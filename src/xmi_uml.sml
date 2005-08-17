@@ -469,13 +469,14 @@ type UMLStereotype = {xmiid: string, name: string}
 datatype UMLPackage = UMLPackage of { xmiid: string,
 				      name: string,
 				      visibility: VisibilityKind,
-				      ownedPackages: UMLPackage list,
-				      ownedClassifiers: UMLClassifier list,
-				      ownedAssociations: UMLAssociation list,
-				      ownedGeneralizations: UMLGeneralization list,
-				      ownedConstraints: OCLConstraint list }
+				      packages: UMLPackage list,
+				      classifiers: UMLClassifier list,
+				      associations: UMLAssociation list,
+				      generalizations: UMLGeneralization list,
+				      constraints: OCLConstraint list }
 		  
 
+(* There may be (are) model elements outside of the UML model *)
 type XmiContent = {classifiers: UMLClassifier list,
 		   constraints: OCLConstraint list,
 		   packages: UMLPackage list,

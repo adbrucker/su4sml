@@ -27,10 +27,10 @@
 structure Xmi2Mdr =
 struct
 exception IllFormed
-open ocl_type;
 
 datatype HashTableEntry = Package of ocl_type.Path
-		        | Type of (ocl_type.OclType * (mdr_core.associationend list)) (* maps xmi.idref to OclType and list of association ends *)
+		        | Type of (ocl_type.OclType * 
+				   (XMI_UML.UMLAssociationEnd list)) 
                         | Generalization of (string * string) 
 			| Constraint of XMI_OCL.OCLConstraint 
 		        | Stereotype of string
@@ -59,11 +59,15 @@ fun find_operation t xmiid =
       of Operation x => x)
     handle Option => error ("expected Operation "^xmiid^" in table")
 
+fun find_type t xmiid = 
+    (case valOf (HashTable.find t xmiid) 
+      of Type x  => x)
+    handle Option => error ("expected Type "^xmiid^" in table (find_type)")
+
 fun find_aends t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of (Type (c,xs))  => xs)
-    handle Option => error ("expected Type "^xmiid^" in table (aends)")
-
+    handle Option => error ("expected Type "^xmiid^" in table (find_aends)")
 
 fun find_variable_dec t xmiid =
     (case valOf (HashTable.find t xmiid) 
@@ -119,9 +123,8 @@ fun find_classifier_type t xmiid
 		      | ocl_type.Set        (ocl_type.Classifier [x]) => ocl_type.Set (find_classifier_type t x)
 		      | ocl_type.Bag        (ocl_type.Classifier [x]) => ocl_type.Bag (find_classifier_type t x)
 		      | ocl_type.OrderedSet (ocl_type.Classifier [x]) => ocl_type.OrderedSet (find_classifier_type t x)
-	(*	      | ocl_type.Collection (ocl_type.Classifier [x]) => ocl_type.Collection (find_classifier_type t x) *)
     end
-    handle Option => error ("expected Classifier "^xmiid^" in table")
+   handle Option => error ("expected Classifier "^xmiid^" in table")
 		    
 
 fun insert_constraint table (c:XMI_OCL.OCLConstraint) =
@@ -165,7 +168,9 @@ fun insert_classifier table package_prefix class =
 			   else if String.isPrefix "OrderedSet(" name then ocl_type.OrderedSet (ocl_type.Classifier [XMI_UML.classifier_elementtype_of class])
 			   else error ("didn't recognize ocltype "^name) 
 		      else ocl_type.Classifier path
-	 val aends = nil (* aends = find_aends table id*)
+	(* This function is called before the associations are handled, *)
+	(* so we do not have to take care of them now...                *)
+	val aends = nil 
     in 
 	HashTable.insert table (id,Type (ocltype,aends));
 	case class 
@@ -182,20 +187,6 @@ fun insert_classifier table package_prefix class =
 	  | _ => ()
     end
 
-fun insert_package table package_prefix (XMI_UML.UMLPackage{xmiid,name,
-							    ownedClassifiers,
-							    ownedPackages,
-							    ownedGeneralizations,
-							    ownedConstraints,...}) =
-    let val id = xmiid
-	val full_name = package_prefix @ [name]
-    in 
-	map (insert_generalization table ) ownedGeneralizations;
-	map (insert_constraint table) ownedConstraints;
-	map (insert_classifier table full_name) ownedClassifiers;
-	map (insert_package   table full_name) ownedPackages;
-	HashTable.insert table (id,Package full_name)
-    end 
 
 fun transform_expression t (XMI_OCL.LiteralExp {symbol,expression_type}) = 
     ocl_term.Literal (symbol,find_classifier_type t expression_type)
@@ -257,6 +248,14 @@ fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
 fun transform_attribute t ({xmiid,name,type_id,changeability,visibility}) =
     (name,find_classifier_type t type_id)
 
+fun transform_aend t ({xmiid,name,ordering,multiplicity,participant_id,
+		       isNavigable,aggregation,changeability,visibility})
+  = {name         = name,
+     aend_type    = find_classifier_type t participant_id,
+     multiplicity = multiplicity,
+     ordered      = if ordering = XMI_UML.Ordered then true else false }
+
+
 	
 fun transform_classifier t (XMI_UML.Class {xmiid,name,isActive,visibility,isLeaf,
 					   generalizations,attributes,operations,
@@ -271,9 +270,10 @@ fun transform_classifier t (XMI_UML.Class {xmiid,name,isActive,visibility,isLeaf
 				   | xs => SOME (path_of_classifier (hd xs)),
 			attributes = map (transform_attribute t) attributes,
 			operations = map (transform_operation t) operations,
-			invariant = map ((transform_constraint t) o 
-					 (find_constraint t)) invariant, 
-			associationends = nil, (* FIX *)
+			invariant  = map ((transform_constraint t) o 
+					  (find_constraint t)) invariant, 
+			associationends = map (transform_aend t) 
+					      (find_aends t xmiid), 
 			stereotypes = nil, (* FIX *)
 			interfaces = nil, (* FIX *)
 			thyname = NONE}
@@ -283,7 +283,8 @@ fun transform_classifier t (XMI_UML.Class {xmiid,name,isActive,visibility,isLeaf
     mdr_core.Primitive {name = case find_classifier_type t xmiid of ocl_type.Classifier x => x, 
 			parent = NONE,    (* FIX *)
 			operations = map (transform_operation t) operations,
-			associationends = nil, (* FIX *)
+			associationends = map (transform_aend t) 
+					      (find_aends t xmiid), 
 			invariant = map ((transform_constraint t) o 
 					 (find_constraint t)) invariant,
 			stereotypes = nil, (*FIX *)
@@ -303,71 +304,96 @@ fun transform_classifier t (XMI_UML.Class {xmiid,name,isActive,visibility,isLeaf
   | transform_classifier t (_) = error "Not supported Classifier type found."
 			   
 
-fun transform_package t (XMI_UML.UMLPackage {xmiid,name,ownedPackages,
-					     ownedClassifiers,
-					     ownedAssociations,
-					     ownedGeneralizations,
-					     ownedConstraints,visibility}) =
-    append (map (transform_classifier t) ownedClassifiers)
-	   (List.concat (map (transform_package t) ownedPackages))
-
-
-(* splits an association into a list of two (or more) association ends, *)
-(* together with the xmi.id of the "opposite" class"                    *)
-fun split_assoc (assoc:XMI_UML.UMLAssociation) = 
-    let val aends = #connection assoc
-	fun attach_opposite ae aends  = map (fn (x:XMI_UML.UMLAssociationEnd) => (#participant_id x, ae)) 
-					     (List.filter (fn x => x <> ae) aends)
+(* recursively transform all classes in the package *)
+fun transform_package t (XMI_UML.UMLPackage p) =
+    let (* we do not transform the ocl library *)
+	val filteredPackages = 
+	    filter (fn (XMI_UML.UMLPackage x) => 
+		       ((#name x <> "oclLib") andalso (#name x <> "UML_OCL")))
+		   (#packages p) 
     in 
-	List.concat (map (fn x => attach_opposite x aends) aends)
+	(map (transform_classifier t) (#classifiers p))@
+		    (List.concat (map (transform_package t) filteredPackages))
     end
 
-fun transform_aend t (id, {xmiid,name,ordering,multiplicity,participant_id,
-			   isNavigable,aggregation,changeability,visibility}) 
-  = (id,{name=name,
-	 aend_type=ocl_type.OclAny (* FIX *),
-	 multiplicity = multiplicity,
-	 ordered = if ordering = XMI_UML.Ordered then true else false })
-
-
-(* recursively collects all associations in the given list of packages *)
-fun collect_associations xs [] = xs
-  | collect_associations xs 
-    ((XMI_UML.UMLPackage {ownedPackages,ownedAssociations,...})::ps) =
-    collect_associations (append xs ownedAssociations) (append ownedPackages ps)
-
-fun transform_toplevel t (XMI_UML.UMLPackage {xmiid,name,ownedPackages,
-					      ownedClassifiers,
-					      ownedAssociations,
-					      ownedGeneralizations,
-					      ownedConstraints,visibility}) =
-    let val filteredPackages = 
-	    filter (fn (XMI_UML.UMLPackage x) => ((#name x <> "oclLib")
-						 andalso (#name x <> "UML_OCL")))
-		   ownedPackages (* throw away oclLib *)
-(*	val assocs = collect_associations ownedAssociations filteredPackages
-	val aends = List.concat (map split_assoc assocs)
-	val mdr_aends = map (transform_aend t) aends*)
-	val _ = map (insert_package t nil) ownedPackages 
-	val _ = map (insert_classifier t nil) ownedClassifiers
-	val cls_in_this_package = map (transform_classifier t) 
-				      ownedClassifiers
-	val cls_in_contained_packages =
-	    List.concat (map (transform_package t) filteredPackages)
+(* recursively insert mapping of xmi.id's to model elements into Hashtable *)
+fun insert_package table package_prefix (XMI_UML.UMLPackage p) =
+    let val full_name = package_prefix @ [#name p]
     in 
-	cls_in_this_package@cls_in_contained_packages
+	map (insert_generalization table)           (#generalizations p);
+	map (insert_constraint     table)           (#constraints p);
+	map (insert_classifier     table full_name) (#classifiers p);
+	map (insert_package        table full_name) (#packages p);
+	HashTable.insert table (#xmiid p,Package full_name)
+    end 
+
+(* We do not want the name of the model to be part of the package hierarchy, *)
+(* therefore we handle the top-level model seperately                        *)
+fun insert_model table (XMI_UML.UMLPackage p) = 
+    let val full_name = nil
+    in 
+	map (insert_generalization table)           (#generalizations p);
+	map (insert_constraint     table)           (#constraints p);
+	map (insert_classifier     table full_name) (#classifiers p);
+	map (insert_package        table full_name) (#packages p);
+	HashTable.insert table (#xmiid p,Package full_name)
+    end 
+
+
+(* split an association into association ends, and put the association ends *)
+(* ends into the xmi.id table under the corresponding (i.e., opposite)      *)
+(* classifier.                                                              *)   
+(* 1. split the association into a list of two (or more) association ends   *)
+(* 2. pair each association end with the participant_id's of all other      *)
+(*    association ends: when a class is a participant in an association,    *)
+(*    this association end is a feature of all _other_ participants in the  *) 
+(*    association                                                           *)
+(* 3. insert the mapping xmi.id to association end into the hashtable       *)
+fun transform_assocation t (assoc:XMI_UML.UMLAssociation) =
+    let	val aends = #connection assoc
+	fun all_others x xs = List.filter (fn y => y <> x) xs
+	fun pair_with ae aes = 
+	    map (fn (x:XMI_UML.UMLAssociationEnd) => (#participant_id x, ae)) aes
+	val mappings = List.concat (map (fn x => pair_with x (all_others x aends)) aends)
+	fun add_aend_to_type (id,ae) = 
+	    HashTable.insert t (id,Type (find_classifier_type t id,
+					 ae::(find_aends t id)))
+    in 
+	List.app add_aend_to_type mappings
     end
-    
+
+(* recursively transforms all associations in the package p, *)
+fun transform_associations t (XMI_UML.UMLPackage p) = 
+    (map (transform_associations t) (#packages p);
+    List.app (transform_assocation t) (#associations p))
+
+(* transform a UML model into a list of mdr_core classes           *)
+(* 1. traverse package hierarchy and put xmi.id of all interesting *)
+(*    model elements into the hashtable                            *) 
+(* 2. traverse again to find all associations, transform them into *)
+(*    association ends and map the correct classes to them         *)
+(*    (We have to handle associations seperately because there is  *)
+(*     no direct link from classes to their association ends in    *)
+(*     the xmi file)                                               *)
+(* 3. traverse again, transforming all remaining model elements,   *)
+(*    i.e., classes with their operations, attributes,             *)
+(*    constraints, etc                                             *)
 fun transformXMI ({classifiers,constraints,packages,
 		   stereotypes,variable_declarations}) =
     let val (xmiid_table: (string,HashTableEntry) HashTable.hash_table) =
 	    HashTable.mkTable (HashString.hashString, (op =)) (101, IllFormed)
+	(* for some reasons, there are model elements outside of the top-level *) 
+	(* model the xmi-file. So we have to handle them here seperately:      *)
 	val _ = map (insert_classifier xmiid_table nil) classifiers
 	val _ = map (insert_constraint xmiid_table) constraints
 	val _ = map (insert_stereotype xmiid_table) stereotypes
 	val _ = map (insert_variable_dec xmiid_table) variable_declarations
+	(* "hd packages" is supposed to be the first model in the xmi-file *)
+	val model = hd packages
     in 
-	transform_toplevel xmiid_table (hd packages)
+	insert_model           xmiid_table model; (* fill xmi.id table   *)
+	transform_associations xmiid_table model; (* handle associations *)
+	map mdr_core.normalize (transform_package xmiid_table model) (* transform classes   *)
     end
 end
 

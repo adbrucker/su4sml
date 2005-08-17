@@ -453,18 +453,19 @@ fun tree2package tree =
 	let val trees = skipOver "UML:Namespace.ownedElement" 
 				 ((hd o XmlTreeData.getTrees) tree)
 	    val atts = XmlTreeData.getAtts tree in
-	    XMI_UML.UMLPackage { xmiid                = getXmiId atts, 
-			 name                 = getName atts,
-			 visibility           = getVisibility atts,
-			 ownedPackages        = (map tree2package 
-						     (filterPackages trees)), 
-			 ownedClassifiers     = (map tree2classifier
-						     (filterClassifiers trees)),
-			 ownedAssociations    = getAssociations trees, 
-			 ownedGeneralizations = (map tree2generalization
-						     (filterByName "UML:Generalization"
-								   trees)),
-			 ownedConstraints     = map tree2constraint (filterConstraints trees) }
+	    XMI_UML.UMLPackage { xmiid   = getXmiId atts, 
+				 name    = getName atts,
+				 visibility      = getVisibility atts,
+				 packages        = (map tree2package 
+							(filterPackages trees)), 
+				 classifiers     = (map tree2classifier
+							(filterClassifiers trees)),
+				 associations    = getAssociations trees, 
+				 generalizations = (map tree2generalization
+							(filterByName "UML:Generalization"
+								      trees)),
+				 constraints     = map tree2constraint 
+						       (filterConstraints trees) }
 	end
     else raise IllFormed "tree2package"
 	

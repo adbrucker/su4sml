@@ -104,7 +104,8 @@ structure Parser = Parse (structure Dtd = Dtd
 			  structure Resolve = ResolveNull)
 		   
 fun parseXmlTree filename = 
-    let val dtd = Dtd.initDtdTables()
+    let val _ = OS.FileSys.fileSize filename (* dummy check to see if the file exists...*)
+	val dtd = Dtd.initDtdTables()
 	(* how to do the following in a clean/portable way? *)
 	val _ = Parser.parseDocument 
 		    (SOME (Uri.String2Uri ("file:"^(su4sml_home())^"/dummy.xmi")))
@@ -112,6 +113,44 @@ fun parseXmlTree filename =
     in Parser.parseDocument
 	   (SOME (Uri.String2Uri filename))
 	   (SOME dtd) (dtd,nil,nil)
+    end
+
+end
+
+
+structure WriteXmlTree =
+struct
+open XmlTreeData
+
+fun writeAttribute stream (name,value) =
+    TextIO.output (stream, " "^name^"=\""^value^"\"")
+
+fun writeEndTag stream name = TextIO.output (stream,"</"^name^">\n")
+
+fun writeStartTag stream tree = 
+    (TextIO.output (stream,"<"^(getElem tree));
+     map (writeAttribute stream) (getAtts tree);
+     TextIO.output (stream,">\n"))
+
+fun writeIndent stream 0 = ()
+  | writeIndent stream n = (TextIO.output (stream, "  "); writeIndent stream (n-1))
+    
+
+fun writeXmlTree' indent stream tree = 
+    let val elemName = getElem tree 
+    in 
+	writeIndent stream indent;
+	writeStartTag stream tree;
+	map (writeXmlTree' (indent+1) stream) (getTrees tree);
+	writeIndent stream indent;
+	writeEndTag stream elemName
+    end
+
+fun writeXmlTree filename tree = 
+    let val stream = TextIO.openOut filename 
+    in 
+	writeXmlTree' 0 stream tree;
+	TextIO.closeOut stream
     end
 
 end

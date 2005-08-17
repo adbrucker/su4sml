@@ -29,14 +29,12 @@ type operation = { name          : string,
 		   postcondition : (string option * ocl_term.OclTerm) list,
 		   arguments     : (string * ocl_type.OclType) list,
 		   result        : ocl_type.OclType,
-		   isQuery       : bool
-				   }     
+		   isQuery       : bool }     
 
 type associationend = {name : string,
 		       aend_type: ocl_type.OclType,
 		       multiplicity: (int*int) list,
-		       ordered: bool
-				     }
+		       ordered: bool }
 
 datatype Classifier =  
 	 Class of 
@@ -79,14 +77,101 @@ datatype Classifier =
 	   thyname     : string option
 	  }
 	
+(* convert an association end into the corresponding collection type *)
+fun assoc_to_attr_type {name,aend_type,multiplicity,ordered} =
+    if ordered then ocl_type.Sequence aend_type (* OrderedSet? *)
+    else ocl_type.Set aend_type
+    
+(* convert an association end into an attribute of the *)
+(* corresponding collection type                       *)
+fun assoc_to_attr (assoc:associationend) = (#name assoc,assoc_to_attr_type assoc)
 
+(* convert a multiplicity range into an invariant of the form *)
+(* size > lowerBound and size < upperBound )                 *)
+fun range_to_inv cls_name aend (a,b) = 
+    let val cls       = ocl_type.Classifier cls_name
+	val attr_type = assoc_to_attr_type aend
+	val attr_name = cls_name@[#name aend]
+	val literal_a = ocl_term.Literal (Int.toString a, ocl_type.Integer)
+	val literal_b = ocl_term.Literal (Int.toString b, ocl_type.Integer)
+	val self      = ocl_term.Variable ("self",cls)
+	val attribute = ocl_term.AttributeCall (self,cls,attr_name,attr_type)
+	val attribute_size = 
+	    ocl_term.OperationCall (attribute,attr_type,
+				    ["oclLib","Collection","size"],[],
+				    ocl_type.Integer)
+	val lower_bound = 
+	    ocl_term.OperationCall (attribute_size,ocl_type.Integer,
+				    ["oclLib","Real",">="],
+				    [(literal_a,ocl_type.Integer)],ocl_type.Boolean)
+	val upper_bound = 
+	    ocl_term.OperationCall (attribute_size,ocl_type.Integer,
+				    ["oclLib","Real","<="],
+				    [(literal_b,ocl_type.Integer)],ocl_type.Boolean)
+	val equal = 
+	    ocl_term.OperationCall (attribute_size,ocl_type.Integer,
+				    ["oclLib","OclAny","="],
+				    [(literal_a,ocl_type.Integer)],ocl_type.Boolean)
+    in
+	if a = b then equal
+	else if b = ~1 then lower_bound
+	else ocl_term.OperationCall (lower_bound,ocl_type.Boolean,
+				     ["oclLib","Boolean","and"],
+				     [(upper_bound,ocl_type.Boolean)],
+				     ocl_type.Boolean)
+    end
+
+(* calculate the invariants of an association end:               *)
+(* 1. multiplicity constraints                                   *)
+(* 2. consistency constraints between opposing association ends  *)
+(*    i.e., A.b.a->includes(A)                                   *)
+(*    FIXME: 2. is not implemented yet...                        *)
+fun assoc_to_inv cls_name (aend:associationend) =
+    let val inv_name = "multiplicity constraint for association end: "^(#name aend)
+	val range_constraints = map (range_to_inv cls_name aend) 
+				    (#multiplicity aend)
+	fun ocl_or (x,y) = 
+	    ocl_term.OperationCall (x,ocl_type.Boolean,
+				    ["oclLib","Boolean","or"],
+				    [(y,ocl_type.Boolean)],ocl_type.Boolean)
+    in if range_constraints = [] 
+       then (SOME inv_name, ocl_term.Literal ("true",ocl_type.Boolean)) 
+       else (SOME inv_name, foldr1 ocl_or range_constraints)
+    end
+	     
+(* convert association ends into attributes + invariants *)
+fun normalize (Class {name,parent,attributes,operations,associationends,invariant,
+		      stereotypes,interfaces,thyname}) =
+	       Class {name   = name,
+		      parent = parent,
+		      attributes = (append (map assoc_to_attr associationends) 
+					   attributes),
+		      operations = operations,
+		      associationends = nil,
+		      invariant = append (map (assoc_to_inv name) associationends)  
+					  invariant,
+		      stereotypes = stereotypes,
+                      interfaces = interfaces,
+                      thyname = thyname }
+  | normalize (Primitive p) =
+    (* Primitive's do not have attributes, so we have to convert *)
+    (* them into Classes...                                      *)
+    if (#associationends p) = [] 
+    then Primitive p 
+    else normalize (Class {name = #name p, parent = #parent p, attributes=[],
+			   operations = #operations p, invariant = #invariant p,
+			   associationends = #associationends p,
+			   stereotypes = #stereotypes p,
+			   interfaces = #interfaces p,
+			   thyname = #thyname p})
+  | normalize c = c
 
 val OclAnyC = Class{name=["OclAny"],parent=NONE,attributes=[],
 			  operations=[], interfaces=[],
 			  invariant=[],stereotypes=[], associationends=[],
 			  thyname=NONE}
 
-					   
+		   
 fun string_of_path (path:ocl_type.Path) = case path of
 			      [] => ""
 			    | p  => foldr1 (fn (a,b) => a^"."^b) p
