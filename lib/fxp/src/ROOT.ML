@@ -1,17 +1,17 @@
 (*****************************************************************************
- *          HOL-OCL - a shallow embedding of OCL into Isabelle/HOL              
+ *          su4sml - a shallow embedding of OCL into Isabelle/HOL              
  *                                                                            
  * ROOT.ML - main "ROOT.ML" for loading fxp
  * Copyright (C) 2005 Achim D. Brucker <brucker@inf.ethz.ch>   
  *                                                                            
- * This file is part of HOL-OCL.                                              
+ * This file is part of su4sml.                                              
  *                                                                            
- * HOL-OCL is free software; you can redistribute it and/or modify it under   
+ * su4sml is free software; you can redistribute it and/or modify it under   
  * the terms of the GNU General Public License as published by the Free       
  * Software Foundation; either version 2 of the License, or (at your option)  
  * any later version.                                                         
  *                                                                            
- * HOL-OCL is distributed in the hope that it will be useful, but WITHOUT ANY 
+ * su4sml is distributed in the hope that it will be useful, but WITHOUT ANY 
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
  * details.                                                              
@@ -20,29 +20,6 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,    
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
-
-(*
-structure IsabelleLibrary =
-struct
-  structure List = List;
-  structure Option = Option;
-  structure Bool = Bool;
-  structure String = String;
-  structure Int = Int;
-  structure Real = Real;
-  val ord= ord;
-  val chr = chr;
-end;
-
-
-open BasisLibrary;
-val ord = Char.ord;
-val chr = Char.chr;
-nonfix prefix;
-open Option;
-open List;
-     
-*)
 
 use "Util/utilString.sml";
 use "Util/utilHash.sml";
@@ -139,10 +116,3 @@ use "Catalog/catParse.sml";
 use "Catalog/catalog.sml";
 use "Catalog/catResolve.sml";
 use "Catalog/catOptions.sml";
-(*
-open IsabelleLibrary;
-infix prefix;
-open Option;
-open List;
-open Library ;
-*)

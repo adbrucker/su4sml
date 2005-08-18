@@ -94,4 +94,3 @@ Group is
   Util/utilTime.sml
   config.sml
   genRandom.sml
-   $/basis.cm

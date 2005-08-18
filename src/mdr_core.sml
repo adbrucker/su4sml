@@ -1,5 +1,5 @@
 (*****************************************************************************
- *          su4sml - a shallow embedding of OCL in Isabelle/HOL              
+ *          su4sml - a SecureUML repository for SML              
  *                                                                            
  * mdr_core.sig - generic meta data repository import signature for su4sml
  * Copyright (C) 2001-2005  Achim D. Brucker <brucker@inf.ethz.ch>   

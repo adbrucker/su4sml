@@ -1,5 +1,5 @@
 (*****************************************************************************
- *          su4sml - a shallow embedding of OCL in Isabelle/HOL              
+ *          su4sml - a SecureUML repository for SML              
  *                                                                            
  * sc_import.sig - generic state diagram import signature for su4sml
  * Copyright (C) 2005  Achim D. Brucker <brucker@inf.ethz.ch>   

@@ -1,5 +1,5 @@
 (*****************************************************************************
- *          su4sml - a shallow embedding of OCL in Isabelle/HOL              
+ *          su4sml - a SecureUML repository for SML              
  *                                                                            
  * xmi_parser.sml - an xmi-parser for the import interface for su4sml
  * Copyright (C) 2005  Achim D. Brucker <brucker@inf.ethz.ch>

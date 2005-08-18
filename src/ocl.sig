@@ -1,5 +1,5 @@
 (*****************************************************************************
- *          su4sml - a shallow embedding of OCL in Isabelle/HOL              
+ *          su4sml - a SecureUML repository for SML              
  *                                                                            
  * ocl.sig - 
  * Copyright (C) 2001-2005  Achim D. Brucker <brucker@inf.ethz.ch>   

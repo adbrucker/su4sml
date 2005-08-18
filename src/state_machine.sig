@@ -1,5 +1,5 @@
 (*****************************************************************************
- *          su4sml - a shallow embedding of OCL in Isabelle/HOL              
+ *          su4sml - a SecureUML repository for SML              
  *                                                                            
  * state_machine.sig - generic state machines
  * Copyright (C) 2005  Achim D. Brucker <brucker@inf.ethz.ch>   

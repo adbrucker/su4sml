@@ -1,5 +1,5 @@
 (*****************************************************************************
- *          su4sml - a shallow embedding of OCL into Isabelle/HOL              
+ *          su4sml - a SecureUML repository for SML              
  *                                                                            
  * library.sml - main "ROOT.ML" file for su4sml
  * Copyright (C) 2005 Achim D. Brucker <brucker@inf.ethz.ch>   
