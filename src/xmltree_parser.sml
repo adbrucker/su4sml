@@ -104,12 +104,16 @@ structure Parser = Parse (structure Dtd = Dtd
 			  structure Resolve = ResolveNull)
 		   
 fun parseXmlTree filename = 
-    let val _ = OS.FileSys.fileSize filename (* dummy check to see if the file exists...*)
+    let val currentDir = OS.FileSys.getDir()
+	val _ = OS.FileSys.fileSize filename (* dummy check to see if the file exists...*)
 	val dtd = Dtd.initDtdTables()
 	(* how to do the following in a clean/portable way? *)
+	val _ = OS.FileSys.chDir (su4sml_home())
+	val _ = OS.FileSys.fileSize "dummy.xmi" (* dummy check to see if the file exists...*)
 	val _ = Parser.parseDocument 
-		    (SOME (Uri.String2Uri ("file:"^(su4sml_home())^"/dummy.xmi")))
+		    (SOME (Uri.String2Uri ("file:dummy.xmi")))
 		    (SOME dtd) (dtd,nil,nil) 
+	val _ = OS.FileSys.chDir currentDir 
     in Parser.parseDocument
 	   (SOME (Uri.String2Uri filename))
 	   (SOME dtd) (dtd,nil,nil)
