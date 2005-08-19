@@ -24,9 +24,13 @@
 
 
 
-structure Xmi2Mdr =
+structure Xmi2Mdr : 
+sig
+    val transformXMI : XMI_UML.XmiContent -> mdr_core.Classifier list
+end  =
 struct
 exception IllFormed
+exception NotYetImplemented
 
 datatype HashTableEntry = Package of ocl_type.Path
 		        | Type of (ocl_type.OclType * 
@@ -41,51 +45,60 @@ datatype HashTableEntry = Package of ocl_type.Path
 
 fun find_generalization t xmiid = 
     (case valOf (HashTable.find t xmiid) 
-      of Generalization x => x)
+      of Generalization x => x
+       | _                => raise IllFormed) 
     handle Option => error ("expected Generalization "^xmiid^" in table")
 
 fun find_stereotype t xmiid =
     (case valOf (HashTable.find t xmiid) 
-      of Stereotype x => x)
+      of Stereotype x => x
+       | _                => raise IllFormed) 
     handle Option => error ("expected Stereotype "^xmiid^" in table")
 
 fun find_attribute t xmiid =
     (case valOf (HashTable.find t xmiid) 
-      of Attribute x => x)
+      of Attribute x => x
+       | _                => raise IllFormed) 
     handle Option => error ("expected Attribute "^xmiid^" in table")
 
 fun find_operation t xmiid =
     (case valOf (HashTable.find t xmiid) 
-      of Operation x => x)
+      of Operation x => x
+       | _                => raise IllFormed) 
     handle Option => error ("expected Operation "^xmiid^" in table")
 
 fun find_type t xmiid = 
     (case valOf (HashTable.find t xmiid) 
-      of Type x  => x)
+      of Type x  => x
+       | _                => raise IllFormed) 
     handle Option => error ("expected Type "^xmiid^" in table (find_type)")
 
 fun find_aends t xmiid = 
     (case valOf (HashTable.find t xmiid) 
-      of (Type (c,xs))  => xs)
+      of (Type (c,xs))  => xs
+       | _                => raise IllFormed) 
     handle Option => error ("expected Type "^xmiid^" in table (find_aends)")
 
 fun find_variable_dec t xmiid =
     (case valOf (HashTable.find t xmiid) 
-      of Variable x => x)
+      of Variable x => x
+       | _                => raise IllFormed) 
     handle Option => error ("expected VariableDeclaration "^xmiid^" in table")
 
 fun find_parent t xmiid = #2 (find_generalization t xmiid)
 
 fun find_package t xmiid  = 
     (case valOf (HashTable.find t xmiid) 
-      of Package path => path)
+      of Package path => path
+       | _                => raise IllFormed) 
     handle Option => error ("expected Path "^xmiid^" in table")
 					
 fun path_of_classifier (ocl_type.Classifier x) = x
 
 fun find_constraint t xmiid =
     (case valOf (HashTable.find t xmiid) 
-      of Constraint c => c)
+      of Constraint c => c
+       | _                => raise IllFormed) 
     handle Option => error ("expected Constraint "^xmiid^" in table")
 		
 
@@ -110,6 +123,7 @@ fun filter_postcondition t cs
 			
 fun find_classifier_type t xmiid
   = let val ocltype = case valOf (HashTable.find t xmiid) of (Type (x,xs)) => x
+							   | _  => raise IllFormed
     in 
 	case ocltype of ocl_type.Integer      => ocltype
 		      | ocl_type.String       => ocltype
@@ -123,6 +137,7 @@ fun find_classifier_type t xmiid
 		      | ocl_type.Set        (ocl_type.Classifier [x]) => ocl_type.Set (find_classifier_type t x)
 		      | ocl_type.Bag        (ocl_type.Classifier [x]) => ocl_type.Bag (find_classifier_type t x)
 		      | ocl_type.OrderedSet (ocl_type.Classifier [x]) => ocl_type.OrderedSet (find_classifier_type t x)
+		      | _ => raise IllFormed
     end
    handle Option => error ("expected Classifier "^xmiid^" in table")
 		    
@@ -222,6 +237,7 @@ fun transform_expression t (XMI_UML.LiteralExp {symbol,expression_type}) =
     in 
 	ocl_term.Variable (#name var_dec,find_classifier_type t expression_type)
     end
+  | transform_expression t _ = raise NotYetImplemented
 
 fun transform_constraint t ({xmiid,name,body,...}:XMI_UML.Constraint) = 
     (name,transform_expression t body)
@@ -280,7 +296,8 @@ fun transform_classifier t (XMI_UML.Class {xmiid,name,isActive,visibility,isLeaf
     end
   | transform_classifier t (XMI_UML.Primitive {xmiid,name,generalizations,
 					       operations,invariant}) =
-    mdr_core.Primitive {name = case find_classifier_type t xmiid of ocl_type.Classifier x => x, 
+    mdr_core.Primitive {name = case find_classifier_type t xmiid of ocl_type.Classifier x => x
+								  | _ => raise IllFormed, 
 			parent = NONE,    (* FIX *)
 			operations = map (transform_operation t) operations,
 			associationends = map (transform_aend t) 
@@ -292,7 +309,8 @@ fun transform_classifier t (XMI_UML.Class {xmiid,name,isActive,visibility,isLeaf
 		   thyname = NONE}
   | transform_classifier t (XMI_UML.Enumeration {xmiid,name,generalizations,
 						 operations,literals,invariant}) =
-    mdr_core.Enumeration {name = case find_classifier_type t xmiid of ocl_type.Classifier x => x, 
+    mdr_core.Enumeration {name = case find_classifier_type t xmiid of ocl_type.Classifier x => x
+								    | _ => raise IllFormed, 
 			  parent = NONE,    (* FIX *)
 			  literals = literals,
 			  operations = map (transform_operation t) operations,
@@ -351,7 +369,8 @@ fun insert_model table (XMI_UML.Package p) =
 (* 3. insert the mapping xmi.id to association end into the hashtable       *)
 fun transform_assocation t (assoc:XMI_UML.Association) =
     let	val aends = #connection assoc
-	fun all_others x xs = List.filter (fn y => y <> x) xs
+	fun all_others x xs = List.filter 
+				  (fn (y:XMI_UML.AssociationEnd) => y <> x) xs
 	fun pair_with ae aes = 
 	    map (fn (x:XMI_UML.AssociationEnd) => (#participant_id x, ae)) aes
 	val mappings = List.concat (map (fn x => pair_with x (all_others x aends)) aends)

@@ -22,7 +22,10 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-structure ParseXMI =
+structure ParseXMI : 
+sig
+    val parseXMI: string -> XMI_UML.XmiContent
+end =
 struct
 
 (* generic exception if something is wrong *)
@@ -31,14 +34,11 @@ exception IllFormed of string
 exception NotYetImplemented
 
 
-fun getAttValueMaybe string atts = Option.map #2 (find (fn (x,_) => x = string) 
-						       atts)
-
-fun getAttValue string atts = valOf (getAttValueMaybe string atts)
+fun getStringAtt string atts = valOf (XmlTreeData.getAttValueMaybe string atts)
     handle Option => raise IllFormed ("in getAttValue: did not find attribute "^string)
 
 fun getBoolAtt string atts = 
-    let val att = getAttValue string atts
+    let val att = getStringAtt string atts
     in 
 	(valOf o Bool.fromString) att 
 	handle Option => raise IllFormed ("in getBoolAtt: found attribute "^string^
@@ -47,19 +47,19 @@ fun getBoolAtt string atts =
 
 
 fun getIntAtt string atts = 	  
-    let val att = getAttValue string atts
+    let val att = getStringAtt string atts
     in 
 	(valOf o Int.fromString) att 
 	handle Option => raise IllFormed ("in getIntAtt: found attribute "^string^
 					  " with unexpected value "^att)
     end
 
-fun getXmiId    a = getAttValue "xmi.id"    a
-fun getName     a = getAttValue "name"      a
-fun getXmiIdref a = getAttValue "xmi.idref" a
+fun getXmiId    a = getStringAtt "xmi.id"    a
+fun getName     a = getStringAtt "name"      a
+fun getXmiIdref a = getStringAtt "xmi.idref" a
 		 
 fun getVisibility atts = 
-    let val att = getAttValueMaybe "visibility" atts 
+    let val att = XmlTreeData.getAttValueMaybe "visibility" atts 
     in
 	case att of SOME "public"    => XMI_UML.public
 		  | SOME "private"   => XMI_UML.private
@@ -70,7 +70,7 @@ fun getVisibility atts =
     end
 
 fun getOrdering atts = 
-    let val att = getAttValue "ordering" atts 
+    let val att = getStringAtt "ordering" atts 
     in 
 	case att of "unordered" => XMI_UML.Unordered
 		  | "ordered"  => XMI_UML.Ordered
@@ -78,7 +78,7 @@ fun getOrdering atts =
     end 
 
 fun getAggregation atts = 
-    let val att = getAttValue "aggregation" atts in
+    let val att = getStringAtt "aggregation" atts in
 	case att of "none" => XMI_UML.NoAggregation
 		  | "aggregate" => XMI_UML.Aggregate
 		  | "composite" => XMI_UML.Composite
@@ -86,7 +86,7 @@ fun getAggregation atts =
     end 
 
 fun getChangeability atts = 
-    let val att = getAttValue "changeability" atts in
+    let val att = getStringAtt "changeability" atts in
 	case att of "changeable" => XMI_UML.Changeable
 		  | "frozen"     => XMI_UML.Frozen
 		  | "addonly"    => XMI_UML.AddOnly
@@ -94,7 +94,7 @@ fun getChangeability atts =
     end 
 			       
 fun getKind atts = 
-    let val att = getAttValue "kind" atts in
+    let val att = getStringAtt "kind" atts in
 	case att of "in"     => XMI_UML.In
 		  | "out"    => XMI_UML.Out
 		  | "inout"  => XMI_UML.Inout
@@ -177,10 +177,10 @@ fun tree2oclexpression tree =
 	val trees = XmlTreeData.getTrees tree
     in 
 	if elem = "UML15OCL.Expressions.BooleanLiteralExp" then
-	    XMI_UML.LiteralExp { symbol          = getAttValue "booleanSymbol" atts,
+	    XMI_UML.LiteralExp { symbol          = getStringAtt "booleanSymbol" atts,
 			 expression_type = findExpressionType trees }
 	else if elem = "UML15OCL.Expressions.IntegerLiteralExp" then
-	    XMI_UML.LiteralExp { symbol          = getAttValue "integerSymbol" atts,
+	    XMI_UML.LiteralExp { symbol          = getStringAtt "integerSymbol" atts,
 			 expression_type = findExpressionType trees }
 	else if elem = "UML15OCL.Expressions.OperationCallExp" then
 	    let val op_src = hd (followByName 
@@ -288,7 +288,7 @@ fun mkConstraint atts trees =
 	val st_type = hd (followByName "UML:ModelElement.stereotype" trees)
 	val st_type_ref  =  getXmiIdref (XmlTreeData.getAtts st_type)
     in { xmiid = getXmiId atts,
-	 name  = case getAttValueMaybe "name" atts of SOME s => SOME s | _ => NONE,
+	 name  = case XmlTreeData.getAttValueMaybe "name" atts of SOME s => SOME s | _ => NONE,
 	 constraint_type = st_type_ref, 
 	 body = tree2oclexpression expr }
     end

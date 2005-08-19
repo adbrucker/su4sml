@@ -23,12 +23,25 @@
  ******************************************************************************)
 
 
-structure XmlTreeData =
+structure XmlTreeData :
+sig
+    type AttList
+    type Tag
+    datatype XmlTree = ELEM of Tag * XmlContent 
+    withtype XmlContent = XmlTree list
+
+    val getAtts : XmlTree -> AttList
+    val getTrees: XmlTree -> XmlContent
+    val getElem : XmlTree -> string
+    val getAttValueMaybe : string -> AttList -> string option
+end =
 struct
-exception IllFormed
+
+
+type AttList = (string * string) list
 
 (* Tags consist of element names, and a list of attribute name-value pairs *)
-type Tag = string * ((string * string) list)
+type Tag = string * AttList
 
 (*datatype Tree = TEXT of UniChar.Vector
 		      | ELEM of Tag * Content
@@ -39,12 +52,15 @@ withtype XmlContent = XmlTree list
 fun getAtts  (ELEM ((elem,atts),trees)) = atts
 fun getTrees (ELEM ((elem,atts),trees)) = trees
 fun getElem  (ELEM ((elem,atts),trees)) = elem
+fun getAttValueMaybe string atts = Option.map #2 (find (fn (x,_) => x = string) 
+						       atts)
 
 end
 
-structure XmlTreeHooks =
+structure XmlTreeHooks:Hooks =
 struct
 open IgnoreHooks XmlTreeData UniChar HookData
+exception IllFormed
 
 type AppData = Dtd.Dtd * XmlContent * (Tag * XmlContent) list
 type AppFinal = XmlTree
@@ -92,10 +108,10 @@ fun hookFinish (dtd,[elem],nil) = elem
 
 end
 
-structure ParseXmlTree = (* :
+structure ParseXmlTree :
   sig
-    val parseTree : Uri.Uri option -> Dtd.Dtd option -> TreeData.Tree
-  end = *)
+    val readFile : string -> XmlTreeData.XmlTree
+  end = 
 struct
 open XmlTreeData 
 
@@ -126,7 +142,10 @@ fun readFile filename =
 end
 
 
-structure WriteXmlTree =
+structure WriteXmlTree:
+sig
+    val writeFile : string -> XmlTreeData.XmlTree -> unit
+end =
 struct
 open XmlTreeData
 
