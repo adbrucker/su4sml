@@ -102,7 +102,7 @@ fun getKind atts =
 		  | _ => raise IllFormed ("in getKind: found unexpected attribute value "^att)
     end 
 	
-fun getRange atts = (getIntegerAtt "lower" atts, getIntegerAtt "upper" atts)
+fun getRange atts = (getIntAtt "lower" atts, getIntAtt "upper" atts)
 
 
 fun skipOver string tree = if string = XmlTreeData.getElem tree 
