@@ -520,7 +520,9 @@ fun filterStereotypes trees = filterByName "UML:Stereotype" trees
 
 fun mkStereotype atts trees = 
     { xmiid = getXmiId atts,
-      name = getName atts
+      name = getName atts,
+      baseClass = NONE,
+      stereotypeConstraint = NONE
      }
     handle IllFormed msg => raise IllFormed ("in mkStereotype: "^msg)
 
@@ -560,11 +562,10 @@ fun findXmiContent tree = if XmlTreeData.getElem tree = "XMI.content"
 						(XmlTreeData.getTrees tree))
 			       
 fun parseXMI filename = 
-    let val trees = findXmiContent (ParseXmlTree.parseXmlTree filename)
+    let val trees = findXmiContent (ParseXmlTree.readFile filename)
     in
 	tree2xmicontent (hd trees)
     end
-	handle IllFormed msg => error msg 
 end
 
 

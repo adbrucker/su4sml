@@ -98,12 +98,15 @@ structure ParseXmlTree = (* :
   end = *)
 struct
 open XmlTreeData 
+
+exception FileNotFound of string
+
 structure Parser = Parse (structure Dtd = Dtd
 			  structure Hooks = XmlTreeHooks
 			  structure ParserOptions = ParserOptions ()
 			  structure Resolve = ResolveNull)
 		   
-fun parseXmlTree filename = 
+fun readFile filename = 
     let val currentDir = OS.FileSys.getDir()
 	val _ = OS.FileSys.fileSize filename (* dummy check to see if the file exists...*)
 	val dtd = Dtd.initDtdTables()
@@ -117,6 +120,7 @@ fun parseXmlTree filename =
     in Parser.parseDocument
 	   (SOME (Uri.String2Uri filename))
 	   (SOME dtd) (dtd,nil,nil)
+       handle SysErr => raise FileNotFound filename
     end
 
 end
@@ -150,7 +154,7 @@ fun writeXmlTree' indent stream tree =
 	writeEndTag stream elemName
     end
 
-fun writeXmlTree filename tree = 
+fun writeFile filename tree = 
     let val stream = TextIO.openOut filename 
     in 
 	writeXmlTree' 0 stream tree;

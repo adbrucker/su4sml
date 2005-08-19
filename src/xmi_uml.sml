@@ -204,7 +204,7 @@ type Stereotype = {xmiid: string,
 		   (* extendedElement: string list        *)
 		   (* definedTag: string list             *)
 		   stereotypeConstraint: Constraint option,
-		   baseClass: string}
+		   baseClass: string option}
 
 (* from UML 1.5 Extension Mechanisms:-----------------------------------------
  * A tag definition specifies the tagged values that can be attached to a kind 
