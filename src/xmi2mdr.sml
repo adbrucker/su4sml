@@ -30,11 +30,11 @@ exception IllFormed
 
 datatype HashTableEntry = Package of ocl_type.Path
 		        | Type of (ocl_type.OclType * 
-				   (XMI_UML.UMLAssociationEnd list)) 
+				   (XMI_UML.AssociationEnd list)) 
                         | Generalization of (string * string) 
-			| Constraint of XMI_OCL.OCLConstraint 
+			| Constraint of XMI_UML.Constraint 
 		        | Stereotype of string
-		        | Variable of XMI_OCL.VariableDeclaration 
+		        | Variable of XMI_UML.VariableDeclaration 
 			| Attribute of ocl_type.Path
 			| Operation of ocl_type.Path
                         
@@ -127,22 +127,22 @@ fun find_classifier_type t xmiid
    handle Option => error ("expected Classifier "^xmiid^" in table")
 		    
 
-fun insert_constraint table (c:XMI_OCL.OCLConstraint) =
+fun insert_constraint table (c:XMI_UML.Constraint) =
     HashTable.insert table (#xmiid c, Constraint c)
 
-fun insert_variable_dec table (v:XMI_OCL.VariableDeclaration) =
+fun insert_variable_dec table (v:XMI_UML.VariableDeclaration) =
     HashTable.insert table (#xmiid v, Variable v)
 
-fun insert_stereotype table (s:XMI_UML.UMLStereotype) =
+fun insert_stereotype table (s:XMI_UML.Stereotype) =
     HashTable.insert table (#xmiid s, Stereotype (#name s))
 
-fun insert_generalization table (g:XMI_UML.UMLGeneralization) =
+fun insert_generalization table (g:XMI_UML.Generalization) =
     HashTable.insert table (#xmiid g, Generalization (#child_id g, #parent_id g))
 
-fun insert_attribute table path_prefix (a:XMI_UML.UMLAttribute) =
+fun insert_attribute table path_prefix (a:XMI_UML.Attribute) =
     HashTable.insert table (#xmiid a, Attribute (path_prefix @ [#name a]))
 
-fun insert_operation table path_prefix (a:XMI_UML.UMLOperation) =
+fun insert_operation table path_prefix (a:XMI_UML.Operation) =
     HashTable.insert table (#xmiid a, Operation (path_prefix @ [#name a]))
 
 fun add_aend table xmiid (aend:mdr_core.associationend) = () (* FIX *)
@@ -188,42 +188,42 @@ fun insert_classifier table package_prefix class =
     end
 
 
-fun transform_expression t (XMI_OCL.LiteralExp {symbol,expression_type}) = 
+fun transform_expression t (XMI_UML.LiteralExp {symbol,expression_type}) = 
     ocl_term.Literal (symbol,find_classifier_type t expression_type)
-  | transform_expression t (XMI_OCL.IfExp {condition,thenExpression,
+  | transform_expression t (XMI_UML.IfExp {condition,thenExpression,
 					   elseExpression,expression_type}) = 
     ocl_term.If (transform_expression t condition, 
-		 find_classifier_type t (XMI_OCL.expression_type_of condition),
+		 find_classifier_type t (XMI_UML.expression_type_of condition),
 		 transform_expression t thenExpression, 
-		 find_classifier_type t (XMI_OCL.expression_type_of thenExpression),
+		 find_classifier_type t (XMI_UML.expression_type_of thenExpression),
 		 transform_expression t elseExpression,
-		 find_classifier_type t (XMI_OCL.expression_type_of elseExpression),
+		 find_classifier_type t (XMI_UML.expression_type_of elseExpression),
 		 find_classifier_type t expression_type)
-  | transform_expression t (XMI_OCL.AttributeCallExp {source,referredAttribute,
+  | transform_expression t (XMI_UML.AttributeCallExp {source,referredAttribute,
 						      expression_type}) =
     ocl_term.AttributeCall (transform_expression t source,
-			    find_classifier_type t (XMI_OCL.expression_type_of source),
+			    find_classifier_type t (XMI_UML.expression_type_of source),
 			    find_attribute t referredAttribute,
 			    find_classifier_type t expression_type)
-  | transform_expression t (XMI_OCL.OperationCallExp {source,arguments,
+  | transform_expression t (XMI_UML.OperationCallExp {source,arguments,
 						      referredOperation,
 						      expression_type}) =
     let val arglist = map (transform_expression t) arguments
 	val argtyplist = map ((find_classifier_type t) o XMI_UML.expression_type_of) arguments
     in
 	ocl_term.OperationCall (transform_expression t source,
-			     find_classifier_type t (XMI_OCL.expression_type_of source),
+			     find_classifier_type t (XMI_UML.expression_type_of source),
 			     find_operation t referredOperation,
 			     ListPair.zip (arglist, argtyplist),
 			     find_classifier_type t expression_type)
     end
-  | transform_expression t (XMI_OCL.VariableExp {referredVariable,expression_type})=
+  | transform_expression t (XMI_UML.VariableExp {referredVariable,expression_type})=
     let val var_dec = find_variable_dec t referredVariable
     in 
 	ocl_term.Variable (#name var_dec,find_classifier_type t expression_type)
     end
 
-fun transform_constraint t ({xmiid,name,body,...}:XMI_OCL.OCLConstraint) = 
+fun transform_constraint t ({xmiid,name,body,...}:XMI_UML.Constraint) = 
     (name,transform_expression t body)
 
 
@@ -305,10 +305,10 @@ fun transform_classifier t (XMI_UML.Class {xmiid,name,isActive,visibility,isLeaf
 			   
 
 (* recursively transform all classes in the package *)
-fun transform_package t (XMI_UML.UMLPackage p) =
+fun transform_package t (XMI_UML.Package p) =
     let (* we do not transform the ocl library *)
 	val filteredPackages = 
-	    filter (fn (XMI_UML.UMLPackage x) => 
+	    filter (fn (XMI_UML.Package x) => 
 		       ((#name x <> "oclLib") andalso (#name x <> "UML_OCL")))
 		   (#packages p) 
     in 
@@ -317,7 +317,7 @@ fun transform_package t (XMI_UML.UMLPackage p) =
     end
 
 (* recursively insert mapping of xmi.id's to model elements into Hashtable *)
-fun insert_package table package_prefix (XMI_UML.UMLPackage p) =
+fun insert_package table package_prefix (XMI_UML.Package p) =
     let val full_name = package_prefix @ [#name p]
     in 
 	map (insert_generalization table)           (#generalizations p);
@@ -329,7 +329,7 @@ fun insert_package table package_prefix (XMI_UML.UMLPackage p) =
 
 (* We do not want the name of the model to be part of the package hierarchy, *)
 (* therefore we handle the top-level model seperately                        *)
-fun insert_model table (XMI_UML.UMLPackage p) = 
+fun insert_model table (XMI_UML.Package p) = 
     let val full_name = nil
     in 
 	map (insert_generalization table)           (#generalizations p);
@@ -349,11 +349,11 @@ fun insert_model table (XMI_UML.UMLPackage p) =
 (*    this association end is a feature of all _other_ participants in the  *) 
 (*    association                                                           *)
 (* 3. insert the mapping xmi.id to association end into the hashtable       *)
-fun transform_assocation t (assoc:XMI_UML.UMLAssociation) =
+fun transform_assocation t (assoc:XMI_UML.Association) =
     let	val aends = #connection assoc
 	fun all_others x xs = List.filter (fn y => y <> x) xs
 	fun pair_with ae aes = 
-	    map (fn (x:XMI_UML.UMLAssociationEnd) => (#participant_id x, ae)) aes
+	    map (fn (x:XMI_UML.AssociationEnd) => (#participant_id x, ae)) aes
 	val mappings = List.concat (map (fn x => pair_with x (all_others x aends)) aends)
 	fun add_aend_to_type (id,ae) = 
 	    HashTable.insert t (id,Type (find_classifier_type t id,
@@ -363,7 +363,7 @@ fun transform_assocation t (assoc:XMI_UML.UMLAssociation) =
     end
 
 (* recursively transforms all associations in the package p, *)
-fun transform_associations t (XMI_UML.UMLPackage p) = 
+fun transform_associations t (XMI_UML.Package p) = 
     (map (transform_associations t) (#packages p);
     List.app (transform_assocation t) (#associations p))
 

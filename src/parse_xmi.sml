@@ -46,11 +46,11 @@ fun getBoolAtt string atts =
     end
 
 
-fun getIntegerAtt string atts = 	  
+fun getIntAtt string atts = 	  
     let val att = getAttValue string atts
     in 
 	(valOf o Int.fromString) att 
-	handle Option => raise IllFormed ("in getIntegerAtt: found attribute "^string^
+	handle Option => raise IllFormed ("in getIntAtt: found attribute "^string^
 					  " with unexpected value "^att)
     end
 
@@ -61,11 +61,11 @@ fun getXmiIdref a = getAttValue "xmi.idref" a
 fun getVisibility atts = 
     let val att = getAttValueMaybe "visibility" atts 
     in
-	case att of SOME "public"    => XMI_UML.Public
-		  | SOME "private"   => XMI_UML.Private
-		  | SOME "protected" => XMI_UML.Protected
-		  | SOME "package"   => XMI_UML.Package
-		  | NONE             => XMI_UML.Public
+	case att of SOME "public"    => XMI_UML.public
+		  | SOME "private"   => XMI_UML.private
+		  | SOME "protected" => XMI_UML.protected
+		  | SOME "package"   => XMI_UML.package
+		  | NONE             => XMI_UML.public
 		  | SOME string      => raise IllFormed ("in getVisibility: found unexpected attribute value "^string)
     end
 
@@ -354,7 +354,7 @@ fun mkAttribute atts trees =
 
 fun tree2attribute tree      = generic_tree2xmi "UML:Attribute" mkAttribute tree
 
-fun mkUMLClass atts trees 
+fun mkClass atts trees 
   = XMI_UML.Class { xmiid           = getXmiId atts,
 	    name            = getName atts,
 	    isActive        = getBoolAtt "isActive" atts,
@@ -382,7 +382,7 @@ fun mkUMLClass atts trees
 						     trees)
 			      else nil}
 
-fun mkUMLPrimitive atts trees 
+fun mkPrimitive atts trees 
   = XMI_UML.Primitive { xmiid      = getXmiId atts,
 		name       = getName atts,
 		operations = if existsByName "UML:Classifier.feature" trees
@@ -403,7 +403,7 @@ fun mkUMLPrimitive atts trees
 		}
     handle IllFormed msg => raise IllFormed ("in mkPrimitive: "^msg)
     
-fun mkUMLEnumeration atts trees 
+fun mkEnumeration atts trees 
   = XMI_UML.Enumeration { xmiid      = getXmiId atts,
 		  name       = getName atts,
 		  operations = if existsByName "UML:Classifier.feature" trees
@@ -423,11 +423,11 @@ fun mkUMLEnumeration atts trees
 						     trees)
 			      else nil
 		  }
-    handle IllFormed msg => raise IllFormed ("in mkUMLEnumeration: "^msg)
+    handle IllFormed msg => raise IllFormed ("in mkEnumeration: "^msg)
 
-fun mkUMLVoid atts trees = XMI_UML.Void { xmiid = getXmiId atts, 
+fun mkVoid atts trees = XMI_UML.Void { xmiid = getXmiId atts, 
 					  name = getName atts }
-    handle IllFormed msg => raise IllFormed ("in mkUMLVoid: "^msg)
+    handle IllFormed msg => raise IllFormed ("in mkVoid: "^msg)
 
 
 fun mkGenericCollection atts trees = 
@@ -451,29 +451,29 @@ fun mkGenericCollection atts trees =
     handle IllFormed msg => raise IllFormed ("in mkGenericCollection: "^msg)
 
     
-fun mkUMLCollection atts trees = XMI_UML.Collection (mkGenericCollection atts trees)
-fun mkUMLSequence   atts trees = XMI_UML.Sequence   (mkGenericCollection atts trees)
-fun mkUMLSet        atts trees = XMI_UML.Set        (mkGenericCollection atts trees)
-fun mkUMLBag        atts trees = XMI_UML.Bag        (mkGenericCollection atts trees)
-fun mkUMLOrderedSet atts trees = XMI_UML.OrderedSet (mkGenericCollection atts trees)
+fun mkCollection atts trees = XMI_UML.Collection (mkGenericCollection atts trees)
+fun mkSequence   atts trees = XMI_UML.Sequence   (mkGenericCollection atts trees)
+fun mkSet        atts trees = XMI_UML.Set        (mkGenericCollection atts trees)
+fun mkBag        atts trees = XMI_UML.Bag        (mkGenericCollection atts trees)
+fun mkOrderedSet atts trees = XMI_UML.OrderedSet (mkGenericCollection atts trees)
 
 fun tree2classifier tree = 
     let val elem  = XmlTreeData.getElem tree
 	val atts  = XmlTreeData.getAtts tree
 	val trees = XmlTreeData.getTrees tree
     in 
-	if elem = "UML:Class" then                          mkUMLClass atts trees
+	if elem = "UML:Class" then                          mkClass atts trees
 	else if elem = "UML:Primitive" orelse 
-		elem = "UML:DataType" then              mkUMLPrimitive atts trees
-	else if elem = "UML:Enumeration" then         mkUMLEnumeration atts trees
-	else if elem = "UML15OCL.Types.VoidType" then        mkUMLVoid atts trees
+		elem = "UML:DataType" then              mkPrimitive atts trees
+	else if elem = "UML:Enumeration" then         mkEnumeration atts trees
+	else if elem = "UML15OCL.Types.VoidType" then        mkVoid atts trees
 	else if elem = "UML15OCL.Types.CollectionType" then 
-	    mkUMLCollection atts trees
-	else if elem = "UML15OCL.Types.SequenceType" then mkUMLSequence atts trees
-	else if elem = "UML15OCL.Types.SetType" then           mkUMLSet atts trees
-	else if elem = "UML15OCL.Types.BagType" then           mkUMLBag atts trees
+	    mkCollection atts trees
+	else if elem = "UML15OCL.Types.SequenceType" then mkSequence atts trees
+	else if elem = "UML15OCL.Types.SetType" then           mkSet atts trees
+	else if elem = "UML15OCL.Types.BagType" then           mkBag atts trees
 	else if elem = "UML15OCL.Types.OrderedSetType" then
-	    mkUMLOrderedSet atts trees
+	    mkOrderedSet atts trees
 	else raise IllFormed ("in tree2classifier: found unexpected element "^elem)
     end
 
@@ -498,7 +498,7 @@ fun tree2package tree =
 	 let val trees = skipOver "UML:Namespace.ownedElement" 
 				  ((hd o XmlTreeData.getTrees) tree)
 	     val atts = XmlTreeData.getAtts tree in
-	     XMI_UML.UMLPackage { xmiid   = getXmiId atts, 
+	     XMI_UML.Package { xmiid   = getXmiId atts, 
 				  name    = getName atts,
 				  visibility      = getVisibility atts,
 				  packages        = (map tree2package 
@@ -564,7 +564,7 @@ fun parseXMI filename =
     in
 	tree2xmicontent (hd trees)
     end
-	handle IllFormed msg => error msg
+	handle IllFormed msg => error msg 
 end
 
 

@@ -23,7 +23,14 @@
  ******************************************************************************)
 
 
-structure XMI_OCL = 
+(* ---------------------------------------------------------------------------
+ * The types in these structures are supposed to define a representation of 
+ * the XML elements found in UML-XMI files. It is reasonably close to the UML 
+ * metamodel and the XMI representation of it, while simplifying some kinds 
+ * of references.
+ * --------------------------------------------------------------------------*)
+
+structure UML_OCL = 
 struct
 (* from OCL 2.0 Expressions: -------------------------------------------------
  * A VariableDeclaration declares a variable name and binds it to a type. The 
@@ -88,90 +95,54 @@ fun expression_type_of (LiteralExp{expression_type,...})           = expression_
  * A constraint is a semantic condition or restriction expressed in text.
  * not supported: 
  * --------------------------------------------------------------------------*)
-
 datatype ConstraintType = Inv | Pre | Post | Def | Body
 
-type OCLConstraint = { xmiid           : string,
-		       name            : string option,
-		       constraint_type : string, (*xmi.idref*)
-		       body            : OCLExpression }
+(* We put Constraint into OCL, not into UML_Core because we only use *)
+(* OCL Constraints.                                                  *)
+type Constraint = { xmiid           : string,
+		    name            : string option,
+		    constraint_type : string, (* xmi.idref to stereotype *)
+		    body            : OCLExpression }
 
 
 end
  
-(* ---------------------------------------------------------------------------
- * The types in this signature are supposed to define a representation of the 
- * XML elements found in UML-XMI files for UML-Core constructs. It is 
- * reasonably close to the UML metamodel and the XMI representation of it, 
- * while simplifying some kinds of references.
- * 
- * represented constructs are: Association, AssociationClass?, AssociationEnd, 
- *    Attribute, Class, Classifier?, Constraint, DataType, Generalization, 
- *    Interface, Operation, Parameter
- * 
- * the following constructs are not represented: Abstraction, Artifact, 
- *    BehavioralFeature, Binding, Comment, Component, Dependency, Element,
- *    ElementOwnership, ElementResidence, Enumeration?, EnumerationLiteral?
- *    Feature, Flow, GeneralizableElement, Method, ModelElement, Namespace, 
- *    Node, Permission, PresentationElement, Primitive?, 
- *    ProgrammingLanguageDataType, Relationship, StructuralFeature, 
- *    TemplateArgument, TemplateParameter, Usage
- * --------------------------------------------------------------------------*)
 
-structure XMI_UML = 
-struct
-open XMI_OCL
 
+
+structure UML_DataTypes =
 (* from UML 1.5 Core Overview: ----------------------------------------------
- * The Core package is the most fundamental of the subpackages that compose 
- * the UML Foundation package. It defines the basic abstract and concrete 
- * metamodel constructs needed for the development of object models. 
- * Abstract constructs are not instantiable and are commonly used to reify 
- * key constructs, share structure, and organize the UML metamodel. Concrete
- * metamodel constructs are instantiable and reflect the modeling constructs 
- * used by object modelers (cf. metamodelers). Abstract constructs defined 
- * in the Core include ModelElement, GeneralizableElement, and Classifier. 
- * Concrete constructs specified in the Core include Class, Attribute, 
- * Operation, and Association.                                               
+ * The Data Types package is the subpackage that specifies the different data 
+ * types that are used to define UML. 
+ * 
+ * the following constructs are currently not represented: ArgListsExpression,
+ * Boolean, BooleanExpression, CallConcurrencyKind, Expression, Geometry, 
+ * Integer, LocationReference, Mapping, MappingExpression, Name, 
+ * ProcedureExpression, PseudostateKind, ScopeKind, String, TimeExpression, 
+ * TypeExpression, UnlimitedInteger
  * --------------------------------------------------------------------------*)
+struct
+open UML_OCL
 
-(* ---------------------------------------------------------------------------
- * First some "simple" types that are used as attributes for the modeling 
- * constructs below.
- * --------------------------------------------------------------------------*)
-datatype ParameterDirectionKind = In | Out | Inout | Return
-datatype OrderingKind           = Unordered | Ordered 
 datatype AggregationKind        = NoAggregation | Aggregate | Composite
+
 
 (* from UML 1.5 Core: --------------------------------------------------------
  * ChangeableKind defines an enumeration that denotes how an AttributeLink or 
  * LinkEnd may be modified.
  * --------------------------------------------------------------------------*)
-datatype ChangeabilityKind = Changeable (* No restrictions on modification.  *)
-                      | Frozen     (* The value may not be changed from the  *)
-			           (* source end after the creation and      *)
-                                   (* initialization of the source object.   *)
-                                   (* Operations on the other end may change *)
-                                   (* a value.                               *)
-                      | AddOnly    (* If the multiplicity is not fixed,      *)
-                                   (* values may be added at any time from   *)
-                                   (* the source object, but once created a  *)
-                                   (* value may not be removed from the      *)
-                                   (* source end. Operations on the other    *)
-                                   (* end may change a value.                *)
-(* from UML 1.5 Core: --------------------------------------------------------
- * VisibilityKind defines an enumeration that denotes how the element to which 
- * it refers is seen outside the enclosing name space.
- * --------------------------------------------------------------------------*)
-datatype VisibilityKind = Public (* Other elements may see and use the target*)
-				(* element.                                  *)
-                    | Private   (* Only the source element may see and use   *)
-                                (* the target element.                       *)
-                    | Protected (* Descendants of the source element may see *)
-                                (* and use the target element.               *)
-                    | Package   (* Elements declared in the same package as  *)
-                                (* the target element may see and use the    *)
-                                (* target                                    *)
+datatype ChangeableKind = Changeable (* No restrictions on modification.     *)
+			| Frozen     (* The value may not be changed from the*)
+			             (* source end after the creation and    *)
+			             (* initialization of the source object. *)
+			             (* Operations on the other end may      *)
+			             (* change a value.                      *)
+			| AddOnly    (* If the multiplicity is not fixed,    *)
+                                     (* values may be added at any time from *)
+                                     (* the source object, but once created a*)
+                                     (* value may not be removed from the    *)
+                                     (* source end. Operations on the other  *)
+                                     (* end may change a value.              *)
 
 (* from UML 1.5 Data Types: --------------------------------------------------
  * a Multiplicity [consists of a list of MultiplicityRanges and] defines a 
@@ -185,6 +156,106 @@ datatype VisibilityKind = Public (* Other elements may see and use the target*)
 (* provisionally, we denote the upper bound 'unlimited' by "-1"              *)
 type Multiplicity = (int * int) list
 
+datatype OrderingKind           = Unordered | Ordered 
+datatype ParameterDirectionKind = In | Out | Inout | Return
+
+
+(* from UML 1.5 Core: --------------------------------------------------------
+ * VisibilityKind defines an enumeration that denotes how the element to which 
+ * it refers is seen outside the enclosing name space.
+ * --------------------------------------------------------------------------*)
+datatype VisibilityKind = public (* Other elements may see and use the target*)
+				(* element.                                  *)
+                    | private   (* Only the source element may see and use   *)
+                                (* the target element.                       *)
+                    | protected (* Descendants of the source element may see *)
+                                (* and use the target element.               *)
+                    | package   (* Elements declared in the same package as  *)
+                                (* the target element may see and use the    *)
+                                (* target                                    *)
+
+
+end
+
+
+structure UML_ExtensionMechanisms =
+(* from UML 1.5 Extension Mechanisms Overview:--------------------------------
+ * The Extension Mechanisms package is the subpackage that specifies how 
+ * specific UML model elements are customized and extended with new semantics 
+ * by using stereotypes, constraints, tag definitions, and tagged values. 
+ * A coherent set of such extensions, defined for specific purposes, 
+ * constitutes a UML profile.
+ * --------------------------------------------------------------------------*)
+struct
+open UML_DataTypes
+                    
+(* from UML 1.5 Extension Mechanisms:-----------------------------------------
+ * The stereotype concept provides a way of branding (classifying) model 
+ * elements so that they behave in some respects as if they were instances of 
+ * new virtual metamodel constructs. These model elements have the same 
+ * structure (attributes, associations, operations) as similar non-stereotyped 
+ * model elements of the same kind. The stereotype may specify additional 
+ * constraints and tag definitions that apply to model elements. In addition, 
+ * a stereotype may be used to indicate a difference in meaning or usage 
+ * between two model elements with identical structure.
+ * --------------------------------------------------------------------------*)
+type Stereotype = {xmiid: string, 
+		   name: string,
+		   (* extendedElement: string list        *)
+		   (* definedTag: string list             *)
+		   stereotypeConstraint: Constraint option,
+		   baseClass: string}
+
+(* from UML 1.5 Extension Mechanisms:-----------------------------------------
+ * A tag definition specifies the tagged values that can be attached to a kind 
+ * of model element.
+ * --------------------------------------------------------------------------*)
+type TagDefinition = {xmiid: string,
+		      name: string,
+		      multiplicity: Multiplicity}
+
+(* from UML 1.5 Extension Mechanisms:-----------------------------------------
+ * A tagged value allows information to be attached to any model element in 
+ * conformance with its tag definition. Although a tagged value, being an 
+ * instance of a kind of ModelElement, automatically inherits the name 
+ * attribute, the name that is actually used in the tagged value is the name 
+ * of the associated tag definition. 
+ * --------------------------------------------------------------------------*)
+type TaggedValue = {xmiid: string,
+		    dataValue: string, (* the value of the tag *)
+		    tag_type: string   (* xmi.idref to TagDefinition *)
+		    }
+end
+
+
+
+structure UML_Core = 
+(* from UML 1.5 Core Overview: ----------------------------------------------
+ * The Core package is the most fundamental of the subpackages that compose 
+ * the UML Foundation package. It defines the basic abstract and concrete 
+ * metamodel constructs needed for the development of object models. 
+ * Abstract constructs are not instantiable and are commonly used to reify 
+ * key constructs, share structure, and organize the UML metamodel. Concrete
+ * metamodel constructs are instantiable and reflect the modeling constructs 
+ * used by object modelers (cf. metamodelers). Abstract constructs defined 
+ * in the Core include ModelElement, GeneralizableElement, and Classifier. 
+ * Concrete constructs specified in the Core include Class, Attribute, 
+ * Operation, and Association.                                               
+ * --------------------------------------------------------------------------*
+ * represented constructs are: Association, AssociationClass?, AssociationEnd, 
+ *    Attribute, Class, Classifier?, Constraint, DataType, Generalization, 
+ *    Interface, Operation, Parameter
+ * 
+ * the following constructs are not represented: Abstraction, Artifact, 
+ *    BehavioralFeature, Binding, Comment, Component, Dependency, Element,
+ *    ElementOwnership, ElementResidence, Enumeration?, EnumerationLiteral?
+ *    Feature, Flow, GeneralizableElement, Method, ModelElement, Namespace, 
+ *    Node, Permission, PresentationElement, Primitive?, 
+ *    ProgrammingLanguageDataType, Relationship, StructuralFeature, 
+ *    TemplateArgument, TemplateParameter, Usage
+ * --------------------------------------------------------------------------*)
+struct
+open UML_ExtensionMechanisms
 
 (* from UML 1.5 Core: --------------------------------------------------------
  * A generalization is a taxonomic relationship between a more general 
@@ -197,9 +268,9 @@ type Multiplicity = (int * int) list
  *                 constraints 'complete', 'disjoint', 
  *                             'incomplete', 'overlapping'
  * --------------------------------------------------------------------------*)
-type UMLGeneralization = { xmiid: string,
-			   child_id : string, 
-			   parent_id : string }
+type Generalization = { xmiid: string,
+			child_id : string, 
+			parent_id : string }
 
 
 (* from UML 1.5 Core: --------------------------------------------------------
@@ -207,19 +278,19 @@ type UMLGeneralization = { xmiid: string,
  * of values that instances of the classifier may hold. 
  * not supported: association associationEnd
  * --------------------------------------------------------------------------*)
-type UMLAttribute = { xmiid : string,
-		      name : string,
-		      type_id : string, (* xmi.idref to type *)
-		      (* initialValue : ...,               *)
-		      (* inherited from StructuralFeature: *)
-		      (* multiplicity : (int * int) list,  *)
-		      (* ordering : OrderingKind           *)
-		      (* targetScope : ScopeKind           *)
-		      changeability : ChangeabilityKind,
-		      (* inherited from Feature:           *)
-		      (* ownerScope : ... ,                *)
-		      visibility : VisibilityKind
-		      }
+type Attribute = { xmiid : string,
+		   name : string,
+		   type_id : string, (* xmi.idref to type *)
+		   (* initialValue : ...,               *)
+		   (* inherited from StructuralFeature: *)
+		   (* multiplicity : (int * int) list,  *)
+		   (* ordering : OrderingKind           *)
+		   (* targetScope : ScopeKind           *)
+		   changeability : ChangeableKind,
+		   (* inherited from Feature:           *)
+		   (* ownerScope : ... ,                *)
+		   visibility : VisibilityKind
+				}
 
 
 (* from UML 1.5 Core: --------------------------------------------------------
@@ -229,35 +300,35 @@ type UMLAttribute = { xmiid : string,
  * messages and events, templates, etc. 
  * not supported: attribute defaultValue 
  * --------------------------------------------------------------------------*)
-type UMLParameter = { xmiid : string,
-		      name : string,
-		      kind : ParameterDirectionKind,
-		      (* defaultValue : ..., *)
-		      type_id : string (* xmi.idref to type *)}
-
+type Parameter = { xmiid : string,
+		   name : string,
+		   kind : ParameterDirectionKind,
+		   (* defaultValue : ..., *)
+		   type_id : string (* xmi.idref to type *)}
+		 
 (* fom UML 1.5 Core: ---------------------------------------------------------	    
  * An operation is a service that can be requested from an object to effect 
  * behavior. An operation has a signature, which describes the actual 
  * parameters that are possible (including possible return values).
  * not supported: taggedValue "semantics"
  * --------------------------------------------------------------------------*)
-type UMLOperation = { xmiid : string,
-		      name : string,
-		      (* concurrency : CallConcurrencyKind, *)
-		      (* isRoot : bool,                     *)
-		      (* isLeaf : bool,                     *)
-		      (* isAbstract : bool,                 *)
-		      (* specification : string,            *)
-		      (* methods: UMLMethod list,           *)
-		      (* inherited from BehavioralFeature:  *)
-		      isQuery : bool,
-		      parameter : UMLParameter list,
-		      (* inherited from Feature:            *)
-		      (* ownerScope : ScopeKind,            *)
-		      visibility : VisibilityKind,
-		      (* inherited from ModelElemt:         *)
-		      (* xmi.idref to UMLConstraint         *)
-		      constraints : string list }
+type Operation = { xmiid : string,
+		   name : string,
+		   (* concurrency : CallConcurrencyKind, *)
+		   (* isRoot : bool,                     *)
+		   (* isLeaf : bool,                     *)
+		   (* isAbstract : bool,                 *)
+		   (* specification : string,            *)
+		   (* methods: UMLMethod list,           *)
+		   (* inherited from BehavioralFeature:  *)
+		   isQuery : bool,
+		   parameter : Parameter list,
+		   (* inherited from Feature:            *)
+		   (* ownerScope : ScopeKind,            *)
+		   visibility : VisibilityKind,
+		   (* inherited from ModelElemt:         *)
+		   (* xmi.idref to UMLConstraint         *)
+		   constraints : string list }
 				   
 		    
 (* from UML 1.5 Core: --------------------------------------------------------
@@ -268,22 +339,22 @@ type UMLOperation = { xmiid : string,
  * not supported: stereotypes <<auxiliary>>, <<focus>>, 
  *                            <<implementation>>, <<type>> 
  * --------------------------------------------------------------------------*)
-type UMLClass = { xmiid : string,
-		  name : string,
-		  isActive : bool,
-		  visibility : VisibilityKind,
-		  (* inherited from GeneralizableElement: *)
-		  (* isRoot : bool,                       *)
-		  (* isAbstract : bool,                   *)
-		  isLeaf : bool,
-		  (* xmi.idref to UMLGeneralization *)
-		  generalizations: string list,
-		  (* inherited from Classifier: *)
-		  attributes : UMLAttribute list,
-		  operations: UMLOperation list,
-		  (* inherited from ModelElement: *)
-		  (* xmi.idref to UMLConstraint *)
-		  invariant: string list }
+type Class = { xmiid : string,
+	       name : string,
+	       isActive : bool,
+	       visibility : VisibilityKind,
+	       (* inherited from GeneralizableElement: *)
+	       (* isRoot : bool,                       *)
+	       (* isAbstract : bool,                   *)
+	       isLeaf : bool,
+	       (* xmi.idref to Generalization *)
+	       generalizations: string list,
+	       (* inherited from Classifier: *)
+	       attributes : Attribute list,
+	       operations: Operation list,
+	       (* inherited from ModelElement: *)
+	       (* xmi.idref to Constraint *)
+	       invariant: string list }
 
 (* from UML 1.5 Core: --------------------------------------------------------
  * A data type is a type whose values have no identity (i.e., they are 
@@ -302,18 +373,18 @@ type UMLClass = { xmiid : string,
  * Primitive datatypes used in UML itself include Integer, UnlimitedInteger, 
  * and String. 
  * --------------------------------------------------------------------------*)
-type UMLPrimitive = { xmiid : string,
-		      name : string,
-		      operations: UMLOperation list,
+type Primitive = { xmiid:           string,
+		      name:            string,
+		      operations:      Operation list,
 		      generalizations: string list,
-		      invariant: string list}
+		      invariant:       string list}
 
 
 (* from UML 1.5 Core: --------------------------------------------------------
  * Enumeration defines a kind of DataType whose range is a list of predefined 
  * values, called enumeration literals.
  * --------------------------------------------------------------------------*)
-(*type UMLEnumeration = { xmiid : string,
+(*type Enumeration = { xmiid : string,
 			name: string,
 			literal : string list,
 			(* inherited from GeneralizableElement: *)
@@ -321,39 +392,39 @@ type UMLPrimitive = { xmiid : string,
 			(* isAbstract : bool,                   *)
 			(* isLeaf : bool, *)
 			(* inherited from Feature:              *)
-			operations: UMLOperation list } *)
+			operations: Operation list } *)
 
 (* from UML 1.5 Core: --------------------------------------------------------
  * An interface is a named set of operations that characterize the 
  * behavior of an element.
  * --------------------------------------------------------------------------*)
-type UMLInterface = { xmiid : string,
-		      name: string,
-		      generalizations: string list,
-		      operations : UMLOperation list,
-		      invariant: string list}  
+type Interface = { xmiid : string,
+		   name: string,
+		   generalizations: string list,
+		   operations : Operation list,
+		   invariant: string list}  
 
 
-type UMLCollection = { xmiid : string,
-		       name : string,
-		       operations: UMLOperation list,
-		       generalizations: string list,
-		       elementtype: string (* xmi.idref to classifier *)}
+type Collection = { xmiid : string,
+		    name : string,
+		    operations: Operation list,
+		    generalizations: string list,
+		    elementtype: string (* xmi.idref to classifier *)}
 
-type UMLSequence = UMLCollection
-type UMLSet = UMLCollection
-type UMLBag = UMLCollection
-type UMLOrderedSet = UMLCollection
+type Sequence   = Collection
+type Set        = Collection
+type Bag        = Collection
+type OrderedSet = Collection
 
-type UMLEnumeration = { xmiid : string,
-			name : string,
-			operations: UMLOperation list,
-			generalizations: string list,
-			literals: string list, (* names of literals *)
-			invariant: string list}
-
-type UMLVoid = {xmiid: string,
-		name : string }
+type Enumeration = { xmiid : string,
+		     name : string,
+		     operations: Operation list,
+		     generalizations: string list,
+		     literals: string list, (* names of literals *)
+		     invariant: string list}
+		   
+type Void = {xmiid: string,
+	     name : string }
 
 (* from UML 1.5 Core: --------------------------------------------------------
  * An association end is an endpoint of an association, which connects 
@@ -363,16 +434,16 @@ type UMLVoid = {xmiid: string,
  *                stereotypes <<association>>, <<global>>, <<local>>, 
  *                            <<parameter>>, <<self>>
  * --------------------------------------------------------------------------*)
-type UMLAssociationEnd = { xmiid : string,
-			   name : string,
-			   isNavigable: bool,
-			   ordering : OrderingKind,
-			   aggregation : AggregationKind,
-			   (* targetScope: ScopeKind, *)
-			   multiplicity : Multiplicity,
-			   changeability: ChangeabilityKind,
-			   visibility : VisibilityKind,
-			   participant_id : string (* xmi.idref to class *) }
+type AssociationEnd = { xmiid : string,
+			name : string,
+			isNavigable: bool,
+			ordering : OrderingKind,
+			aggregation : AggregationKind,
+			(* targetScope: ScopeKind, *)
+			multiplicity : Multiplicity,
+			changeability: ChangeableKind,
+			visibility : VisibilityKind,
+			participant_id : string (* xmi.idref to class *) }
 			 
 (* from UML 1.5 Core: --------------------------------------------------------
  * An association defines a semantic relationship between classifiers. 
@@ -383,10 +454,10 @@ type UMLAssociationEnd = { xmiid : string,
  *                tagged value "persistence"
  *                generalization of associations
  * --------------------------------------------------------------------------*)
-type UMLAssociation = { xmiid : string,
-			name : string,
-			connection: UMLAssociationEnd list }
-
+type Association = { xmiid : string,
+		     name : string,
+		     connection: AssociationEnd list }
+		   
 (* from UML 1.5 Core: --------------------------------------------------------
  * An association class is an association that is also a class. It not 
  * only connects a set of classifiers but also defines a set of features 
@@ -406,16 +477,16 @@ type UMLAssociation = { xmiid : string,
  *                            <<thread>>, <<utility>>
  *                taggedValues persistence, semantics
  * --------------------------------------------------------------------------*)
-datatype UMLClassifier = Primitive   of UMLPrimitive
-		       | Class       of UMLClass     
-		       | Interface   of UMLInterface 
-		       | Enumeration of UMLEnumeration 
-		       | Collection  of UMLCollection 
-		       | Sequence    of UMLSequence
-                       | Set         of UMLSet
-                       | Bag         of UMLBag
-                       | OrderedSet  of UMLOrderedSet
-		       | Void        of UMLVoid
+datatype Classifier = Primitive   of Primitive
+		    | Class       of Class     
+		    | Interface   of Interface 
+		    | Enumeration of Enumeration 
+		    | Collection  of Collection 
+		    | Sequence    of Sequence
+                    | Set         of Set
+                    | Bag         of Bag
+                    | OrderedSet  of OrderedSet
+		    | Void        of Void
 
 fun classifier_name_of (Primitive{name,...}) = name
   | classifier_name_of (Class{name,...}) = name
@@ -456,8 +527,25 @@ fun classifier_elementtype_of (Collection{elementtype,...}) = elementtype
   | classifier_elementtype_of (Bag{elementtype,...}) = elementtype
   | classifier_elementtype_of (OrderedSet{elementtype,...}) = elementtype
 
-type UMLStereotype = {xmiid: string, name: string}
-                    
+
+
+
+end
+
+
+
+structure UML_ModelManagement =
+(* from UML 1.5 Model Management Overview: ------------------------------------
+ * The Model Management package is dependent on the Foundation package. It 
+ * defines Model, Package, and Subsystem, which all serve as grouping units 
+ * for other ModelElements.
+ * Models are used to capture different views of a physical system. Packages 
+ * are used within a Model to group ModelElements. A Subsystem represents a 
+ * behavioral unit in the physical system. UML Profiles are packages 
+ * dedicated to group UML extensions.
+ * --------------------------------------------------------------------------*)
+struct
+open UML_Core
 (* from UML 1.5 Model Management: --------------------------------------------
  * A package is a grouping of model elements.
  * [...]
@@ -466,22 +554,43 @@ type UMLStereotype = {xmiid: string, name: string}
  * StateMachines, Stereotypes, and TaggedValues.
  * --------------------------------------------------------------------------*)
 (* We treat "Model" the same way as a "Package".                             *)
-datatype UMLPackage = UMLPackage of { xmiid: string,
-				      name: string,
-				      visibility: VisibilityKind,
-				      packages: UMLPackage list,
-				      classifiers: UMLClassifier list,
-				      associations: UMLAssociation list,
-				      generalizations: UMLGeneralization list,
-				      constraints: OCLConstraint list }
+datatype Package = Package of { xmiid: string,
+				name: string,
+				visibility:  VisibilityKind,
+				packages:    Package list,
+				classifiers: Classifier list,
+				associations: Association list,
+				generalizations: Generalization list,
+				constraints: Constraint list }
 		  
+end
+
+
+structure UML_CommonBehavior = 
+struct
+open UML_ModelManagement
+end
+
+structure UML_StateMachines =
+struct
+open UML_CommonBehavior
+end
+
+structure UML_ActivityGraphs =
+struct
+open UML_StateMachines
+end
+
+structure XMI_UML =
+struct
+open UML_ActivityGraphs
 
 (* There may be (are) model elements outside of the UML model *)
-type XmiContent = {classifiers: UMLClassifier list,
-		   constraints: OCLConstraint list,
-		   packages: UMLPackage list,
-		   stereotypes: UMLStereotype list,
+type XmiContent = {classifiers:           Classifier list,
+		   constraints:           Constraint list,
+		   packages:              Package list,
+		   stereotypes:           Stereotype list,
 		   variable_declarations: VariableDeclaration list
-					      }
+					  }
 
 end
