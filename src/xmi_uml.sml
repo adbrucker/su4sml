@@ -455,7 +455,7 @@ type AssociationEnd = { xmiid : string,
  *                generalization of associations
  * --------------------------------------------------------------------------*)
 type Association = { xmiid : string,
-		     name : string,
+		     name : string option,
 		     connection: AssociationEnd list }
 		   
 (* from UML 1.5 Core: --------------------------------------------------------

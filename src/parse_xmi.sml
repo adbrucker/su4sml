@@ -129,7 +129,7 @@ fun mkAssociationEnd tree =
 
 fun mkAssociation tree = 
     let fun f atts trees = { xmiid      = getXmiId atts, 
-			     name       = getName atts,
+			     name       = XmlTree.attvalue_of "name" atts,
 			     connection = (map mkAssociationEnd 
 					       (XmlTree.skip "UML:Association.connection" 
 								 (hd trees))) }
