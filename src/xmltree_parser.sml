@@ -23,47 +23,75 @@
  ******************************************************************************)
 
 
-structure XmlTreeData :
+structure XmlTree :
 sig
-    type AttList
-    type Tag
-    datatype XmlTree = ELEM of Tag * XmlContent 
-    withtype XmlContent = XmlTree list
+    type Attribute
+    type Tag = string * Attribute list
+    datatype Tree = Node of Tag * Tree list 
 
-    val getAtts : XmlTree -> AttList
-    val getTrees: XmlTree -> XmlContent
-    val getElem : XmlTree -> string
-    val getAttValueMaybe : string -> AttList -> string option
+    val tag_of      : Tree -> Tag
+    val attributes_of    : Tree -> Attribute list
+    val children_of : Tree -> Tree list
+    val tagname_of  : Tree -> string
+    val attvalue_of : string -> Attribute list -> string option
+
+    val skip   : string -> Tree -> Tree list 
+    val filter : string -> Tree list -> Tree list
+    val find   : string -> Tree list -> Tree
+    val exists : string -> Tree list -> bool
+    val follow : string -> Tree list -> Tree list
+    val follow_all : string -> Tree list -> Tree list list
+
+    val apply_on : string -> (Attribute list -> Tree list -> 'a) -> Tree -> 'a
 end =
 struct
 
+exception IllFormed of string
 
-type AttList = (string * string) list
+type Attribute = (string * string) 
 
 (* Tags consist of element names, and a list of attribute name-value pairs *)
-type Tag = string * AttList
+type Tag = string * Attribute list
 
-(*datatype Tree = TEXT of UniChar.Vector
-		      | ELEM of Tag * Content
-withtype Content = Tree list *)
-datatype XmlTree = ELEM of Tag * XmlContent
-withtype XmlContent = XmlTree list
+datatype Tree = Node of Tag * Tree list
 
-fun getAtts  (ELEM ((elem,atts),trees)) = atts
-fun getTrees (ELEM ((elem,atts),trees)) = trees
-fun getElem  (ELEM ((elem,atts),trees)) = elem
-fun getAttValueMaybe string atts = Option.map #2 (find (fn (x,_) => x = string) 
-						       atts)
+fun tag_of        (Node (tag,trees)) = tag 
+fun attributes_of (Node ((elem,atts),trees)) = atts
+fun children_of   (Node ((elem,atts),trees)) = trees
+fun tagname_of    (Node ((elem,atts),trees)) = elem
+
+fun attvalue_of string atts = Option.map #2 (List.find (fn (x,_) => x = string) atts)
+
+fun skip string tree = if string = tagname_of tree 
+		       then children_of tree
+		       else raise IllFormed ("in skip: did not find element "^string)
+				  
+fun filter string trees = List.filter (fn x => string = tagname_of x) 
+				      trees
+				      
+fun find string trees = valOf (List.find (fn x => string = tagname_of x) trees) 
+    handle Option => raise IllFormed ("in find: did not find element "^string)
+			   
+fun exists string trees = List.exists (fn x => string = tagname_of x) trees 
+			  
+fun follow string = children_of o (find string)
+		    
+fun follow_all string trees = map children_of (filter string trees) 
+			     			    
+fun apply_on name f tree = 
+    if tagname_of tree = name
+    then f (attributes_of tree) (children_of tree)
+    else raise IllFormed ("in apply_on: did not find element "^name)
 
 end
 
-structure XmlTreeHooks:Hooks =
+structure XmlTreeHooks : Hooks =
 struct
-open IgnoreHooks XmlTreeData UniChar HookData
+open IgnoreHooks XmlTree UniChar HookData
 exception IllFormed
 
-type AppData = Dtd.Dtd * XmlContent * (Tag * XmlContent) list
-type AppFinal = XmlTree
+type AppData = Dtd.Dtd * Tree list * (Tag * Tree list) list
+type AppFinal = Tree
 (* val appStart = (nil,nil) *)
 		
 fun attspec2name dtd nil = nil 
@@ -86,13 +114,13 @@ fun hookStartTag ((dtd,content, stack), (_,elem,atts,_,empty)) =
     let val elemName = UniChar.Data2String (Dtd.Index2Element dtd elem) 
 	val attNames = attspec2name dtd atts in
 	if empty 
-	then (dtd,ELEM ((elemName,attNames),nil)::content,stack)
+	then (dtd,Node ((elemName,attNames),nil)::content,stack)
 	else (dtd,nil,((elemName,attNames),content)::stack)
     end
 	
 fun hookEndTag ((dtd,_,nil),_) = raise IllFormed
   | hookEndTag ((dtd,content,(tag,content')::stack),_) =
-    (dtd,ELEM (tag,rev content)::content',stack)
+    (dtd,Node (tag,rev content)::content',stack)
 
 fun hookData ((dtd,content,stack),(_,vec,_)) =
     (dtd,content,stack)
@@ -108,12 +136,11 @@ fun hookFinish (dtd,[elem],nil) = elem
 
 end
 
-structure ParseXmlTree :
-  sig
-    val readFile : string -> XmlTreeData.XmlTree
-  end = 
+structure ParseXmlTree : sig
+    val readFile : string -> XmlTree.Tree
+end = 
 struct
-open XmlTreeData 
+open XmlTree
 
 exception FileNotFound of string
 
@@ -142,12 +169,11 @@ fun readFile filename =
 end
 
 
-structure WriteXmlTree:
-sig
-    val writeFile : string -> XmlTreeData.XmlTree -> unit
+structure WriteXmlTree: sig
+    val writeFile : string -> XmlTree.Tree -> unit
 end =
 struct
-open XmlTreeData
+open XmlTree
 
 fun writeAttribute stream (name,value) =
     TextIO.output (stream, " "^name^"=\""^value^"\"")
@@ -155,20 +181,20 @@ fun writeAttribute stream (name,value) =
 fun writeEndTag stream name = TextIO.output (stream,"</"^name^">\n")
 
 fun writeStartTag stream tree = 
-    (TextIO.output (stream,"<"^(getElem tree));
-     map (writeAttribute stream) (getAtts tree);
+    (TextIO.output (stream,"<"^(tagname_of tree));
+     map (writeAttribute stream) (attributes_of tree);
      TextIO.output (stream,">\n"))
 
 fun writeIndent stream 0 = ()
   | writeIndent stream n = (TextIO.output (stream, "  "); writeIndent stream (n-1))
     
 
-fun writeXmlTree' indent stream tree = 
-    let val elemName = getElem tree 
+fun writeXmlTree indent stream tree = 
+    let val elemName = tagname_of tree 
     in 
 	writeIndent stream indent;
 	writeStartTag stream tree;
-	map (writeXmlTree' (indent+1) stream) (getTrees tree);
+	map (writeXmlTree (indent+1) stream) (children_of tree);
 	writeIndent stream indent;
 	writeEndTag stream elemName
     end
@@ -176,7 +202,7 @@ fun writeXmlTree' indent stream tree =
 fun writeFile filename tree = 
     let val stream = TextIO.openOut filename 
     in 
-	writeXmlTree' 0 stream tree;
+	writeXmlTree 0 stream tree;
 	TextIO.closeOut stream
     end
 
