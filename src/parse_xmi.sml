@@ -521,24 +521,23 @@ fun mkXmiContent tree =
 	      constraints = (map mkConstraint (filterConstraints trees)),
 	      classifiers = (map mkClassifier (filterClassifiers trees)),
 	      stereotypes = (map mkStereotype (filterStereotypes trees)),
-	      variable_declarations = (map mkVariableDec (filterVariableDecs trees))
-	      }
-    in
-	XmlTree.apply_on "XMI.content" f tree
-	handle IllFormed msg => raise IllFormed ("in mkXmiContent: "^msg)
+	      variable_declarations = (map mkVariableDec (filterVariableDecs trees)) }
+    in XmlTree.apply_on "XMI.content" f tree
+       handle IllFormed msg => raise IllFormed ("in mkXmiContent: "^msg)
     end
 	
 
-fun findXmiContent tree = if XmlTree.tagname_of tree = "XMI.content" 
-			  then [tree]
-			  else List.concat (map findXmiContent 
-						(XmlTree.children_of tree))
+val emptyXmiContent = { packages = nil,
+			constraints = nil,
+			classifiers = nil,
+			stereotypes = nil,
+			variable_declarations = nil }
+
+fun findXmiContent tree = valOf (XmlTree.dfs "XMI.content" tree)
+    handle Option => raise IllFormed "in findXmiContent: did not find XMI.content"
 			       
-fun readFile filename = 
-    let val trees = findXmiContent (ParseXmlTree.readFile filename)
-    in
-	mkXmiContent (hd trees)
-    end
+fun readFile f = (mkXmiContent o findXmiContent o ParseXmlTree.readFile) f
+    handle IllFormed msg => (print ("Warning: "^msg^"\n"); emptyXmiContent)
 end
 
 

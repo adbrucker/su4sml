@@ -27,9 +27,10 @@
 structure Xmi2Mdr : 
 sig
     val transformXMI : XMI_UML.XmiContent -> mdr_core.Classifier list
+    val readXMI      : string -> mdr_core.Classifier list
 end  =
 struct
-exception IllFormed
+exception IllFormed 
 exception NotYetImplemented
 
 datatype HashTableEntry = Package of ocl_type.Path
@@ -414,6 +415,11 @@ fun transformXMI ({classifiers,constraints,packages,
 	transform_associations xmiid_table model; (* handle associations *)
 	map mdr_core.normalize (transform_package xmiid_table model) (* transform classes   *)
     end
+	handle Empty => raise IllFormed
+
+fun readXMI f = (transformXMI o ParseXMI.readFile) f
+    handle IllFormed => (print ("Warning: in readXMI: could not parse file "^f^"\n"); 
+			 nil)
 end
 
 

@@ -30,19 +30,23 @@ sig
     datatype Tree = Node of Tag * Tree list 
 
     val tag_of      : Tree -> Tag
-    val attributes_of    : Tree -> Attribute list
+    val attributes_of : Tree -> Attribute list
     val children_of : Tree -> Tree list
     val tagname_of  : Tree -> string
     val attvalue_of : string -> Attribute list -> string option
 
-    val skip   : string -> Tree -> Tree list 
-    val filter : string -> Tree list -> Tree list
-    val find   : string -> Tree list -> Tree
-    val exists : string -> Tree list -> bool
-    val follow : string -> Tree list -> Tree list
-    val follow_all : string -> Tree list -> Tree list list
+    val skip        : string -> Tree -> Tree list 
+    val filter      : string -> Tree list -> Tree list
+    val filter_children : string -> Tree -> Tree list
+    val find        : string -> Tree list -> Tree
+    val find_child  : string -> Tree -> Tree
+    val dfs         : string -> Tree -> Tree option
+    val exists      : string -> Tree list -> bool
+    val has_child   : string -> Tree -> bool
+    val follow      : string -> Tree list -> Tree list
+    val follow_all  : string -> Tree list -> Tree list list
 
-    val apply_on : string -> (Attribute list -> Tree list -> 'a) -> Tree -> 'a
+    val apply_on    : string -> (Attribute list -> Tree list -> 'a) -> Tree -> 'a
 end =
 struct
 
@@ -68,11 +72,22 @@ fun skip string tree = if string = tagname_of tree
 				  
 fun filter string trees = List.filter (fn x => string = tagname_of x) 
 				      trees
+fun filter_children string tree = List.filter (fn x => string = tagname_of x) 
+				      (children_of tree)
 				      
+
 fun find string trees = valOf (List.find (fn x => string = tagname_of x) trees) 
     handle Option => raise IllFormed ("in find: did not find element "^string)
+
+fun find_child string tree = valOf (List.find (fn x => string = tagname_of x) (children_of tree)) 
+    handle Option => raise IllFormed ("in find_child: did not find element "^string)
 			   
+fun dfs string tree = if tagname_of tree = string 
+		      then SOME tree
+		      else Option.join (List.find Option.isSome (List.map (dfs string) (children_of tree)))
+
 fun exists string trees = List.exists (fn x => string = tagname_of x) trees 
+fun has_child string tree = List.exists (fn x => string = tagname_of x) (children_of tree) 
 			  
 fun follow string = children_of o (find string)
 		    
@@ -82,6 +97,7 @@ fun apply_on name f tree =
     if tagname_of tree = name
     then f (attributes_of tree) (children_of tree)
     else raise IllFormed ("in apply_on: did not find element "^name)
+
 
 end
 
@@ -163,9 +179,9 @@ fun readFile filename =
     in Parser.parseDocument
 	   (SOME (Uri.String2Uri filename))
 	   (SOME dtd) (dtd,nil,nil)
-       handle SysErr => raise FileNotFound filename
     end
-
+	handle SysErr => (print ("Warning: in readFile: did not find file "^filename^"\n"); 
+			  Node (("",nil),nil))
 end
 
 

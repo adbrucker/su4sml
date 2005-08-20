@@ -76,7 +76,7 @@ datatype Classifier =
 	   interfaces  : ocl_type.Path list,
 	   thyname     : string option
 	  }
-	
+ 
 (* convert an association end into the corresponding collection type *)
 fun assoc_to_attr_type {name,aend_type,multiplicity,ordered} =
     if ordered then ocl_type.Sequence aend_type (* OrderedSet? *)
