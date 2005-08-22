@@ -137,6 +137,18 @@ fun mkAssociation tree =
 	XmlTree.apply_on "UML:Association" f tree
 	handle IllFormed msg => raise IllFormed ("in mkAssociation: "^msg)
     end
+
+fun mkVariableDec tree = 
+    let fun f atts trees = 
+	    { xmiid = getXmiId atts,
+	      name  = getName atts,
+	      declaration_type = (getXmiIdref o XmlTree.attributes_of o hd o 
+				  (XmlTree.follow "OCL.Expressions.VariableDeclaration.type")) trees
+	      }
+    in XmlTree.apply_on "UML15OCL.Expressions.VariableDeclaration" f tree
+       handle IllFormed msg => raise IllFormed ("in mkVariableDec: "^msg)
+    end
+
 	
 (* find the xmi.idref attribute of an element pinted to by name *)
 fun findXmiIdRef name trees = (getXmiIdref o XmlTree.attributes_of o hd)
@@ -246,7 +258,21 @@ fun mkOCLExpression tree =
 	else if elem = "UML15OCL.Expressions.IterateExp"  then 
 	    raise NotYetImplemented
 	else if elem = "UML15OCL.Expressions.IteratorExp" then 
-	    raise NotYetImplemented
+	    let val iterator_src = (hd o XmlTree.follow 
+					     "OCL.Expressions.PropertyCallExp.source") 
+				       trees
+		val iterator_body = (hd o XmlTree.follow 
+					     "OCL.Expressions.LoopExp.body") 
+				       trees
+		val iterators = XmlTree.follow "OCL.Expressions.LoopExp.iterators" 
+					       trees 
+	    in 
+		XMI_UML.IteratorExp { name      = getName atts,
+				      iterators = map mkVariableDec iterators,
+				      body      = mkOCLExpression iterator_body,
+				      source    = mkOCLExpression iterator_src,
+				      expression_type = findExpressionType trees }
+	    end
 	else raise IllFormed ("in mkOCLExpression: found unexpected element "^elem)
     end
 
@@ -503,17 +529,6 @@ fun mkStereotype tree =
     in XmlTree.apply_on "UML:Stereotype" f tree
        handle IllFormed msg => raise IllFormed ("in mkStereotype: "^msg)
     end 
-
-fun mkVariableDec tree = 
-    let fun f atts trees = 
-	    { xmiid = getXmiId atts,
-	      name  = getName atts,
-	      declaration_type = (getXmiIdref o XmlTree.attributes_of o hd o 
-				  (XmlTree.follow "OCL.Expressions.VariableDeclaration.type")) trees
-	      }
-    in XmlTree.apply_on "UML15OCL.Expressions.VariableDeclaration" f tree
-       handle IllFormed msg => raise IllFormed ("in mkVariableDec: "^msg)
-    end
 
 fun mkXmiContent tree =
     let fun f atts trees = 

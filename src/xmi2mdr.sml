@@ -42,7 +42,7 @@ datatype HashTableEntry = Package of ocl_type.Path
 		        | Variable of XMI_UML.VariableDeclaration 
 			| Attribute of ocl_type.Path
 			| Operation of ocl_type.Path
-                        
+		        | AssociationEnd of ocl_type.Path 
 
 fun find_generalization t xmiid = 
     (case valOf (HashTable.find t xmiid) 
@@ -101,8 +101,13 @@ fun find_constraint t xmiid =
       of Constraint c => c
        | _                => raise IllFormed) 
     handle Option => error ("expected Constraint "^xmiid^" in table")
-		
 
+fun find_associationend t xmiid  = 
+    (case valOf (HashTable.find t xmiid) 
+      of AssociationEnd path => path
+       | _                   => raise IllFormed) 
+    handle Option => error ("expected AssociationEnd "^xmiid^" in table")
+		
 fun filter_precondition t  cs 
   = filter (fn x => let val constraint = find_constraint t x
 			val name = #name constraint
@@ -238,6 +243,19 @@ fun transform_expression t (XMI_UML.LiteralExp {symbol,expression_type}) =
     in 
 	ocl_term.Variable (#name var_dec,find_classifier_type t expression_type)
     end
+  | transform_expression t (XMI_UML.AssociationEndCallExp {source, referredAssociationEnd, expression_type}) =
+    ocl_term.AssociationEndCall (transform_expression t source,
+				 find_classifier_type t (XMI_UML.expression_type_of source),
+				 find_associationend t referredAssociationEnd,
+				 find_classifier_type t expression_type
+				 )
+  | transform_expression t (XMI_UML.IteratorExp {name,iterators,body,source,expression_type}) = 
+    ocl_term.Iterator (name,
+		       map (fn x => (#name x, find_classifier_type t (#declaration_type x))) iterators,
+		       transform_expression t source, find_classifier_type t (XMI_UML.expression_type_of source),
+		       transform_expression t body, find_classifier_type t (XMI_UML.expression_type_of body),
+		       find_classifier_type t expression_type
+		       )
   | transform_expression t _ = raise NotYetImplemented
 
 fun transform_constraint t ({xmiid,name,body,...}:XMI_UML.Constraint) = 
@@ -367,7 +385,9 @@ fun insert_model table (XMI_UML.Package p) =
 (*    association ends: when a class is a participant in an association,    *)
 (*    this association end is a feature of all _other_ participants in the  *) 
 (*    association                                                           *)
-(* 3. insert the mapping xmi.id to association end into the hashtable       *)
+(* 3. insert the mapping xmi.id of class to association end into the        *)
+(*    hashtable                                                             *)
+(* 4. insert mapping xmi.id of association end to path into the hashtable   *)
 fun transform_assocation t (assoc:XMI_UML.Association) =
     let	val aends = #connection assoc
 	fun all_others x xs = List.filter 
@@ -376,8 +396,14 @@ fun transform_assocation t (assoc:XMI_UML.Association) =
 	    map (fn (x:XMI_UML.AssociationEnd) => (#participant_id x, ae)) aes
 	val mappings = List.concat (map (fn x => pair_with x (all_others x aends)) aends)
 	fun add_aend_to_type (id,ae) = 
-	    HashTable.insert t (id,Type (find_classifier_type t id,
-					 ae::(find_aends t id)))
+	    let val type_of_id = find_classifier_type t id
+		val aends_of_id = ae::(find_aends t id)
+		val path_of_id = case type_of_id of ocl_type.Classifier x => x
+		val path_of_ae = path_of_id @ [#name ae]
+	    in 
+		(HashTable.insert t (id,Type (type_of_id,aends_of_id));
+		 HashTable.insert t (#xmiid ae, AssociationEnd path_of_ae))
+	    end
     in 
 	List.app add_aend_to_type mappings
     end
