@@ -126,7 +126,7 @@ fun mkAssociationEnd tree =
 				(XmlTree.follow "UML:AssociationEnd.participant")) trees }
     in 
 	XmlTree.apply_on "UML:AssociationEnd" f tree
-	handle IllFormed msg => raise IllFormed ("in mkAssociationEnd: "^msg)
+	handle XmlTree.IllFormed msg => raise IllFormed ("in mkAssociationEnd: "^msg)
     end
 
 fun mkAssociation tree = 
@@ -137,7 +137,7 @@ fun mkAssociation tree =
 								 (hd trees))) }
     in 
 	XmlTree.apply_on "UML:Association" f tree
-	handle IllFormed msg => raise IllFormed ("in mkAssociation: "^msg)
+	handle XmlTree.IllFormed msg => raise IllFormed ("in mkAssociation: "^msg)
     end
 
 fun mkVariableDec tree = 
@@ -148,7 +148,7 @@ fun mkVariableDec tree =
 				  (XmlTree.follow "OCL.Expressions.VariableDeclaration.type")) trees
 	      }
     in XmlTree.apply_on "UML15OCL.Expressions.VariableDeclaration" f tree
-       handle IllFormed msg => raise IllFormed ("in mkVariableDec: "^msg)
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkVariableDec: "^msg)
     end
 
 	
@@ -213,7 +213,7 @@ fun mkOCLExpression tree =
 		     referredAssociationEnd  = assoc_ref,
 		     expression_type = findExpressionType trees }
 	    end
-	else if elem = "UML15OCL.Expressions.AssociationEndCallExp" then
+	else if elem = "UML15OCL.Expressions.AssociationClassCallExp" then
 	    raise NotYetImplemented
 	else if elem = "UML15OCL.Expressions.VariableExp" then
 	    let val var_ref = findXmiIdRef
@@ -315,7 +315,7 @@ fun mkConstraint tree =
 	     body = mkOCLExpression expr }
 	end
     in XmlTree.apply_on "UML:Constraint" f tree
-       handle IllFormed msg => raise IllFormed ("in mkConstraint: "^msg)
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkConstraint: "^msg)
     end
 
 
@@ -328,7 +328,7 @@ fun mkParameter tree =
 				    (XmlTree.follow "UML:Parameter.type")) 
 				       trees }
     in XmlTree.apply_on "UML:Parameter" f tree
-       handle IllFormed msg => raise IllFormed ("in mkParameter: "^msg)
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkParameter: "^msg)
     end
 
 fun mkOperation tree = 
@@ -346,7 +346,7 @@ fun mkOperation tree =
 						   trees)
 			  else nil}
     in XmlTree.apply_on "UML:Operation" f tree
-       handle IllFormed msg => raise IllFormed ("in mkOperation: "^msg)
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkOperation: "^msg)
     end
 
 fun mkAttribute tree = 
@@ -358,7 +358,7 @@ fun mkAttribute tree =
 	  type_id       = (getXmiIdref o XmlTree.attributes_of o hd o 
 			   (XmlTree.follow "UML:StructuralFeature.type")) trees }
     in XmlTree.apply_on "UML:Attribute" f tree
-       handle IllFormed msg => raise IllFormed ("in mkAttribute: "^msg)
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkAttribute: "^msg)
     end
 
 fun mkClass atts trees 
@@ -408,7 +408,7 @@ fun mkPrimitive atts trees
 						   trees)
 			    else nil 
 		}
-    handle IllFormed msg => raise IllFormed ("in mkPrimitive: "^msg)
+    handle XmlTree.IllFormed msg => raise IllFormed ("in mkPrimitive: "^msg)
     
 fun mkEnumeration atts trees 
   = XMI_UML.Enumeration { xmiid      = getXmiId atts,
@@ -430,11 +430,11 @@ fun mkEnumeration atts trees
 							       trees)
 				      else nil
 					   }
-    handle IllFormed msg => raise IllFormed ("in mkEnumeration: "^msg)
+    handle XmlTree.IllFormed msg => raise IllFormed ("in mkEnumeration: "^msg)
 
 fun mkVoid atts trees = XMI_UML.Void { xmiid = getXmiId atts, 
 				       name  = getName atts }
-    handle IllFormed msg => raise IllFormed ("in mkVoid: "^msg)
+    handle XmlTree.IllFormed msg => raise IllFormed ("in mkVoid: "^msg)
 
 
 fun mkGenericCollection atts trees = 
@@ -455,7 +455,7 @@ fun mkGenericCollection atts trees =
 			      "OCL.Types.CollectionType.elementType" 
 			      trees))
       }
-    handle IllFormed msg => raise IllFormed ("in mkGenericCollection: "^msg)
+    handle XmlTree.IllFormed msg => raise IllFormed ("in mkGenericCollection: "^msg)
 
 				  
 fun mkCollection atts trees = XMI_UML.Collection (mkGenericCollection atts trees)
@@ -494,7 +494,7 @@ fun mkGeneralization tree =
 	  parent_id = (getXmiIdref o XmlTree.attributes_of o hd o 
 		       (XmlTree.follow "UML:Generalization.parent")) trees }
     in XmlTree.apply_on "UML:Generalization" f tree
-       handle IllFormed msg => raise IllFormed ("in mkGeneralization: "^msg)
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkGeneralization: "^msg)
     end
 
 fun mkPackage tree = 
@@ -518,7 +518,7 @@ fun mkPackage tree =
 						     (filterConstraints trees) }
 	 end
      else raise IllFormed "did not find a UML:Model or UML: Package")
-    handle IllFormed msg => raise IllFormed ("in mkPackage: "^msg)
+    handle XmlTree.IllFormed msg => raise IllFormed ("in mkPackage: "^msg)
 				  
 				 
 
@@ -529,7 +529,7 @@ fun mkStereotype tree =
 			  stereotypeConstraint = NONE (*FIX*)
 			  }
     in XmlTree.apply_on "UML:Stereotype" f tree
-       handle IllFormed msg => raise IllFormed ("in mkStereotype: "^msg)
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkStereotype: "^msg)
     end 
 
 fun mkXmiContent tree =
@@ -540,7 +540,7 @@ fun mkXmiContent tree =
 	      stereotypes = (map mkStereotype (filterStereotypes trees)),
 	      variable_declarations = (map mkVariableDec (filterVariableDecs trees)) }
     in XmlTree.apply_on "XMI.content" f tree
-       handle IllFormed msg => raise IllFormed ("in mkXmiContent: "^msg)
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkXmiContent: "^msg)
     end
 	
 
@@ -555,7 +555,7 @@ fun findXmiContent tree = valOf (XmlTree.dfs "XMI.content" tree)
 			       
 fun readFile f = (mkXmiContent o findXmiContent o ParseXmlTree.readFile) f
     handle XmlTree.IllFormed msg =>  (print ("Warning: "^msg^"\n"); emptyXmiContent)
-    handle IllFormed msg => (print ("Warning: "^msg^"\n"); emptyXmiContent)
+	 | IllFormed msg => (print ("Warning: "^msg^"\n"); emptyXmiContent)
 end
 
 

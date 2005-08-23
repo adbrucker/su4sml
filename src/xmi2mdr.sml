@@ -446,11 +446,11 @@ fun transformXMI ({classifiers,constraints,packages,
 	handle Empty => raise Option
 
 fun readXMI f = (transformXMI o ParseXMI.readFile) f
-    handle Option => (print ("Warning: in readXMI: could not parse file "^f^"\n"); 
+    handle ParseXMI.IllFormed msg => (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^f^":\n"^msg^"\n"); 
 				      nil)
-    handle IllFormed msg => (print ("Warning: in readXMI: could not parse file "^f^": "^msg^"\n"); 
+	 | Option => (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^f^"\n"); 
 				      nil)
-    handle ParseXMI.IllFormed msg => (print ("Warning: in readXMI: could not parse file "^f^": "^msg^"\n"); 
+	 | IllFormed msg => (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^f^": "^msg^"\n"); 
 				      nil)
 end
 
