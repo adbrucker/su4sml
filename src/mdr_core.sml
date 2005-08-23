@@ -127,7 +127,7 @@ fun range_to_inv cls_name aend (a,b) =
 (*    i.e., A.b.a->includes(A)                                   *)
 (*    FIXME: 2. is not implemented yet...                        *)
 fun assoc_to_inv cls_name (aend:associationend) =
-    let val inv_name = "multiplicity constraint for association end: "^(#name aend)
+    let val inv_name = "multiplicity_constraint_for_association_end_"^(#name aend)
 	val range_constraints = map (range_to_inv cls_name aend) 
 				    (#multiplicity aend)
 	fun ocl_or (x,y) = 
