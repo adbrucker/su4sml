@@ -28,9 +28,11 @@ structure Xmi2Mdr :
 sig
     val transformXMI : XMI_UML.XmiContent -> mdr_core.Classifier list
     val readXMI      : string -> mdr_core.Classifier list
+    (* generic exception if something is wrong *)
+    exception IllFormed of string
 end  =
 struct
-exception IllFormed 
+exception IllFormed of string
 exception NotYetImplemented
 
 datatype HashTableEntry = Package of ocl_type.Path
@@ -47,66 +49,66 @@ datatype HashTableEntry = Package of ocl_type.Path
 fun find_generalization t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of Generalization x => x
-       | _                => raise IllFormed) 
-    handle Option => error ("expected Generalization "^xmiid^" in table")
+       | _                => raise Option) 
+    handle Option => raise IllFormed ("expected Generalization "^xmiid^" in table")
 
 fun find_stereotype t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Stereotype x => x
-       | _                => raise IllFormed) 
-    handle Option => error ("expected Stereotype "^xmiid^" in table")
+       | _                => raise Option) 
+    handle Option => raise IllFormed ("expected Stereotype "^xmiid^" in table")
 
 fun find_attribute t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Attribute x => x
-       | _                => raise IllFormed) 
-    handle Option => error ("expected Attribute "^xmiid^" in table")
+       | _                => raise Option) 
+    handle Option => raise IllFormed ("expected Attribute "^xmiid^" in table")
 
 fun find_operation t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Operation x => x
-       | _                => raise IllFormed) 
-    handle Option => error ("expected Operation "^xmiid^" in table")
+       | _                => raise Option) 
+    handle Option => raise IllFormed ("expected Operation "^xmiid^" in table")
 
 fun find_type t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of Type x  => x
-       | _                => raise IllFormed) 
-    handle Option => error ("expected Type "^xmiid^" in table (find_type)")
+       | _                => raise Option) 
+    handle Option => raise IllFormed ("expected Type "^xmiid^" in table (find_type)")
 
 fun find_aends t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of (Type (c,xs))  => xs
-       | _                => raise IllFormed) 
-    handle Option => error ("expected Type "^xmiid^" in table (find_aends)")
+       | _                => raise Option) 
+    handle Option => raise IllFormed ("expected Type "^xmiid^" in table (find_aends)")
 
 fun find_variable_dec t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Variable x => x
-       | _                => raise IllFormed) 
-    handle Option => error ("expected VariableDeclaration "^xmiid^" in table")
+       | _                => raise Option) 
+    handle Option => raise IllFormed ("expected VariableDeclaration "^xmiid^" in table")
 
 fun find_parent t xmiid = #2 (find_generalization t xmiid)
 
 fun find_package t xmiid  = 
     (case valOf (HashTable.find t xmiid) 
       of Package path => path
-       | _                => raise IllFormed) 
-    handle Option => error ("expected Path "^xmiid^" in table")
+       | _                => raise Option) 
+    handle Option => raise IllFormed ("expected Path "^xmiid^" in table")
 					
 fun path_of_classifier (ocl_type.Classifier x) = x
 
 fun find_constraint t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Constraint c => c
-       | _                => raise IllFormed) 
-    handle Option => error ("expected Constraint "^xmiid^" in table")
+       | _                => raise Option) 
+    handle Option => raise IllFormed ("expected Constraint "^xmiid^" in table")
 
 fun find_associationend t xmiid  = 
     (case valOf (HashTable.find t xmiid) 
       of AssociationEnd path => path
-       | _                   => raise IllFormed) 
-    handle Option => error ("expected AssociationEnd "^xmiid^" in table")
+       | _                   => raise Option) 
+    handle Option => raise IllFormed ("expected AssociationEnd "^xmiid^" in table")
 		
 fun filter_precondition t  cs 
   = filter (fn x => let val constraint = find_constraint t x
@@ -129,7 +131,7 @@ fun filter_postcondition t cs
 			
 fun find_classifier_type t xmiid
   = let val ocltype = case valOf (HashTable.find t xmiid) of (Type (x,xs)) => x
-							   | _  => raise IllFormed
+							   | _  => raise Option
     in 
 	case ocltype of ocl_type.Integer      => ocltype
 		      | ocl_type.String       => ocltype
@@ -143,9 +145,9 @@ fun find_classifier_type t xmiid
 		      | ocl_type.Set        (ocl_type.Classifier [x]) => ocl_type.Set (find_classifier_type t x)
 		      | ocl_type.Bag        (ocl_type.Classifier [x]) => ocl_type.Bag (find_classifier_type t x)
 		      | ocl_type.OrderedSet (ocl_type.Classifier [x]) => ocl_type.OrderedSet (find_classifier_type t x)
-		      | _ => raise IllFormed
+		      | _ => raise Option
     end
-   handle Option => error ("expected Classifier "^xmiid^" in table")
+   handle Option => raise IllFormed ("expected Classifier "^xmiid^" in table")
 		    
 
 fun insert_constraint table (c:XMI_UML.Constraint) =
@@ -187,7 +189,7 @@ fun insert_classifier table package_prefix class =
 			   else if String.isPrefix "Set("        name then ocl_type.Set        (ocl_type.Classifier [XMI_UML.classifier_elementtype_of class])
 			   else if String.isPrefix "Bag("        name then ocl_type.Bag        (ocl_type.Classifier [XMI_UML.classifier_elementtype_of class])
 			   else if String.isPrefix "OrderedSet(" name then ocl_type.OrderedSet (ocl_type.Classifier [XMI_UML.classifier_elementtype_of class])
-			   else error ("didn't recognize ocltype "^name) 
+			   else raise IllFormed ("didn't recognize ocltype "^name) 
 		      else ocl_type.Classifier path
 	(* This function is called before the associations are handled, *)
 	(* so we do not have to take care of them now...                *)
@@ -316,7 +318,7 @@ fun transform_classifier t (XMI_UML.Class {xmiid,name,isActive,visibility,isLeaf
   | transform_classifier t (XMI_UML.Primitive {xmiid,name,generalizations,
 					       operations,invariant}) =
     mdr_core.Primitive {name = case find_classifier_type t xmiid of ocl_type.Classifier x => x
-								  | _ => raise IllFormed, 
+								  | _ => raise Option, 
 			parent = NONE,    (* FIX *)
 			operations = map (transform_operation t) operations,
 			associationends = map (transform_aend t) 
@@ -329,7 +331,7 @@ fun transform_classifier t (XMI_UML.Class {xmiid,name,isActive,visibility,isLeaf
   | transform_classifier t (XMI_UML.Enumeration {xmiid,name,generalizations,
 						 operations,literals,invariant}) =
     mdr_core.Enumeration {name = case find_classifier_type t xmiid of ocl_type.Classifier x => x
-								    | _ => raise IllFormed, 
+								    | _ => raise Option, 
 			  parent = NONE,    (* FIX *)
 			  literals = literals,
 			  operations = map (transform_operation t) operations,
@@ -338,7 +340,7 @@ fun transform_classifier t (XMI_UML.Class {xmiid,name,isActive,visibility,isLeaf
 			  stereotypes = nil, (* FIX *)
 			  interfaces = nil, (* FIX *)
 		   thyname = NONE}
-  | transform_classifier t (_) = error "Not supported Classifier type found."
+  | transform_classifier t (_) = raise IllFormed "Not supported Classifier type found."
 			   
 
 (* recursively transform all classes in the package *)
@@ -427,7 +429,7 @@ fun transform_associations t (XMI_UML.Package p) =
 fun transformXMI ({classifiers,constraints,packages,
 		   stereotypes,variable_declarations}) =
     let val (xmiid_table: (string,HashTableEntry) HashTable.hash_table) =
-	    HashTable.mkTable (HashString.hashString, (op =)) (101, IllFormed)
+	    HashTable.mkTable (HashString.hashString, (op =)) (101, Option)
 	(* for some reasons, there are model elements outside of the top-level *) 
 	(* model the xmi-file. So we have to handle them here seperately:      *)
 	val _ = map (insert_classifier xmiid_table nil) classifiers
@@ -441,11 +443,15 @@ fun transformXMI ({classifiers,constraints,packages,
 	transform_associations xmiid_table model; (* handle associations *)
 	map mdr_core.normalize (transform_package xmiid_table model) (* transform classes   *)
     end
-	handle Empty => raise IllFormed
+	handle Empty => raise Option
 
 fun readXMI f = (transformXMI o ParseXMI.readFile) f
-    handle IllFormed => (print ("Warning: in readXMI: could not parse file "^f^"\n"); 
-			 nil)
+    handle Option => (print ("Warning: in readXMI: could not parse file "^f^"\n"); 
+				      nil)
+    handle IllFormed msg => (print ("Warning: in readXMI: could not parse file "^f^": "^msg^"\n"); 
+				      nil)
+    handle ParseXMI.IllFormed msg => (print ("Warning: in readXMI: could not parse file "^f^": "^msg^"\n"); 
+				      nil)
 end
 
 

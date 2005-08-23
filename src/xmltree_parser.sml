@@ -47,6 +47,7 @@ sig
     val follow_all  : string -> Tree list -> Tree list list
 
     val apply_on    : string -> (Attribute list -> Tree list -> 'a) -> Tree -> 'a
+    exception IllFormed of string
 end =
 struct
 
@@ -68,7 +69,7 @@ fun attvalue_of string atts = Option.map #2 (List.find (fn (x,_) => x = string) 
 
 fun skip string tree = if string = tagname_of tree 
 		       then children_of tree
-		       else raise IllFormed ("in skip: did not find element "^string)
+		       else raise IllFormed ("in XmlTree.skip: did not find element "^string)
 				  
 fun filter string trees = List.filter (fn x => string = tagname_of x) 
 				      trees
@@ -77,10 +78,10 @@ fun filter_children string tree = List.filter (fn x => string = tagname_of x)
 				      
 
 fun find string trees = valOf (List.find (fn x => string = tagname_of x) trees) 
-    handle Option => raise IllFormed ("in find: did not find element "^string)
+    handle Option => raise IllFormed ("in XmlTree.find: did not find element "^string)
 
 fun find_child string tree = valOf (List.find (fn x => string = tagname_of x) (children_of tree)) 
-    handle Option => raise IllFormed ("in find_child: did not find element "^string)
+    handle Option => raise IllFormed ("in XmlTree.find_child: did not find element "^string)
 			   
 fun dfs string tree = if tagname_of tree = string 
 		      then SOME tree
@@ -96,7 +97,7 @@ fun follow_all string trees = map children_of (filter string trees)
 fun apply_on name f tree = 
     if tagname_of tree = name
     then f (attributes_of tree) (children_of tree)
-    else raise IllFormed ("in apply_on: did not find element "^name)
+    else raise IllFormed ("in XmlTree.apply_on: did not find element "^name)
 
 
 end

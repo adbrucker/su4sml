@@ -25,13 +25,15 @@
 structure ParseXMI : 
 sig
     val readFile: string -> XMI_UML.XmiContent
+    (* generic exception if something is wrong *)
+    exception IllFormed of string
 end =
 struct
 
-(* generic exception if something is wrong *)
-exception IllFormed of string 
-
 exception NotYetImplemented
+(* generic exception if something is wrong *)
+exception IllFormed of string
+
 
 
 fun getStringAtt string atts = valOf (XmlTree.attvalue_of string atts)
@@ -552,6 +554,7 @@ fun findXmiContent tree = valOf (XmlTree.dfs "XMI.content" tree)
     handle Option => raise IllFormed "in findXmiContent: did not find XMI.content"
 			       
 fun readFile f = (mkXmiContent o findXmiContent o ParseXmlTree.readFile) f
+    handle XmlTree.IllFormed msg =>  (print ("Warning: "^msg^"\n"); emptyXmiContent)
     handle IllFormed msg => (print ("Warning: "^msg^"\n"); emptyXmiContent)
 end
 
