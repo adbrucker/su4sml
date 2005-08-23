@@ -129,6 +129,17 @@ fun mkAssociationEnd tree =
 	handle XmlTree.IllFormed msg => raise IllFormed ("in mkAssociationEnd: "^msg)
     end
 
+fun mkAssociationClass tree =
+    let fun f atts trees = { xmiid      = getXmiId atts, 
+			     name       = XmlTree.attvalue_of "name" atts,
+			     connection = (map mkAssociationEnd 
+					       (XmlTree.follow "UML:Association.connection" 
+							       trees)) }
+    in 
+	XmlTree.apply_on "UML:AssociationClass" f tree
+	handle XmlTree.IllFormed msg => raise IllFormed ("in mkAssociation: "^msg)
+    end
+
 fun mkAssociation tree = 
     let fun f atts trees = { xmiid      = getXmiId atts, 
 			     name       = XmlTree.attvalue_of "name" atts,
@@ -278,7 +289,8 @@ fun mkOCLExpression tree =
 	else raise IllFormed ("in mkOCLExpression: found unexpected element "^elem)
     end
 
-fun getAssociations t = map mkAssociation ((XmlTree.filter "UML:Association") t)
+fun getAssociations t = (map mkAssociation (XmlTree.filter "UML:Association" t))@
+			 (map mkAssociationClass (XmlTree.filter "UML:AssociationClass" t))
 			
 fun filterConstraints  trees = XmlTree.filter "UML:Constraint" trees   
 fun filterStereotypes  trees = XmlTree.filter "UML:Stereotype" trees
@@ -297,7 +309,8 @@ fun filterClassifiers trees =
 			elem = "UML15OCL.Types.BagType"        orelse
 			elem = "UML15OCL.Types.SetType"        orelse
 			elem = "UML15OCL.Types.CollectionType" orelse
-			elem = "UML15OCL.Types.VoidType" 
+			elem = "UML15OCL.Types.VoidType"       orelse
+			elem = "UML:AssociationClass"
 		    end) trees
 
 fun mkConstraint tree = 
@@ -469,9 +482,11 @@ fun mkClassifier tree =
 	val atts  = XmlTree.attributes_of tree
 	val trees = XmlTree.children_of    tree
     in 
-	if elem = "UML:Class" then                          mkClass atts trees
-	else if elem = "UML:Primitive" orelse 
-		elem = "UML:DataType" then              mkPrimitive atts trees
+	if elem = "UML:Class" orelse
+	   elem = "UML:AssociationClass" then               mkClass atts trees
+	else if elem = "UML:Interface" orelse (* FIX: use a custom mkInterface *) 
+		elem = "UML:DataType" orelse
+		elem = "UML:Primitive" then              mkPrimitive atts trees
 	else if elem = "UML:Enumeration" then         mkEnumeration atts trees
 	else if elem = "UML15OCL.Types.VoidType" then        mkVoid atts trees
 	else if elem = "UML15OCL.Types.CollectionType" then 
