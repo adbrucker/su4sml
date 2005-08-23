@@ -283,8 +283,8 @@ type Attribute = { xmiid : string,
 		   type_id : string, (* xmi.idref to type *)
 		   (* initialValue : ...,               *)
 		   (* inherited from StructuralFeature: *)
-		   (* multiplicity : (int * int) list,  *)
-		   (* ordering : OrderingKind           *)
+		   multiplicity : Multiplicity, 
+		   ordering : OrderingKind,           
 		   (* targetScope : ScopeKind           *)
 		   changeability : ChangeableKind,
 		   (* inherited from Feature:           *)

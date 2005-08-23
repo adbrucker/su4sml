@@ -79,6 +79,14 @@ fun getOrdering atts =
 		  | _ => raise IllFormed ("in getOrdering: found unexpected attribute value "^att)
     end 
 
+fun getOrderingMaybe atts = 
+    let val att = XmlTree.attvalue_of "ordering" atts 
+    in 
+	case att of SOME "unordered" => XMI_UML.Unordered
+		  | SOME "ordered"   => XMI_UML.Ordered
+		  | _                => XMI_UML.Unordered
+    end 
+
 fun getAggregation atts = 
     let val att = getStringAtt "aggregation" atts in
 	case att of "none" => XMI_UML.NoAggregation
@@ -106,6 +114,10 @@ fun getKind atts =
 	
 fun getRange atts = (getIntAtt "lower" atts, getIntAtt "upper" atts)
 
+fun mkMultiplicity tree = map (getRange o XmlTree.attributes_of) 
+			   (((XmlTree.filter "UML:MultiplicityRange") o 
+			     (XmlTree.skip   "UML:Multiplicity.range") o hd o 
+			     (XmlTree.skip   "UML:Multiplicity")) tree)
 
 fun mkAssociationEnd tree = 
     let fun f atts trees =  
@@ -114,12 +126,8 @@ fun mkAssociationEnd tree =
 	      isNavigable    = getBoolAtt "isNavigable" atts,
 	      ordering       = getOrdering atts,
 	      aggregation    = getAggregation atts,
-	      multiplicity   = (map (getRange o XmlTree.attributes_of) 
-				    (((XmlTree.filter "UML:MultiplicityRange") o 
-				      (XmlTree.skip   "UML:Multiplicity.range") o hd o 
-				      (XmlTree.skip   "UML:Multiplicity") o hd o 
-				      (XmlTree.follow "UML:AssociationEnd.multiplicity"))
-					 trees)),
+	      multiplicity   = (mkMultiplicity o hd o (XmlTree.follow "UML:AssociationEnd.multiplicity")) 
+							 trees,
 	      changeability  = getChangeability atts, 
 	      visibility     = getVisibility atts,
 	      participant_id = (getXmiIdref o XmlTree.attributes_of o hd o
@@ -368,8 +376,11 @@ fun mkAttribute tree =
 	  name          = getName atts,
 	  visibility    = getVisibility atts,
 	  changeability = getChangeability atts,
+	  ordering      = getOrderingMaybe atts, 
 	  type_id       = (getXmiIdref o XmlTree.attributes_of o hd o 
-			   (XmlTree.follow "UML:StructuralFeature.type")) trees }
+			   (XmlTree.follow "UML:StructuralFeature.type")) trees,
+	  multiplicity   = (mkMultiplicity o hd o (XmlTree.follow "UML:StructuralFeature.multiplicity"))
+							 trees}
     in XmlTree.apply_on "UML:Attribute" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkAttribute: "^msg)
     end

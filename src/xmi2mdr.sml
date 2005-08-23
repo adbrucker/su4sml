@@ -286,8 +286,15 @@ fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
 
       
 
-fun transform_attribute t ({xmiid,name,type_id,changeability,visibility}) =
-    (name,find_classifier_type t type_id)
+fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,
+			    ordering,multiplicity}) =
+    let val cls_type = find_classifier_type t type_id 
+    in
+	(name,if multiplicity = [(1,1)] 
+	      then cls_type
+	      else if ordering = XMI_UML.Ordered then ocl_type.Sequence cls_type
+	      else ocl_type.Set cls_type)
+    end
 
 fun transform_aend t ({xmiid,name,ordering,multiplicity,participant_id,
 		       isNavigable,aggregation,changeability,visibility})
