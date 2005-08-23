@@ -261,8 +261,12 @@ fun transform_expression t (XMI_UML.LiteralExp {symbol,expression_type}) =
   | transform_expression t _ = raise NotYetImplemented
 
 fun transform_constraint t ({xmiid,name,body,...}:XMI_UML.Constraint) = 
-    (name,transform_expression t body)
-
+	let val n_name = case name of 
+		(SOME s) => if (s = "") then NONE else (SOME(s))
+	       |NONE     => NONE
+	in	
+    		(n_name,transform_expression t body)
+	end
 
 fun transform_parameter t {xmiid,name,kind,type_id} =
     (name, find_classifier_type t type_id)
