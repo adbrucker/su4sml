@@ -274,11 +274,11 @@ fun postcondition_of_op ({postcondition, ...}:operation) = case postcondition  o
 
 fun name_of_op ({name,...}:operation) = name
 
-fun mangled_name_of_op ({name,arguments,...}:operation) = 
+fun mangled_name_of_op ({name,arguments,result,...}:operation) = 
     let
 	val arg_typestrs = map (fn a => (ocl_type.string_of_OclType o snd ) a ) arguments
     in 
-	 foldr1 (fn (a,b) =>(a^"_"^b)) (name::arg_typestrs)
+	 foldr1 (fn (a,b) =>(a^"_"^b)) ((name::arg_typestrs)@[ocl_type.string_of_OclType result])
     end
 							   
 fun result_of_op ({result,...}:operation) = result
