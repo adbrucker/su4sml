@@ -189,10 +189,16 @@ fun mkOCLExpression tree =
     in 
 	if elem = "UML15OCL.Expressions.BooleanLiteralExp" then
 	    XMI_UML.LiteralExp { symbol          = getStringAtt "booleanSymbol" atts,
-			 expression_type = findExpressionType trees }
+				 expression_type = findExpressionType trees }
 	else if elem = "UML15OCL.Expressions.IntegerLiteralExp" then
 	    XMI_UML.LiteralExp { symbol          = getStringAtt "integerSymbol" atts,
-			 expression_type = findExpressionType trees }
+				 expression_type = findExpressionType trees }
+	else if elem = "UML15OCL.Expressions.StringLiteralExp" then
+	    XMI_UML.LiteralExp { symbol          = getStringAtt "stringSymbol" atts,
+				 expression_type = findExpressionType trees }
+	else if elem = "UML15OCL.Expressions.RealLiteralExp" then
+	    XMI_UML.LiteralExp { symbol          = getStringAtt "realSymbol" atts,
+				 expression_type = findExpressionType trees }
 	else if elem = "UML15OCL.Expressions.OperationCallExp" then
 	    let val op_src = hd (XmlTree.follow 
 				      "OCL.Expressions.PropertyCallExp.source"
