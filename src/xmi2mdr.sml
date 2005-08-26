@@ -212,6 +212,8 @@ fun insert_classifier table package_prefix class =
     end
 
 
+val triv_expr = ocl_term.Literal ("true",ocl_type.Boolean)
+
 fun transform_expression t (XMI_UML.LiteralExp {symbol,expression_type}) = 
     ocl_term.Literal (symbol,find_classifier_type t expression_type)
   | transform_expression t (XMI_UML.IfExp {condition,thenExpression,
@@ -267,6 +269,9 @@ fun transform_constraint t ({xmiid,name,body,...}:XMI_UML.Constraint) =
 	       |NONE     => NONE
 	in	
     		(n_name,transform_expression t body)
+		handle NotYetImplemented => (print "Warning: in Xmi2Mdr.transform_constraint: Something is not yet implemented.\n";(NONE, triv_expr))
+		     | IllFormed msg => (print ("Warning: in Xmi2Mdr.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
+		     | ParseXMI.IllFormed msg => (print ("Warning: in Xmi2Mdr.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
 	end
 
 fun transform_parameter t {xmiid,name,kind,type_id} =

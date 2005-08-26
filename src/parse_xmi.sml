@@ -182,6 +182,11 @@ fun findExpressionType trees = findXmiIdRef "OCL.Expressions.OclExpression.type"
 					    (* hack: return a reference to a dummy*)
 					    (* type if the real type is not found *)
 
+(* this is a hack. This will still throw an exception in xmi2mdr, because the  *)
+(* expression_type should be the xmiid of oclLib.Boolean, which we do not know *)
+val triv_expr = XMI_UML.LiteralExp {symbol = "true", 
+				    expression_type = "bool" }
+
 fun mkOCLExpression tree = 
     let val elem  = XmlTree.tagname_of tree
 	val atts  = XmlTree.attributes_of tree
@@ -341,7 +346,9 @@ fun mkConstraint tree =
 	in { xmiid = getXmiId atts,
 	     name  = case XmlTree.attvalue_of "name" atts of SOME s => SOME s | _ => NONE,
 	     constraint_type = st_type_ref, 
-	     body = mkOCLExpression expr }
+	     body = (mkOCLExpression expr   (* if something goes wrong, we return *)
+		     handle _ => triv_expr) (* return trivial expression "true"   *)
+	     }
 	end
     in XmlTree.apply_on "UML:Constraint" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkConstraint: "^msg)
