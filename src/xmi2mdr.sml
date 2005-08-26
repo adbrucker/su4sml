@@ -140,14 +140,15 @@ fun find_classifier_type t xmiid
 		      | ocl_type.Classifier x => ocltype
 		      | ocl_type.OclVoid      => ocltype
 		      | ocl_type.OclAny       => ocltype
+		      | ocl_type.DummyT       => ocltype
 		      | ocl_type.Collection (ocl_type.Classifier [x]) => ocl_type.Collection (find_classifier_type t x)
 		      | ocl_type.Sequence   (ocl_type.Classifier [x]) => ocl_type.Sequence (find_classifier_type t x)
 		      | ocl_type.Set        (ocl_type.Classifier [x]) => ocl_type.Set (find_classifier_type t x)
 		      | ocl_type.Bag        (ocl_type.Classifier [x]) => ocl_type.Bag (find_classifier_type t x)
 		      | ocl_type.OrderedSet (ocl_type.Classifier [x]) => ocl_type.OrderedSet (find_classifier_type t x)
 		      | _ => raise Option
-    end
-   handle Option => raise IllFormed ("expected Classifier "^xmiid^" in table")
+	 end
+	handle Option => raise IllFormed ("expected Classifier "^xmiid^" in table")
 		    
 
 fun insert_constraint table (c:XMI_UML.Constraint) =
@@ -441,6 +442,8 @@ fun transformXMI ({classifiers,constraints,packages,
 		   stereotypes,variable_declarations}) =
     let val (xmiid_table: (string,HashTableEntry) HashTable.hash_table) =
 	    HashTable.mkTable (HashString.hashString, (op =)) (101, Option)
+	(* hack: insert a dummy type into the table *)
+	val _ = HashTable.insert xmiid_table ("DummyT",Type (ocl_type.DummyT,nil))
 	(* for some reasons, there are model elements outside of the top-level *) 
 	(* model the xmi-file. So we have to handle them here seperately:      *)
 	val _ = map (insert_classifier xmiid_table nil) classifiers

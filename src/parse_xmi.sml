@@ -178,7 +178,9 @@ fun findXmiIdRef name trees = (getXmiIdref o XmlTree.attributes_of o hd)
 (* find the type of an OCl sub-expression *)
 fun findExpressionType trees = findXmiIdRef "OCL.Expressions.OclExpression.type" 
 					    trees
-			       
+					    handle _ => "DummyT"
+					    (* hack: return a reference to a dummy*)
+					    (* type if the real type is not found *)
 
 fun mkOCLExpression tree = 
     let val elem  = XmlTree.tagname_of tree

@@ -31,7 +31,7 @@ type Path = string list
 datatype OclType    =  Integer | Real | String | Boolean | OclAny 
 		     | Set of OclType | Sequence of OclType
 		     | OrderedSet of OclType | Bag of OclType 
-		     | Collection of OclType | OclVoid
+		     | Collection of OclType | OclVoid | DummyT
 		     | Classifier of Path
 
 fun string_of_path (path:Path) = case path of

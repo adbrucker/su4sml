@@ -31,7 +31,7 @@ sig
 		     | Set of OclType | Sequence of OclType
 		     | OrderedSet of OclType | Bag of OclType 
 		     | Collection of OclType
-		     | Classifier of Path | OclVoid
+		     | Classifier of Path | OclVoid | DummyT
 	val string_of_OclType : OclType -> string	
 	val string_of_path    : Path -> string	
 	
