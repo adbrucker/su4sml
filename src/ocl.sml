@@ -51,6 +51,7 @@ fun string_of_OclType Integer        = "Integer"
   | string_of_OclType (Collection t) = ("Collection("^(string_of_OclType t)^")")	
   | string_of_OclType OclVoid        = "OclVoid"
   | string_of_OclType (Classifier p) = (string_of_path p)
+  | string_of_OclType DummyT         = "DummyT"
 
 end
      
