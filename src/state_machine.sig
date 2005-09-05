@@ -41,50 +41,65 @@ datatype Action = create
 datatype StateMachine = SM_mk of {top : StateVertex_Id,
                                   transition : Transition_Id list}
 
-datatype Guard        = G_mk of    {expression : ocl_term.OclTerm}
+datatype Guard        = G_mk of  {expression : ocl_term.OclTerm}
 
-type params = ocl_type.OclType
+type     Parameter    = ocl_type.OclType
 	      
-datatype Event = SignalEvent  of params list
-               | CallEvent    of params list
-				 (*   | TimeEvent    of params list  *)
-				 (*   | ChangeEvent  of params list  *)
+datatype Event  = SignalEvent  of Parameter list
+                | CallEvent    of Parameter list
+				 (*   | TimeEvent    of Parameter list  *)
+				 (*   | ChangeEvent  of Parameter list  *)
 				 
 				 
-datatype Transition   = T_ml of  {source : StateVertex_Id,
-                                  target : StateVertex_Id,
-			 	  guard  : Guard option,
-				  trigger: Event option,
-				  effect : Action option
+datatype Transition   = T_ml of  {source  : StateVertex_Id,
+                                  target  : StateVertex_Id,
+			 	  guard   : Guard  option,
+				  trigger : Event  option,
+				  effect  : Action option
 				 (* mmm    : StateVertexId option *)
 			         }
 				 
 				   
 datatype PseudoStateVars = initial | (* deep | shallow | *)  
-         join | fork | junction | choice 
+                           join | fork | 
+                           junction | choice 
 				  
 datatype StateVertex  = 
          State_CompositState 
-	 of {outgoing : Transition_Id list,
-	     incoming : Transition_Id list, 
-	     container: StateVertex_Id option,
-	     subvertex: StateVertex_Id list}
+	 of {outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list, 
+	     container    : StateVertex_Id option,
+	     subvertex    : StateVertex_Id list,
+             isConcurrent : bool,
+             submachine   : StateMachine * 
+                            {isDynamic : bool
+                             (* + dynamicArguments 
+                                + dynamicMultiplicity *)} option}
+                            (* variant for Subactivity State *)
        | State_SimpleState
-	 of {outgoing : Transition_Id list,
-	     incoming : Transition_Id list,
-	     container: StateVertex_Id option}
+	 of {outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list,
+	     container    : StateVertex_Id option}
+       | SimpleState_ActionState (* from ActivityGraphs *)
+         of {isDynamic    : bool 
+             (* + dynamicArguments + dynamicMultiplicity *)}
+       | SimpleState_ObjectflowState (* from ActivityGraphs *)
+         of {isSynch      : bool,
+             parameter    : Parameter list,
+             types        : ocl_type.Path list (* Classifier_Id *)}
        | State_FinalState
-	 of {outgoing : Transition_Id list,
-	     incoming : Transition_Id list,
-	     container: StateVertex_Id option}
+	 of {outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list,
+	     container    : StateVertex_Id option}
        | PseudoState
-	 of {outgoing : Transition_Id list,
-	     incoming : Transition_Id list,
-	     container: StateVertex_Id option}
+	 of {kind         : PseudoStateVars,
+             outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list,
+	     container    : StateVertex_Id option}
        | SyncState
-	 of {outgoing : Transition_Id list,
-	     incoming : Transition_Id list,
-	     container: StateVertex_Id option}
+	 of {outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list,
+	     container    : StateVertex_Id option}
 (*	  | StubState  *)
 	    
 	    
