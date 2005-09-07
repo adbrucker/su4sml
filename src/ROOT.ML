@@ -25,20 +25,22 @@
 use "library.sml";
 open library;
 fun su4sml_home () = if (getenv "HOLOCL_HOME") <> ""
-                  then getenv "HOLOCL_HOME"
-		                    else ".";
+                     then getenv "HOLOCL_HOME" else ".";
 
 
 cd "../lib/fxp/src"; 
 use "ROOT.ML"; 
 cd "../../../src";
 
-use "ocl.sig";
-use "ocl.sml";
-use "mdr_core.sig";
-use "mdr_core.sml";
-use "state_machine.sig";
-use "mdr.sig";
+use "rep_ocl.sig";
+use "rep_ocl.sml";
+use "rep_state_machine.sig";
+use "rep_state_machine.sml";
+use "rep_activity_graphs.sig";
+use "rep_activity_graphs.sml";
+use "rep_core.sig";
+use "rep_core.sml";
+use "rep.sig";
 use "xmi_uml.sml";
 use "xmltree_parser.sml";
 use "parse_xmi.sml";

@@ -30,7 +30,7 @@
  * of references.
  * --------------------------------------------------------------------------*)
 
-structure UML_OCL = 
+structure XMI_OCL = 
 struct
 (* from OCL 2.0 Expressions: -------------------------------------------------
  * A VariableDeclaration declares a variable name and binds it to a type. The 
@@ -102,7 +102,7 @@ fun expression_type_of (LiteralExp{expression_type,...})           = expression_
  * --------------------------------------------------------------------------*)
 datatype ConstraintType = Inv | Pre | Post | Def | Body
 
-(* We put Constraint into OCL, not into UML_Core because we only use *)
+(* We put Constraint into OCL, not into XMI_Core because we only use *)
 (* OCL Constraints.                                                  *)
 type Constraint = { xmiid           : string,
 		    name            : string option,
@@ -115,7 +115,7 @@ end
 
 
 
-structure UML_DataTypes =
+structure XMI_DataTypes =
 (* from UML 1.5 Core Overview: ----------------------------------------------
  * The Data Types package is the subpackage that specifies the different data 
  * types that are used to define UML. 
@@ -127,7 +127,7 @@ structure UML_DataTypes =
  * TypeExpression, UnlimitedInteger
  * --------------------------------------------------------------------------*)
 struct
-open UML_OCL
+open XMI_OCL
 
 datatype AggregationKind        = NoAggregation | Aggregate | Composite
 
@@ -183,7 +183,7 @@ datatype VisibilityKind = public (* Other elements may see and use the target*)
 end
 
 
-structure UML_ExtensionMechanisms =
+structure XMI_ExtensionMechanisms =
 (* from UML 1.5 Extension Mechanisms Overview:--------------------------------
  * The Extension Mechanisms package is the subpackage that specifies how 
  * specific UML model elements are customized and extended with new semantics 
@@ -192,7 +192,7 @@ structure UML_ExtensionMechanisms =
  * constitutes a UML profile.
  * --------------------------------------------------------------------------*)
 struct
-open UML_DataTypes
+open XMI_DataTypes
                     
 (* from UML 1.5 Extension Mechanisms:-----------------------------------------
  * The stereotype concept provides a way of branding (classifying) model 
@@ -234,7 +234,7 @@ end
 
 
 
-structure UML_Core = 
+structure XMI_Core = 
 (* from UML 1.5 Core Overview: ----------------------------------------------
  * The Core package is the most fundamental of the subpackages that compose 
  * the UML Foundation package. It defines the basic abstract and concrete 
@@ -260,7 +260,7 @@ structure UML_Core =
  *    TemplateArgument, TemplateParameter, Usage
  * --------------------------------------------------------------------------*)
 struct
-open UML_ExtensionMechanisms
+open XMI_ExtensionMechanisms
 
 (* from UML 1.5 Core: --------------------------------------------------------
  * A generalization is a taxonomic relationship between a more general 
@@ -538,8 +538,24 @@ fun classifier_elementtype_of (Collection{elementtype,...}) = elementtype
 end
 
 
+structure XMI_CommonBehavior = 
+struct
+end
 
-structure UML_ModelManagement =
+structure XMI_StateMachines =
+struct
+open XMI_CommonBehavior
+datatype StateMachine = dummy
+end
+
+structure XMI_ActivityGraphs =
+struct
+open XMI_StateMachines
+datatype ActivityGraph = dummy
+end
+
+
+structure XMI_ModelManagement =
 (* from UML 1.5 Model Management Overview: ------------------------------------
  * The Model Management package is dependent on the Foundation package. It 
  * defines Model, Package, and Subsystem, which all serve as grouping units 
@@ -550,7 +566,7 @@ structure UML_ModelManagement =
  * dedicated to group UML extensions.
  * --------------------------------------------------------------------------*)
 struct
-open UML_Core
+open XMI_Core XMI_ActivityGraphs
 (* from UML 1.5 Model Management: --------------------------------------------
  * A package is a grouping of model elements.
  * [...]
@@ -559,43 +575,34 @@ open UML_Core
  * StateMachines, Stereotypes, and TaggedValues.
  * --------------------------------------------------------------------------*)
 (* We treat "Model" the same way as a "Package".                             *)
-datatype Package = Package of { xmiid: string,
-				name: string,
-				visibility:  VisibilityKind,
-				packages:    Package list,
-				classifiers: Classifier list,
-				associations: Association list,
+datatype Package = Package of { xmiid          : string,
+				name           : string,
+				visibility     : VisibilityKind,
+				packages       : Package list,
+				classifiers    : Classifier list,
+                                statemachines  : StateMachine list,
+                                activitygraphs : ActivityGraph list,
+				associations   : Association list,
 				generalizations: Generalization list,
-				constraints: Constraint list }
+				constraints    : Constraint list }
 		  
 end
 
 
-structure UML_CommonBehavior = 
-struct
-open UML_ModelManagement
-end
-
-structure UML_StateMachines =
-struct
-open UML_CommonBehavior
-end
-
-structure UML_ActivityGraphs =
-struct
-open UML_StateMachines
-end
 
 structure XMI_UML =
 struct
-open UML_ActivityGraphs
+open XMI_Core XMI_ActivityGraphs XMI_ModelManagement
 
-(* There may be (are) model elements outside of the UML model *)
+(* There may be (are) model elements outside of the UML model,
+   due to errors in the Dresden Package.
+   The only relevant Xmi Content is the head of the
+   package list. *)
 type XmiContent = {classifiers:           Classifier list,
 		   constraints:           Constraint list,
 		   packages:              Package list,
 		   stereotypes:           Stereotype list,
 		   variable_declarations: VariableDeclaration list
-					  }
+                  }
 
 end

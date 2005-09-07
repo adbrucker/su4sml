@@ -49,7 +49,8 @@ datatype Classifier =
 	   invariant   : (string option * ocl_term.OclTerm) list,
 	   stereotypes : string list,
 	   interfaces  : ocl_type.Path list,
-	   thyname     : string option
+	   thyname     : string option,
+           activity_graphs : rep_ActivityGraph.ActivityGraph list
 	  }
        | Interface of               (* not supported yet *)
 	 { name        : ocl_type.Path,

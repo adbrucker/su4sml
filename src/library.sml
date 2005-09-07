@@ -52,7 +52,9 @@ fun getenv var =
       NONE => ""
         | SOME txt => txt);
 	                                
-
+fun print_depth n = 
+   (Control.Print.printDepth := n div 2;
+    Control.Print.printLength := n); 
 
 val cd = OS.FileSys.chDir;
 val pwd = OS.FileSys.getDir;

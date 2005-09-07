@@ -23,7 +23,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-signature STATE_MACHINE = 
+signature REP_STATE_MACHINE = 
 sig
     
 type     StateVertex_Id

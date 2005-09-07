@@ -46,7 +46,8 @@ datatype Classifier =
 	   invariant   : (string option * ocl_term.OclTerm) list,
 	   stereotypes : string list,
 	   interfaces  : ocl_type.Path list,
-	   thyname     : string option
+	   thyname     : string option,
+           activity_graphs : rep_ActivityGraph.ActivityGraph list
 	  }
        | Interface of               (* not supported yet *)
 	 { name        : ocl_type.Path,
@@ -141,7 +142,7 @@ fun assoc_to_inv cls_name (aend:associationend) =
 	     
 (* convert association ends into attributes + invariants *)
 fun normalize (Class {name,parent,attributes,operations,associationends,invariant,
-		      stereotypes,interfaces,thyname}) =
+		      stereotypes,interfaces,thyname,activity_graphs}) =
 	       Class {name   = name,
 		      parent = parent,
 		      attributes = (append (map assoc_to_attr associationends) 
@@ -152,7 +153,8 @@ fun normalize (Class {name,parent,attributes,operations,associationends,invarian
 					  invariant,
 		      stereotypes = stereotypes,
                       interfaces = interfaces,
-                      thyname = thyname }
+		      thyname = thyname,
+                      activity_graphs=activity_graphs}
   | normalize (Primitive p) =
     (* Primitive's do not have attributes, so we have to convert *)
     (* them into Classes...                                      *)
@@ -163,13 +165,15 @@ fun normalize (Class {name,parent,attributes,operations,associationends,invarian
 			   associationends = #associationends p,
 			   stereotypes = #stereotypes p,
 			   interfaces = #interfaces p,
-			   thyname = #thyname p})
+			   thyname = #thyname p,
+                           activity_graphs=nil})
   | normalize c = c
 
 val OclAnyC = Class{name=["OclAny"],parent=NONE,attributes=[],
 			  operations=[], interfaces=[],
 			  invariant=[],stereotypes=[], associationends=[],
-			  thyname=NONE}
+			  thyname=NONE,
+                          activity_graphs=nil}
 
 		   
 fun string_of_path (path:ocl_type.Path) = case path of
@@ -178,14 +182,24 @@ fun string_of_path (path:ocl_type.Path) = case path of
 
 
 
-fun update_thyname tname (Class{name,parent,attributes,operations,invariant,stereotypes,interfaces,associationends,...})
-    = Class{name=name,parent=parent,attributes=attributes,operations=operations,associationends=associationends,invariant=invariant,stereotypes=stereotypes,interfaces=interfaces,thyname=(SOME tname)}
+fun update_thyname tname (Class{name,parent,attributes,operations,invariant,
+                                stereotypes,interfaces,associationends,activity_graphs,...})
+    = Class{name=name,parent=parent,attributes=attributes,operations=operations,
+            associationends=associationends,invariant=invariant,stereotypes=stereotypes,
+            interfaces=interfaces,thyname=(SOME tname),activity_graphs=activity_graphs }
   | update_thyname tname (Interface{name,parents,operations,stereotypes,invariant,...}) 
-    = Interface{name=name,parents=parents,operations=operations,stereotypes=stereotypes,invariant=invariant,thyname=(SOME tname)} 
-  | update_thyname tname (Enumeration{name,parent,operations,literals,invariant,stereotypes,interfaces,...}) 
-    = Enumeration{name=name,parent=parent,operations=operations,literals=literals,invariant=invariant,stereotypes=stereotypes,interfaces=interfaces,thyname=(SOME tname)}
-  | update_thyname tname (Primitive{name,parent,operations,associationends,invariant,stereotypes,interfaces,...}) 
-    = Primitive{name=name,parent=parent,operations=operations,associationends=associationends,invariant=invariant,stereotypes=stereotypes,interfaces=interfaces,thyname=(SOME tname)} 
+    = Interface{name=name,parents=parents,operations=operations,stereotypes=stereotypes,
+                invariant=invariant,thyname=(SOME tname)} 
+  | update_thyname tname (Enumeration{name,parent,operations,literals,invariant,
+                                      stereotypes,interfaces,...}) 
+    = Enumeration{name=name,parent=parent,operations=operations,literals=literals,
+                  invariant=invariant,stereotypes=stereotypes,interfaces=interfaces,
+                  thyname=(SOME tname)}
+  | update_thyname tname (Primitive{name,parent,operations,associationends,invariant,
+                                    stereotypes,interfaces,...}) 
+    = Primitive{name=name,parent=parent,operations=operations,
+                associationends=associationends,invariant=invariant,
+                stereotypes=stereotypes,interfaces=interfaces,thyname=(SOME tname)} 
 
 
 fun name_of (Class{name,...})       = name  
@@ -200,57 +214,83 @@ fun short_name_of (Class{name,...})       = (hd o rev) name
 
 
 
-fun package_of (Class{name,...})       = if (length name) > 1 then take (((length name) -1),name)  else []
-  | package_of (Interface{name,...})   = if (length name) > 1 then take (((length name) -1),name) else []
-  | package_of (Enumeration{name,...}) = if (length name) > 1 then take (((length name) -1),name) else []
-  | package_of (Primitive{name,...})    = if (length name) > 1 then take (((length name) -1),name) else []
+fun package_of (Class{name,...})       = if (length name) > 1 
+                                         then take (((length name) -1),name)  
+                                         else []
+  | package_of (Interface{name,...})   = if (length name) > 1 
+                                         then take (((length name) -1),name) 
+                                         else []
+  | package_of (Enumeration{name,...}) = if (length name) > 1 
+                                         then take (((length name) -1),name) 
+                                         else []
+  | package_of (Primitive{name,...})   = if (length name) > 1 
+                                         then take (((length name) -1),name) 
+                                         else []
 
-fun parent_name_of (C as Class{parent,...})       = (case parent  of 
-						  NONE => name_of OclAnyC
-						| (SOME p)  => p ) 
-  | parent_name_of (Interface{...})        = error "parent_name_of <Interface> not supported"
-  | parent_name_of (E as Enumeration{parent,...}) = (case parent  of 
-						  NONE => error ("Enumeration "^((string_of_path o name_of) E)^" has no parent")
-						| (SOME p)  => p )  
-  | parent_name_of (D as Primitive{parent,...})    = (case parent  of 
-						  NONE => name_of OclAnyC
-								  (* error ("Primitive "^((string_of_path o name_of) D)^" has no parent") *)
-						| (SOME p)  => p )
+fun parent_name_of (C as Class{parent,...}) = 
+    (case parent  of NONE   => name_of OclAnyC
+		    |SOME p => p ) 
+  | parent_name_of (Interface{...})         = 
+                    error "parent_name_of <Interface> not supported"
+  | parent_name_of (E as Enumeration{parent,...}) = 
+    (case parent  of NONE => error ("Enumeration "^((string_of_path o name_of) E)
+                                    ^" has no parent")
+		   | SOME p  => p )  
+  | parent_name_of (D as Primitive{parent,...})    = 
+    (case parent  of NONE => name_of OclAnyC
+	(* error ("Primitive "^((string_of_path o name_of) D)^" has no parent") *)
+		   | SOME p  => p )
  
-fun short_parent_name_of (C as Class{parent,...})       = (case parent  of 
-						  NONE => short_name_of OclAnyC
-						| (SOME p)  => (hd o rev) p ) 
-  | short_parent_name_of (Interface{...})        = error "parent_name_of <Interface> not supported"
-  | short_parent_name_of (E as Enumeration{parent,...}) = (case parent  of 
-						  NONE => error ("Enumeration "^((string_of_path o name_of) E)^" has no parent")
-						| (SOME p)  => (hd o rev) p )  
-  | short_parent_name_of (D as Primitive{parent,...})    = (case parent  of 
-						  NONE =>  short_name_of OclAnyC (* error ("Primitive "^((string_of_path o name_of) D)^" has no parent") *)
-						| (SOME p)  => (hd o rev) p ) 
+fun short_parent_name_of (C as Class{parent,...})       = 
+    (case parent  of NONE => short_name_of OclAnyC
+		   | SOME p  => (hd o rev) p ) 
+  | short_parent_name_of (Interface{...})        = 
+    error "parent_name_of <Interface> not supported"
+  | short_parent_name_of (E as Enumeration{parent,...}) = 
+    (case parent  of  NONE => error ("Enumeration "^((string_of_path o name_of) E)^
+                                     " has no parent")
+		   |  SOME p  => (hd o rev) p )  
+  | short_parent_name_of (D as Primitive{parent,...})    = 
+    (case parent  of  NONE =>  short_name_of OclAnyC 
+          (* error ("Primitive "^((string_of_path o name_of) D)^" has no parent") *)
+		   | SOME p  => (hd o rev) p ) 
 					     					     
 							 
-fun parent_package_of (Class{parent,...})       = (case parent of 
-						     NONE => package_of OclAnyC
-						   | (SOME p)   =>if (length p) > 1 then  (take (((length p) -1),p))  else [])
-  | parent_package_of (Interface{...})        = error "parent_package_of <Interface> not supported"
-  | parent_package_of (Enumeration{parent,...}) = (case parent of 
-						     NONE => error "Enumeration has no parent"
-						   | (SOME p)  => if (length p) > 1 then (take (((length p) -1),p))  else [])
-  | parent_package_of (Primitive{parent,...})    = (case parent of 
-							NONE => package_of OclAnyC
-						      (* NONE => error "Primitive has no parent" *)
-						      | (SOME p)   => if (length p) > 1 then (take (((length p) -1),p))  else [])
+fun parent_package_of (Class{parent,...})       = 
+    (case parent of  NONE => package_of OclAnyC
+		   | SOME p   =>if (length p) > 1 
+                                then  (take (((length p) -1),p))  
+                                else [])
+  | parent_package_of (Interface{...})        = 
+                   error "parent_package_of <Interface> not supported"
+  | parent_package_of (Enumeration{parent,...}) = 
+    (case parent of  NONE => error "Enumeration has no parent"
+		   | SOME p  => if (length p) > 1 
+                                then (take (((length p) -1),p))  
+                                else [])
+  | parent_package_of (Primitive{parent,...})    = 
+    (case parent of NONE => package_of OclAnyC
+	  (* NONE => error "Primitive has no parent" *)
+		 |  SOME p   => if (length p) > 1 
+                                then (take (((length p) -1),p))  
+                                else [])
 						
 
 fun attributes_of (Class{attributes,...}) = attributes
-  | attributes_of (Interface{...})        = error "attributes_of <Interface> not supported" 
-  | attributes_of (Enumeration{...})      = error "attributes_of <Enumeration> not supported"  
-  | attributes_of (Primitive{...})         = []  (* error "attributes_of <Primitive> not supported" *)  
+  | attributes_of (Interface{...})        = 
+         error "attributes_of <Interface> not supported" 
+  | attributes_of (Enumeration{...})      = 
+         error "attributes_of <Enumeration> not supported"  
+  | attributes_of (Primitive{...})         = []  
+         (* error "attributes_of <Primitive> not supported" *)  
 
 fun operations_of (Class{operations,...}) = operations
-  | operations_of (Interface{...})        = error "operations_of <Interface> not supported" 
-  | operations_of (Enumeration{...})      = error "operations_of <Enumeration> not supported"  
-  | operations_of (Primitive{...})         = []  (* error "operations_of <Primitive> not supported" *)  
+  | operations_of (Interface{...})        = 
+         error "operations_of <Interface> not supported" 
+  | operations_of (Enumeration{...})      = 
+         error "operations_of <Enumeration> not supported"  
+  | operations_of (Primitive{...})         = []  
+         (* error "operations_of <Primitive> not supported" *)  
 
 
 fun p_invariant_of (Class{invariant,...})       = invariant 
@@ -278,7 +318,8 @@ fun mangled_name_of_op ({name,arguments,result,...}:operation) =
     let
 	val arg_typestrs = map (fn a => (ocl_type.string_of_OclType o snd ) a ) arguments
     in 
-	 foldr1 (fn (a,b) =>(a^"_"^b)) ((name::arg_typestrs)@[ocl_type.string_of_OclType result])
+	 foldr1 (fn (a,b) =>(a^"_"^b)) 
+                ((name::arg_typestrs)@[ocl_type.string_of_OclType result])
     end
 							   
 fun result_of_op ({result,...}:operation) = result
@@ -289,17 +330,21 @@ fun arguments_of_op ({arguments,...}:operation) = arguments
 
 
 
-fun thy_name_of (C as Class{thyname,...})       = (case thyname of
-						   (SOME tname) =>  tname
-						 | NONE => error  ("Class "^((string_of_path o name_of) C)^" has no thyname"))
-  | thy_name_of (I as Interface{thyname,...})   = (case thyname of
-						   (SOME tname) =>  tname
-						 | NONE => error  ("Interface "^((string_of_path o name_of) I)^" has no thyname"))
-  | thy_name_of (E as Enumeration{thyname,...}) = (case thyname of
-						   (SOME tname) =>  tname
-						 | NONE => error  ("Enumeration "^((string_of_path o name_of) E)^" has no thyname"))
-  | thy_name_of (P as Primitive{thyname,...})    = (case thyname of
-						   (SOME tname) =>  tname
-						 | NONE => error  ("Primitive "^((string_of_path o name_of) P)^" has no thyname"))
+fun thy_name_of (C as Class{thyname,...})       = 
+     (case thyname of  SOME tname =>  tname
+		     | NONE => error  ("Class "^((string_of_path o name_of) C)^
+                                       " has no thyname"))
+  | thy_name_of (I as Interface{thyname,...})   = 
+     (case thyname of SOME tname =>  tname
+		     | NONE => error  ("Interface "^((string_of_path o name_of) I)
+                                       ^" has no thyname"))
+  | thy_name_of (E as Enumeration{thyname,...}) = 
+      (case thyname of SOME tname =>  tname
+		     | NONE => error  ("Enumeration "^((string_of_path o name_of) E)
+                                       ^" has no thyname"))
+  | thy_name_of (P as Primitive{thyname,...})    = 
+      (case thyname of SOME tname =>  tname
+		     | NONE => error  ("Primitive "^((string_of_path o name_of) P)^
+                                       " has no thyname"))
  
 end

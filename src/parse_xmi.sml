@@ -548,6 +548,13 @@ fun mkGeneralization tree =
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkGeneralization: "^msg)
     end
 
+
+fun mkActivityGraph tree =
+    let fun f atts trees = XMI_ActivityGraphs.dummy
+    in  XmlTree.apply_on "UML:ActivityGraph" f tree
+    end;
+
+
 fun mkPackage tree = 
     (if XmlTree.tagname_of tree = "UML:Model" orelse
 	XmlTree.tagname_of tree = "UML:Package" then 
@@ -566,7 +573,10 @@ fun mkPackage tree =
 						      (XmlTree.filter "UML:Generalization"
 								    trees)),
 			       constraints     = map mkConstraint 
-						     (filterConstraints trees) }
+						     (filterConstraints trees),
+                               statemachines   = nil,
+                               activitygraphs  = nil
+                              }
 	 end
      else raise IllFormed "did not find a UML:Model or UML: Package")
     handle XmlTree.IllFormed msg => raise IllFormed ("in mkPackage: "^msg)
@@ -583,13 +593,15 @@ fun mkStereotype tree =
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkStereotype: "^msg)
     end 
 
+
+
 fun mkXmiContent tree =
     let fun f atts trees = 
 	    { packages    = (map mkPackage    (filterPackages trees)),
 	      constraints = (map mkConstraint (filterConstraints trees)),
 	      classifiers = (map mkClassifier (filterClassifiers trees)),
 	      stereotypes = (map mkStereotype (filterStereotypes trees)),
-	      variable_declarations = (map mkVariableDec (filterVariableDecs trees)) }
+	      variable_declarations = (map mkVariableDec   (filterVariableDecs trees))}
     in XmlTree.apply_on "XMI.content" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkXmiContent: "^msg)
     end
@@ -599,7 +611,7 @@ val emptyXmiContent = { packages = nil,
 			constraints = nil,
 			classifiers = nil,
 			stereotypes = nil,
-			variable_declarations = nil }
+			variable_declarations = nil}
 
 fun findXmiContent tree = valOf (XmlTree.dfs "XMI.content" tree)
     handle Option => raise IllFormed "in findXmiContent: did not find XMI.content"

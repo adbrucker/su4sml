@@ -338,6 +338,7 @@ fun transform_classifier t (XMI_UML.Class {xmiid,name,isActive,visibility,isLeaf
 					      (find_aends t xmiid), 
 			stereotypes = nil, (* FIX *)
 			interfaces = nil, (* FIX *)
+                        activity_graphs = nil,
 			thyname = NONE}
     end
   | transform_classifier t (XMI_UML.Primitive {xmiid,name,generalizations,
