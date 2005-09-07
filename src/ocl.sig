@@ -51,6 +51,7 @@ datatype OclTerm =
        | AttributeCall      of OclTerm * OclType * Path * OclType
        | OperationCall         of OclTerm * OclType * Path 
 				* (OclTerm * OclType) list * OclType 
+       | OperationWithType of OclTerm * OclType * string * OclType * OclType 
        | Variable           of string * OclType
        | Let of string * OclType * OclTerm * OclType * OclTerm * OclType
        | Iterate of (string * OclType) list * string * OclType 

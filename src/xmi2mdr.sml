@@ -243,6 +243,14 @@ fun transform_expression t (XMI_UML.LiteralExp {symbol,expression_type}) =
 			     ListPair.zip (arglist, argtyplist),
 			     find_classifier_type t expression_type)
     end
+  | transform_expression t (XMI_UML.OperationWithTypeArgExp {source,name,
+							     typeArgument,
+							     expression_type}) =
+    ocl_term.OperationWithType (transform_expression t source,
+				find_classifier_type t (XMI_UML.expression_type_of source),
+				name,
+				find_classifier_type t typeArgument,
+				find_classifier_type t expression_type)    
   | transform_expression t (XMI_UML.VariableExp {referredVariable,expression_type})=
     let val var_dec = find_variable_dec t referredVariable
     in 

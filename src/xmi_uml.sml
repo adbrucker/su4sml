@@ -63,6 +63,10 @@ datatype OCLExpression = LiteralExp of { symbol          : string,
 				       arguments         : OCLExpression list,
 				       referredOperation : string,
 				       expression_type   : string }
+       | OperationWithTypeArgExp of { source :OCLExpression,
+				      name : string,
+				      typeArgument: string,
+				      expression_type: string} 
        | VariableExp             of { referredVariable: string,
 				       expression_type : string }
        | LetExp                  of { variable        : VariableDeclaration,
@@ -86,6 +90,7 @@ fun expression_type_of (LiteralExp{expression_type,...})           = expression_
   | expression_type_of (AssociationClassCallExp{expression_type,...}) = expression_type
   | expression_type_of (AttributeCallExp{expression_type,...}) = expression_type
   | expression_type_of (OperationCallExp{expression_type,...}) = expression_type
+  | expression_type_of (OperationWithTypeArgExp{expression_type,...}) = expression_type 
   | expression_type_of (VariableExp{expression_type,...}) = expression_type
   | expression_type_of (LetExp{expression_type,...})           = expression_type
   | expression_type_of (IterateExp{expression_type,...})       = expression_type

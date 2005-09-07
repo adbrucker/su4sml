@@ -220,6 +220,16 @@ fun mkOCLExpression tree =
 		     referredOperation = op_ref,
 		     expression_type   = findExpressionType trees }
 	    end
+	else if elem = "UML15OCL.Expressions.OclOperationWithTypeArgExp" then
+	    let val op_src = hd (XmlTree.follow 
+				      "OCL.Expressions.PropertyCallExp.source"
+				      trees)
+	    in XMI_UML.OperationWithTypeArgExp
+	       { source = mkOCLExpression op_src,
+		 name = getName atts,
+		 typeArgument = findXmiIdRef "OCL.Expressions.OclOperationWithTypeArgExp.typeArgument" trees,
+		 expression_type = findExpressionType trees }
+	    end
 	else if elem = "UML15OCL.Expressions.AttributeCallExp" then
 	    let val att_ref = 
 		    findXmiIdRef 
