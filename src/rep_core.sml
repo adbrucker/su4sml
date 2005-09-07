@@ -22,66 +22,66 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-structure mdr_core :  MDR_CORE = 
+structure Rep_Core :  REP_CORE = 
 struct
 type operation = { name          : string,	
-		   precondition  : (string option * ocl_term.OclTerm) list,
-		   postcondition : (string option * ocl_term.OclTerm) list,
-		   arguments     : (string * ocl_type.OclType) list,
-		   result        : ocl_type.OclType,
+		   precondition  : (string option * Rep_OclTerm.OclTerm) list,
+		   postcondition : (string option * Rep_OclTerm.OclTerm) list,
+		   arguments     : (string * Rep_OclType.OclType) list,
+		   result        : Rep_OclType.OclType,
 		   isQuery       : bool }     
 
 type associationend = {name : string,
-		       aend_type: ocl_type.OclType,
+		       aend_type: Rep_OclType.OclType,
 		       multiplicity: (int*int) list,
 		       ordered: bool }
 
 datatype Classifier =  
 	 Class of 
-	 { name        : ocl_type.Path, 
-	   parent      : ocl_type.Path option,
-	   attributes  : (string * ocl_type.OclType) list,
+	 { name        : Rep_OclType.Path, 
+	   parent      : Rep_OclType.Path option,
+	   attributes  : (string * Rep_OclType.OclType) list,
 	   operations  : operation list,
 	   associationends : associationend list,
-	   invariant   : (string option * ocl_term.OclTerm) list,
+	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   stereotypes : string list,
-	   interfaces  : ocl_type.Path list,
+	   interfaces  : Rep_OclType.Path list,
 	   thyname     : string option,
            activity_graphs : Rep_ActivityGraph.ActivityGraph list
 	  }
        | Interface of               (* not supported yet *)
-	 { name        : ocl_type.Path,
-	   parents     : ocl_type.Path list, 
+	 { name        : Rep_OclType.Path,
+	   parents     : Rep_OclType.Path list, 
 	   operations  : operation list,
 	   stereotypes : string list,
-	   invariant   : (string option * ocl_term.OclTerm) list,
+	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   thyname     : string option
 	  }
        | Enumeration of (* not really supported yet? *)
-	 { name        : ocl_type.Path,
-	   parent      : ocl_type.Path option,
+	 { name        : Rep_OclType.Path,
+	   parent      : Rep_OclType.Path option,
 	   operations  : operation list,
 	   literals    : string list,
-	   invariant   : (string option * ocl_term.OclTerm) list,
+	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   stereotypes : string list,
-	   interfaces  : ocl_type.Path list,
+	   interfaces  : Rep_OclType.Path list,
 	   thyname     : string option
 	  }
        | Primitive of (* not really supported yet *)
-	 { name        : ocl_type.Path,
-	   parent      : ocl_type.Path option,
+	 { name        : Rep_OclType.Path,
+	   parent      : Rep_OclType.Path option,
 	   operations  : operation list,
 	   associationends : associationend list,
-	   invariant   : (string option * ocl_term.OclTerm) list,
+	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   stereotypes : string list,
-	   interfaces  : ocl_type.Path list,
+	   interfaces  : Rep_OclType.Path list,
 	   thyname     : string option
 	  }
  
 (* convert an association end into the corresponding collection type *)
 fun assoc_to_attr_type {name,aend_type,multiplicity,ordered} =
-    if ordered then ocl_type.Sequence aend_type (* OrderedSet? *)
-    else ocl_type.Set aend_type
+    if ordered then Rep_OclType.Sequence aend_type (* OrderedSet? *)
+    else Rep_OclType.Set aend_type
     
 (* convert an association end into an attribute of the *)
 (* corresponding collection type                       *)
@@ -90,36 +90,36 @@ fun assoc_to_attr (assoc:associationend) = (#name assoc,assoc_to_attr_type assoc
 (* convert a multiplicity range into an invariant of the form *)
 (* size > lowerBound and size < upperBound )                 *)
 fun range_to_inv cls_name aend (a,b) = 
-    let val cls       = ocl_type.Classifier cls_name
+    let val cls       = Rep_OclType.Classifier cls_name
 	val attr_type = assoc_to_attr_type aend
 	val attr_name = cls_name@[#name aend]
-	val literal_a = ocl_term.Literal (Int.toString a, ocl_type.Integer)
-	val literal_b = ocl_term.Literal (Int.toString b, ocl_type.Integer)
-	val self      = ocl_term.Variable ("self",cls)
-	val attribute = ocl_term.AttributeCall (self,cls,attr_name,attr_type)
+	val literal_a = Rep_OclTerm.Literal (Int.toString a, Rep_OclType.Integer)
+	val literal_b = Rep_OclTerm.Literal (Int.toString b, Rep_OclType.Integer)
+	val self      = Rep_OclTerm.Variable ("self",cls)
+	val attribute = Rep_OclTerm.AttributeCall (self,cls,attr_name,attr_type)
 	val attribute_size = 
-	    ocl_term.OperationCall (attribute,attr_type,
+	    Rep_OclTerm.OperationCall (attribute,attr_type,
 				    ["oclLib","Collection","size"],[],
-				    ocl_type.Integer)
+				    Rep_OclType.Integer)
 	val lower_bound = 
-	    ocl_term.OperationCall (attribute_size,ocl_type.Integer,
+	    Rep_OclTerm.OperationCall (attribute_size,Rep_OclType.Integer,
 				    ["oclLib","Real",">="],
-				    [(literal_a,ocl_type.Integer)],ocl_type.Boolean)
+				    [(literal_a,Rep_OclType.Integer)],Rep_OclType.Boolean)
 	val upper_bound = 
-	    ocl_term.OperationCall (attribute_size,ocl_type.Integer,
+	    Rep_OclTerm.OperationCall (attribute_size,Rep_OclType.Integer,
 				    ["oclLib","Real","<="],
-				    [(literal_b,ocl_type.Integer)],ocl_type.Boolean)
+				    [(literal_b,Rep_OclType.Integer)],Rep_OclType.Boolean)
 	val equal = 
-	    ocl_term.OperationCall (attribute_size,ocl_type.Integer,
+	    Rep_OclTerm.OperationCall (attribute_size,Rep_OclType.Integer,
 				    ["oclLib","OclAny","="],
-				    [(literal_a,ocl_type.Integer)],ocl_type.Boolean)
+				    [(literal_a,Rep_OclType.Integer)],Rep_OclType.Boolean)
     in
 	if a = b then equal
 	else if b = ~1 then lower_bound
-	else ocl_term.OperationCall (lower_bound,ocl_type.Boolean,
+	else Rep_OclTerm.OperationCall (lower_bound,Rep_OclType.Boolean,
 				     ["oclLib","Boolean","and"],
-				     [(upper_bound,ocl_type.Boolean)],
-				     ocl_type.Boolean)
+				     [(upper_bound,Rep_OclType.Boolean)],
+				     Rep_OclType.Boolean)
     end
 
 (* calculate the invariants of an association end:               *)
@@ -132,11 +132,11 @@ fun assoc_to_inv cls_name (aend:associationend) =
 	val range_constraints = map (range_to_inv cls_name aend) 
 				    (#multiplicity aend)
 	fun ocl_or (x,y) = 
-	    ocl_term.OperationCall (x,ocl_type.Boolean,
+	    Rep_OclTerm.OperationCall (x,Rep_OclType.Boolean,
 				    ["oclLib","Boolean","or"],
-				    [(y,ocl_type.Boolean)],ocl_type.Boolean)
+				    [(y,Rep_OclType.Boolean)],Rep_OclType.Boolean)
     in if range_constraints = [] 
-       then (SOME inv_name, ocl_term.Literal ("true",ocl_type.Boolean)) 
+       then (SOME inv_name, Rep_OclTerm.Literal ("true",Rep_OclType.Boolean)) 
        else (SOME inv_name, foldr1 ocl_or range_constraints)
     end
 	     
@@ -176,7 +176,7 @@ val OclAnyC = Class{name=["OclAny"],parent=NONE,attributes=[],
                           activity_graphs=nil}
 
 		   
-fun string_of_path (path:ocl_type.Path) = case path of
+fun string_of_path (path:Rep_OclType.Path) = case path of
 			      [] => ""
 			    | p  => foldr1 (fn (a,b) => a^"."^b) p
 
@@ -299,27 +299,27 @@ fun p_invariant_of (Class{invariant,...})       = invariant
   | p_invariant_of (Primitive{invariant,...})    = invariant
 
 fun invariant_of C = case p_invariant_of C of  
-			 [] => [(NONE, ocl_term.Literal ("true",ocl_type.Boolean))]
+			 [] => [(NONE, Rep_OclTerm.Literal ("true",Rep_OclType.Boolean))]
 		       | il => il
 
 
 fun precondition_of_op ({precondition,...}:operation) = case precondition  of  
-			 [] => [(NONE, ocl_term.Literal ("true",ocl_type.Boolean))]
+			 [] => [(NONE, Rep_OclTerm.Literal ("true",Rep_OclType.Boolean))]
 		       | il => il
 
 
 fun postcondition_of_op ({postcondition, ...}:operation) = case postcondition  of  
-			 [] => [(NONE, ocl_term.Literal ("true",ocl_type.Boolean))]
+			 [] => [(NONE, Rep_OclTerm.Literal ("true",Rep_OclType.Boolean))]
 		       | il => il
 
 fun name_of_op ({name,...}:operation) = name
 
 fun mangled_name_of_op ({name,arguments,result,...}:operation) = 
     let
-	val arg_typestrs = map (fn a => (ocl_type.string_of_OclType o snd ) a ) arguments
+	val arg_typestrs = map (fn a => (Rep_OclType.string_of_OclType o snd ) a ) arguments
     in 
 	 foldr1 (fn (a,b) =>(a^"_"^b)) 
-                ((name::arg_typestrs)@[ocl_type.string_of_OclType result])
+                ((name::arg_typestrs)@[Rep_OclType.string_of_OclType result])
     end
 							   
 fun result_of_op ({result,...}:operation) = result

@@ -22,7 +22,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-structure ocl_type : OCL_TYPE =
+structure Rep_OclType : REP_OCL_TYPE =
 struct
 
 type Path = string list
@@ -56,9 +56,9 @@ fun string_of_OclType Integer        = "Integer"
 end
      
     
-structure ocl_term : OCL_TERM =
+structure Rep_OclTerm : REP_OCL_TERM =
 struct
-open ocl_type
+open Rep_OclType
 
 datatype OclTerm = 
 	 Literal of string * OclType

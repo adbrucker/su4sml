@@ -25,7 +25,7 @@
 signature REP = 
 sig
 
-include MDR_CORE
+include REP_CORE
 include REP_ACTIVITY_GRAPH 
 
 				 

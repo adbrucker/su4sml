@@ -25,7 +25,7 @@
 structure Rep : REP = 
 struct
 
-open mdr_core Rep_StateMachine Rep_ActivityGraph
+open Rep_Core Rep_StateMachine Rep_ActivityGraph
 
 				 
 end

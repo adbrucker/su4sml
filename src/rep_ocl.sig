@@ -22,7 +22,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-signature OCL_TYPE =
+signature REP_OCL_TYPE =
 sig
 	
     type Path = string list
@@ -38,9 +38,9 @@ sig
 end
      
     
-signature OCL_TERM =
+signature REP_OCL_TERM =
 sig
-include OCL_TYPE
+include REP_OCL_TYPE
 
 datatype OclTerm = 
 	 Literal of string * OclType

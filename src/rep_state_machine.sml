@@ -41,9 +41,9 @@ datatype Action = create
 datatype StateMachine = SM_mk of {top : StateVertex_Id,
                                   transition : Transition_Id list}
 
-datatype Guard        = G_mk of  {expression : ocl_term.OclTerm}
+datatype Guard        = G_mk of  {expression : Rep_OclTerm.OclTerm}
 
-type     Parameter    = ocl_type.OclType
+type     Parameter    = Rep_OclType.OclType
 	      
 datatype Event  = SignalEvent  of Parameter list
                 | CallEvent    of Parameter list
@@ -86,7 +86,7 @@ datatype StateVertex  =
        | SimpleState_ObjectflowState (* from ActivityGraphs *)
          of {isSynch      : bool,
              parameter    : Parameter list,
-             types        : ocl_type.Path list (* Classifier_Id *)}
+             types        : Rep_OclType.Path list (* Classifier_Id *)}
        | State_FinalState
 	 of {outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list,

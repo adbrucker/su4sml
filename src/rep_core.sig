@@ -22,18 +22,18 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-signature MDR_CORE = 
+signature REP_CORE = 
 sig
 type operation = { name          : string,	
-		   precondition  : (string option * ocl_term.OclTerm) list,
-		   postcondition : (string option * ocl_term.OclTerm) list,
-		   arguments     : (string * ocl_type.OclType) list,
-		   result        : ocl_type.OclType,
+		   precondition  : (string option * Rep_OclTerm.OclTerm) list,
+		   postcondition : (string option * Rep_OclTerm.OclTerm) list,
+		   arguments     : (string * Rep_OclType.OclType) list,
+		   result        : Rep_OclType.OclType,
 		   isQuery       : bool
 				   }     
 
 type associationend = {name : string,
-		       aend_type : ocl_type.OclType,	
+		       aend_type : Rep_OclType.OclType,	
 		       multiplicity: (int * int) list,
 		       ordered: bool	
 				     }	       
@@ -41,43 +41,43 @@ type associationend = {name : string,
 
 datatype Classifier =  
 	 Class of 
-	 { name        : ocl_type.Path, 
-	   parent      : ocl_type.Path option,
-	   attributes  : (string * ocl_type.OclType) list,
+	 { name        : Rep_OclType.Path, 
+	   parent      : Rep_OclType.Path option,
+	   attributes  : (string * Rep_OclType.OclType) list,
 	   operations  : operation list,
 	   associationends : associationend list,
-	   invariant   : (string option * ocl_term.OclTerm) list,
+	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   stereotypes : string list,
-	   interfaces  : ocl_type.Path list,
+	   interfaces  : Rep_OclType.Path list,
 	   thyname     : string option,
            activity_graphs : Rep_ActivityGraph.ActivityGraph list
 	  }
        | Interface of               (* not supported yet *)
-	 { name        : ocl_type.Path,
-	   parents     : ocl_type.Path list, 
+	 { name        : Rep_OclType.Path,
+	   parents     : Rep_OclType.Path list, 
 	   operations  : operation list,
 	   stereotypes : string list,
-	   invariant   : (string option * ocl_term.OclTerm) list,
+	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   thyname     : string option
 	  }
        | Enumeration of (* not really supported yet? *)
-	 { name        : ocl_type.Path,
-	   parent      : ocl_type.Path option,
+	 { name        : Rep_OclType.Path,
+	   parent      : Rep_OclType.Path option,
 	   operations  : operation list,
 	   literals    : string list,
-	   invariant   : (string option * ocl_term.OclTerm) list,
+	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   stereotypes : string list,
-	   interfaces  : ocl_type.Path list,
+	   interfaces  : Rep_OclType.Path list,
 	   thyname     : string option
 	  }
        | Primitive of (* not really supported yet *)
-	 { name        : ocl_type.Path,
-	   parent      : ocl_type.Path option,
+	 { name        : Rep_OclType.Path,
+	   parent      : Rep_OclType.Path option,
 	   operations  : operation list,
 	   associationends : associationend list,
-	   invariant   : (string option * ocl_term.OclTerm) list,
+	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   stereotypes : string list,
-	   interfaces  : ocl_type.Path list,
+	   interfaces  : Rep_OclType.Path list,
 	   thyname     : string option
 	  }
 
@@ -85,25 +85,25 @@ val OclAnyC : Classifier
 
 val normalize : Classifier -> Classifier
 
-val name_of       : Classifier -> ocl_type.Path 
-val package_of    : Classifier -> ocl_type.Path
+val name_of       : Classifier -> Rep_OclType.Path 
+val package_of    : Classifier -> Rep_OclType.Path
 val short_name_of : Classifier -> string 
 
-val parent_name_of       : Classifier -> ocl_type.Path 
-val parent_package_of    : Classifier -> ocl_type.Path 
+val parent_name_of       : Classifier -> Rep_OclType.Path 
+val parent_package_of    : Classifier -> Rep_OclType.Path 
 val short_parent_name_of : Classifier -> string 
 
 val thy_name_of       : Classifier -> string
 val update_thyname    : string -> Classifier -> Classifier
-val attributes_of     : Classifier -> (string * ocl_type.OclType) list
+val attributes_of     : Classifier -> (string * Rep_OclType.OclType) list
 val operations_of     : Classifier -> operation list
-val invariant_of      : Classifier -> (string option * ocl_term.OclTerm) list
+val invariant_of      : Classifier -> (string option * Rep_OclTerm.OclTerm) list
 val string_of_path    : string list -> string    
 
-val arguments_of_op    : operation -> (string * ocl_type.OclType) list
-val precondition_of_op  : operation -> (string option * ocl_term.OclTerm) list
-val result_of_op  : operation -> ocl_type.OclType
-val postcondition_of_op : operation -> (string option * ocl_term.OclTerm) list
+val arguments_of_op    : operation -> (string * Rep_OclType.OclType) list
+val precondition_of_op  : operation -> (string option * Rep_OclTerm.OclTerm) list
+val result_of_op  : operation -> Rep_OclType.OclType
+val postcondition_of_op : operation -> (string option * Rep_OclTerm.OclTerm) list
 val name_of_op          : operation -> string
 val mangled_name_of_op          : operation -> string
 
