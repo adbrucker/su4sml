@@ -23,7 +23,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-structure rep_ActivityGraph : REP_ACTIVITY_GRAPH = 
+structure Rep_ActivityGraph : REP_ACTIVITY_GRAPH = 
 struct
 open     Rep_StateMachine 
 type     ActivityGraph = StateMachine

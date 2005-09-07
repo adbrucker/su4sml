@@ -22,11 +22,10 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-signature REP = 
-sig
+structure Rep : REP = 
+struct
 
-include MDR_CORE
-include REP_ACTIVITY_GRAPH 
+open mdr_core Rep_StateMachine Rep_ActivityGraph
 
 				 
 end

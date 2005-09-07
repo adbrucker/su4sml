@@ -47,7 +47,7 @@ datatype Classifier =
 	   stereotypes : string list,
 	   interfaces  : ocl_type.Path list,
 	   thyname     : string option,
-           activity_graphs : rep_ActivityGraph.ActivityGraph list
+           activity_graphs : Rep_ActivityGraph.ActivityGraph list
 	  }
        | Interface of               (* not supported yet *)
 	 { name        : ocl_type.Path,

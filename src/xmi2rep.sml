@@ -26,8 +26,8 @@
 
 structure Xmi2Rep : 
 sig
-    val transformXMI : XMI.XmiContent -> mdr_core.Classifier list
-    val readXMI      : string -> mdr_core.Classifier list
+    val transformXMI : XMI.XmiContent -> Rep.Classifier list
+    val readXMI      : string -> Rep.Classifier list
     (* generic exception if something is wrong *)
     exception IllFormed of string
 end  =
@@ -169,7 +169,7 @@ fun insert_attribute table path_prefix (a:XMI.Attribute) =
 fun insert_operation table path_prefix (a:XMI.Operation) =
     HashTable.insert table (#xmiid a, Operation (path_prefix @ [#name a]))
 
-fun add_aend table xmiid (aend:mdr_core.associationend) = () (* FIX *)
+fun add_aend table xmiid (aend:Rep.associationend) = () (* FIX *)
 
 
 fun insert_classifier table package_prefix class = 
@@ -326,7 +326,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 			  generalizations 
 	val filtered_parents = filter (fn x => x <> ocl_type.OclAny) parents
     in
-	mdr_core.Class {name = path_of_classifier (find_classifier_type t xmiid), 
+	Rep.Class {name = path_of_classifier (find_classifier_type t xmiid), 
 			parent = case filtered_parents 
 				  of [] => NONE
 				   | xs => SOME (path_of_classifier (hd xs)),
@@ -343,7 +343,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
     end
   | transform_classifier t (XMI.Primitive {xmiid,name,generalizations,
 					       operations,invariant}) =
-    mdr_core.Primitive {name = case find_classifier_type t xmiid of ocl_type.Classifier x => x
+    Rep.Primitive {name = case find_classifier_type t xmiid of ocl_type.Classifier x => x
 								  | _ => raise Option, 
 			parent = NONE,    (* FIX *)
 			operations = map (transform_operation t) operations,
@@ -356,7 +356,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 		   thyname = NONE}
   | transform_classifier t (XMI.Enumeration {xmiid,name,generalizations,
 						 operations,literals,invariant}) =
-    mdr_core.Enumeration {name = case find_classifier_type t xmiid of ocl_type.Classifier x => x
+    Rep.Enumeration {name = case find_classifier_type t xmiid of ocl_type.Classifier x => x
 								    | _ => raise Option, 
 			  parent = NONE,    (* FIX *)
 			  literals = literals,
@@ -441,7 +441,7 @@ fun transform_associations t (XMI.Package p) =
     (map (transform_associations t) (#packages p);
     List.app (transform_assocation t) (#associations p))
 
-(* transform a UML model into a list of mdr_core classes           *)
+(* transform a UML model into a list of Rep classes           *)
 (* 1. traverse package hierarchy and put xmi.id of all interesting *)
 (*    model elements into the hashtable                            *) 
 (* 2. traverse again to find all associations, transform them into *)
@@ -469,7 +469,7 @@ fun transformXMI ({classifiers,constraints,packages,
     in 
 	insert_model           xmiid_table model; (* fill xmi.id table   *)
 	transform_associations xmiid_table model; (* handle associations *)
-	map mdr_core.normalize (transform_package xmiid_table model) (* transform classes   *)
+	map Rep.normalize (transform_package xmiid_table model) (* transform classes   *)
     end
 	handle Empty => raise Option
 
