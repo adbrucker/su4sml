@@ -44,5 +44,5 @@ use "rep.sig";
 use "xmi_uml.sml";
 use "xmltree_parser.sml";
 use "parse_xmi.sml";
-use "xmi2mdr.sml";
+use "xmi2rep.sml";
 
