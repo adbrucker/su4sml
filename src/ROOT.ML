@@ -42,7 +42,9 @@ use "rep_core.sig";
 use "rep_core.sml";
 use "rep.sig";
 use "rep.sml";
-use "xmi.sml";
+
+use "xmi.sml"; (* should be separated analogously as rep *)
+
 use "xmltree_parser.sml";
 use "xml2xmi.sml";
 use "xmi2rep.sml";
