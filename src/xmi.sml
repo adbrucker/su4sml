@@ -590,7 +590,7 @@ end
 
 
 
-structure XMI_UML =
+structure XMI =
 struct
 open XMI_Core XMI_ActivityGraphs XMI_ModelManagement
 

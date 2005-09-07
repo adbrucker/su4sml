@@ -24,9 +24,9 @@
 
 
 
-structure Xmi2Mdr : 
+structure Xmi2Rep : 
 sig
-    val transformXMI : XMI_UML.XmiContent -> mdr_core.Classifier list
+    val transformXMI : XMI.XmiContent -> mdr_core.Classifier list
     val readXMI      : string -> mdr_core.Classifier list
     (* generic exception if something is wrong *)
     exception IllFormed of string
@@ -37,11 +37,11 @@ exception NotYetImplemented
 
 datatype HashTableEntry = Package of ocl_type.Path
 		        | Type of (ocl_type.OclType * 
-				   (XMI_UML.AssociationEnd list)) 
+				   (XMI.AssociationEnd list)) 
                         | Generalization of (string * string) 
-			| Constraint of XMI_UML.Constraint 
+			| Constraint of XMI.Constraint 
 		        | Stereotype of string
-		        | Variable of XMI_UML.VariableDeclaration 
+		        | Variable of XMI.VariableDeclaration 
 			| Attribute of ocl_type.Path
 			| Operation of ocl_type.Path
 		        | AssociationEnd of ocl_type.Path 
@@ -151,30 +151,30 @@ fun find_classifier_type t xmiid
 	handle Option => raise IllFormed ("expected Classifier "^xmiid^" in table")
 		    
 
-fun insert_constraint table (c:XMI_UML.Constraint) =
+fun insert_constraint table (c:XMI.Constraint) =
     HashTable.insert table (#xmiid c, Constraint c)
 
-fun insert_variable_dec table (v:XMI_UML.VariableDeclaration) =
+fun insert_variable_dec table (v:XMI.VariableDeclaration) =
     HashTable.insert table (#xmiid v, Variable v)
 
-fun insert_stereotype table (s:XMI_UML.Stereotype) =
+fun insert_stereotype table (s:XMI.Stereotype) =
     HashTable.insert table (#xmiid s, Stereotype (#name s))
 
-fun insert_generalization table (g:XMI_UML.Generalization) =
+fun insert_generalization table (g:XMI.Generalization) =
     HashTable.insert table (#xmiid g, Generalization (#child_id g, #parent_id g))
 
-fun insert_attribute table path_prefix (a:XMI_UML.Attribute) =
+fun insert_attribute table path_prefix (a:XMI.Attribute) =
     HashTable.insert table (#xmiid a, Attribute (path_prefix @ [#name a]))
 
-fun insert_operation table path_prefix (a:XMI_UML.Operation) =
+fun insert_operation table path_prefix (a:XMI.Operation) =
     HashTable.insert table (#xmiid a, Operation (path_prefix @ [#name a]))
 
 fun add_aend table xmiid (aend:mdr_core.associationend) = () (* FIX *)
 
 
 fun insert_classifier table package_prefix class = 
-    let val id      = XMI_UML.classifier_xmiid_of class
-	val name    = XMI_UML.classifier_name_of class
+    let val id      = XMI.classifier_xmiid_of class
+	val name    = XMI.classifier_name_of class
 	val path    = package_prefix @ [name]
 	val ocltype = if (package_prefix = ["oclLib"]
 			  orelse package_prefix = ["UML_OCL"])
@@ -185,11 +185,11 @@ fun insert_classifier table package_prefix class =
 			   else if name = "OclVoid" then ocl_type.OclVoid
 			   else if name = "OclAny"  then ocl_type.OclAny
 			   (* now this is really ugly... *)
-			   else if String.isPrefix "Collection(" name then ocl_type.Collection (ocl_type.Classifier [XMI_UML.classifier_elementtype_of class])
-			   else if String.isPrefix "Sequence("   name then ocl_type.Sequence   (ocl_type.Classifier [XMI_UML.classifier_elementtype_of class])
-			   else if String.isPrefix "Set("        name then ocl_type.Set        (ocl_type.Classifier [XMI_UML.classifier_elementtype_of class])
-			   else if String.isPrefix "Bag("        name then ocl_type.Bag        (ocl_type.Classifier [XMI_UML.classifier_elementtype_of class])
-			   else if String.isPrefix "OrderedSet(" name then ocl_type.OrderedSet (ocl_type.Classifier [XMI_UML.classifier_elementtype_of class])
+			   else if String.isPrefix "Collection(" name then ocl_type.Collection (ocl_type.Classifier [XMI.classifier_elementtype_of class])
+			   else if String.isPrefix "Sequence("   name then ocl_type.Sequence   (ocl_type.Classifier [XMI.classifier_elementtype_of class])
+			   else if String.isPrefix "Set("        name then ocl_type.Set        (ocl_type.Classifier [XMI.classifier_elementtype_of class])
+			   else if String.isPrefix "Bag("        name then ocl_type.Bag        (ocl_type.Classifier [XMI.classifier_elementtype_of class])
+			   else if String.isPrefix "OrderedSet(" name then ocl_type.OrderedSet (ocl_type.Classifier [XMI.classifier_elementtype_of class])
 			   else raise IllFormed ("didn't recognize ocltype "^name) 
 		      else ocl_type.Classifier path
 	(* This function is called before the associations are handled, *)
@@ -198,80 +198,80 @@ fun insert_classifier table package_prefix class =
     in 
 	HashTable.insert table (id,Type (ocltype,aends));
 	case class 
-	 of XMI_UML.Class c => (map (insert_attribute table path) (#attributes c);
+	 of XMI.Class c => (map (insert_attribute table path) (#attributes c);
 				map (insert_operation table path) (#operations c); ())
-	  | XMI_UML.Primitive c => (map (insert_operation table path) (#operations c); ())
-	  | XMI_UML.Enumeration c => (map (insert_operation table path) (#operations c); ())
-	  | XMI_UML.Interface c => (map (insert_operation table path) (#operations c); ())
-	  | XMI_UML.Collection c => (map (insert_operation table path) (#operations c); ())
-	  | XMI_UML.Sequence c => (map (insert_operation table path) (#operations c); ())
-	  | XMI_UML.Set c => (map (insert_operation table path) (#operations c); ())
-	  | XMI_UML.Bag c => (map (insert_operation table path) (#operations c); ())
-	  | XMI_UML.OrderedSet c => (map (insert_operation table path) (#operations c); ())
+	  | XMI.Primitive c => (map (insert_operation table path) (#operations c); ())
+	  | XMI.Enumeration c => (map (insert_operation table path) (#operations c); ())
+	  | XMI.Interface c => (map (insert_operation table path) (#operations c); ())
+	  | XMI.Collection c => (map (insert_operation table path) (#operations c); ())
+	  | XMI.Sequence c => (map (insert_operation table path) (#operations c); ())
+	  | XMI.Set c => (map (insert_operation table path) (#operations c); ())
+	  | XMI.Bag c => (map (insert_operation table path) (#operations c); ())
+	  | XMI.OrderedSet c => (map (insert_operation table path) (#operations c); ())
 	  | _ => ()
     end
 
 
 val triv_expr = ocl_term.Literal ("true",ocl_type.Boolean)
 
-fun transform_expression t (XMI_UML.LiteralExp {symbol,expression_type}) = 
+fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) = 
     ocl_term.Literal (symbol,find_classifier_type t expression_type)
-  | transform_expression t (XMI_UML.IfExp {condition,thenExpression,
+  | transform_expression t (XMI.IfExp {condition,thenExpression,
 					   elseExpression,expression_type}) = 
     ocl_term.If (transform_expression t condition, 
-		 find_classifier_type t (XMI_UML.expression_type_of condition),
+		 find_classifier_type t (XMI.expression_type_of condition),
 		 transform_expression t thenExpression, 
-		 find_classifier_type t (XMI_UML.expression_type_of thenExpression),
+		 find_classifier_type t (XMI.expression_type_of thenExpression),
 		 transform_expression t elseExpression,
-		 find_classifier_type t (XMI_UML.expression_type_of elseExpression),
+		 find_classifier_type t (XMI.expression_type_of elseExpression),
 		 find_classifier_type t expression_type)
-  | transform_expression t (XMI_UML.AttributeCallExp {source,referredAttribute,
+  | transform_expression t (XMI.AttributeCallExp {source,referredAttribute,
 						      expression_type}) =
     ocl_term.AttributeCall (transform_expression t source,
-			    find_classifier_type t (XMI_UML.expression_type_of source),
+			    find_classifier_type t (XMI.expression_type_of source),
 			    find_attribute t referredAttribute,
 			    find_classifier_type t expression_type)
-  | transform_expression t (XMI_UML.OperationCallExp {source,arguments,
+  | transform_expression t (XMI.OperationCallExp {source,arguments,
 						      referredOperation,
 						      expression_type}) =
     let val arglist = map (transform_expression t) arguments
-	val argtyplist = map ((find_classifier_type t) o XMI_UML.expression_type_of) arguments
+	val argtyplist = map ((find_classifier_type t) o XMI.expression_type_of) arguments
     in
 	ocl_term.OperationCall (transform_expression t source,
-			     find_classifier_type t (XMI_UML.expression_type_of source),
+			     find_classifier_type t (XMI.expression_type_of source),
 			     find_operation t referredOperation,
 			     ListPair.zip (arglist, argtyplist),
 			     find_classifier_type t expression_type)
     end
-  | transform_expression t (XMI_UML.OperationWithTypeArgExp {source,name,
+  | transform_expression t (XMI.OperationWithTypeArgExp {source,name,
 							     typeArgument,
 							     expression_type}) =
     ocl_term.OperationWithType (transform_expression t source,
-				find_classifier_type t (XMI_UML.expression_type_of source),
+				find_classifier_type t (XMI.expression_type_of source),
 				name,
 				find_classifier_type t typeArgument,
 				find_classifier_type t expression_type)    
-  | transform_expression t (XMI_UML.VariableExp {referredVariable,expression_type})=
+  | transform_expression t (XMI.VariableExp {referredVariable,expression_type})=
     let val var_dec = find_variable_dec t referredVariable
     in 
 	ocl_term.Variable (#name var_dec,find_classifier_type t expression_type)
     end
-  | transform_expression t (XMI_UML.AssociationEndCallExp {source, referredAssociationEnd, expression_type}) =
+  | transform_expression t (XMI.AssociationEndCallExp {source, referredAssociationEnd, expression_type}) =
     ocl_term.AssociationEndCall (transform_expression t source,
-				 find_classifier_type t (XMI_UML.expression_type_of source),
+				 find_classifier_type t (XMI.expression_type_of source),
 				 find_associationend t referredAssociationEnd,
 				 find_classifier_type t expression_type
 				 )
-  | transform_expression t (XMI_UML.IteratorExp {name,iterators,body,source,expression_type}) = 
+  | transform_expression t (XMI.IteratorExp {name,iterators,body,source,expression_type}) = 
     ocl_term.Iterator (name,
 		       map (fn x => (#name x, find_classifier_type t (#declaration_type x))) iterators,
-		       transform_expression t source, find_classifier_type t (XMI_UML.expression_type_of source),
-		       transform_expression t body, find_classifier_type t (XMI_UML.expression_type_of body),
+		       transform_expression t source, find_classifier_type t (XMI.expression_type_of source),
+		       transform_expression t body, find_classifier_type t (XMI.expression_type_of body),
 		       find_classifier_type t expression_type
 		       )
   | transform_expression t _ = raise NotYetImplemented
 
-fun transform_constraint t ({xmiid,name,body,...}:XMI_UML.Constraint) = 
+fun transform_constraint t ({xmiid,name,body,...}:XMI.Constraint) = 
 	let val n_name = case name of 
 		(SOME s) => if (s = "") then NONE else (SOME(s))
 	       |NONE     => NONE
@@ -289,12 +289,12 @@ fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
 			   constraints} =
     {name=name,
      arguments = map (transform_parameter t)
-		     (filter (fn x => #kind x <> XMI_UML.Return) parameter),
+		     (filter (fn x => #kind x <> XMI.Return) parameter),
      precondition = map ((transform_constraint t) o (find_constraint t)) 
 			(filter_precondition t constraints),
      postcondition = map ((transform_constraint t) o (find_constraint t)) 
 			 (filter_postcondition t constraints), 
-     result = find_classifier_type t ((#type_id o hd)(filter (fn x => #kind x = XMI_UML.Return) parameter)),
+     result = find_classifier_type t ((#type_id o hd)(filter (fn x => #kind x = XMI.Return) parameter)),
      isQuery = isQuery      (* FIX *)
      }
 
@@ -306,7 +306,7 @@ fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,
     in
 	(name,if multiplicity = [(1,1)] 
 	      then cls_type
-	      else if ordering = XMI_UML.Ordered then ocl_type.Sequence cls_type
+	      else if ordering = XMI.Ordered then ocl_type.Sequence cls_type
 	      else ocl_type.Set cls_type)
     end
 
@@ -315,11 +315,11 @@ fun transform_aend t ({xmiid,name,ordering,multiplicity,participant_id,
   = {name         = name,
      aend_type    = find_classifier_type t participant_id,
      multiplicity = multiplicity,
-     ordered      = if ordering = XMI_UML.Ordered then true else false }
+     ordered      = if ordering = XMI.Ordered then true else false }
 
 
 	
-fun transform_classifier t (XMI_UML.Class {xmiid,name,isActive,visibility,isLeaf,
+fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 					   generalizations,attributes,operations,
 					   invariant}) =
     let val parents = map ((find_classifier_type t) o (find_parent t)) 
@@ -341,7 +341,7 @@ fun transform_classifier t (XMI_UML.Class {xmiid,name,isActive,visibility,isLeaf
                         activity_graphs = nil,
 			thyname = NONE}
     end
-  | transform_classifier t (XMI_UML.Primitive {xmiid,name,generalizations,
+  | transform_classifier t (XMI.Primitive {xmiid,name,generalizations,
 					       operations,invariant}) =
     mdr_core.Primitive {name = case find_classifier_type t xmiid of ocl_type.Classifier x => x
 								  | _ => raise Option, 
@@ -354,7 +354,7 @@ fun transform_classifier t (XMI_UML.Class {xmiid,name,isActive,visibility,isLeaf
 			stereotypes = nil, (*FIX *)
 			interfaces = nil, (* FIX *)
 		   thyname = NONE}
-  | transform_classifier t (XMI_UML.Enumeration {xmiid,name,generalizations,
+  | transform_classifier t (XMI.Enumeration {xmiid,name,generalizations,
 						 operations,literals,invariant}) =
     mdr_core.Enumeration {name = case find_classifier_type t xmiid of ocl_type.Classifier x => x
 								    | _ => raise Option, 
@@ -370,10 +370,10 @@ fun transform_classifier t (XMI_UML.Class {xmiid,name,isActive,visibility,isLeaf
 			   
 
 (* recursively transform all classes in the package *)
-fun transform_package t (XMI_UML.Package p) =
+fun transform_package t (XMI.Package p) =
     let (* we do not transform the ocl library *)
 	val filteredPackages = 
-	    filter (fn (XMI_UML.Package x) => 
+	    filter (fn (XMI.Package x) => 
 		       ((#name x <> "oclLib") andalso (#name x <> "UML_OCL")))
 		   (#packages p) 
     in 
@@ -382,7 +382,7 @@ fun transform_package t (XMI_UML.Package p) =
     end
 
 (* recursively insert mapping of xmi.id's to model elements into Hashtable *)
-fun insert_package table package_prefix (XMI_UML.Package p) =
+fun insert_package table package_prefix (XMI.Package p) =
     let val full_name = package_prefix @ [#name p]
     in 
 	map (insert_generalization table)           (#generalizations p);
@@ -394,7 +394,7 @@ fun insert_package table package_prefix (XMI_UML.Package p) =
 
 (* We do not want the name of the model to be part of the package hierarchy, *)
 (* therefore we handle the top-level model seperately                        *)
-fun insert_model table (XMI_UML.Package p) = 
+fun insert_model table (XMI.Package p) = 
     let val full_name = nil
     in 
 	map (insert_generalization table)           (#generalizations p);
@@ -416,12 +416,12 @@ fun insert_model table (XMI_UML.Package p) =
 (* 3. insert the mapping xmi.id of class to association end into the        *)
 (*    hashtable                                                             *)
 (* 4. insert mapping xmi.id of association end to path into the hashtable   *)
-fun transform_assocation t (assoc:XMI_UML.Association) =
+fun transform_assocation t (assoc:XMI.Association) =
     let	val aends = #connection assoc
 	fun all_others x xs = List.filter 
-				  (fn (y:XMI_UML.AssociationEnd) => y <> x) xs
+				  (fn (y:XMI.AssociationEnd) => y <> x) xs
 	fun pair_with ae aes = 
-	    map (fn (x:XMI_UML.AssociationEnd) => (#participant_id x, ae)) aes
+	    map (fn (x:XMI.AssociationEnd) => (#participant_id x, ae)) aes
 	val mappings = List.concat (map (fn x => pair_with x (all_others x aends)) aends)
 	fun add_aend_to_type (id,ae) = 
 	    let val type_of_id = find_classifier_type t id
@@ -437,7 +437,7 @@ fun transform_assocation t (assoc:XMI_UML.Association) =
     end
 
 (* recursively transforms all associations in the package p, *)
-fun transform_associations t (XMI_UML.Package p) = 
+fun transform_associations t (XMI.Package p) = 
     (map (transform_associations t) (#packages p);
     List.app (transform_assocation t) (#associations p))
 

@@ -24,7 +24,7 @@
 
 structure ParseXMI : 
 sig
-    val readFile: string -> XMI_UML.XmiContent
+    val readFile: string -> XMI.XmiContent
     (* generic exception if something is wrong *)
     exception IllFormed of string
 end =
@@ -63,52 +63,52 @@ fun getXmiIdref a = getStringAtt "xmi.idref" a
 fun getVisibility atts = 
     let val att = XmlTree.attvalue_of "visibility" atts 
     in
-	case att of SOME "public"    => XMI_UML.public
-		  | SOME "private"   => XMI_UML.private
-		  | SOME "protected" => XMI_UML.protected
-		  | SOME "package"   => XMI_UML.package
-		  | NONE             => XMI_UML.public
+	case att of SOME "public"    => XMI.public
+		  | SOME "private"   => XMI.private
+		  | SOME "protected" => XMI.protected
+		  | SOME "package"   => XMI.package
+		  | NONE             => XMI.public
 		  | SOME string      => raise IllFormed ("in getVisibility: found unexpected attribute value "^string)
     end
 
 fun getOrdering atts = 
     let val att = getStringAtt "ordering" atts 
     in 
-	case att of "unordered" => XMI_UML.Unordered
-		  | "ordered"  => XMI_UML.Ordered
+	case att of "unordered" => XMI.Unordered
+		  | "ordered"  => XMI.Ordered
 		  | _ => raise IllFormed ("in getOrdering: found unexpected attribute value "^att)
     end 
 
 fun getOrderingMaybe atts = 
     let val att = XmlTree.attvalue_of "ordering" atts 
     in 
-	case att of SOME "unordered" => XMI_UML.Unordered
-		  | SOME "ordered"   => XMI_UML.Ordered
-		  | _                => XMI_UML.Unordered
+	case att of SOME "unordered" => XMI.Unordered
+		  | SOME "ordered"   => XMI.Ordered
+		  | _                => XMI.Unordered
     end 
 
 fun getAggregation atts = 
     let val att = getStringAtt "aggregation" atts in
-	case att of "none" => XMI_UML.NoAggregation
-		  | "aggregate" => XMI_UML.Aggregate
-		  | "composite" => XMI_UML.Composite
+	case att of "none" => XMI.NoAggregation
+		  | "aggregate" => XMI.Aggregate
+		  | "composite" => XMI.Composite
 		  | _ => raise IllFormed ("in getAggregation: found unexpected attribute value "^att)
     end 
 
 fun getChangeability atts = 
     let val att = getStringAtt "changeability" atts in
-	case att of "changeable" => XMI_UML.Changeable
-		  | "frozen"     => XMI_UML.Frozen
-		  | "addonly"    => XMI_UML.AddOnly
+	case att of "changeable" => XMI.Changeable
+		  | "frozen"     => XMI.Frozen
+		  | "addonly"    => XMI.AddOnly
 		  | _ => raise IllFormed ("in getChangeability: found unexpected attribute value "^att)
     end 
 			       
 fun getKind atts = 
     let val att = getStringAtt "kind" atts in
-	case att of "in"     => XMI_UML.In
-		  | "out"    => XMI_UML.Out
-		  | "inout"  => XMI_UML.Inout
-		  | "return" => XMI_UML.Return
+	case att of "in"     => XMI.In
+		  | "out"    => XMI.Out
+		  | "inout"  => XMI.Inout
+		  | "return" => XMI.Return
 		  | _ => raise IllFormed ("in getKind: found unexpected attribute value "^att)
     end 
 	
@@ -184,7 +184,7 @@ fun findExpressionType trees = findXmiIdRef "OCL.Expressions.OclExpression.type"
 
 (* this is a hack. This will still throw an exception in xmi2mdr, because the  *)
 (* expression_type should be the xmiid of oclLib.Boolean, which we do not know *)
-val triv_expr = XMI_UML.LiteralExp {symbol = "true", 
+val triv_expr = XMI.LiteralExp {symbol = "true", 
 				    expression_type = "bool" }
 
 fun mkOCLExpression tree = 
@@ -193,16 +193,16 @@ fun mkOCLExpression tree =
 	val trees = XmlTree.children_of tree
     in 
 	if elem = "UML15OCL.Expressions.BooleanLiteralExp" then
-	    XMI_UML.LiteralExp { symbol          = getStringAtt "booleanSymbol" atts,
+	    XMI.LiteralExp { symbol          = getStringAtt "booleanSymbol" atts,
 				 expression_type = findExpressionType trees }
 	else if elem = "UML15OCL.Expressions.IntegerLiteralExp" then
-	    XMI_UML.LiteralExp { symbol          = getStringAtt "integerSymbol" atts,
+	    XMI.LiteralExp { symbol          = getStringAtt "integerSymbol" atts,
 				 expression_type = findExpressionType trees }
 	else if elem = "UML15OCL.Expressions.StringLiteralExp" then
-	    XMI_UML.LiteralExp { symbol          = getStringAtt "stringSymbol" atts,
+	    XMI.LiteralExp { symbol          = getStringAtt "stringSymbol" atts,
 				 expression_type = findExpressionType trees }
 	else if elem = "UML15OCL.Expressions.RealLiteralExp" then
-	    XMI_UML.LiteralExp { symbol          = getStringAtt "realSymbol" atts,
+	    XMI.LiteralExp { symbol          = getStringAtt "realSymbol" atts,
 				 expression_type = findExpressionType trees }
 	else if elem = "UML15OCL.Expressions.OperationCallExp" then
 	    let val op_src = hd (XmlTree.follow 
@@ -214,7 +214,7 @@ fun mkOCLExpression tree =
 		val op_args = XmlTree.follow_all 
 				  "OCL.Expressions.OperationCallExp.arguments"
 				  trees 
-	    in XMI_UML.OperationCallExp 
+	    in XMI.OperationCallExp 
 		   { source            = mkOCLExpression op_src,
 		     arguments         = map (mkOCLExpression o hd) op_args,
 		     referredOperation = op_ref,
@@ -224,7 +224,7 @@ fun mkOCLExpression tree =
 	    let val op_src = hd (XmlTree.follow 
 				      "OCL.Expressions.PropertyCallExp.source"
 				      trees)
-	    in XMI_UML.OperationWithTypeArgExp
+	    in XMI.OperationWithTypeArgExp
 	       { source = mkOCLExpression op_src,
 		 name = getName atts,
 		 typeArgument = findXmiIdRef "OCL.Expressions.OclOperationWithTypeArgExp.typeArgument" trees,
@@ -237,7 +237,7 @@ fun mkOCLExpression tree =
 		val att_src = (hd o XmlTree.follow 
 					"OCL.Expressions.PropertyCallExp.source") 
 				  trees
-	    in XMI_UML.AttributeCallExp 
+	    in XMI.AttributeCallExp 
 		   { source            = mkOCLExpression att_src,
 		     referredAttribute = att_ref,
 		     expression_type   = findExpressionType trees }
@@ -250,7 +250,7 @@ fun mkOCLExpression tree =
 		    findXmiIdRef 
 			"OCL.Expressions.AssociationEndCallExp.referredAssociationEnd"
 			trees
-	    in XMI_UML.AssociationEndCallExp 
+	    in XMI.AssociationEndCallExp 
 		   { source = mkOCLExpression assoc_src,
 		     referredAssociationEnd  = assoc_ref,
 		     expression_type = findExpressionType trees }
@@ -261,7 +261,7 @@ fun mkOCLExpression tree =
 	    let val var_ref = findXmiIdRef
 				  "OCL.Expressions.VariableExp.referredVariable"
 				  trees
-	    in XMI_UML.VariableExp { referredVariable = var_ref,
+	    in XMI.VariableExp { referredVariable = var_ref,
 			     expression_type  = findExpressionType trees }
 	    end
 	else if elem = "UML15OCL.Expressions.IfExp" then
@@ -273,7 +273,7 @@ fun mkOCLExpression tree =
 		val else_exp = (hd o XmlTree.follow 
 					 "OCL.Expressions.IfExp.elseExpression")
 				   trees
-	    in XMI_UML.IfExp { condition      = mkOCLExpression cond,
+	    in XMI.IfExp { condition      = mkOCLExpression cond,
 		       thenExpression = mkOCLExpression then_exp,
 		       elseExpression = mkOCLExpression else_exp,
 		       expression_type = findExpressionType trees }
@@ -291,7 +291,7 @@ fun mkOCLExpression tree =
 		    (hd o XmlTree.follow 
 			      "OCL.Expressions.VariableDeclaration.initExpression") 
 			(XmlTree.children_of var_decl)
-	    in XMI_UML.LetExp 
+	    in XMI.LetExp 
 		   { variable        = { xmiid            = var_xmiid,
 					 name             = var_name, 
 					 declaration_type = var_type_ref },
@@ -311,7 +311,7 @@ fun mkOCLExpression tree =
 		val iterators = XmlTree.follow "OCL.Expressions.LoopExp.iterators" 
 					       trees 
 	    in 
-		XMI_UML.IteratorExp { name      = getName atts,
+		XMI.IteratorExp { name      = getName atts,
 				      iterators = map mkVariableDec iterators,
 				      body      = mkOCLExpression iterator_body,
 				      source    = mkOCLExpression iterator_src,
@@ -411,7 +411,7 @@ fun mkAttribute tree =
     end
 
 fun mkClass atts trees 
-  = XMI_UML.Class { xmiid           = getXmiId atts,
+  = XMI.Class { xmiid           = getXmiId atts,
 	    name            = getName atts,
 	    isActive        = getBoolAtt "isActive" atts,
 	    visibility      = getVisibility atts,
@@ -439,7 +439,7 @@ fun mkClass atts trees
 			      else nil}
 
 fun mkPrimitive atts trees 
-  = XMI_UML.Primitive { xmiid      = getXmiId atts,
+  = XMI.Primitive { xmiid      = getXmiId atts,
 		name       = getName atts,
 		operations = if XmlTree.exists "UML:Classifier.feature" trees
 			     then map mkOperation 
@@ -460,7 +460,7 @@ fun mkPrimitive atts trees
     handle XmlTree.IllFormed msg => raise IllFormed ("in mkPrimitive: "^msg)
     
 fun mkEnumeration atts trees 
-  = XMI_UML.Enumeration { xmiid      = getXmiId atts,
+  = XMI.Enumeration { xmiid      = getXmiId atts,
 			  name       = getName atts,
 			  operations = if XmlTree.exists "UML:Classifier.feature" trees
 				       then map mkOperation 
@@ -481,7 +481,7 @@ fun mkEnumeration atts trees
 					   }
     handle XmlTree.IllFormed msg => raise IllFormed ("in mkEnumeration: "^msg)
 
-fun mkVoid atts trees = XMI_UML.Void { xmiid = getXmiId atts, 
+fun mkVoid atts trees = XMI.Void { xmiid = getXmiId atts, 
 				       name  = getName atts }
     handle XmlTree.IllFormed msg => raise IllFormed ("in mkVoid: "^msg)
 
@@ -507,11 +507,11 @@ fun mkGenericCollection atts trees =
     handle XmlTree.IllFormed msg => raise IllFormed ("in mkGenericCollection: "^msg)
 
 				  
-fun mkCollection atts trees = XMI_UML.Collection (mkGenericCollection atts trees)
-fun mkSequence   atts trees = XMI_UML.Sequence   (mkGenericCollection atts trees)
-fun mkSet        atts trees = XMI_UML.Set        (mkGenericCollection atts trees)
-fun mkBag        atts trees = XMI_UML.Bag        (mkGenericCollection atts trees)
-fun mkOrderedSet atts trees = XMI_UML.OrderedSet (mkGenericCollection atts trees)
+fun mkCollection atts trees = XMI.Collection (mkGenericCollection atts trees)
+fun mkSequence   atts trees = XMI.Sequence   (mkGenericCollection atts trees)
+fun mkSet        atts trees = XMI.Set        (mkGenericCollection atts trees)
+fun mkBag        atts trees = XMI.Bag        (mkGenericCollection atts trees)
+fun mkOrderedSet atts trees = XMI.OrderedSet (mkGenericCollection atts trees)
 
 fun mkClassifier tree = 
     let val elem  = XmlTree.tagname_of    tree
@@ -561,7 +561,7 @@ fun mkPackage tree =
 	 let val trees = XmlTree.skip "UML:Namespace.ownedElement" 
 				      ((hd o XmlTree.children_of) tree)
 	     val atts = XmlTree.attributes_of tree in
-	     XMI_UML.Package { xmiid           = getXmiId atts, 
+	     XMI.Package { xmiid           = getXmiId atts, 
 			       name            = getName atts,
 			       visibility      = getVisibility atts,
 			       packages        = (map mkPackage 
