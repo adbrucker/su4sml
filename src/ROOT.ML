@@ -41,8 +41,8 @@ use "rep_activity_graphs.sml";
 use "rep_core.sig";
 use "rep_core.sml";
 use "rep.sig";
-use "xmi_uml.sml";
+use "xmi.sml";
 use "xmltree_parser.sml";
-use "parse_xmi.sml";
+use "mxl2xmi.sml";
 use "xmi2rep.sml";
 
