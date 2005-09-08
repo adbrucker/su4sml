@@ -25,7 +25,8 @@
 use "library.sml";
 open library;
 fun su4sml_home () = if (getenv "HOLOCL_HOME") <> ""
-                     then getenv "HOLOCL_HOME" else ".";
+                     then getenv "HOLOCL_HOME" 
+                     else ".";
 
 
 cd "../lib/fxp/src"; 
@@ -43,7 +44,10 @@ use "rep_core.sml";
 use "rep.sig";
 use "rep.sml";
 
-use "xmi.sml"; (* should be separated analogously as rep *)
+use "xmi_ocl.sml"; 
+use "xmi_core.sml"; 
+use "xmi_activity_graphs.sml"; 
+use "xmi.sml"; 
 
 use "xmltree_parser.sml";
 use "xml2xmi.sml";
