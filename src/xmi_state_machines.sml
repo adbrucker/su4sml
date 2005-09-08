@@ -31,11 +31,15 @@
  * of references.
  * --------------------------------------------------------------------------*)
 
-
-structure XMI_ActivityGraphs =
+structure XMI_CommonBehavior = 
 struct
-open XMI_StateMachines
-datatype ActivityGraph = dummy
 end
+
+structure XMI_StateMachines =
+struct
+open XMI_CommonBehavior
+datatype StateMachine = dummy
+end
+
 
 

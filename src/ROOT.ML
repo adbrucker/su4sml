@@ -3,7 +3,8 @@
  *                                                                            
  * ROOT.ML - main "ROOT.ML" file for su4sml
  * Copyright (C) 2005 Achim D. Brucker <brucker@inf.ethz.ch>   
- *                    Jürgen Doser <doserj@inf.ethz.ch>
+ *                    Juergen Doser    <doserj@inf.ethz.ch>
+ *                    Burkhart Wolff   <bwolff@inf.ethz.ch>
  *                                                                            
  * This file is part of su4sml.                                              
  *                                                                            
@@ -35,8 +36,8 @@ cd "../../../src";
 
 use "rep_ocl.sig";
 use "rep_ocl.sml";
-use "rep_state_machine.sig";
-use "rep_state_machine.sml";
+use "rep_state_machines.sig";
+use "rep_state_machines.sml";
 use "rep_activity_graphs.sig";
 use "rep_activity_graphs.sml";
 use "rep_core.sig";
@@ -46,6 +47,7 @@ use "rep.sml";
 
 use "xmi_ocl.sml"; 
 use "xmi_core.sml"; 
+use "xmi_state_machines.sml"; 
 use "xmi_activity_graphs.sml"; 
 use "xmi.sml"; 
 
