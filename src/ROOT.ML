@@ -25,15 +25,26 @@
 
 use "library.sml";
 open library;
+
+
+(* ****************************************************** *)
+(* Load the (foreign) fxp-module providing
+   an elemantary library in processing xml documents. *)
 fun su4sml_home () = if (getenv "HOLOCL_HOME") <> ""
                      then getenv "HOLOCL_HOME" 
                      else ".";
-
-
 cd "../lib/fxp/src"; 
 use "ROOT.ML"; 
 cd "../../../src";
 
+
+
+(* ****************************************************** *)
+(* Abstract Representation ("The Repository") of a UML model.
+   - References resolved
+   - only supported parts were represented
+   - structural simplifications whereever needed for
+     our applications.  *)
 use "rep_ocl.sig";
 use "rep_ocl.sml";
 use "rep_state_machines.sig";
@@ -45,13 +56,27 @@ use "rep_core.sml";
 use "rep.sig";
 use "rep.sml";
 
+
+
+(* ****************************************************** *)
+(* Abstract Representation of an XMI File of a UML Model.
+   - References kept
+   - only "interesting" parts were represented
+   - structural simplifications whereever needed for
+     our applications.
+   - Layout Information skipped.  *)
 use "xmi_ocl.sml"; 
 use "xmi_core.sml"; 
 use "xmi_state_machines.sml"; 
 use "xmi_activity_graphs.sml"; 
 use "xmi.sml"; 
 
-use "xmltree_parser.sml";
-use "xml2xmi.sml";
-use "xmi2rep.sml";
+
+(* ****************************************************** *)
+(* Main Conversion Processes  *)
+use "xmltree_parser.sml"; (* provides explicit xml-tree data structure,
+                             abstracts away fxp package. *)
+use "xml2xmi.sml";        (* conversion XML to XMI *)
+
+use "xmi2rep.sml";        (* conversion XMI to Rep *)
 
