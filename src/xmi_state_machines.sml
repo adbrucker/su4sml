@@ -61,7 +61,9 @@ datatype Event  = SignalEvent  of Parameter list
 				 
 				 
 datatype Transition   = mk_Transition of  
-                                 {source  : StateVertex_Id,
+                                 {is_specification : bool,
+                                  xmiid   : string,
+                                  source  : StateVertex_Id,
                                   target  : StateVertex_Id,
 			 	  guard   : Guard  option,
 				  trigger : Event  option,
@@ -76,45 +78,95 @@ datatype PseudoStateVars = initial  | deep   | shallow |
 				  
 datatype StateVertex  = 
          State_CompositState 
-	 of {outgoing     : Transition_Id list,
-	     incoming     : Transition_Id list, 
-	     container    : StateVertex_Id option,
-	     subvertex    : StateVertex_Id list,
+	 of {xmiid        : string,
+             name         : string,
+             is_specification : bool,
              isConcurrent : bool,
-             submachine   : StateMachine * 
-                            {isDynamic : bool
-                             (* + dynamicArguments 
-                                + dynamicMultiplicity *)} option}
-                            (* variant for Subactivity State *)
+             entry        : Action option,
+             exit         : Action option,
+             doActivity   : Action option,
+             outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list, 
+	     subvertex    : StateVertex list}
+       | CompositState_SubactivityState
+	 of {xmiid        : string,
+             name         : string,
+             is_specification : bool,
+             isConcurrent : bool,
+             entry        : Action option,
+             exit         : Action option,
+             doActivity   : Action option,
+             outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list, 
+	     subvertex    : StateVertex list,
+             submachine   : StateMachine ,
+             isDynamic    : bool}
        | State_SimpleState
-	 of {outgoing     : Transition_Id list,
-	     incoming     : Transition_Id list,
-	     container    : StateVertex_Id option}
+	 of {xmiid        : string,
+             name         : string,
+             is_specification : bool,
+             entry        : Action option,
+             exit         : Action option,
+             doActivity   : Action option,
+             outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list}
        | SimpleState_ActionState (* from ActivityGraphs *)
-         of {isDynamic    : bool 
+         of {xmiid        : string,
+             name         : string,
+             is_specification : bool,
+             entry        : Action option,
+             exit         : Action option,
+             doActivity   : Action option,
+             outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list, 
+             isDynamic    : bool 
              (* + dynamicArguments + dynamicMultiplicity *)}
        | SimpleState_ObjectflowState (* from ActivityGraphs *)
-         of {isSynch      : bool,
+         of {xmiid        : string,
+             name         : string,
+             is_specification : bool,
+             entry        : Action option,
+             exit         : Action option,
+             doActivity   : Action option,
+             outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list, 
+             isSynch      : bool,
              parameter    : Parameter list,
              types        : Rep_OclType.Path list (* Classifier_Id *)}
        | State_FinalState
-	 of {outgoing     : Transition_Id list,
-	     incoming     : Transition_Id list,
-	     container    : StateVertex_Id option}
+	 of {xmiid        : string,
+             name         : string,
+             is_specification : bool,
+             entry        : Action option,
+             exit         : Action option,
+             doActivity   : Action option,
+             outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list }
        | PseudoState
-	 of {kind         : PseudoStateVars,
+	 of {xmiid        : string,
+             name         : string,
+             is_specification : bool,
+             kind         : PseudoStateVars,
+             entry        : Action option,
+             exit         : Action option,
+             doActivity   : Action option,
+             outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list }
+       | SyncState
+	 of {xmiid        : string,
+             name         : string,
+             is_specification : bool,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list,
-	     container    : StateVertex_Id option}
-       | SyncState
-	 of {outgoing     : Transition_Id list,
-	     incoming     : Transition_Id list,
-	     container    : StateVertex_Id option}
+	     bound        : int}
 (*     | StubState  *)
 	    
 and	StateMachine = mk_StateMachine of 
-                           {top        : StateVertex,
-                            transition : Transition list}
+                           {xmiid            : string,
+                            contextxmiid     : string,
+                            is_specification : bool,
+                            top              : StateVertex,
+                            transitions      : Transition list}
 
 
 end

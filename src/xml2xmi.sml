@@ -56,9 +56,9 @@ fun getIntAtt string atts =
 					  " with unexpected value "^att)
     end
 
-fun getXmiId    a = getStringAtt "xmi.id"    a
-fun getName     a = getStringAtt "name"      a
-fun getXmiIdref a = getStringAtt "xmi.idref" a
+val getXmiId     = getStringAtt "xmi.id"    
+val getName      = getStringAtt "name"      
+val getXmiIdref  = getStringAtt "xmi.idref" 
 		 
 fun getVisibility atts = 
     let val att = XmlTree.attvalue_of "visibility" atts 
@@ -323,11 +323,15 @@ fun mkOCLExpression tree =
 fun getAssociations t = (map mkAssociation (XmlTree.filter "UML:Association" t))@
 			 (map mkAssociationClass (XmlTree.filter "UML:AssociationClass" t))
 			
-fun filterConstraints  trees = XmlTree.filter "UML:Constraint" trees   
-fun filterStereotypes  trees = XmlTree.filter "UML:Stereotype" trees
-fun filterVariableDecs trees = XmlTree.filter "UML15OCL.Expressions.VariableDeclaration" trees
-fun filterPackages     trees = append (XmlTree.filter "UML:Package" trees)
-				      (XmlTree.filter "UML:Model" trees)			      
+val filterConstraints   = XmlTree.filter "UML:Constraint"  
+val filterStereotypes   = XmlTree.filter "UML:Stereotype" 
+val filterVariableDecs  = XmlTree.filter "UML15OCL.Expressions.VariableDeclaration" 
+val filterPackages      = fn trees => append (XmlTree.filter "UML:Package" trees)
+				             (XmlTree.filter "UML:Model" trees)			      
+val filterStateMachines = XmlTree.filter "UML:StateMachine" 
+val filterActivityGraphs= XmlTree.filter "UML:ActivityGraph" 
+
+
 (* FIX: other classifiers *) 
 fun filterClassifiers trees = 
     filter (fn x => let val elem = XmlTree.tagname_of x in
@@ -549,15 +553,146 @@ fun mkGeneralization tree =
     end
 
 
+fun mkTransition tree = 
+    let fun f atts trees = XMI.mk_Transition  
+                           {is_specification = getBoolAtt "isSpecification" atts,
+                            xmiid  = getXmiId atts,
+                            source = (getXmiIdref o XmlTree.attributes_of o 
+                                      hd o XmlTree.children_of o 
+                                      (XmlTree.find "UML:Transition.source"))
+                                     (trees),
+                            target = (getXmiIdref o XmlTree.attributes_of o 
+                                      hd o XmlTree.children_of o 
+                                      (XmlTree.find "UML:Transition.target"))
+                                     (trees),
+			    guard  = NONE, (* TO BE DONE *)
+			    trigger= NONE, (* TO BE DONE *)
+		            effect = NONE  (* TO BE DONE *)}
+    in  XmlTree.apply_on "UML:Transition" f tree 
+    end
+
+
+fun getPseudoStateKindAttr atts = 
+    (case getStringAtt "kind" atts of
+         "initial"  => XMI.initial
+       | "deep"     => XMI.deep
+       | "shallow"  => XMI.shallow
+       | "join"     => XMI.join
+       | "fork"     => XMI.fork
+       | "junction" => XMI.junction
+       | "choice"   => XMI.choice)
+
+
+fun mkState tree =
+    let val elem  = XmlTree.tagname_of    tree
+	val atts  = XmlTree.attributes_of tree
+	val trees = XmlTree.children_of   tree
+        val xmiid = getXmiId atts
+        val name  =  getName atts
+        val isSpecification =  getBoolAtt "isSpecification" atts
+        fun getTid x = (getXmiIdref o XmlTree.attributes_of) x 
+                       handle _ => "XXX"
+(*
+        val visibility = getVisibility atts
+ *)
+    in  case elem of 
+        "UML:CompositeState" => 
+             XMI.State_CompositState{
+                    xmiid=xmiid,name=name,is_specification=isSpecification,
+                    isConcurrent = getBoolAtt "isConcurrent" atts,
+                    outgoing     = (List.concat o (map ((map getTid) o XmlTree.children_of)) o 
+                                    (XmlTree.filter "UML:StateVertex.outgoing"))
+                                    (trees),
+	            incoming     = (List.concat o (map ((map getTid) o XmlTree.children_of)) o
+                                    (XmlTree.filter "UML:StateVertex.incoming"))
+                                    (trees), 
+	            subvertex    = ((map mkState) o XmlTree.children_of o 
+                                    (XmlTree.find "UML:CompositeState.subvertex"))
+                                    (trees),
+                    entry        = NONE,
+                    exit         = NONE,
+                    doActivity   = NONE }
+       |"UML:ActionState" => 
+             XMI.SimpleState_ActionState {
+                    xmiid=xmiid,name=name,is_specification=isSpecification,
+                    outgoing     = (List.concat o (map ((map getTid) o XmlTree.children_of)) o
+                                    (XmlTree.filter "UML:StateVertex.outgoing"))
+                                    (trees),
+	            incoming     = (List.concat o (map ((map getTid) o XmlTree.children_of)) o 
+                                    (XmlTree.filter "UML:StateVertex.incoming"))
+                                    (trees), 
+                    isDynamic    = getBoolAtt "isDynamic" atts,
+                    entry        = NONE,
+                    exit         = NONE,
+                    doActivity   = NONE}
+       |"UML:Pseudostate" => 
+             XMI.PseudoState {
+                    xmiid=xmiid,name=name,is_specification=isSpecification,
+                    entry        = NONE,
+                    exit         = NONE,
+                    doActivity   = NONE,
+                    kind = getPseudoStateKindAttr atts,
+                    outgoing     = (List.concat o (map ((map getTid) o XmlTree.children_of)) o
+                                    (XmlTree.filter "UML:StateVertex.outgoing"))
+                                    (trees),
+      	            incoming     = (List.concat o (map ((map getTid) o XmlTree.children_of)) o 
+                                    (XmlTree.filter "UML:StateVertex.incoming"))
+                                    (trees)}
+       |"UML:SimpleState" => 
+             XMI.State_SimpleState{
+                    xmiid=xmiid,name=name,is_specification=isSpecification,
+                    entry        = NONE,
+                    exit         = NONE,
+                    doActivity   = NONE,
+                    outgoing     = (List.concat o (map ((map getTid) o XmlTree.children_of)) o
+                                    (XmlTree.filter "UML:StateVertex.outgoing"))
+                                    (trees),
+      	            incoming     = (List.concat o (map ((map getTid) o XmlTree.children_of)) o 
+                                    (XmlTree.filter "UML:StateVertex.incoming"))
+                                    (trees)}
+       | _ => raise IllFormed ("in mkState: This should not happen.")
+
+     end
+
+
+
+fun mkStateMachine tree =
+    let fun f atts trees = XMI.mk_StateMachine 
+                           {is_specification = getBoolAtt "isSpecification" atts,
+                            xmiid        = getXmiId atts, 
+                            contextxmiid = (getXmiIdref o XmlTree.attributes_of o hd o 
+                                            XmlTree.children_of o 
+                                            (XmlTree.find "UML:StateMachine.context"))
+                                           (trees), 
+                            top          = (hd o (map mkState) o XmlTree.children_of o 
+                                           (XmlTree.find "UML:StateMachine.top"))
+                                           (trees),
+                            transitions  = ((map mkTransition) o XmlTree.children_of o 
+                                           (XmlTree.find "UML:StateMachine.transitions"))
+                                           (trees)}
+    in  XmlTree.apply_on "UML:StateMachine" f tree
+    end;
+
+
+
 fun mkActivityGraph tree =
     let fun f atts trees = XMI.mk_ActivityGraph 
-                           {top        = XMI.State_SimpleState{outgoing=nil,
-                                                           incoming=nil,
-                                                           container=NONE},
-                            transition = nil}
+                           {is_specification = getBoolAtt "isSpecification" atts,
+                            xmiid        = getXmiId atts,
+                            contextxmiid = (getXmiIdref o XmlTree.attributes_of o hd o 
+                                            XmlTree.children_of o 
+                                            (XmlTree.find "UML:StateMachine.context"))
+                                           (trees), 
+                            top          = (hd o (map mkState) o XmlTree.children_of o 
+                                           (XmlTree.find "UML:StateMachine.top"))
+                                           (trees),
+                            transitions  = ((map mkTransition) o XmlTree.children_of o 
+                                           (XmlTree.find "UML:StateMachine.transitions"))
+                                           (trees)}
 
     in  XmlTree.apply_on "UML:ActivityGraph" f tree
     end;
+
 
 
 fun mkPackage tree = 
@@ -566,7 +701,7 @@ fun mkPackage tree =
 	 let val trees = XmlTree.skip "UML:Namespace.ownedElement" 
 				      ((hd o XmlTree.children_of) tree)
 	     val atts = XmlTree.attributes_of tree in
-	     XMI.Package { xmiid           = getXmiId atts, 
+	         XMI.Package { xmiid           = getXmiId atts, 
 			       name            = getName atts,
 			       visibility      = getVisibility atts,
 			       packages        = (map mkPackage 
@@ -579,8 +714,8 @@ fun mkPackage tree =
 								    trees)),
 			       constraints     = map mkConstraint 
 						     (filterConstraints trees),
-                               statemachines   = nil,
-                               activitygraphs  = nil
+                               state_machines  = nil,
+                               activity_graphs = nil
                               }
 	 end
      else raise IllFormed "did not find a UML:Model or UML: Package")
@@ -606,17 +741,23 @@ fun mkXmiContent tree =
 	      constraints = (map mkConstraint (filterConstraints trees)),
 	      classifiers = (map mkClassifier (filterClassifiers trees)),
 	      stereotypes = (map mkStereotype (filterStereotypes trees)),
-	      variable_declarations = (map mkVariableDec   (filterVariableDecs trees))}
+	      variable_declarations = map mkVariableDec   (filterVariableDecs trees),
+              activity_graphs = map mkActivityGraph(filterActivityGraphs trees),
+              state_machines  = map mkStateMachine (filterStateMachines trees)}
     in XmlTree.apply_on "XMI.content" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkXmiContent: "^msg)
     end
 	
 
-val emptyXmiContent = { packages = nil,
-			constraints = nil,
-			classifiers = nil,
-			stereotypes = nil,
-			variable_declarations = nil}
+
+
+val emptyXmiContent = { packages              = nil,
+			constraints           = nil,
+			classifiers           = nil,
+			stereotypes           = nil,
+			variable_declarations = nil,
+                        activity_graphs       = nil,
+                        state_machines        = nil}
 
 fun findXmiContent tree = valOf (XmlTree.dfs "XMI.content" tree)
     handle Option => raise IllFormed "in findXmiContent: did not find XMI.content"

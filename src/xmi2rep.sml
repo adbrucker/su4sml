@@ -453,7 +453,7 @@ fun transform_associations t (XMI.Package p) =
 (*    i.e., classes with their operations, attributes,             *)
 (*    constraints, etc                                             *)
 fun transformXMI ({classifiers,constraints,packages,
-		   stereotypes,variable_declarations}) =
+		   stereotypes,variable_declarations,state_machines, activity_graphs}) =
     let val (xmiid_table: (string,HashTableEntry) HashTable.hash_table) =
 	    HashTable.mkTable (HashString.hashString, (op =)) (101, Option)
 	(* hack: insert a dummy type into the table *)

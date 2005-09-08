@@ -55,8 +55,8 @@ datatype Package = Package of { xmiid          : string,
 				visibility     : VisibilityKind,
 				packages       : Package list,
 				classifiers    : Classifier list,
-                                statemachines  : StateMachine list,
-                                activitygraphs : ActivityGraph list,
+                                state_machines : StateMachine list,
+                                activity_graphs: ActivityGraph list,
 				associations   : Association list,
 				generalizations: Generalization list,
 				constraints    : Constraint list }
@@ -75,9 +75,11 @@ open XMI_Core XMI_ActivityGraphs XMI_ModelManagement
    package list. *)
 type XmiContent = {classifiers:           Classifier list,
 		   constraints:           Constraint list,
-		   packages:              Package list,
+		   packages   :           Package list,
 		   stereotypes:           Stereotype list,
-		   variable_declarations: VariableDeclaration list
+		   variable_declarations: VariableDeclaration list,
+                   state_machines  :      StateMachine list,
+                   activity_graphs :      ActivityGraph list
                   }
 
 end

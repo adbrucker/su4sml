@@ -72,11 +72,13 @@ use "xmi_activity_graphs.sml";
 use "xmi.sml"; 
 
 
+
 (* ****************************************************** *)
 (* Main Conversion Processes  *)
 use "xmltree_parser.sml"; (* provides explicit xml-tree data structure,
                              abstracts away fxp package. *)
-use "xml2xmi.sml";        (* conversion XML to XMI *)
+use "xml2xmi.sml";        (* conversion XML to XMI *);
+
 
 use "xmi2rep.sml";        (* conversion XMI to Rep *)
 

@@ -37,8 +37,11 @@ struct
 open XMI_StateMachines
 
 datatype ActivityGraph = mk_ActivityGraph of 
-                           {top        : StateVertex,
-                            transition : Transition list}
+                           {xmiid            : string,
+                            contextxmiid     : string,
+                            is_specification : bool,
+                            top              : StateVertex,
+                            transitions      : Transition list}
 
 end
 
