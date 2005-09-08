@@ -37,8 +37,86 @@ end
 
 structure XMI_StateMachines =
 struct
-open XMI_CommonBehavior
-datatype StateMachine = dummy
+open XMI_Core XMI_CommonBehavior
+
+
+type     StateVertex_Id = string
+type     Transition_Id  = string
+	 
+datatype Action = create 
+		| call 
+		| return
+		| send
+		| terminate
+		| uninterpreted
+		| destroy
+		| sequence
+
+datatype Guard  = mk_Guard of  {expression : Rep_OclTerm.OclTerm}
+
+datatype Event  = SignalEvent  of Parameter list
+                | CallEvent    of Parameter list
+				 (*   | TimeEvent    of Parameter list  *)
+				 (*   | ChangeEvent  of Parameter list  *)
+				 
+				 
+datatype Transition   = mk_Transition of  
+                                 {source  : StateVertex_Id,
+                                  target  : StateVertex_Id,
+			 	  guard   : Guard  option,
+				  trigger : Event  option,
+				  effect  : Action option
+				 (* mmm    : StateVertexId option *)
+			         }
+				 
+				   
+datatype PseudoStateVars = initial  | deep   | shallow |
+                           join     | fork   | 
+                           junction | choice 
+				  
+datatype StateVertex  = 
+         State_CompositState 
+	 of {outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list, 
+	     container    : StateVertex_Id option,
+	     subvertex    : StateVertex_Id list,
+             isConcurrent : bool,
+             submachine   : StateMachine * 
+                            {isDynamic : bool
+                             (* + dynamicArguments 
+                                + dynamicMultiplicity *)} option}
+                            (* variant for Subactivity State *)
+       | State_SimpleState
+	 of {outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list,
+	     container    : StateVertex_Id option}
+       | SimpleState_ActionState (* from ActivityGraphs *)
+         of {isDynamic    : bool 
+             (* + dynamicArguments + dynamicMultiplicity *)}
+       | SimpleState_ObjectflowState (* from ActivityGraphs *)
+         of {isSynch      : bool,
+             parameter    : Parameter list,
+             types        : Rep_OclType.Path list (* Classifier_Id *)}
+       | State_FinalState
+	 of {outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list,
+	     container    : StateVertex_Id option}
+       | PseudoState
+	 of {kind         : PseudoStateVars,
+             outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list,
+	     container    : StateVertex_Id option}
+       | SyncState
+	 of {outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list,
+	     container    : StateVertex_Id option}
+(*     | StubState  *)
+	    
+and	StateMachine = mk_StateMachine of 
+                           {top        : StateVertex,
+                            transition : Transition list}
+
+
 end
 
 
