@@ -35,7 +35,11 @@
 structure XMI_ActivityGraphs =
 struct
 open XMI_StateMachines
-datatype ActivityGraph = dummy
+
+datatype ActivityGraph = mk_ActivityGraph of 
+                           {top        : StateVertex,
+                            transition : Transition list}
+
 end
 
 

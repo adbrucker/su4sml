@@ -550,7 +550,12 @@ fun mkGeneralization tree =
 
 
 fun mkActivityGraph tree =
-    let fun f atts trees = XMI_ActivityGraphs.dummy
+    let fun f atts trees = XMI.mk_ActivityGraph 
+                           {top        = XMI.State_SimpleState{outgoing=nil,
+                                                           incoming=nil,
+                                                           container=NONE},
+                            transition = nil}
+
     in  XmlTree.apply_on "UML:ActivityGraph" f tree
     end;
 
