@@ -99,7 +99,7 @@ datatype StateVertex  =
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list, 
 	     subvertex    : StateVertex list,
-             submachine   : StateMachine ,
+             submachine   : StateMachine,
              isDynamic    : bool}
        | State_SimpleState
 	 of {xmiid        : string,
@@ -126,13 +126,13 @@ datatype StateVertex  =
              name         : string,
              is_specification : bool,
              entry        : Action option,
-             exit         : Action option,
+             exit         : Action option, 
              doActivity   : Action option,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list, 
              isSynch      : bool,
              parameter    : Parameter list,
-             types        : Rep_OclType.Path list (* Classifier_Id *)}
+             type_        : Rep_OclType.Path option}
        | State_FinalState
 	 of {xmiid        : string,
              name         : string,

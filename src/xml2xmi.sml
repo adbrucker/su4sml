@@ -592,6 +592,12 @@ fun mkState tree =
         val isSpecification =  getBoolAtt "isSpecification" atts
         fun getTid x = (getXmiIdref o XmlTree.attributes_of) x 
                        handle _ => "XXX"
+        fun getTrans str = List.concat o (map ((map getTid) o XmlTree.children_of)) o
+                           (XmlTree.filter str)
+        val getIncoming = getTrans "UML:StateVertex.incoming"
+        val getOutgoing = getTrans "UML:StateVertex.outgoing"
+        val getSubvertex= (map mkState) o XmlTree.children_of o 
+                          (XmlTree.find "UML:CompositeState.subvertex")
 (*
         val visibility = getVisibility atts
  *)
@@ -600,27 +606,28 @@ fun mkState tree =
              XMI.State_CompositState{
                     xmiid=xmiid,name=name,is_specification=isSpecification,
                     isConcurrent = getBoolAtt "isConcurrent" atts,
-                    outgoing     = (List.concat o (map ((map getTid) o XmlTree.children_of)) o 
-                                    (XmlTree.filter "UML:StateVertex.outgoing"))
-                                    (trees),
-	            incoming     = (List.concat o (map ((map getTid) o XmlTree.children_of)) o
-                                    (XmlTree.filter "UML:StateVertex.incoming"))
-                                    (trees), 
-	            subvertex    = ((map mkState) o XmlTree.children_of o 
-                                    (XmlTree.find "UML:CompositeState.subvertex"))
-                                    (trees),
+                    outgoing     = getOutgoing trees, incoming = getIncoming trees, 
+	            subvertex    = getSubvertex trees,
                     entry        = NONE,
                     exit         = NONE,
                     doActivity   = NONE }
+       |"UML:SubactivityState" => 
+             XMI.CompositState_SubactivityState{
+                    xmiid=xmiid,name=name,is_specification=isSpecification,
+                    isConcurrent = getBoolAtt "isConcurrent" atts,
+                    isDynamic    = getBoolAtt "isDynamic" atts,
+                    outgoing     = getOutgoing trees, incoming = getIncoming trees, 
+	            subvertex    = getSubvertex trees,
+                    entry        = NONE,
+                    exit         = NONE,
+                    doActivity   = NONE,
+                    submachine   = mkStateMachine (hd trees) 
+                    (* HACK ! So far, no UML tool supports this. Parser has to be adapted
+                       of we find a first example ... *)}
        |"UML:ActionState" => 
              XMI.SimpleState_ActionState {
                     xmiid=xmiid,name=name,is_specification=isSpecification,
-                    outgoing     = (List.concat o (map ((map getTid) o XmlTree.children_of)) o
-                                    (XmlTree.filter "UML:StateVertex.outgoing"))
-                                    (trees),
-	            incoming     = (List.concat o (map ((map getTid) o XmlTree.children_of)) o 
-                                    (XmlTree.filter "UML:StateVertex.incoming"))
-                                    (trees), 
+                    outgoing     = getOutgoing trees, incoming = getIncoming trees, 
                     isDynamic    = getBoolAtt "isDynamic" atts,
                     entry        = NONE,
                     exit         = NONE,
@@ -631,32 +638,43 @@ fun mkState tree =
                     entry        = NONE,
                     exit         = NONE,
                     doActivity   = NONE,
-                    kind = getPseudoStateKindAttr atts,
-                    outgoing     = (List.concat o (map ((map getTid) o XmlTree.children_of)) o
-                                    (XmlTree.filter "UML:StateVertex.outgoing"))
-                                    (trees),
-      	            incoming     = (List.concat o (map ((map getTid) o XmlTree.children_of)) o 
-                                    (XmlTree.filter "UML:StateVertex.incoming"))
-                                    (trees)}
+                    kind         = getPseudoStateKindAttr atts,
+                    outgoing     = getOutgoing trees,incoming = getIncoming trees}
        |"UML:SimpleState" => 
              XMI.State_SimpleState{
                     xmiid=xmiid,name=name,is_specification=isSpecification,
                     entry        = NONE,
                     exit         = NONE,
                     doActivity   = NONE,
-                    outgoing     = (List.concat o (map ((map getTid) o XmlTree.children_of)) o
-                                    (XmlTree.filter "UML:StateVertex.outgoing"))
-                                    (trees),
-      	            incoming     = (List.concat o (map ((map getTid) o XmlTree.children_of)) o 
-                                    (XmlTree.filter "UML:StateVertex.incoming"))
-                                    (trees)}
-       | _ => raise IllFormed ("in mkState: This should not happen.")
+                    outgoing     = getOutgoing trees, incoming = getIncoming trees}
+       |"UML:ObjectflowState" => 
+             XMI.SimpleState_ObjectflowState{
+                    xmiid=xmiid,name=name,is_specification=isSpecification,
+                    entry        = NONE,
+                    exit         = NONE,
+                    doActivity   = NONE,
+                    outgoing     = getOutgoing trees, incoming = getIncoming trees, 
+                    isSynch      = getBoolAtt "isSynch" atts,
+                    parameter    = nil,
+                    type_        = NONE}
+       |"UML:FinalState" => 
+             XMI.State_FinalState{
+                    xmiid=xmiid,name=name,is_specification=isSpecification,
+                    entry        = NONE,
+                    exit         = NONE,
+                    doActivity   = NONE,
+                    outgoing     = getOutgoing trees,incoming = getIncoming trees}
+       |"UML:SyncState" => 
+             XMI.SyncState{
+                    xmiid=xmiid,name=name,is_specification=isSpecification,
+                    bound        = 0,
+                    outgoing     = getOutgoing trees,incoming = getIncoming trees}
+
+       | _ => raise IllFormed ("in mkState: Unknown State Vertex.")
 
      end
 
-
-
-fun mkStateMachine tree =
+and mkStateMachine tree =
     let fun f atts trees = XMI.mk_StateMachine 
                            {is_specification = getBoolAtt "isSpecification" atts,
                             xmiid        = getXmiId atts, 
@@ -688,7 +706,8 @@ fun mkActivityGraph tree =
                                            (trees),
                             transitions  = ((map mkTransition) o XmlTree.children_of o 
                                            (XmlTree.find "UML:StateMachine.transitions"))
-                                           (trees)}
+                                           (trees),
+                            partition    = nil}
 
     in  XmlTree.apply_on "UML:ActivityGraph" f tree
     end;

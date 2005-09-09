@@ -41,6 +41,7 @@ datatype ActivityGraph = mk_ActivityGraph of
                             contextxmiid     : string,
                             is_specification : bool,
                             top              : StateVertex,
+                            partition        : (string * StateVertex_Id list) list,
                             transitions      : Transition list}
 
 end
