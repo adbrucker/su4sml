@@ -65,6 +65,8 @@ fun foldr1 f l =
           | itr (x::l) = f(x, itr l)
     in  itr l  end;
     
+fun ap_some f (SOME x) = SOME(f x)
+   |ap_some f NONE     = NONE
 
 fun separate s (x :: (xs as _ :: _)) = x :: s :: separate s xs
   | separate _ xs = xs;

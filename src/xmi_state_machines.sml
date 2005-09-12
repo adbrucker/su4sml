@@ -42,17 +42,25 @@ open XMI_Core XMI_CommonBehavior
 
 type     StateVertex_Id = string
 type     Transition_Id  = string
-	 
-datatype Action = create 
-		| call 
-		| return
-		| send
-		| terminate
-		| uninterpreted
-		| destroy
-		| sequence
 
-datatype Guard  = mk_Guard of  {expression : Rep_OclTerm.OclTerm}
+datatype Procedure = mk_Procedure of 
+                                 {xmiid            : string,
+                                  isSpecification : bool,
+                                  name             : string,
+                                  isAsynchronous   : bool,
+                                  language         : string,
+                                  body             : string,
+                                  expression       : string list
+                          (*      method     : Method list, NOT YET IMPLEMENTED *)
+                          (*      isList     : bool NOT SUPPORTED BY POSEIDON *)}
+
+datatype Guard  = mk_Guard of    {xmiid            : string,
+                                  isSpecification  : bool,
+                                  name             : string,
+                                  visibility       : VisibilityKind, 
+                                  language         : string,
+                                  body             : string,
+                                  expression       : string list}
 
 datatype Event  = SignalEvent  of Parameter list
                 | CallEvent    of Parameter list
@@ -61,13 +69,13 @@ datatype Event  = SignalEvent  of Parameter list
 				 
 				 
 datatype Transition   = mk_Transition of  
-                                 {is_specification : bool,
+                                 {isSpecification : bool,
                                   xmiid   : string,
                                   source  : StateVertex_Id,
                                   target  : StateVertex_Id,
 			 	  guard   : Guard  option,
 				  trigger : Event  option,
-				  effect  : Action option
+				  effect  : Procedure option
 				 (* mmm    : StateVertexId option *)
 			         }
 				 
@@ -77,85 +85,85 @@ datatype PseudoStateVars = initial  | deep   | shallow |
                            junction | choice 
 				  
 datatype StateVertex  = 
-         State_CompositState 
+         CompositeState 
 	 of {xmiid        : string,
              name         : string,
-             is_specification : bool,
+             isSpecification : bool,
              isConcurrent : bool,
-             entry        : Action option,
-             exit         : Action option,
-             doActivity   : Action option,
+             entry        : Procedure option,
+             exit         : Procedure option,
+             doActivity   : Procedure option,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list, 
 	     subvertex    : StateVertex list}
-       | CompositState_SubactivityState
+       | SubactivityState
 	 of {xmiid        : string,
              name         : string,
-             is_specification : bool,
+             isSpecification : bool,
              isConcurrent : bool,
-             entry        : Action option,
-             exit         : Action option,
-             doActivity   : Action option,
+             entry        : Procedure option,
+             exit         : Procedure option,
+             doActivity   : Procedure option,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list, 
 	     subvertex    : StateVertex list,
              submachine   : StateMachine,
              isDynamic    : bool}
-       | State_SimpleState
+       | SimpleState
 	 of {xmiid        : string,
              name         : string,
-             is_specification : bool,
-             entry        : Action option,
-             exit         : Action option,
-             doActivity   : Action option,
+             isSpecification : bool,
+             entry        : Procedure option,
+             exit         : Procedure option,
+             doActivity   : Procedure option,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list}
-       | SimpleState_ActionState (* from ActivityGraphs *)
+       | ActionState (* from ActivityGraphs *)
          of {xmiid        : string,
              name         : string,
-             is_specification : bool,
-             entry        : Action option,
-             exit         : Action option,
-             doActivity   : Action option,
+             isSpecification : bool,
+             entry        : Procedure option,
+             exit         : Procedure option,
+             doActivity   : Procedure option,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list, 
              isDynamic    : bool 
              (* + dynamicArguments + dynamicMultiplicity *)}
-       | SimpleState_ObjectflowState (* from ActivityGraphs *)
+       | ObjectFlowState (* from ActivityGraphs *)
          of {xmiid        : string,
              name         : string,
-             is_specification : bool,
-             entry        : Action option,
-             exit         : Action option, 
-             doActivity   : Action option,
+             isSpecification : bool,
+             entry        : Procedure option,
+             exit         : Procedure option, 
+             doActivity   : Procedure option,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list, 
              isSynch      : bool,
              parameter    : Parameter list,
              type_        : Rep_OclType.Path option}
-       | State_FinalState
+       | FinalState
 	 of {xmiid        : string,
              name         : string,
-             is_specification : bool,
-             entry        : Action option,
-             exit         : Action option,
-             doActivity   : Action option,
+             isSpecification : bool,
+             entry        : Procedure option,
+             exit         : Procedure option,
+             doActivity   : Procedure option,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list }
        | PseudoState
 	 of {xmiid        : string,
              name         : string,
-             is_specification : bool,
+             isSpecification : bool,
              kind         : PseudoStateVars,
-             entry        : Action option,
-             exit         : Action option,
-             doActivity   : Action option,
+             entry        : Procedure option,
+             exit         : Procedure option,
+             doActivity   : Procedure option,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list }
        | SyncState
 	 of {xmiid        : string,
              name         : string,
-             is_specification : bool,
+             isSpecification : bool,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list,
 	     bound        : int}
@@ -164,7 +172,7 @@ datatype StateVertex  =
 and	StateMachine = mk_StateMachine of 
                            {xmiid            : string,
                             contextxmiid     : string,
-                            is_specification : bool,
+                            isSpecification : bool,
                             top              : StateVertex,
                             transitions      : Transition list}
 

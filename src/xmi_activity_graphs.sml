@@ -39,7 +39,7 @@ open XMI_StateMachines
 datatype ActivityGraph = mk_ActivityGraph of 
                            {xmiid            : string,
                             contextxmiid     : string,
-                            is_specification : bool,
+                            isSpecification  : bool,
                             top              : StateVertex,
                             partition        : (string * StateVertex_Id list) list,
                             transitions      : Transition list}

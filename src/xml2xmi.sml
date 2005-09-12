@@ -56,6 +56,8 @@ fun getIntAtt string atts =
 					  " with unexpected value "^att)
     end
 
+val getLang      = getStringAtt "language" 
+val getBody      = getStringAtt "body" 
 val getXmiId     = getStringAtt "xmi.id"    
 val getName      = getStringAtt "name"      
 val getXmiIdref  = getStringAtt "xmi.idref" 
@@ -553,9 +555,46 @@ fun mkGeneralization tree =
     end
 
 
+fun mkProcedure tree =
+    let fun get_AttrL x = (XmlTree.attributes_of o (XmlTree.find "UML:ActionExpression") o
+                        XmlTree.children_of o (XmlTree.find "UML:Action.script")) x
+                        handle _ => (writeln(getXmiId(XmlTree.attributes_of tree)); [])
+        fun f atts trees = XMI.mk_Procedure{
+                               xmiid = getXmiId atts,
+                               name  = getName atts,
+                               isSpecification = getBoolAtt "isSpecification" atts,
+                               isAsynchronous  = getBoolAtt "isAsynchronous"  atts,
+                               language        = getLang(get_AttrL trees),
+                               body            = getBody(get_AttrL trees),
+                               expression      = nil}
+    in XmlTree.apply_on "UML:CallAction" f tree 
+       (* POSEIDON specific ! According to UML 1.5, should be: "UML:Method" *)
+    end
+
+
+fun mkGuard tree = 
+    let val getExpr = XmlTree.attributes_of o (XmlTree.find "UML:BooleanExpression") o
+                      XmlTree.children_of o (XmlTree.find "UML:Guard.expression") 
+        fun f atts trees = XMI.mk_Guard{
+                               xmiid = getXmiId atts,
+                               name  = getName atts,
+                               isSpecification = getBoolAtt "isSpecification" atts,
+                               visibility      = getVisibility atts,
+                               language        = getLang(getExpr trees),
+                               body            = getBody(getExpr trees),
+                               expression      = nil}
+    in   XmlTree.apply_on "UML:Guard" f tree 
+    end
+
+
 fun mkTransition tree = 
-    let fun f atts trees = XMI.mk_Transition  
-                           {is_specification = getBoolAtt "isSpecification" atts,
+    let val getGuard     = (ap_some (mkGuard  o 
+                                     (XmlTree.find "UML:Guard") o
+                                     XmlTree.children_of))  o
+                           (XmlTree.find_some "UML:Transition.guard")
+ 
+        fun f atts trees = XMI.mk_Transition  
+                           {isSpecification = getBoolAtt "isSpecification" atts,
                             xmiid  = getXmiId atts,
                             source = (getXmiIdref o XmlTree.attributes_of o 
                                       hd o XmlTree.children_of o 
@@ -565,7 +604,7 @@ fun mkTransition tree =
                                       hd o XmlTree.children_of o 
                                       (XmlTree.find "UML:Transition.target"))
                                      (trees),
-			    guard  = NONE, (* TO BE DONE *)
+			    guard  = getGuard trees, 
 			    trigger= NONE, (* TO BE DONE *)
 		            effect = NONE  (* TO BE DONE *)}
     in  XmlTree.apply_on "UML:Transition" f tree 
@@ -584,73 +623,77 @@ fun getPseudoStateKindAttr atts =
 
 
 fun mkState tree =
-    let val elem  = XmlTree.tagname_of    tree
-	val atts  = XmlTree.attributes_of tree
-	val trees = XmlTree.children_of   tree
-        val xmiid = getXmiId atts
-        val name  =  getName atts
+    let val elem         = XmlTree.tagname_of    tree
+	val atts         = XmlTree.attributes_of tree
+	val trees        = XmlTree.children_of   tree
+        val xmiid        = getXmiId atts
+        val name         = getName atts
         val isSpecification =  getBoolAtt "isSpecification" atts
-        fun getTid x = (getXmiIdref o XmlTree.attributes_of) x 
-                       handle _ => "XXX"
+        val getTid       = getXmiIdref o XmlTree.attributes_of
         fun getTrans str = List.concat o (map ((map getTid) o XmlTree.children_of)) o
                            (XmlTree.filter str)
-        val getIncoming = getTrans "UML:StateVertex.incoming"
-        val getOutgoing = getTrans "UML:StateVertex.outgoing"
-        val getSubvertex= (map mkState) o XmlTree.children_of o 
-                          (XmlTree.find "UML:CompositeState.subvertex")
+        val getIncoming  = getTrans "UML:StateVertex.incoming"
+        val getOutgoing  = getTrans "UML:StateVertex.outgoing"
+        val getSubvertex = (map mkState) o XmlTree.children_of o 
+                           (XmlTree.find "UML:CompositeState.subvertex")
+        val getEntry     = (ap_some (mkProcedure  o 
+                                     (XmlTree.find "UML:CallAction") o
+                                     XmlTree.children_of))  o
+                           (XmlTree.find_some "UML:State.entry")
+        
 (*
         val visibility = getVisibility atts
  *)
     in  case elem of 
         "UML:CompositeState" => 
-             XMI.State_CompositState{
-                    xmiid=xmiid,name=name,is_specification=isSpecification,
+             XMI.CompositeState{
+                    xmiid=xmiid,name=name,isSpecification=isSpecification,
                     isConcurrent = getBoolAtt "isConcurrent" atts,
                     outgoing     = getOutgoing trees, incoming = getIncoming trees, 
 	            subvertex    = getSubvertex trees,
-                    entry        = NONE,
+                    entry        = getEntry trees,
                     exit         = NONE,
                     doActivity   = NONE }
        |"UML:SubactivityState" => 
-             XMI.CompositState_SubactivityState{
-                    xmiid=xmiid,name=name,is_specification=isSpecification,
+             XMI.SubactivityState{
+                    xmiid=xmiid,name=name,isSpecification=isSpecification,
                     isConcurrent = getBoolAtt "isConcurrent" atts,
                     isDynamic    = getBoolAtt "isDynamic" atts,
                     outgoing     = getOutgoing trees, incoming = getIncoming trees, 
 	            subvertex    = getSubvertex trees,
-                    entry        = NONE,
+                    entry        = getEntry trees,
                     exit         = NONE,
                     doActivity   = NONE,
                     submachine   = mkStateMachine (hd trees) 
                     (* HACK ! So far, no UML tool supports this. Parser has to be adapted
                        of we find a first example ... *)}
        |"UML:ActionState" => 
-             XMI.SimpleState_ActionState {
-                    xmiid=xmiid,name=name,is_specification=isSpecification,
+             XMI.ActionState {
+                    xmiid=xmiid,name=name,isSpecification=isSpecification,
                     outgoing     = getOutgoing trees, incoming = getIncoming trees, 
                     isDynamic    = getBoolAtt "isDynamic" atts,
-                    entry        = NONE,
+                    entry        = getEntry trees,
                     exit         = NONE,
                     doActivity   = NONE}
        |"UML:Pseudostate" => 
              XMI.PseudoState {
-                    xmiid=xmiid,name=name,is_specification=isSpecification,
-                    entry        = NONE,
+                    xmiid=xmiid,name=name,isSpecification=isSpecification,
+                    entry        = getEntry trees,
                     exit         = NONE,
                     doActivity   = NONE,
                     kind         = getPseudoStateKindAttr atts,
                     outgoing     = getOutgoing trees,incoming = getIncoming trees}
        |"UML:SimpleState" => 
-             XMI.State_SimpleState{
-                    xmiid=xmiid,name=name,is_specification=isSpecification,
-                    entry        = NONE,
+             XMI.SimpleState{
+                    xmiid=xmiid,name=name,isSpecification=isSpecification,
+                    entry        = getEntry trees,
                     exit         = NONE,
                     doActivity   = NONE,
                     outgoing     = getOutgoing trees, incoming = getIncoming trees}
-       |"UML:ObjectflowState" => 
-             XMI.SimpleState_ObjectflowState{
-                    xmiid=xmiid,name=name,is_specification=isSpecification,
-                    entry        = NONE,
+       |"UML:ObjectFlowState" => 
+             XMI.ObjectFlowState{
+                    xmiid=xmiid,name=name,isSpecification=isSpecification,
+                    entry        = getEntry trees,
                     exit         = NONE,
                     doActivity   = NONE,
                     outgoing     = getOutgoing trees, incoming = getIncoming trees, 
@@ -658,15 +701,15 @@ fun mkState tree =
                     parameter    = nil,
                     type_        = NONE}
        |"UML:FinalState" => 
-             XMI.State_FinalState{
-                    xmiid=xmiid,name=name,is_specification=isSpecification,
-                    entry        = NONE,
+             XMI.FinalState{
+                    xmiid=xmiid,name=name,isSpecification=isSpecification,
+                    entry        = getEntry trees,
                     exit         = NONE,
                     doActivity   = NONE,
                     outgoing     = getOutgoing trees,incoming = getIncoming trees}
        |"UML:SyncState" => 
              XMI.SyncState{
-                    xmiid=xmiid,name=name,is_specification=isSpecification,
+                    xmiid=xmiid,name=name,isSpecification=isSpecification,
                     bound        = 0,
                     outgoing     = getOutgoing trees,incoming = getIncoming trees}
 
@@ -674,9 +717,10 @@ fun mkState tree =
 
      end
 
+
 and mkStateMachine tree =
     let fun f atts trees = XMI.mk_StateMachine 
-                           {is_specification = getBoolAtt "isSpecification" atts,
+                           {isSpecification = getBoolAtt "isSpecification" atts,
                             xmiid        = getXmiId atts, 
                             contextxmiid = (getXmiIdref o XmlTree.attributes_of o hd o 
                                             XmlTree.children_of o 
@@ -692,10 +736,9 @@ and mkStateMachine tree =
     end;
 
 
-
 fun mkActivityGraph tree =
     let fun f atts trees = XMI.mk_ActivityGraph 
-                           {is_specification = getBoolAtt "isSpecification" atts,
+                           {isSpecification = getBoolAtt "isSpecification" atts,
                             xmiid        = getXmiId atts,
                             contextxmiid = (getXmiIdref o XmlTree.attributes_of o hd o 
                                             XmlTree.children_of o 

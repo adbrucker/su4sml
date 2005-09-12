@@ -38,6 +38,7 @@ sig
     val skip        : string -> Tree -> Tree list 
     val filter      : string -> Tree list -> Tree list
     val filter_children : string -> Tree -> Tree list
+    val find_some   : string -> Tree list -> Tree option
     val find        : string -> Tree list -> Tree
     val find_child  : string -> Tree -> Tree
     val dfs         : string -> Tree -> Tree option
@@ -76,6 +77,7 @@ fun filter string trees = List.filter (fn x => string = tagname_of x)
 fun filter_children string tree = List.filter (fn x => string = tagname_of x) 
 				      (children_of tree)
 				      
+fun find_some string trees = (List.find (fn x => string = tagname_of x) trees)
 
 fun find string trees = valOf (List.find (fn x => string = tagname_of x) trees) 
     handle Option => raise IllFormed ("in XmlTree.find: did not find element "^string)

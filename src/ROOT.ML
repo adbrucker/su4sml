@@ -64,7 +64,10 @@ use "rep.sml";
    - only "interesting" parts were represented
    - structural simplifications whereever needed for
      our applications.
-   - Layout Information skipped.  *)
+   - Layout Information skippedi
+   - the structure is oriented towards UML 1.5
+     (although the supported Poseidon is apparantly based
+     on Version 1.4 or something ...).  *)
 use "xmi_ocl.sml"; 
 use "xmi_core.sml"; 
 use "xmi_state_machines.sml"; 
