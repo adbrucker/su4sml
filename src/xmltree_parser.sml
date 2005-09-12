@@ -186,6 +186,9 @@ fun readFile filename =
 end
 
 
+(* supposed to print a XmlTree to a xml file.        *)
+(* Works in principle, but currently does not escape *)
+(* entities like "<", and is not UTF-8 clean         *)
 structure WriteXmlTree: sig
     val writeFile : string -> XmlTree.Tree -> unit
 end =
@@ -219,6 +222,7 @@ fun writeXmlTree indent stream tree =
 fun writeFile filename tree = 
     let val stream = TextIO.openOut filename 
     in 
+	TextIO.output (stream,"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 	writeXmlTree 0 stream tree;
 	TextIO.closeOut stream
     end
