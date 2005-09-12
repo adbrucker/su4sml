@@ -309,7 +309,7 @@
     OCL.CommonModel.Classifier | UML:Reception | UML:Parameter | UML:Package | 
     UML:ActivityGraph | OCL.Types.OrderedSetType | UML:Guard | 
     OCL.CommonModel.Signal | UML:Variable | UML:BroadcastSignalAction | 
-    UML:JumpAction | UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:JumpAction | UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     OCL.CommonModel.Reception | UML:ReadLinkObjectQualifierAction | 
     UML15OCL.Expressions.EnumLiteralExp | OCL.CommonModel.Parameter | 
     UML15OCL.Expressions.ExpressionInOcl | UML:Generalization | 
@@ -420,6 +420,17 @@
 <!ELEMENT UML:Expression.language (#PCDATA | XMI.reference)* >
 
 <!ELEMENT UML:Expression.body (#PCDATA | XMI.reference)* >
+
+<!-- included for compatibility with Poseidon 3.1 -->
+<!ELEMENT UML:Action.script (UML:ActionExpression)>
+
+<!-- included for compatibility with Poseidon 3.1 -->
+<!ELEMENT UML:ActionExpression (UML:Expression.language | 
+    UML:Expression.body | XMI.extension)* >
+<!ATTLIST UML:ActionExpression
+   language CDATA #IMPLIED
+   body CDATA #IMPLIED
+   %XMI.element.att; %XMI.link.att;>
 
 <!ELEMENT UML:Expression (UML:Expression.language | 
     UML:Expression.body | XMI.extension)* >
@@ -532,7 +543,7 @@
     UML:Operation | UML15OCL.Types.CollectionType | UML:Reception | 
     UML:Parameter | UML:Package | UML:ActivityGraph | UML:Guard | 
     UML:Variable | UML:BroadcastSignalAction | UML:JumpAction | 
-    UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -682,7 +693,7 @@
     UML15OCL.Types.SetType | UML:Operation | UML15OCL.Types.CollectionType | 
     UML:Reception | UML:Parameter | UML:Package | UML:ActivityGraph | 
     UML:Guard | UML:Variable | UML:BroadcastSignalAction | 
-    UML:JumpAction | UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:JumpAction | UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -751,7 +762,7 @@
     UML15OCL.Types.SetType | UML:Operation | UML15OCL.Types.CollectionType | 
     UML:Reception | UML:Parameter | UML:Package | UML:ActivityGraph | 
     UML:Guard | UML:Variable | UML:BroadcastSignalAction | 
-    UML:JumpAction | UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:JumpAction | UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -1189,7 +1200,7 @@
     UML:Operation | UML15OCL.Types.CollectionType | UML:Reception | 
     UML:Parameter | UML:Package | UML:ActivityGraph | UML:Guard | 
     UML:Variable | UML:BroadcastSignalAction | UML:JumpAction | 
-    UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -1270,7 +1281,7 @@
     UML:Operation | UML15OCL.Types.CollectionType | UML:Reception | 
     UML:Parameter | UML:Package | UML:ActivityGraph | UML:Guard | 
     UML:Variable | UML:BroadcastSignalAction | UML:JumpAction | 
-    UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -1340,7 +1351,7 @@
     UML:Operation | UML15OCL.Types.CollectionType | UML:Reception | 
     UML:Parameter | UML:Package | UML:ActivityGraph | UML:Guard | 
     UML:Variable | UML:BroadcastSignalAction | UML:JumpAction | 
-    UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -1410,7 +1421,7 @@
     UML:Operation | UML15OCL.Types.CollectionType | UML:Reception | 
     UML:Parameter | UML:Package | UML:ActivityGraph | UML:Guard | 
     UML:Variable | UML:BroadcastSignalAction | UML:JumpAction | 
-    UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -1488,7 +1499,7 @@
     UML15OCL.Types.SetType | UML:Operation | UML15OCL.Types.CollectionType | 
     UML:Reception | UML:Parameter | UML:Package | UML:ActivityGraph | 
     UML:Guard | UML:Variable | UML:BroadcastSignalAction | 
-    UML:JumpAction | UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:JumpAction | UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -1557,7 +1568,7 @@
     UML15OCL.Types.SetType | UML:Operation | UML15OCL.Types.CollectionType | 
     UML:Reception | UML:Parameter | UML:Package | UML:ActivityGraph | 
     UML:Guard | UML:Variable | UML:BroadcastSignalAction | 
-    UML:JumpAction | UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:JumpAction | UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -1928,7 +1939,7 @@
     UML15OCL.Types.SetType | UML:Operation | UML15OCL.Types.CollectionType | 
     UML:Reception | UML:Parameter | UML:Package | UML:ActivityGraph | 
     UML:Guard | UML:Variable | UML:BroadcastSignalAction | 
-    UML:JumpAction | UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:JumpAction | UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -2129,7 +2140,7 @@
     UML:Operation | UML15OCL.Types.CollectionType | UML:Reception | 
     UML:Parameter | UML:Package | UML:ActivityGraph | UML:Guard | 
     UML:Variable | UML:BroadcastSignalAction | UML:JumpAction | 
-    UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -2321,7 +2332,7 @@
     UML:Operation | UML15OCL.Types.CollectionType | UML:Reception | 
     UML:Parameter | UML:Package | UML:ActivityGraph | UML:Guard | 
     UML:Variable | UML:BroadcastSignalAction | UML:JumpAction | 
-    UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -2480,7 +2491,7 @@
     UML:Operation | UML15OCL.Types.CollectionType | UML:Reception | 
     UML:Parameter | UML:Package | UML:ActivityGraph | UML:Guard | 
     UML:Variable | UML:BroadcastSignalAction | UML:JumpAction | 
-    UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -2775,7 +2786,7 @@
     UML:Operation | UML15OCL.Types.CollectionType | UML:Reception | 
     UML:Parameter | UML:Package | UML:ActivityGraph | UML:Guard | 
     UML:Variable | UML:BroadcastSignalAction | UML:JumpAction | 
-    UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -2847,7 +2858,7 @@
     UML:Operation | UML15OCL.Types.CollectionType | UML:Reception | 
     UML:Parameter | UML:Package | UML:ActivityGraph | UML:Guard | 
     UML:Variable | UML:BroadcastSignalAction | UML:JumpAction | 
-    UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -2944,7 +2955,7 @@
     UML:Subsystem | UML:StubState | UML15OCL.Types.SetType | 
     UML:Operation | UML15OCL.Types.CollectionType | UML:Reception | 
     UML:Parameter | UML:Package | UML:ActivityGraph | UML:Guard | 
-    UML:BroadcastSignalAction | UML:Variable | UML:CallProcedureAction | 
+    UML:BroadcastSignalAction | UML:Variable | UML:CallProcedureAction | UML:CallAction | 
     UML:JumpAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | UML:Clause | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
@@ -3061,7 +3072,7 @@
     UML:Operation | UML15OCL.Types.CollectionType | UML:Reception | 
     UML:Parameter | UML:Package | UML:ActivityGraph | UML:Guard | 
     UML:Variable | UML:BroadcastSignalAction | UML:JumpAction | 
-    UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -4501,7 +4512,7 @@
     OCL.CommonModel.Classifier | UML:Reception | UML:Parameter | UML:Package | 
     UML:ActivityGraph | OCL.Types.OrderedSetType | UML:Guard | 
     OCL.CommonModel.Signal | UML:Variable | UML:BroadcastSignalAction | 
-    UML:JumpAction | UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:JumpAction | UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     OCL.CommonModel.Reception | UML:ReadLinkObjectQualifierAction | 
     UML15OCL.Expressions.EnumLiteralExp | OCL.CommonModel.Parameter | 
     UML15OCL.Expressions.ExpressionInOcl | UML:Generalization | 
@@ -5276,7 +5287,7 @@
     UML:ReadVariableAction | UML:ExplicitInvocationActtion | UML:CodeAction | 
     UML:AddAttributeValueAction | UML:WriteAttributeAction | UML:ReadAttributeAction | 
     UML:CreateLinkAction | UML:TestIdentityAction | UML:MapAction | 
-    UML:VariableAction | UML:BroadcastSignalAction | UML:CallProcedureAction | 
+    UML:VariableAction | UML:BroadcastSignalAction | UML:CallProcedureAction | UML:CallAction | 
     UML:JumpAction | UML:CreateLinkObjectAction | 
     UML:ReadLinkObjectQualifierAction | UML:ReadExtentAction | UML:DestroyObjectAction | 
     UML:InvocationAction | UML:AttributeAction | UML:IterateAction | 
@@ -5362,7 +5373,7 @@
     UML:ReadVariableAction | UML:ExplicitInvocationActtion | UML:CodeAction | 
     UML:AddAttributeValueAction | UML:WriteAttributeAction | UML:ReadAttributeAction | 
     UML:CreateLinkAction | UML:TestIdentityAction | UML:MapAction | 
-    UML:VariableAction | UML:BroadcastSignalAction | UML:CallProcedureAction | 
+    UML:VariableAction | UML:BroadcastSignalAction | UML:CallProcedureAction | UML:CallAction | 
     UML:JumpAction | UML:CreateLinkObjectAction | 
     UML:ReadLinkObjectQualifierAction | UML:ReadExtentAction | UML:DestroyObjectAction | 
     UML:InvocationAction | UML:AttributeAction | UML:IterateAction | 
@@ -5444,7 +5455,7 @@
     UML:ExplicitInvocationActtion | UML:CodeAction | UML:AddAttributeValueAction | 
     UML:WriteAttributeAction | UML:ReadAttributeAction | UML:CreateLinkAction | 
     UML:TestIdentityAction | UML:MapAction | UML:VariableAction | 
-    UML:BroadcastSignalAction | UML:CallProcedureAction | UML:JumpAction | 
+    UML:BroadcastSignalAction | UML:CallProcedureAction | UML:CallAction | UML:JumpAction | 
     UML:CreateLinkObjectAction | UML:ReadLinkObjectQualifierAction | 
     UML:ReadExtentAction | UML:DestroyObjectAction | UML:InvocationAction | 
     UML:AttributeAction | UML:IterateAction | UML:ReduceAction | 
@@ -5465,7 +5476,7 @@
     UML:ReadVariableAction | UML:ExplicitInvocationActtion | UML:CodeAction | 
     UML:AddAttributeValueAction | UML:WriteAttributeAction | UML:ReadAttributeAction | 
     UML:CreateLinkAction | UML:TestIdentityAction | UML:MapAction | 
-    UML:VariableAction | UML:BroadcastSignalAction | UML:CallProcedureAction | 
+    UML:VariableAction | UML:BroadcastSignalAction | UML:CallProcedureAction | UML:CallAction | 
     UML:JumpAction | UML:CreateLinkObjectAction | 
     UML:ReadLinkObjectQualifierAction | UML:ReadExtentAction | UML:DestroyObjectAction | 
     UML:InvocationAction | UML:AttributeAction | UML:IterateAction | 
@@ -5512,7 +5523,7 @@
     UML:ExplicitInvocationActtion | UML:CodeAction | UML:AddAttributeValueAction | 
     UML:WriteAttributeAction | UML:ControlFlow | UML:ReadAttributeAction | 
     UML:CreateLinkAction | UML:TestIdentityAction | UML:MapAction | 
-    UML:VariableAction | UML:BroadcastSignalAction | UML:CallProcedureAction | 
+    UML:VariableAction | UML:BroadcastSignalAction | UML:CallProcedureAction | UML:CallAction | 
     UML:JumpAction | UML:CreateLinkObjectAction | 
     UML:ReadLinkObjectQualifierAction | UML:ReadExtentAction | UML:DestroyObjectAction | 
     UML:InvocationAction | UML:AttributeAction | UML:IterateAction | 
@@ -6146,7 +6157,7 @@
     UML:ReadVariableAction | UML:ExplicitInvocationActtion | UML:CodeAction | 
     UML:AddAttributeValueAction | UML:WriteAttributeAction | UML:ReadAttributeAction | 
     UML:CreateLinkAction | UML:TestIdentityAction | UML:MapAction | 
-    UML:VariableAction | UML:BroadcastSignalAction | UML:CallProcedureAction | 
+    UML:VariableAction | UML:BroadcastSignalAction | UML:CallProcedureAction | UML:CallAction | 
     UML:JumpAction | UML:CreateLinkObjectAction | 
     UML:ReadLinkObjectQualifierAction | UML:ReadExtentAction | UML:DestroyObjectAction | 
     UML:InvocationAction | UML:AttributeAction | UML:IterateAction | 
@@ -6239,7 +6250,7 @@
     UML:ExplicitInvocationActtion | UML:CodeAction | UML:AddAttributeValueAction | 
     UML:WriteAttributeAction | UML:ReadAttributeAction | UML:CreateLinkAction | 
     UML:TestIdentityAction | UML:MapAction | UML:VariableAction | 
-    UML:BroadcastSignalAction | UML:CallProcedureAction | UML:JumpAction | 
+    UML:BroadcastSignalAction | UML:CallProcedureAction | UML:CallAction | UML:JumpAction | 
     UML:CreateLinkObjectAction | UML:ReadLinkObjectQualifierAction | 
     UML:ReadExtentAction | UML:DestroyObjectAction | UML:InvocationAction | 
     UML:AttributeAction | UML:IterateAction | UML:ReduceAction | 
@@ -6291,7 +6302,7 @@
     UML:ReadVariableAction | UML:ExplicitInvocationActtion | UML:CodeAction | 
     UML:AddAttributeValueAction | UML:WriteAttributeAction | UML:ReadAttributeAction | 
     UML:CreateLinkAction | UML:TestIdentityAction | UML:MapAction | 
-    UML:VariableAction | UML:BroadcastSignalAction | UML:CallProcedureAction | 
+    UML:VariableAction | UML:BroadcastSignalAction | UML:CallProcedureAction | UML:CallAction | 
     UML:JumpAction | UML:CreateLinkObjectAction | 
     UML:ReadLinkObjectQualifierAction | UML:ReadExtentAction | UML:DestroyObjectAction | 
     UML:InvocationAction | UML:AttributeAction | UML:IterateAction | 
@@ -6313,7 +6324,7 @@
     UML:ReadVariableAction | UML:ExplicitInvocationActtion | UML:CodeAction | 
     UML:AddAttributeValueAction | UML:WriteAttributeAction | UML:ReadAttributeAction | 
     UML:CreateLinkAction | UML:TestIdentityAction | UML:MapAction | 
-    UML:VariableAction | UML:BroadcastSignalAction | UML:CallProcedureAction | 
+    UML:VariableAction | UML:BroadcastSignalAction | UML:CallProcedureAction | UML:CallAction | 
     UML:JumpAction | UML:CreateLinkObjectAction | 
     UML:ReadLinkObjectQualifierAction | UML:ReadExtentAction | UML:DestroyObjectAction | 
     UML:InvocationAction | UML:AttributeAction | UML:IterateAction | 
@@ -6697,7 +6708,7 @@
     UML:ExplicitInvocationActtion | UML:CodeAction | UML:AddAttributeValueAction | 
     UML:WriteAttributeAction | UML:ReadAttributeAction | UML:CreateLinkAction | 
     UML:TestIdentityAction | UML:MapAction | UML:VariableAction | 
-    UML:BroadcastSignalAction | UML:CallProcedureAction | UML:JumpAction | 
+    UML:BroadcastSignalAction | UML:CallProcedureAction | UML:CallAction | UML:JumpAction | 
     UML:CreateLinkObjectAction | UML:ReadLinkObjectQualifierAction | 
     UML:ReadExtentAction | UML:DestroyObjectAction | UML:InvocationAction | 
     UML:AttributeAction | UML:IterateAction | UML:ReduceAction | 
@@ -6887,7 +6898,7 @@
     UML:ReadVariableAction | UML:ExplicitInvocationActtion | UML:CodeAction | 
     UML:AddAttributeValueAction | UML:WriteAttributeAction | UML:ReadAttributeAction | 
     UML:CreateLinkAction | UML:TestIdentityAction | UML:MapAction | 
-    UML:VariableAction | UML:BroadcastSignalAction | UML:CallProcedureAction | 
+    UML:VariableAction | UML:BroadcastSignalAction | UML:CallProcedureAction | UML:CallAction | 
     UML:JumpAction | UML:CreateLinkObjectAction | 
     UML:ReadLinkObjectQualifierAction | UML:ReadExtentAction | UML:DestroyObjectAction | 
     UML:InvocationAction | UML:AttributeAction | UML:IterateAction | 
@@ -7327,6 +7338,18 @@
    isSynchronous CDATA #IMPLIED
    %XMI.element.att; %XMI.link.att;>
 
+<!-- included for compatibility with Poseidon 3.1               -->
+<!-- the allowed elements are just a guess. It may be necessary -->
+<!-- to add more...                                             -->
+<!ELEMENT UML:CallAction (UML:Action.script |
+	  UML:ModelElement.constraint | UML:ModelElement.stereotype |
+	  XMI.extension)* >
+<!ATTLIST UML:CallAction
+   name CDATA #IMPLIED
+   isSpecification CDATA #IMPLIED
+   isAsynchronous CDATA #IMPLIED
+   %XMI.element.att; %XMI.link.att;>
+
 <!ELEMENT UML:VariableAction.variable (UML:Variable)* >
 
 <!ELEMENT UML:VariableAction (UML:ModelElement.name | 
@@ -7710,7 +7733,7 @@
     UML:AddAttributeValueAction | UML:WriteAttributeAction | UML:QualifierValue | 
     UML:ReadAttributeAction | UML:CreateLinkAction | UML:TestIdentityAction | 
     UML:MapAction | UML:VariableAction | UML:BroadcastSignalAction | 
-    UML:Variable | UML:JumpAction | UML:CallProcedureAction | 
+    UML:Variable | UML:JumpAction | UML:CallProcedureAction | UML:CallAction | 
     UML:LinkEndData | UML:CreateLinkObjectAction | 
     UML:ReadLinkObjectQualifierAction | UML:ReadExtentAction | UML:DestroyObjectAction | 
     UML:AttributeAction | UML:Clause | UML:InvocationAction | UML:IterateAction | 
@@ -9149,7 +9172,7 @@
     UML:Operation | UML15OCL.Types.CollectionType | UML:Reception | 
     UML:Parameter | UML:Package | UML:ActivityGraph | UML:Guard | 
     UML:Variable | UML:BroadcastSignalAction | UML:JumpAction | 
-    UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -9308,7 +9331,7 @@
     UML:Operation | UML15OCL.Types.CollectionType | UML:Reception | 
     UML:Parameter | UML:Package | UML:ActivityGraph | UML:Guard | 
     UML:Variable | UML:BroadcastSignalAction | UML:JumpAction | 
-    UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -9519,7 +9542,7 @@
     UML:Operation | UML15OCL.Types.CollectionType | UML:Reception | 
     UML:Parameter | UML:Package | UML:ActivityGraph | UML:Guard | 
     UML:Variable | UML:BroadcastSignalAction | UML:JumpAction | 
-    UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -10000,7 +10023,7 @@
     UML15OCL.Types.SetType | UML:Operation | UML15OCL.Types.CollectionType | 
     UML:Reception | UML:Parameter | UML:Package | UML:ActivityGraph | 
     UML:Guard | UML:Variable | UML:BroadcastSignalAction | 
-    UML:JumpAction | UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:JumpAction | UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
@@ -10432,7 +10455,7 @@
     UML15OCL.Types.SetType | UML:Operation | UML15OCL.Types.CollectionType | 
     UML:Reception | UML:Parameter | UML:Package | UML:ActivityGraph | 
     UML:Guard | UML:Variable | UML:BroadcastSignalAction | 
-    UML:JumpAction | UML:CallProcedureAction | UML:ComponentInstance | 
+    UML:JumpAction | UML:CallProcedureAction | UML:CallAction | UML:ComponentInstance | 
     UML:ReadLinkObjectQualifierAction | UML15OCL.Expressions.EnumLiteralExp | 
     UML:Generalization | UML15OCL.Expressions.BooleanLiteralExp | 
     UML:SimpleState | UML15OCL.Expressions.FeatureCallExp | UML:FinalState | 
