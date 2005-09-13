@@ -312,12 +312,13 @@ fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,
 
 fun transform_aend t ({xmiid,name,ordering,multiplicity,participant_id,
 		       isNavigable,aggregation,changeability,visibility})
-  = {name         = name,
+  = {name         = valOf name,
      aend_type    = find_classifier_type t participant_id,
      multiplicity = multiplicity,
      ordered      = if ordering = XMI.Ordered then true else false }
 
-
+val filter_named_aends  = List.filter (fn {name=SOME _,...}:XMI.AssociationEnd => true
+					| _ => false)
 	
 fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 					   generalizations,attributes,operations,
@@ -335,7 +336,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 			invariant  = map ((transform_constraint t) o 
 					  (find_constraint t)) invariant, 
 			associationends = map (transform_aend t) 
-					      (find_aends t xmiid), 
+					      ((filter_named_aends (find_aends t xmiid))), 
 			stereotypes = nil, (* FIX *)
 			interfaces = nil, (* FIX *)
                         activity_graphs = nil,
@@ -348,7 +349,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 			parent = NONE,    (* FIX *)
 			operations = map (transform_operation t) operations,
 			associationends = map (transform_aend t) 
-					      (find_aends t xmiid), 
+					      (filter_named_aends (find_aends t xmiid)), 
 			invariant = map ((transform_constraint t) o 
 					 (find_constraint t)) invariant,
 			stereotypes = nil, (*FIX *)
@@ -427,7 +428,8 @@ fun transform_assocation t (assoc:XMI.Association) =
 	    let val type_of_id = find_classifier_type t id
 		val aends_of_id = ae::(find_aends t id)
 		val path_of_id = case type_of_id of Rep_OclType.Classifier x => x
-		val path_of_ae = path_of_id @ [#name ae]
+		val path_of_ae = path_of_id @ [case #name ae of SOME x => x
+							      | NONE   => ""]
 	    in 
 		(HashTable.insert t (id,Type (type_of_id,aends_of_id));
 		 HashTable.insert t (#xmiid ae, AssociationEnd path_of_ae))

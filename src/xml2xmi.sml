@@ -97,12 +97,30 @@ fun getAggregation atts =
 		  | _ => raise IllFormed ("in getAggregation: found unexpected attribute value "^att)
     end 
 
+fun getAggregationMaybe atts = 
+    let val att = XmlTree.attvalue_of "aggregation" atts in
+	case att of SOME "none" => XMI.NoAggregation
+		  | SOME "aggregate" => XMI.Aggregate
+		  | SOME "composite" => XMI.Composite
+		  | NONE             => XMI.NoAggregation
+		  | SOME x => raise IllFormed ("in getAggregation: found unexpected attribute value "^x)
+    end 
+
 fun getChangeability atts = 
     let val att = getStringAtt "changeability" atts in
 	case att of "changeable" => XMI.Changeable
 		  | "frozen"     => XMI.Frozen
 		  | "addonly"    => XMI.AddOnly
 		  | _ => raise IllFormed ("in getChangeability: found unexpected attribute value "^att)
+    end 
+
+fun getChangeabilityMaybe atts = 
+    let val att = XmlTree.attvalue_of "changeability" atts in
+	case att of SOME "changeable" => XMI.Changeable
+		  | SOME "frozen"     => XMI.Frozen
+		  | SOME "addonly"    => XMI.AddOnly
+		  | NONE              => XMI.Changeable
+		  | SOME x =>  raise IllFormed ("in getChangeability: found unexpected attribute value "^x)
     end 
 			       
 fun getKind atts = 
@@ -124,13 +142,15 @@ fun mkMultiplicity tree = map (getRange o XmlTree.attributes_of)
 fun mkAssociationEnd tree = 
     let fun f atts trees =  
 	    { xmiid          = getXmiId atts, 
-	      name           = getName atts, 
+	      name           = XmlTree.attvalue_of "name" atts, 
 	      isNavigable    = getBoolAtt "isNavigable" atts,
-	      ordering       = getOrdering atts,
-	      aggregation    = getAggregation atts,
-	      multiplicity   = (mkMultiplicity o hd o (XmlTree.follow "UML:AssociationEnd.multiplicity")) 
-							 trees,
-	      changeability  = getChangeability atts, 
+	      ordering       = getOrderingMaybe atts,
+	      aggregation    = getAggregationMaybe atts,
+	      multiplicity   = if XmlTree.exists "UML:AssociationEnd.multiplicity" trees 
+			       then (mkMultiplicity o hd o (XmlTree.follow "UML:AssociationEnd.multiplicity")) 
+					trees
+			       else [(0,~1)],
+	      changeability  = getChangeabilityMaybe atts, 
 	      visibility     = getVisibility atts,
 	      participant_id = (getXmiIdref o XmlTree.attributes_of o hd o
 				(XmlTree.follow "UML:AssociationEnd.participant")) trees }
@@ -406,7 +426,7 @@ fun mkAttribute tree =
 	{ xmiid         = getXmiId atts,
 	  name          = getName atts,
 	  visibility    = getVisibility atts,
-	  changeability = getChangeability atts,
+	  changeability = getChangeabilityMaybe atts,
 	  ordering      = getOrderingMaybe atts, 
 	  type_id       = (getXmiIdref o XmlTree.attributes_of o hd o 
 			   (XmlTree.follow "UML:StructuralFeature.type")) trees,

@@ -350,7 +350,7 @@ type Void = {xmiid: string,
  *                            <<parameter>>, <<self>>
  * --------------------------------------------------------------------------*)
 type AssociationEnd = { xmiid : string,
-			name : string,
+			name : string option,
 			isNavigable: bool,
 			ordering : OrderingKind,
 			aggregation : AggregationKind,
