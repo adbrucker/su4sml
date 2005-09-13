@@ -539,6 +539,28 @@ fun mkSet        atts trees = XMI.Set        (mkGenericCollection atts trees)
 fun mkBag        atts trees = XMI.Bag        (mkGenericCollection atts trees)
 fun mkOrderedSet atts trees = XMI.OrderedSet (mkGenericCollection atts trees)
 
+fun mkStereotype tree = 
+    let fun f atts trees =  { xmiid = getXmiId atts,
+			  name = getName atts,
+			  baseClass = NONE, (*FIX*)
+			  stereotypeConstraint = NONE (*FIX*)
+			  }
+    in XmlTree.apply_on "UML:Stereotype" f tree
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkStereotype: "^msg)
+    end 
+
+fun mkStereotypeR tree = 
+    let fun f atts trees =  { xmiid = getXmiIdref atts,
+			  name = "",
+			  baseClass = NONE, (*FIX*)
+			  stereotypeConstraint = NONE (*FIX*)
+			  }
+    in XmlTree.apply_on "UML:Stereotype" f tree
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkStereotype: "^msg)
+    end 
+
+
+
 fun mkClassifier tree = 
     let val elem  = XmlTree.tagname_of    tree
 	val atts  = XmlTree.attributes_of tree
@@ -607,12 +629,28 @@ fun mkGuard tree =
     end
 
 
+fun mkTaggedValue tree =
+    let fun f atts trees ={xmiid    = getXmiId atts,
+                           dataValue= "", (* BUG in unserem xml *)
+                           tag_type = (getXmiIdref o XmlTree.attributes_of o 
+                                      (XmlTree.find "UML:TagDefinition") o
+                                      XmlTree.children_of o  
+                                      (XmlTree.find "UML:TaggedValue.type")) trees
+                          }
+    in  XmlTree.apply_on "UML:TaggedValue" f tree 
+    end
+
+
 fun mkTransition tree = 
     let val getGuard     = (ap_some (mkGuard  o 
                                      (XmlTree.find "UML:Guard") o
                                      XmlTree.children_of))  o
                            (XmlTree.find_some "UML:Transition.guard")
- 
+
+        val getTagVal    = List.concat o 
+                           (map ((map mkTaggedValue) o XmlTree.children_of)) o 
+                           (XmlTree.filter "UML:ModelElement.taggedValue")
+
         fun f atts trees = XMI.mk_Transition  
                            {isSpecification = getBoolAtt "isSpecification" atts,
                             xmiid  = getXmiId atts,
@@ -626,7 +664,9 @@ fun mkTransition tree =
                                      (trees),
 			    guard  = getGuard trees, 
 			    trigger= NONE, (* TO BE DONE *)
-		            effect = NONE  (* TO BE DONE *)}
+		            effect = NONE  (* TO BE DONE *),
+                            taggedValue = getTagVal trees}
+
     in  XmlTree.apply_on "UML:Transition" f tree 
     end
 
@@ -642,6 +682,7 @@ fun getPseudoStateKindAttr atts =
        | "choice"   => XMI.choice)
 
 
+
 fun mkState tree =
     let val elem         = XmlTree.tagname_of    tree
 	val atts         = XmlTree.attributes_of tree
@@ -650,7 +691,8 @@ fun mkState tree =
         val name         = getName atts
         val isSpecification =  getBoolAtt "isSpecification" atts
         val getTid       = getXmiIdref o XmlTree.attributes_of
-        fun getTrans str = List.concat o (map ((map getTid) o XmlTree.children_of)) o
+        fun getTrans str = List.concat o 
+                           (map ((map getTid) o XmlTree.children_of)) o
                            (XmlTree.filter str)
         val getIncoming  = getTrans "UML:StateVertex.incoming"
         val getOutgoing  = getTrans "UML:StateVertex.outgoing"
@@ -660,7 +702,13 @@ fun mkState tree =
                                      (XmlTree.find "UML:CallAction") o
                                      XmlTree.children_of))  o
                            (XmlTree.find_some "UML:State.entry")
-        
+        val getTagVal    = List.concat o 
+                           (map ((map mkTaggedValue) o XmlTree.children_of)) o 
+                           (XmlTree.filter "UML:ModelElement.taggedValue")
+        val getStereo    = List.concat o 
+                           (map ((map mkStereotypeR) o XmlTree.children_of)) o 
+                           (XmlTree.filter "UML:ModelElement.stereotype")
+
 (*
         val visibility = getVisibility atts
  *)
@@ -668,15 +716,18 @@ fun mkState tree =
         "UML:CompositeState" => 
              XMI.CompositeState{
                     xmiid=xmiid,name=name,isSpecification=isSpecification,
+                    stereotype   = getStereo trees,
                     isConcurrent = getBoolAtt "isConcurrent" atts,
                     outgoing     = getOutgoing trees, incoming = getIncoming trees, 
 	            subvertex    = getSubvertex trees,
                     entry        = getEntry trees,
                     exit         = NONE,
-                    doActivity   = NONE }
-       |"UML:SubactivityState" => 
+                    doActivity   = NONE,
+                    taggedValue  = getTagVal trees}
+        |"UML:SubactivityState" => 
              XMI.SubactivityState{
                     xmiid=xmiid,name=name,isSpecification=isSpecification,
+                    stereotype   = getStereo trees,
                     isConcurrent = getBoolAtt "isConcurrent" atts,
                     isDynamic    = getBoolAtt "isDynamic" atts,
                     outgoing     = getOutgoing trees, incoming = getIncoming trees, 
@@ -686,52 +737,65 @@ fun mkState tree =
                     doActivity   = NONE,
                     submachine   = mkStateMachine (hd trees) 
                     (* HACK ! So far, no UML tool supports this. Parser has to be adapted
-                       of we find a first example ... *)}
+                       of we find a first example ... *),
+                    taggedValue  = getTagVal trees}
        |"UML:ActionState" => 
              XMI.ActionState {
                     xmiid=xmiid,name=name,isSpecification=isSpecification,
+                    stereotype   = getStereo trees,
                     outgoing     = getOutgoing trees, incoming = getIncoming trees, 
                     isDynamic    = getBoolAtt "isDynamic" atts,
                     entry        = getEntry trees,
                     exit         = NONE,
-                    doActivity   = NONE}
+                    doActivity   = NONE,
+                    taggedValue  = getTagVal trees}
        |"UML:Pseudostate" => 
              XMI.PseudoState {
                     xmiid=xmiid,name=name,isSpecification=isSpecification,
+                    stereotype   = getStereo trees,
                     entry        = getEntry trees,
                     exit         = NONE,
                     doActivity   = NONE,
                     kind         = getPseudoStateKindAttr atts,
-                    outgoing     = getOutgoing trees,incoming = getIncoming trees}
+                    outgoing     = getOutgoing trees,incoming = getIncoming trees,
+                    taggedValue  = getTagVal trees}
        |"UML:SimpleState" => 
              XMI.SimpleState{
                     xmiid=xmiid,name=name,isSpecification=isSpecification,
+                    stereotype   = getStereo trees,
                     entry        = getEntry trees,
                     exit         = NONE,
                     doActivity   = NONE,
-                    outgoing     = getOutgoing trees, incoming = getIncoming trees}
+                    outgoing     = getOutgoing trees, incoming = getIncoming trees,
+                    taggedValue  = getTagVal trees}
        |"UML:ObjectFlowState" => 
              XMI.ObjectFlowState{
                     xmiid=xmiid,name=name,isSpecification=isSpecification,
+                    stereotype   = getStereo trees,
                     entry        = getEntry trees,
                     exit         = NONE,
                     doActivity   = NONE,
                     outgoing     = getOutgoing trees, incoming = getIncoming trees, 
                     isSynch      = getBoolAtt "isSynch" atts,
                     parameter    = nil,
-                    type_        = NONE}
+                    type_        = NONE,
+                    taggedValue  = getTagVal trees}
        |"UML:FinalState" => 
              XMI.FinalState{
                     xmiid=xmiid,name=name,isSpecification=isSpecification,
+                    stereotype   = getStereo trees,
                     entry        = getEntry trees,
                     exit         = NONE,
                     doActivity   = NONE,
-                    outgoing     = getOutgoing trees,incoming = getIncoming trees}
+                    outgoing     = getOutgoing trees,incoming = getIncoming trees,
+                    taggedValue  = getTagVal trees}
        |"UML:SyncState" => 
              XMI.SyncState{
                     xmiid=xmiid,name=name,isSpecification=isSpecification,
+                    stereotype   = getStereo trees,
                     bound        = 0,
-                    outgoing     = getOutgoing trees,incoming = getIncoming trees}
+                    outgoing     = getOutgoing trees,incoming = getIncoming trees,
+                    taggedValue  = getTagVal trees}
 
        | _ => raise IllFormed ("in mkState: Unknown State Vertex.")
 
@@ -804,18 +868,6 @@ fun mkPackage tree =
     handle XmlTree.IllFormed msg => raise IllFormed ("in mkPackage: "^msg)
 				  
 				 
-
-fun mkStereotype tree = 
-    let fun f atts trees =  { xmiid = getXmiId atts,
-			  name = getName atts,
-			  baseClass = NONE, (*FIX*)
-			  stereotypeConstraint = NONE (*FIX*)
-			  }
-    in XmlTree.apply_on "UML:Stereotype" f tree
-       handle XmlTree.IllFormed msg => raise IllFormed ("in mkStereotype: "^msg)
-    end 
-
-
 
 fun mkXmiContent tree =
     let fun f atts trees = 

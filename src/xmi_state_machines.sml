@@ -75,7 +75,8 @@ datatype Transition   = mk_Transition of
                                   target  : StateVertex_Id,
 			 	  guard   : Guard  option,
 				  trigger : Event  option,
-				  effect  : Procedure option
+				  effect  : Procedure option,
+                                  taggedValue  : TaggedValue list
 				 (* mmm    : StateVertexId option *)
 			         }
 				 
@@ -88,6 +89,7 @@ datatype StateVertex  =
          CompositeState 
 	 of {xmiid        : string,
              name         : string,
+             stereotype   : Stereotype list,
              isSpecification : bool,
              isConcurrent : bool,
              entry        : Procedure option,
@@ -95,10 +97,12 @@ datatype StateVertex  =
              doActivity   : Procedure option,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list, 
+             taggedValue  : TaggedValue list,
 	     subvertex    : StateVertex list}
        | SubactivityState
 	 of {xmiid        : string,
              name         : string,
+             stereotype   : Stereotype list,
              isSpecification : bool,
              isConcurrent : bool,
              entry        : Procedure option,
@@ -108,30 +112,36 @@ datatype StateVertex  =
 	     incoming     : Transition_Id list, 
 	     subvertex    : StateVertex list,
              submachine   : StateMachine,
+             taggedValue  : TaggedValue list,
              isDynamic    : bool}
        | SimpleState
 	 of {xmiid        : string,
              name         : string,
+             stereotype   : Stereotype list,
              isSpecification : bool,
              entry        : Procedure option,
              exit         : Procedure option,
              doActivity   : Procedure option,
+             taggedValue  : TaggedValue list,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list}
        | ActionState (* from ActivityGraphs *)
          of {xmiid        : string,
              name         : string,
+             stereotype   : Stereotype list,
              isSpecification : bool,
              entry        : Procedure option,
              exit         : Procedure option,
              doActivity   : Procedure option,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list, 
+             taggedValue  : TaggedValue list,
              isDynamic    : bool 
              (* + dynamicArguments + dynamicMultiplicity *)}
        | ObjectFlowState (* from ActivityGraphs *)
          of {xmiid        : string,
              name         : string,
+             stereotype   : Stereotype list,
              isSpecification : bool,
              entry        : Procedure option,
              exit         : Procedure option, 
@@ -140,32 +150,39 @@ datatype StateVertex  =
 	     incoming     : Transition_Id list, 
              isSynch      : bool,
              parameter    : Parameter list,
+             taggedValue  : TaggedValue list,
              type_        : Rep_OclType.Path option}
        | FinalState
 	 of {xmiid        : string,
              name         : string,
+             stereotype   : Stereotype list,
              isSpecification : bool,
              entry        : Procedure option,
              exit         : Procedure option,
              doActivity   : Procedure option,
+             taggedValue  : TaggedValue list,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list }
        | PseudoState
 	 of {xmiid        : string,
              name         : string,
+             stereotype   : Stereotype list,
              isSpecification : bool,
              kind         : PseudoStateVars,
              entry        : Procedure option,
              exit         : Procedure option,
              doActivity   : Procedure option,
+             taggedValue  : TaggedValue list,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list }
        | SyncState
 	 of {xmiid        : string,
              name         : string,
+             stereotype   : Stereotype list,
              isSpecification : bool,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list,
+             taggedValue  : TaggedValue list,
 	     bound        : int}
 (*     | StubState  *)
 	    
