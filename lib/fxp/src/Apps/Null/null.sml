@@ -79,3 +79,4 @@ structure Null =
 	 end
    end
 
+val _ = Null.null(CommandLine.name (), CommandLine.arguments ())

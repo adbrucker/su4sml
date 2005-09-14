@@ -238,9 +238,9 @@ functor Entities (structure Hooks : Hooks) : Entities =
 	    | CLOSED(_,_,_,NORMAL(_,other)) => closeAll other
 	    | INT(_,_,_,(_,other)) => closeAll other
 	    | EXT1(dec,_,_,_,SPECIAL _) => ignore(decClose dec)
-	    | EXT1(dec,_,_,_,NORMAL(_,other)) => (decClose dec; closeAll other)
+	    | EXT1(dec,_,_,_,NORMAL(_,other)) => (ignore (decClose dec); closeAll other)
 	    | EXT2(_,_,_,_,_,_,(dec,_,SPECIAL _)) => ignore(decClose dec)
-	    | EXT2(_,_,_,_,_,_,(dec,_,NORMAL(_,other))) => (decClose dec; closeAll other)
+	    | EXT2(_,_,_,_,_,_,(dec,_,NORMAL(_,other))) => (ignore (decClose dec); closeAll other)
 
       (*--------------------------------------------------------------------*)
       (* is this entity already on the stack?                               *)

@@ -154,7 +154,7 @@ structure Uri :> Uri =
 
       fun convertCommand str (src,dst) =
 	 let 
-	    val s = Substring.all str
+	    val s = Substring.full str
 	    fun doit ss s = 
 	       if Substring.isEmpty s then ss
 	       else let val (sl,sr) = Substring.splitr (fn c => #"%"<>c) s
@@ -162,12 +162,12 @@ structure Uri :> Uri =
 		       else let val sl' =  Substring.trimr 1 sl
 			    in case Substring.first sr
 				 of SOME #"1" => let val sr' = Substring.triml 1 sr
-						 in doit (Substring.all src::sr'::ss) sl'
+						 in doit (Substring.full src::sr'::ss) sl'
 						 end
 				  | SOME #"2" => let val sr' = Substring.triml 1 sr
-						 in doit (Substring.all dst::sr'::ss) sl'
+						 in doit (Substring.full dst::sr'::ss) sl'
 						 end
-				  | _ => doit (Substring.all "%"::sr::ss) sl'
+				  | _ => doit (Substring.full "%"::sr::ss) sl'
 			    end
 		    end
 	    val ss = doit nil s

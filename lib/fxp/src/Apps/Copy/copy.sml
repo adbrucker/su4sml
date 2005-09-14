@@ -78,3 +78,4 @@ structure Copy =
 	 end
    end
 
+val _ = Copy.copy(CommandLine.name (), CommandLine.arguments ())
