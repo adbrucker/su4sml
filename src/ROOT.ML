@@ -30,9 +30,6 @@ open library;
 (* ****************************************************** *)
 (* Load the (foreign) fxp-module providing
    an elemantary library in processing xml documents. *)
-fun su4sml_home () = if (getenv "HOLOCL_HOME") <> ""
-                     then getenv "HOLOCL_HOME" 
-                     else ".";
 cd "../lib/fxp/src"; 
 use "ROOT.ML"; 
 cd "../../../src";

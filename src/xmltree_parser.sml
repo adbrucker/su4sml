@@ -54,7 +54,7 @@ sig
     exception IllFormed of string
 end =
 struct
-
+open library
 exception IllFormed of string
 
 type Attribute = (string * string) 
@@ -174,7 +174,7 @@ structure ParseXmlTree : sig
 end = 
 struct
 open XmlTree
-
+open library
 exception FileNotFound of string
 
 structure Parser = Parse (structure Dtd = Dtd
@@ -184,6 +184,9 @@ structure Parser = Parse (structure Dtd = Dtd
 		   
 fun readFile filename = 
     let val currentDir = OS.FileSys.getDir()
+	fun su4sml_home () = if (getenv "HOLOCL_HOME") <> ""
+	                     then getenv "HOLOCL_HOME" 
+			                          else ".";
 	val _ = OS.FileSys.fileSize filename (* dummy check to see if the file exists...*)
 	val dtd = Dtd.initDtdTables()
 	(* how to do the following in a clean/portable way? *)

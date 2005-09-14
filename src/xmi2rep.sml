@@ -32,6 +32,7 @@ sig
     exception IllFormed of string
 end  =
 struct
+open library
 exception IllFormed of string
 exception NotYetImplemented
 

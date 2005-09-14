@@ -24,6 +24,7 @@
 
 structure Rep_Core :  REP_CORE = 
 struct
+open library
 type operation = { name          : string,	
 		   precondition  : (string option * Rep_OclTerm.OclTerm) list,
 		   postcondition : (string option * Rep_OclTerm.OclTerm) list,

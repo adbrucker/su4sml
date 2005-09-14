@@ -29,7 +29,7 @@ sig
     exception IllFormed of string
 end =
 struct
-
+open library
 exception NotYetImplemented
 (* generic exception if something is wrong *)
 exception IllFormed of string

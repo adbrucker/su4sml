@@ -24,7 +24,7 @@
 
 structure Rep_OclType : REP_OCL_TYPE =
 struct
-
+open library
 type Path = string list
 	    
 	    
