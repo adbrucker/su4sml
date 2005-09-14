@@ -212,7 +212,7 @@ val triv_expr = XMI.LiteralExp {symbol = "true",
 fun mkOCLExpression tree = 
     let val elem  = XmlTree.tagname_of tree
 	val atts  = XmlTree.attributes_of tree
-	val trees = XmlTree.children_of tree
+	val trees = XmlTree.node_children_of tree
     in 
 	if elem = "UML15OCL.Expressions.BooleanLiteralExp" then
 	    XMI.LiteralExp { symbol          = getStringAtt "booleanSymbol" atts,
@@ -307,12 +307,12 @@ fun mkOCLExpression tree =
 		val var_name     = getName (XmlTree.attributes_of var_decl)
 		val var_type_ref = findXmiIdRef 
 				       "OCL.Expressions.VariableDeclaration.type" 
-				       (XmlTree.children_of var_decl)
+				       (XmlTree.node_children_of var_decl)
 		val in_exp = (hd o XmlTree.follow "OCL.Expressions.LetExp.in") trees
 		val init_exp = 
 		    (hd o XmlTree.follow 
 			      "OCL.Expressions.VariableDeclaration.initExpression") 
-			(XmlTree.children_of var_decl)
+			(XmlTree.node_children_of var_decl)
 	    in XMI.LetExp 
 		   { variable        = { xmiid            = var_xmiid,
 					 name             = var_name, 
@@ -564,7 +564,7 @@ fun mkStereotypeR tree =
 fun mkClassifier tree = 
     let val elem  = XmlTree.tagname_of    tree
 	val atts  = XmlTree.attributes_of tree
-	val trees = XmlTree.children_of    tree
+	val trees = XmlTree.node_children_of    tree
     in 
 	if elem = "UML:Class" orelse
 	   elem = "UML:AssociationClass" then               mkClass atts trees
@@ -599,7 +599,7 @@ fun mkGeneralization tree =
 
 fun mkProcedure tree =
     let fun get_AttrL x = (XmlTree.attributes_of o (XmlTree.find "UML:ActionExpression") o
-                        XmlTree.children_of o (XmlTree.find "UML:Action.script")) x
+                        XmlTree.node_children_of o (XmlTree.find "UML:Action.script")) x
                         handle _ => (writeln(getXmiId(XmlTree.attributes_of tree)); [])
         fun f atts trees = XMI.mk_Procedure{
                                xmiid = getXmiId atts,
@@ -616,7 +616,7 @@ fun mkProcedure tree =
 
 fun mkGuard tree = 
     let val getExpr = XmlTree.attributes_of o (XmlTree.find "UML:BooleanExpression") o
-                      XmlTree.children_of o (XmlTree.find "UML:Guard.expression") 
+                      XmlTree.node_children_of o (XmlTree.find "UML:Guard.expression") 
         fun f atts trees = XMI.mk_Guard{
                                xmiid = getXmiId atts,
                                name  = getName atts,
@@ -634,7 +634,7 @@ fun mkTaggedValue tree =
                            dataValue= "", (* BUG in unserem xml *)
                            tag_type = (getXmiIdref o XmlTree.attributes_of o 
                                       (XmlTree.find "UML:TagDefinition") o
-                                      XmlTree.children_of o  
+                                      XmlTree.node_children_of o  
                                       (XmlTree.find "UML:TaggedValue.type")) trees
                           }
     in  XmlTree.apply_on "UML:TaggedValue" f tree 
@@ -644,22 +644,22 @@ fun mkTaggedValue tree =
 fun mkTransition tree = 
     let val getGuard     = (ap_some (mkGuard  o 
                                      (XmlTree.find "UML:Guard") o
-                                     XmlTree.children_of))  o
+                                     XmlTree.node_children_of))  o
                            (XmlTree.find_some "UML:Transition.guard")
 
         val getTagVal    = List.concat o 
-                           (map ((map mkTaggedValue) o XmlTree.children_of)) o 
+                           (map ((map mkTaggedValue) o XmlTree.node_children_of)) o 
                            (XmlTree.filter "UML:ModelElement.taggedValue")
 
         fun f atts trees = XMI.mk_Transition  
                            {isSpecification = getBoolAtt "isSpecification" atts,
                             xmiid  = getXmiId atts,
                             source = (getXmiIdref o XmlTree.attributes_of o 
-                                      hd o XmlTree.children_of o 
+                                      hd o XmlTree.node_children_of o 
                                       (XmlTree.find "UML:Transition.source"))
                                      (trees),
                             target = (getXmiIdref o XmlTree.attributes_of o 
-                                      hd o XmlTree.children_of o 
+                                      hd o XmlTree.node_children_of o 
                                       (XmlTree.find "UML:Transition.target"))
                                      (trees),
 			    guard  = getGuard trees, 
@@ -686,27 +686,27 @@ fun getPseudoStateKindAttr atts =
 fun mkState tree =
     let val elem         = XmlTree.tagname_of    tree
 	val atts         = XmlTree.attributes_of tree
-	val trees        = XmlTree.children_of   tree
+	val trees        = XmlTree.node_children_of   tree
         val xmiid        = getXmiId atts
         val name         = getName atts
         val isSpecification =  getBoolAtt "isSpecification" atts
         val getTid       = getXmiIdref o XmlTree.attributes_of
         fun getTrans str = List.concat o 
-                           (map ((map getTid) o XmlTree.children_of)) o
+                           (map ((map getTid) o XmlTree.node_children_of)) o
                            (XmlTree.filter str)
         val getIncoming  = getTrans "UML:StateVertex.incoming"
         val getOutgoing  = getTrans "UML:StateVertex.outgoing"
-        val getSubvertex = (map mkState) o XmlTree.children_of o 
+        val getSubvertex = (map mkState) o XmlTree.node_children_of o 
                            (XmlTree.find "UML:CompositeState.subvertex")
         val getEntry     = (ap_some (mkProcedure  o 
                                      (XmlTree.find "UML:CallAction") o
-                                     XmlTree.children_of))  o
+                                     XmlTree.node_children_of))  o
                            (XmlTree.find_some "UML:State.entry")
         val getTagVal    = List.concat o 
-                           (map ((map mkTaggedValue) o XmlTree.children_of)) o 
+                           (map ((map mkTaggedValue) o XmlTree.node_children_of)) o 
                            (XmlTree.filter "UML:ModelElement.taggedValue")
         val getStereo    = List.concat o 
-                           (map ((map mkStereotypeR) o XmlTree.children_of)) o 
+                           (map ((map mkStereotypeR) o XmlTree.node_children_of)) o 
                            (XmlTree.filter "UML:ModelElement.stereotype")
 
 (*
@@ -807,13 +807,13 @@ and mkStateMachine tree =
                            {isSpecification = getBoolAtt "isSpecification" atts,
                             xmiid        = getXmiId atts, 
                             contextxmiid = (getXmiIdref o XmlTree.attributes_of o hd o 
-                                            XmlTree.children_of o 
+                                            XmlTree.node_children_of o 
                                             (XmlTree.find "UML:StateMachine.context"))
                                            (trees), 
-                            top          = (hd o (map mkState) o XmlTree.children_of o 
+                            top          = (hd o (map mkState) o XmlTree.node_children_of o 
                                            (XmlTree.find "UML:StateMachine.top"))
                                            (trees),
-                            transitions  = ((map mkTransition) o XmlTree.children_of o 
+                            transitions  = ((map mkTransition) o XmlTree.node_children_of o 
                                            (XmlTree.find "UML:StateMachine.transitions"))
                                            (trees)}
     in  XmlTree.apply_on "UML:StateMachine" f tree
@@ -825,13 +825,13 @@ fun mkActivityGraph tree =
                            {isSpecification = getBoolAtt "isSpecification" atts,
                             xmiid        = getXmiId atts,
                             contextxmiid = (getXmiIdref o XmlTree.attributes_of o hd o 
-                                            XmlTree.children_of o 
+                                            XmlTree.node_children_of o 
                                             (XmlTree.find "UML:StateMachine.context"))
                                            (trees), 
-                            top          = (hd o (map mkState) o XmlTree.children_of o 
+                            top          = (hd o (map mkState) o XmlTree.node_children_of o 
                                            (XmlTree.find "UML:StateMachine.top"))
                                            (trees),
-                            transitions  = ((map mkTransition) o XmlTree.children_of o 
+                            transitions  = ((map mkTransition) o XmlTree.node_children_of o 
                                            (XmlTree.find "UML:StateMachine.transitions"))
                                            (trees),
                             partition    = nil}
@@ -845,7 +845,7 @@ fun mkPackage tree =
     (if XmlTree.tagname_of tree = "UML:Model" orelse
 	XmlTree.tagname_of tree = "UML:Package" then 
 	 let val trees = XmlTree.skip "UML:Namespace.ownedElement" 
-				      ((hd o XmlTree.children_of) tree)
+				      ((hd o XmlTree.node_children_of) tree)
 	     val atts = XmlTree.attributes_of tree in
 	         XMI.Package { xmiid           = getXmiId atts, 
 			       name            = getName atts,

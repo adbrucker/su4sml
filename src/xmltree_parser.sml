@@ -33,6 +33,8 @@ sig
     val tag_of      : Tree -> Tag
     val attributes_of : Tree -> Attribute list
     val children_of : Tree -> Tree list
+    val node_children_of : Tree -> Tree list
+    val text_children_of : Tree -> Tree list
     val tagname_of  : Tree -> string
     val attvalue_of : string -> Attribute list -> string option
 
@@ -63,44 +65,54 @@ type Tag = string * Attribute list
 datatype Tree = Node of Tag * Tree list
               | Text of string
 
+val filter_nodes = List.filter (fn Node x => true
+				 | _      => false)
+
+val filter_text  = List.filter (fn Text x => true
+				 | _      => false)
+
+
 fun tag_of        (Node (tag,trees)) = tag 
 fun attributes_of (Node ((elem,atts),trees)) = atts
 fun children_of   (Node ((elem,atts),trees)) = trees
+fun node_children_of (Node ((elem,atts),trees)) = filter_nodes trees
+fun text_children_of (Node ((elem,atts),trees)) = filter_text trees
 fun tagname_of    (Node ((elem,atts),trees)) = elem
+  | tagname_of    (Text _) = ""
 
 fun attvalue_of string atts = Option.map #2 (List.find (fn (x,_) => x = string) atts)
 
 fun skip string tree = if string = tagname_of tree 
-		       then children_of tree
+		       then node_children_of tree
 		       else raise IllFormed ("in XmlTree.skip: did not find element "^string)
 				  
 fun filter string trees = List.filter (fn x => string = tagname_of x) 
 				      trees
 fun filter_children string tree = List.filter (fn x => string = tagname_of x) 
-				      (children_of tree)
+				      (node_children_of tree)
 				      
 fun find_some string trees = (List.find (fn x => string = tagname_of x) trees)
 
 fun find string trees = valOf (List.find (fn x => string = tagname_of x) trees) 
     handle Option => raise IllFormed ("in XmlTree.find: did not find element "^string)
 
-fun find_child string tree = valOf (List.find (fn x => string = tagname_of x) (children_of tree)) 
+fun find_child string tree = valOf (List.find (fn x => string = tagname_of x) (node_children_of tree)) 
     handle Option => raise IllFormed ("in XmlTree.find_child: did not find element "^string)
 			   
 fun dfs string tree = if tagname_of tree = string 
 		      then SOME tree
-		      else Option.join (List.find Option.isSome (List.map (dfs string) (children_of tree)))
+		      else Option.join (List.find Option.isSome (List.map (dfs string) (node_children_of tree)))
 
 fun exists string trees = List.exists (fn x => string = tagname_of x) trees 
-fun has_child string tree = List.exists (fn x => string = tagname_of x) (children_of tree) 
+fun has_child string tree = List.exists (fn x => string = tagname_of x) (node_children_of tree) 
 			  
-fun follow string = children_of o (find string)
+fun follow string = node_children_of o (find string)
 		    
-fun follow_all string trees = map children_of (filter string trees) 
+fun follow_all string trees = map node_children_of (filter string trees) 
 			     			    
 fun apply_on name f tree = 
     if tagname_of tree = name
-    then f (attributes_of tree) (children_of tree)
+    then f (attributes_of tree) (node_children_of tree)
     else raise IllFormed ("in XmlTree.apply_on: did not find element "^name)
 
 
