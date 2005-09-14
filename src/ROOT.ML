@@ -79,6 +79,6 @@ use "xmltree_parser.sml"; (* provides explicit xml-tree data structure,
                              abstracts away fxp package. *)
 use "xml2xmi.sml";        (* conversion XML to XMI *);
 
-
+use "xmi_idtable.sml";    (* auxiliary table to store and dereference xmi.id's *)
 use "xmi2rep.sml";        (* conversion XMI to Rep *)
 
