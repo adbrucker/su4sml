@@ -28,6 +28,7 @@ sig
     type Attribute
     type Tag = string * Attribute list
     datatype Tree = Node of Tag * Tree list 
+                  | Text of string
 
     val tag_of      : Tree -> Tag
     val attributes_of : Tree -> Attribute list
@@ -60,6 +61,7 @@ type Attribute = (string * string)
 type Tag = string * Attribute list
 
 datatype Tree = Node of Tag * Tree list
+              | Text of string
 
 fun tag_of        (Node (tag,trees)) = tag 
 fun attributes_of (Node ((elem,atts),trees)) = atts
@@ -142,12 +144,12 @@ fun hookEndTag ((dtd,_,nil),_) = raise IllFormed
     (dtd,Node (tag,rev content)::content',stack)
 
 fun hookData ((dtd,content,stack),(_,vec,_)) =
-    (dtd,content,stack)
+    (dtd,Text (UniChar.Vector2String vec)::content,stack)
 
 fun hookCData ((dtd,content,stack),(_,vec)) =
-    (dtd,content,stack)
+    (dtd,Text (UniChar.Vector2String vec)::content,stack)
 
-fun hookCharRef ((dtd,content,stack),(_,c,_)) =
+fun hookCharRef ((dtd,content,stack),(_,c,_)) = (* FIX *)
     (dtd,content,stack)
 
 fun hookFinish (dtd,[elem],nil) = elem
