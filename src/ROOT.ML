@@ -25,17 +25,17 @@
 
 use "library.sml";
 
-(*
-library should be opend locally for MLton compatibility...
-open library;
-*)
+
+(* library should be opend locally for MLton compatibility... *)
+(* open library; *)
+
 
 (* ****************************************************** *)
 (* Load the (foreign) fxp-module providing
    an elemantary library in processing xml documents. *)
-cd "../lib/fxp/src"; 
+OS.FileSys.chDir "../lib/fxp/src"; 
 use "ROOT.ML"; 
-cd "../../../src";
+OS.FileSys.chDir "../../../src";
 
 
 
