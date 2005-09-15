@@ -106,7 +106,9 @@ fun dfs string tree = if tagname_of tree = string
 fun exists string trees = List.exists (fn x => string = tagname_of x) trees 
 fun has_child string tree = List.exists (fn x => string = tagname_of x) (node_children_of tree) 
 			  
-fun follow string = node_children_of o (find string)
+fun follow string trees = if exists string trees
+			  then (node_children_of o (find string)) trees
+			  else []
 		    
 fun follow_all string trees = map node_children_of (filter string trees) 
 			     			    
