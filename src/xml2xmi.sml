@@ -493,7 +493,7 @@ fun mkEnumeration atts trees
 		      invariant = (map (getXmiIdref o XmlTree.attributes_of)
 				       (XmlTree.follow "UML:ModelElement.constraint" 
 						       trees)
-				       }
+				       )}
 		      handle XmlTree.IllFormed msg => raise IllFormed ("in mkEnumeration: "^msg)
 
 fun mkVoid atts trees = XMI.Void { xmiid = getXmiId atts, 
