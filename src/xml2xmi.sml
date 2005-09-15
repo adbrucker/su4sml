@@ -492,10 +492,10 @@ fun mkEnumeration atts trees
 		      literals = nil, (* FIX *)
 		      invariant = (map (getXmiIdref o XmlTree.attributes_of)
 				       (XmlTree.follow "UML:ModelElement.constraint" 
-						       trees)
+						       trees))
 				       )}
 		      handle XmlTree.IllFormed msg => raise IllFormed ("in mkEnumeration: "^msg)
-
+							    
 fun mkVoid atts trees = XMI.Void { xmiid = getXmiId atts, 
 				       name  = getName atts }
     handle XmlTree.IllFormed msg => raise IllFormed ("in mkVoid: "^msg)
