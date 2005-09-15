@@ -404,6 +404,8 @@ datatype Classifier = Primitive   of Primitive
                     | OrderedSet  of OrderedSet
 		    | Void        of Void
 
+fun classifier_stereotype_of (Class{stereotype,...}) = stereotype
+
 fun classifier_name_of (Primitive{name,...}) = name
   | classifier_name_of (Class{name,...}) = name
   | classifier_name_of (Interface{name,...}) = name
