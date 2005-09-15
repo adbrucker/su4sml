@@ -405,6 +405,7 @@ datatype Classifier = Primitive   of Primitive
 		    | Void        of Void
 
 fun classifier_stereotype_of (Class{stereotype,...}) = stereotype
+  | classifier_stereotype_of _  = nil
 
 fun classifier_name_of (Primitive{name,...}) = name
   | classifier_name_of (Class{name,...}) = name
