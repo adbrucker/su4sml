@@ -127,7 +127,7 @@ fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
      isQuery = isQuery      (* FIX *)
      }
 
-      
+     
 
 fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,
 			    ordering,multiplicity}) =
@@ -151,7 +151,7 @@ val filter_named_aends  = List.filter (fn {name=SOME _,...}:XMI.AssociationEnd =
 	
 fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 					   generalizations,attributes,operations,
-					   invariant}) =
+					   invariant,stereotype}) =
     let val parents = map ((find_classifier_type t) o (find_parent t)) 
 			  generalizations 
 	val filtered_parents = filter (fn x => x <> Rep_OclType.OclAny) parents
@@ -166,7 +166,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 					  (find_constraint t)) invariant, 
 			associationends = map (transform_aend t) 
 					      ((filter_named_aends (find_aends t xmiid))), 
-			stereotypes = nil, (* FIX *)
+			stereotypes = map (find_stereotype t) stereotype, 
 			interfaces = nil, (* FIX *)
                         activity_graphs = nil,
 			thyname = NONE}
@@ -217,6 +217,7 @@ fun insert_package table package_prefix (XMI.Package p) =
     in 
 	map (insert_generalization table)           (#generalizations p);
 	map (insert_constraint     table)           (#constraints p);
+	map (insert_stereotype     table)           (#stereotypes p);
 	map (insert_classifier     table full_name) (#classifiers p);
 	map (insert_package        table full_name) (#packages p);
 	HashTable.insert table (#xmiid p,Package full_name)
@@ -229,6 +230,7 @@ fun insert_model table (XMI.Package p) =
     in 
 	map (insert_generalization table)           (#generalizations p);
 	map (insert_constraint     table)           (#constraints p);
+	map (insert_stereotype     table)           (#stereotypes p);
 	map (insert_classifier     table full_name) (#classifiers p);
 	map (insert_package        table full_name) (#packages p);
 	HashTable.insert table (#xmiid p,Package full_name)

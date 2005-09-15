@@ -59,7 +59,8 @@ datatype Package = Package of { xmiid          : string,
                                 activity_graphs: ActivityGraph list,
 				associations   : Association list,
 				generalizations: Generalization list,
-				constraints    : Constraint list }
+				constraints    : Constraint list,
+				stereotypes    : Stereotype list}
 		  
 end
 

@@ -430,8 +430,9 @@ fun mkAttribute tree =
 	  ordering      = getOrderingMaybe atts, 
 	  type_id       = (getXmiIdref o XmlTree.attributes_of o hd o 
 			   (XmlTree.follow "UML:StructuralFeature.type")) trees,
-	  multiplicity   = (mkMultiplicity o hd o (XmlTree.follow "UML:StructuralFeature.multiplicity"))
-							 trees}
+	  multiplicity   = if XmlTree.exists "UML:StructuralFeature.multiplicity" trees 
+			   then (mkMultiplicity o hd o (XmlTree.follow "UML:StructuralFeature.multiplicity")) trees
+			   else [(0,~1)]}
     in XmlTree.apply_on "UML:Attribute" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkAttribute: "^msg)
     end
@@ -462,7 +463,10 @@ fun mkClass atts trees
 			      then map (getXmiIdref o XmlTree.attributes_of)
 				       (XmlTree.follow "UML:ModelElement.constraint" 
 						     trees)
-			      else nil}
+			      else nil,
+	    stereotype      = map (getXmiIdref o XmlTree.attributes_of) 
+				  (XmlTree.follow "UML:ModelElement.stereotype" 
+						  trees)}
 
 fun mkPrimitive atts trees 
   = XMI.Primitive { xmiid      = getXmiId atts,
@@ -858,8 +862,10 @@ fun mkPackage tree =
 			       generalizations = (map mkGeneralization
 						      (XmlTree.filter "UML:Generalization"
 								    trees)),
-			       constraints     = map mkConstraint 
-						     (filterConstraints trees),
+			       constraints     = (map mkConstraint 
+						     (filterConstraints trees)),
+			       stereotypes     = (map mkStereotype
+						      (filterStereotypes trees)),
                                state_machines  = nil,
                                activity_graphs = nil
                               }

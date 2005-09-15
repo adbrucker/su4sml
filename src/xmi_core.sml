@@ -269,7 +269,8 @@ type Class = { xmiid : string,
 	       operations: Operation list,
 	       (* inherited from ModelElement: *)
 	       (* xmi.idref to Constraint *)
-	       invariant: string list }
+	       invariant: string list ,
+	       stereotype: string list}
 
 (* from UML 1.5 Core: --------------------------------------------------------
  * A data type is a type whose values have no identity (i.e., they are 
