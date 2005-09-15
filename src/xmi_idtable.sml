@@ -204,4 +204,30 @@ fun insert_classifier table package_prefix class =
 	  | _ => ()
     end
 
+(* recursively insert mapping of xmi.id's to model elements into Hashtable *)
+fun insert_package table package_prefix (XMI.Package p) =
+    let val full_name = package_prefix @ [#name p]
+    in 
+	map (insert_generalization table)           (#generalizations p);
+	map (insert_constraint     table)           (#constraints p);
+	map (insert_stereotype     table)           (#stereotypes p);
+	map (insert_classifier     table full_name) (#classifiers p);
+	map (insert_package        table full_name) (#packages p);
+	HashTable.insert table (#xmiid p,Package full_name)
+    end 
+
+(* We do not want the name of the model to be part of the package hierarchy, *)
+(* therefore we handle the top-level model seperately                        *)
+fun insert_model table (XMI.Package p) = 
+    let val full_name = nil
+    in 
+	map (insert_generalization table)           (#generalizations p);
+	map (insert_constraint     table)           (#constraints p);
+	map (insert_stereotype     table)           (#stereotypes p);
+	map (insert_classifier     table full_name) (#classifiers p);
+	map (insert_package        table full_name) (#packages p);
+	HashTable.insert table (#xmiid p,Package full_name)
+    end 
+
+
 end
