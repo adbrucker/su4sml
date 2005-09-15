@@ -24,8 +24,11 @@
  ******************************************************************************)
 
 use "library.sml";
-open library;
 
+(*
+library should be opend locally for MLton compatibility...
+open library;
+*)
 
 (* ****************************************************** *)
 (* Load the (foreign) fxp-module providing

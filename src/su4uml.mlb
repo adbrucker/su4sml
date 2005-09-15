@@ -24,6 +24,7 @@ in
     xmi_activity_graphs.sml 
     xmi.sml 
     xmltree_parser.sml
+    xmi_idtable.sml
     xml2xmi.sml 
     xmi2rep.sml  
   end

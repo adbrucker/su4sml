@@ -25,7 +25,7 @@
 
 structure Xmi_IDTable = 
 struct
-
+open library
 exception IllFormed of string
 
 datatype HashTableEntry = Package of Rep_OclType.Path
