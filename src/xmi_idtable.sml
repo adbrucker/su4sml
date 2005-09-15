@@ -30,7 +30,8 @@ exception IllFormed of string
 
 datatype HashTableEntry = Package of Rep_OclType.Path
 		        | Type of (Rep_OclType.OclType * 
-				   (XMI.AssociationEnd list)) 
+				   (XMI.AssociationEnd list) *
+				   (XMI.Classifier)) 
                         | Generalization of (string * string) 
 			| Constraint of XMI.Constraint 
 		        | Stereotype of string
@@ -71,7 +72,7 @@ fun find_type t xmiid =
 
 fun find_aends t xmiid = 
     (case valOf (HashTable.find t xmiid) 
-      of (Type (c,xs))  => xs
+      of (Type (c,xs,_))  => xs
        | _                => raise Option) 
     handle Option => raise IllFormed ("expected Type "^xmiid^" in table (find_aends)")
 
@@ -121,9 +122,14 @@ fun filter_postcondition t cs
 			constr_type_name = "post"
 		    end) cs
 
+fun find_classifier t xmiid =
+    (case valOf (HashTable.find t xmiid) 
+      of Type (_,_,c) => c
+       | _                => raise Option) 
+    handle Option => raise IllFormed ("expected Classifier "^xmiid^" in table")
 			
 fun find_classifier_type t xmiid
-  = let val ocltype = case valOf (HashTable.find t xmiid) of (Type (x,xs)) => x
+  = let val ocltype = case valOf (HashTable.find t xmiid) of (Type (x,xs,_)) => x
 							   | _  => raise Option
     in 
 	case ocltype of Rep_OclType.Integer      => ocltype
@@ -189,7 +195,7 @@ fun insert_classifier table package_prefix class =
 	(* so we do not have to take care of them now...                *)
 	val aends = nil 
     in 
-	HashTable.insert table (id,Type (ocltype,aends));
+	HashTable.insert table (id,Type (ocltype,aends,class));
 	case class 
 	 of XMI.Class c => (map (insert_attribute table path) (#attributes c);
 				map (insert_operation table path) (#operations c); ())
