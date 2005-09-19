@@ -31,7 +31,8 @@ exception IllFormed of string
 datatype HashTableEntry = Package of Rep_OclType.Path
 		        | Type of (Rep_OclType.OclType * 
 				   (XMI.AssociationEnd list) *
-				   (XMI.Classifier)) 
+				   XMI.Classifier * 
+				   (XMI.ActivityGraph list)) 
                         | Generalization of (string * string) 
 			| Constraint of XMI.Constraint 
 		        | Stereotype of string
@@ -72,7 +73,7 @@ fun find_type t xmiid =
 
 fun find_aends t xmiid = 
     (case valOf (HashTable.find t xmiid) 
-      of (Type (c,xs,_))  => xs
+      of (Type (c,xs,_,_))  => xs
        | _                => raise Option) 
     handle Option => raise IllFormed ("expected Type "^xmiid^" in table (find_aends)")
 
@@ -124,12 +125,19 @@ fun filter_postcondition t cs
 
 fun find_classifier t xmiid =
     (case valOf (HashTable.find t xmiid) 
-      of Type (_,_,c) => c
+      of Type (_,_,c,_) => c
        | _                => raise Option) 
     handle Option => raise IllFormed ("expected Classifier "^xmiid^" in table")
+
+fun find_activity_graph_of t xmiid = 
+    (case valOf (HashTable.find t xmiid) 
+      of Type (_,_,_,ag) => ag
+       | _                => raise Option) 
+    handle Option => raise IllFormed ("expected Classifier "^xmiid^" in table")
+
 			
 fun find_classifier_type t xmiid
-  = let val ocltype = case valOf (HashTable.find t xmiid) of (Type (x,xs,_)) => x
+  = let val ocltype = case valOf (HashTable.find t xmiid) of (Type (x,xs,_,_)) => x
 							   | _  => raise Option
     in 
 	case ocltype of Rep_OclType.Integer      => ocltype
@@ -170,6 +178,17 @@ fun insert_operation table path_prefix (a:XMI.Operation) =
 
 fun add_aend table xmiid (aend:Rep.associationend) = () (* FIX *)
 
+fun insert_activity_graph table (XMI.mk_ActivityGraph ag) =
+    let val context = #contextxmiid ag 
+    in  
+	(case valOf (HashTable.find table context) 
+	  of (Type (c,xs,aes,ags))  => HashTable.insert 
+					   table (context, Type (c,xs,aes,
+XMI.mk_ActivityGraph ag::ags))
+	   | _                => raise Option) 
+	      handle Option => raise IllFormed ("expected Type "^context^" in table (insert_activity_graph)")
+    end
+
 
 fun insert_classifier table package_prefix class = 
     let val id      = XMI.classifier_xmiid_of class
@@ -194,8 +213,9 @@ fun insert_classifier table package_prefix class =
 	(* This function is called before the associations are handled, *)
 	(* so we do not have to take care of them now...                *)
 	val aends = nil 
+	val ag    = nil
     in 
-	HashTable.insert table (id,Type (ocltype,aends,class));
+	HashTable.insert table (id,Type (ocltype,aends,class,ag));
 	case class 
 	 of XMI.Class c => (map (insert_attribute table path) (#attributes c);
 				map (insert_operation table path) (#operations c); ())
@@ -219,6 +239,7 @@ fun insert_package table package_prefix (XMI.Package p) =
 	map (insert_stereotype     table)           (#stereotypes p);
 	map (insert_classifier     table full_name) (#classifiers p);
 	map (insert_package        table full_name) (#packages p);
+	map (insert_activity_graph table)           (#activity_graphs p);
 	HashTable.insert table (#xmiid p,Package full_name)
     end 
 
@@ -232,6 +253,7 @@ fun insert_model table (XMI.Package p) =
 	map (insert_stereotype     table)           (#stereotypes p);
 	map (insert_classifier     table full_name) (#classifiers p);
 	map (insert_package        table full_name) (#packages p);
+	map (insert_activity_graph table)           (#activity_graphs p);
 	HashTable.insert table (#xmiid p,Package full_name)
     end 
 

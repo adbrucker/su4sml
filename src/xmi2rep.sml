@@ -234,11 +234,12 @@ fun transform_assocation t (assoc:XMI.Association) =
 	    let val type_of_id = find_classifier_type t id
 		val cls_of_id = find_classifier t id
 		val aends_of_id = ae::(find_aends t id)
+		val ags_of_id  = find_activity_graph_of t id
 		val path_of_id = case type_of_id of Rep_OclType.Classifier x => x
 		val path_of_ae = path_of_id @ [case #name ae of SOME x => x
 							      | NONE   => ""]
 	    in 
-		(HashTable.insert t (id,Type (type_of_id,aends_of_id,cls_of_id));
+		(HashTable.insert t (id,Type (type_of_id,aends_of_id,cls_of_id,ags_of_id));
 		 HashTable.insert t (#xmiid ae, AssociationEnd path_of_ae))
 	    end
     in 
@@ -266,7 +267,7 @@ fun transformXMI ({classifiers,constraints,packages,
     let val (xmiid_table: (string,HashTableEntry) HashTable.hash_table) =
 	    HashTable.mkTable (HashString.hashString, (op =)) (101, Option)
 	(* hack: insert a dummy type into the table *)
-	val _ = HashTable.insert xmiid_table ("DummyT",Type (Rep_OclType.DummyT,nil,XMI.Primitive{name="DummyT",xmiid="DummyT",operations=[],generalizations=[],invariant=[]}))
+	val _ = HashTable.insert xmiid_table ("DummyT",Type (Rep_OclType.DummyT,nil,XMI.Primitive{name="DummyT",xmiid="DummyT",operations=[],generalizations=[],invariant=[]},nil))
 	(* for some reasons, there are model elements outside of the top-level *) 
 	(* model the xmi-file. So we have to handle them here seperately:      *)
 	val _ = map (insert_classifier xmiid_table nil) classifiers
