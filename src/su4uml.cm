@@ -1,0 +1,28 @@
+Group is
+#if(defined(SMLNJ_VERSION))
+  $/basis.cm 
+  $smlnj/compiler/compiler.cm
+  $/smlnj-lib.cm
+#else
+#endif
+    ../lib/fxp/src/fxlib.cm
+    library.sml
+    rep_ocl.sig
+    rep_ocl.sml
+    rep_state_machines.sig
+    rep_state_machines.sml
+    rep_activity_graphs.sig
+    rep_activity_graphs.sml
+    rep_core.sig
+    rep_core.sml
+    rep.sig
+    rep.sml
+    xmi_ocl.sml 
+    xmi_core.sml 
+    xmi_state_machines.sml 
+    xmi_activity_graphs.sml 
+    xmi.sml 
+    xmltree_parser.sml
+    xmi_idtable.sml
+    xml2xmi.sml 
+    xmi2rep.sml  
