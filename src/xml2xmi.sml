@@ -831,8 +831,8 @@ fun mkActivityGraph tree =
 fun mkPackage tree = 
     (if XmlTree.tagname_of tree = "UML:Model" orelse
 	XmlTree.tagname_of tree = "UML:Package" then 
-	 let val trees = XmlTree.skip "UML:Namespace.ownedElement" 
-				      ((hd o XmlTree.node_children_of) tree)
+	 let val trees = XmlTree.follow "UML:Namespace.ownedElement" 
+				      (XmlTree.node_children_of tree)
 	     val atts = XmlTree.attributes_of tree in
 	         XMI.Package { xmiid           = getXmiId atts, 
 			       name            = getName atts,
