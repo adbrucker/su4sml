@@ -1,6 +1,6 @@
 <?xml version = '1.0' encoding = 'UTF-8' ?>
 <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' xmlns:UML2 = 'org.omg.xmi.namespace.UML2'
-  timestamp = 'Tue Sep 20 11:43:25 MEST 2005'>
+  timestamp = 'Tue Sep 20 12:17:50 MEST 2005'>
   <XMI.header>
     <XMI.documentation>
       <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
@@ -65,37 +65,6 @@
           isAbstract = 'false'>
           <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
         </UML:Stereotype>
-        <UML:Class xmi.id = 'I1441dc0m1066e78a649mm7856' name = 'Customer Negotiation'
-          visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
-          isAbstract = 'false' isActive = 'false'>
-          <UML:ModelElement.stereotype>
-            <UML:Stereotype xmi.idref = 'I1441dc0m1066e78a649mm7825'/>
-          </UML:ModelElement.stereotype>
-          <UML:Classifier.feature>
-            <UML:Operation xmi.id = 'I1441dc0m1066e78a649mm7630' name = '' visibility = 'public'
-              isSpecification = 'false' ownerScope = 'instance' isQuery = 'false' concurrency = 'sequential'
-              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
-              <UML:BehavioralFeature.parameter>
-                <UML:Parameter xmi.id = 'I1441dc0m1066e78a649mm762d' name = 'return' isSpecification = 'false'
-                  kind = 'return'>
-                  <UML:Parameter.type>
-                    <UML:DataType xmi.idref = 'I1441dc0m1066e78a649mm7631'/>
-                  </UML:Parameter.type>
-                </UML:Parameter>
-              </UML:BehavioralFeature.parameter>
-            </UML:Operation>
-            <UML:Method xmi.id = 'I1441dc0m1066e78a649mm762e' isSpecification = 'false'
-              isQuery = 'false'>
-              <UML:Method.body>
-                <UML:ProcedureExpression xmi.id = 'I1441dc0m1066e78a649mm762f' language = 'java'
-                  body = ''/>
-              </UML:Method.body>
-              <UML:Method.specification>
-                <UML:Operation xmi.idref = 'I1441dc0m1066e78a649mm7630'/>
-              </UML:Method.specification>
-            </UML:Method>
-          </UML:Classifier.feature>
-        </UML:Class>
         <UML:Stereotype xmi.id = 'I1441dc0m1066e78a649mm7843' name = 'Relationship Type'
           visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
           isAbstract = 'false'>
@@ -113,238 +82,17 @@
           isAbstract = 'false'>
           <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
         </UML:Stereotype>
-        <UML:Class xmi.id = 'I1441dc0m1066e78a649mm781a' name = 'DesignCycle' visibility = 'public'
-          isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
-          isActive = 'false'>
-          <UML:ModelElement.stereotype>
-            <UML:Stereotype xmi.idref = 'I1441dc0m1066e78a649mm7861'/>
-          </UML:ModelElement.stereotype>
-        </UML:Class>
         <UML:Class xmi.id = 'I1441dc0m1066e78a649mm7807' name = 'BPEL_Design' visibility = 'public'
           isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
           isActive = 'false'>
-          <UML:ModelElement.clientDependency>
-            <UML:Abstraction xmi.idref = 'I1441dc0m1066e78a649mm77a7'/>
-            <UML:Abstraction xmi.idref = 'I1441dc0m1066e78a649mm76fc'/>
-          </UML:ModelElement.clientDependency>
           <UML:ModelElement.stereotype>
             <UML:Stereotype xmi.idref = 'I1441dc0m1066e78a649mm7843'/>
           </UML:ModelElement.stereotype>
         </UML:Class>
-        <UML:Association xmi.id = 'I1441dc0m1066e78a649mm77da' isSpecification = 'false'
-          isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
-          <UML:Association.connection>
-            <UML:AssociationEnd xmi.id = 'I1441dc0m1066e78a649mm77e0' visibility = 'public'
-              isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
-              targetScope = 'instance' changeability = 'changeable'>
-              <UML:AssociationEnd.multiplicity>
-                <UML:Multiplicity xmi.id = 'I1441dc0m1066e78a649mm77de'>
-                  <UML:Multiplicity.range>
-                    <UML:MultiplicityRange xmi.id = 'I1441dc0m1066e78a649mm77df' lower = '1'
-                      upper = '1'/>
-                  </UML:Multiplicity.range>
-                </UML:Multiplicity>
-              </UML:AssociationEnd.multiplicity>
-              <UML:AssociationEnd.participant>
-                <UML:Class xmi.idref = 'I1441dc0m1066e78a649mm781a'/>
-              </UML:AssociationEnd.participant>
-            </UML:AssociationEnd>
-            <UML:AssociationEnd xmi.id = 'I1441dc0m1066e78a649mm77dd' visibility = 'public'
-              isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
-              targetScope = 'instance' changeability = 'changeable'>
-              <UML:AssociationEnd.multiplicity>
-                <UML:Multiplicity xmi.id = 'I1441dc0m1066e78a649mm77db'>
-                  <UML:Multiplicity.range>
-                    <UML:MultiplicityRange xmi.id = 'I1441dc0m1066e78a649mm77dc' lower = '1'
-                      upper = '1'/>
-                  </UML:Multiplicity.range>
-                </UML:Multiplicity>
-              </UML:AssociationEnd.multiplicity>
-              <UML:AssociationEnd.participant>
-                <UML:Class xmi.idref = 'I1441dc0m1066e78a649mm7807'/>
-              </UML:AssociationEnd.participant>
-            </UML:AssociationEnd>
-          </UML:Association.connection>
-        </UML:Association>
-        <UML:Interface xmi.id = 'I1441dc0m1066e78a649mm77bd' name = 'Interface_1'
-          visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
-          isAbstract = 'false'/>
         <UML:Stereotype xmi.id = 'I1441dc0m1066e78a649mm77a8' name = 'realize' isSpecification = 'false'
           isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
           <UML:Stereotype.baseClass>Abstraction</UML:Stereotype.baseClass>
         </UML:Stereotype>
-        <UML:Abstraction xmi.id = 'I1441dc0m1066e78a649mm77a7' isSpecification = 'false'>
-          <UML:ModelElement.stereotype>
-            <UML:Stereotype xmi.idref = 'I1441dc0m1066e78a649mm77a8'/>
-          </UML:ModelElement.stereotype>
-          <UML:Dependency.client>
-            <UML:Class xmi.idref = 'I1441dc0m1066e78a649mm7807'/>
-          </UML:Dependency.client>
-          <UML:Dependency.supplier>
-            <UML:Interface xmi.idref = 'I1441dc0m1066e78a649mm77bd'/>
-          </UML:Dependency.supplier>
-        </UML:Abstraction>
-        <UML:Class xmi.id = 'I1441dc0m1066e78a649mm77a0' name = 'Class_7' visibility = 'public'
-          isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
-          isActive = 'false'/>
-        <UML:Association xmi.id = 'I1441dc0m1066e78a649mm7787' isSpecification = 'false'
-          isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
-          <UML:Association.connection>
-            <UML:AssociationEnd xmi.id = 'I1441dc0m1066e78a649mm778d' visibility = 'public'
-              isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
-              targetScope = 'instance' changeability = 'changeable'>
-              <UML:AssociationEnd.multiplicity>
-                <UML:Multiplicity xmi.id = 'I1441dc0m1066e78a649mm778b'>
-                  <UML:Multiplicity.range>
-                    <UML:MultiplicityRange xmi.id = 'I1441dc0m1066e78a649mm778c' lower = '1'
-                      upper = '1'/>
-                  </UML:Multiplicity.range>
-                </UML:Multiplicity>
-              </UML:AssociationEnd.multiplicity>
-              <UML:AssociationEnd.participant>
-                <UML:Class xmi.idref = 'I1441dc0m1066e78a649mm7838'/>
-              </UML:AssociationEnd.participant>
-            </UML:AssociationEnd>
-            <UML:AssociationEnd xmi.id = 'I1441dc0m1066e78a649mm778a' visibility = 'public'
-              isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
-              targetScope = 'instance' changeability = 'changeable'>
-              <UML:AssociationEnd.multiplicity>
-                <UML:Multiplicity xmi.id = 'I1441dc0m1066e78a649mm7788'>
-                  <UML:Multiplicity.range>
-                    <UML:MultiplicityRange xmi.id = 'I1441dc0m1066e78a649mm7789' lower = '1'
-                      upper = '1'/>
-                  </UML:Multiplicity.range>
-                </UML:Multiplicity>
-              </UML:AssociationEnd.multiplicity>
-              <UML:AssociationEnd.participant>
-                <UML:Class xmi.idref = 'I1441dc0m1066e78a649mm77a0'/>
-              </UML:AssociationEnd.participant>
-            </UML:AssociationEnd>
-          </UML:Association.connection>
-        </UML:Association>
-        <UML:Class xmi.id = 'I1441dc0m1066e78a649mm776a' name = 'Class_8' visibility = 'public'
-          isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
-          isActive = 'false'/>
-        <UML:Association xmi.id = 'I1441dc0m1066e78a649mm7751' isSpecification = 'false'
-          isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
-          <UML:Association.connection>
-            <UML:AssociationEnd xmi.id = 'I1441dc0m1066e78a649mm7757' visibility = 'public'
-              isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'aggregate'
-              targetScope = 'instance' changeability = 'changeable'>
-              <UML:AssociationEnd.multiplicity>
-                <UML:Multiplicity xmi.id = 'I1441dc0m1066e78a649mm7755'>
-                  <UML:Multiplicity.range>
-                    <UML:MultiplicityRange xmi.id = 'I1441dc0m1066e78a649mm7756' lower = '1'
-                      upper = '1'/>
-                  </UML:Multiplicity.range>
-                </UML:Multiplicity>
-              </UML:AssociationEnd.multiplicity>
-              <UML:AssociationEnd.participant>
-                <UML:Class xmi.idref = 'I1441dc0m1066e78a649mm7807'/>
-              </UML:AssociationEnd.participant>
-            </UML:AssociationEnd>
-            <UML:AssociationEnd xmi.id = 'I1441dc0m1066e78a649mm7754' visibility = 'public'
-              isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
-              targetScope = 'instance' changeability = 'changeable'>
-              <UML:AssociationEnd.multiplicity>
-                <UML:Multiplicity xmi.id = 'I1441dc0m1066e78a649mm7752'>
-                  <UML:Multiplicity.range>
-                    <UML:MultiplicityRange xmi.id = 'I1441dc0m1066e78a649mm7753' lower = '1'
-                      upper = '1'/>
-                  </UML:Multiplicity.range>
-                </UML:Multiplicity>
-              </UML:AssociationEnd.multiplicity>
-              <UML:AssociationEnd.participant>
-                <UML:Class xmi.idref = 'I1441dc0m1066e78a649mm776a'/>
-              </UML:AssociationEnd.participant>
-            </UML:AssociationEnd>
-          </UML:Association.connection>
-        </UML:Association>
-        <UML:Association xmi.id = 'I1441dc0m1066e78a649mm772e' isSpecification = 'false'
-          isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
-          <UML:Association.connection>
-            <UML:AssociationEnd xmi.id = 'I1441dc0m1066e78a649mm7734' visibility = 'public'
-              isSpecification = 'false' isNavigable = 'false' ordering = 'unordered' aggregation = 'none'
-              targetScope = 'instance' changeability = 'changeable'>
-              <UML:AssociationEnd.multiplicity>
-                <UML:Multiplicity xmi.id = 'I1441dc0m1066e78a649mm7732'>
-                  <UML:Multiplicity.range>
-                    <UML:MultiplicityRange xmi.id = 'I1441dc0m1066e78a649mm7733' lower = '1'
-                      upper = '1'/>
-                  </UML:Multiplicity.range>
-                </UML:Multiplicity>
-              </UML:AssociationEnd.multiplicity>
-              <UML:AssociationEnd.participant>
-                <UML:Class xmi.idref = 'I1441dc0m1066e78a649mm781a'/>
-              </UML:AssociationEnd.participant>
-            </UML:AssociationEnd>
-            <UML:AssociationEnd xmi.id = 'I1441dc0m1066e78a649mm7731' visibility = 'public'
-              isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
-              targetScope = 'instance' changeability = 'changeable'>
-              <UML:AssociationEnd.multiplicity>
-                <UML:Multiplicity xmi.id = 'I1441dc0m1066e78a649mm772f'>
-                  <UML:Multiplicity.range>
-                    <UML:MultiplicityRange xmi.id = 'I1441dc0m1066e78a649mm7730' lower = '1'
-                      upper = '1'/>
-                  </UML:Multiplicity.range>
-                </UML:Multiplicity>
-              </UML:AssociationEnd.multiplicity>
-              <UML:AssociationEnd.participant>
-                <UML:Class xmi.idref = 'I1441dc0m1066e78a649mm781a'/>
-              </UML:AssociationEnd.participant>
-            </UML:AssociationEnd>
-          </UML:Association.connection>
-        </UML:Association>
-        <UML:Interface xmi.id = 'I1441dc0m1066e78a649mm7711' name = 'Interface_2'
-          visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
-          isAbstract = 'false'/>
-        <UML:Abstraction xmi.id = 'I1441dc0m1066e78a649mm76fc' isSpecification = 'false'>
-          <UML:ModelElement.stereotype>
-            <UML:Stereotype xmi.idref = 'I1441dc0m1066e78a649mm77a8'/>
-          </UML:ModelElement.stereotype>
-          <UML:Dependency.client>
-            <UML:Class xmi.idref = 'I1441dc0m1066e78a649mm7807'/>
-          </UML:Dependency.client>
-          <UML:Dependency.supplier>
-            <UML:Interface xmi.idref = 'I1441dc0m1066e78a649mm7711'/>
-          </UML:Dependency.supplier>
-        </UML:Abstraction>
-        <UML:AssociationClass xmi.id = 'I1441dc0m1066e78a649mm76ef' name = 'Association_Class_1'
-          visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
-          isAbstract = 'false' isActive = 'false'>
-          <UML:Association.connection>
-            <UML:AssociationEnd xmi.id = 'I1441dc0m1066e78a649mm76f5' visibility = 'public'
-              isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
-              targetScope = 'instance' changeability = 'changeable'>
-              <UML:AssociationEnd.multiplicity>
-                <UML:Multiplicity xmi.id = 'I1441dc0m1066e78a649mm76f3'>
-                  <UML:Multiplicity.range>
-                    <UML:MultiplicityRange xmi.id = 'I1441dc0m1066e78a649mm76f4' lower = '1'
-                      upper = '1'/>
-                  </UML:Multiplicity.range>
-                </UML:Multiplicity>
-              </UML:AssociationEnd.multiplicity>
-              <UML:AssociationEnd.participant>
-                <UML:Class xmi.idref = 'I1441dc0m1066e78a649mm7838'/>
-              </UML:AssociationEnd.participant>
-            </UML:AssociationEnd>
-            <UML:AssociationEnd xmi.id = 'I1441dc0m1066e78a649mm76f2' visibility = 'public'
-              isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
-              targetScope = 'instance' changeability = 'changeable'>
-              <UML:AssociationEnd.multiplicity>
-                <UML:Multiplicity xmi.id = 'I1441dc0m1066e78a649mm76f0'>
-                  <UML:Multiplicity.range>
-                    <UML:MultiplicityRange xmi.id = 'I1441dc0m1066e78a649mm76f1' lower = '1'
-                      upper = '1'/>
-                  </UML:Multiplicity.range>
-                </UML:Multiplicity>
-              </UML:AssociationEnd.multiplicity>
-              <UML:AssociationEnd.participant>
-                <UML:Class xmi.idref = 'I1441dc0m1066e78a649mm7807'/>
-              </UML:AssociationEnd.participant>
-            </UML:AssociationEnd>
-          </UML:Association.connection>
-        </UML:AssociationClass>
         <UML:Package xmi.id = 'I1441dc0m1066e78a649mm7632' name = 'java' isSpecification = 'false'
           isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
           <UML:Namespace.ownedElement>
@@ -405,86 +153,6 @@
             </UML:AssociationEnd>
           </UML:Association.connection>
         </UML:AssociationClass>
-        <UML:Class xmi.id = 'I1441dc0m1066e78a649mm75a1' name = 'Class_10' visibility = 'public'
-          isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
-          isActive = 'false'/>
-        <UML:Association xmi.id = 'I1441dc0m1066e78a649mm7588' isSpecification = 'false'
-          isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
-          <UML:Association.connection>
-            <UML:AssociationEnd xmi.id = 'I1441dc0m1066e78a649mm758e' visibility = 'public'
-              isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
-              targetScope = 'instance' changeability = 'changeable'>
-              <UML:AssociationEnd.multiplicity>
-                <UML:Multiplicity xmi.id = 'I1441dc0m1066e78a649mm758c'>
-                  <UML:Multiplicity.range>
-                    <UML:MultiplicityRange xmi.id = 'I1441dc0m1066e78a649mm758d' lower = '1'
-                      upper = '1'/>
-                  </UML:Multiplicity.range>
-                </UML:Multiplicity>
-              </UML:AssociationEnd.multiplicity>
-              <UML:AssociationEnd.participant>
-                <UML:Class xmi.idref = 'I1441dc0m1066e78a649mm7874'/>
-              </UML:AssociationEnd.participant>
-            </UML:AssociationEnd>
-            <UML:AssociationEnd xmi.id = 'I1441dc0m1066e78a649mm758b' visibility = 'public'
-              isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
-              targetScope = 'instance' changeability = 'changeable'>
-              <UML:AssociationEnd.multiplicity>
-                <UML:Multiplicity xmi.id = 'I1441dc0m1066e78a649mm7589'>
-                  <UML:Multiplicity.range>
-                    <UML:MultiplicityRange xmi.id = 'I1441dc0m1066e78a649mm758a' lower = '1'
-                      upper = '1'/>
-                  </UML:Multiplicity.range>
-                </UML:Multiplicity>
-              </UML:AssociationEnd.multiplicity>
-              <UML:AssociationEnd.participant>
-                <UML:Class xmi.idref = 'I1441dc0m1066e78a649mm75a1'/>
-              </UML:AssociationEnd.participant>
-            </UML:AssociationEnd>
-          </UML:Association.connection>
-        </UML:Association>
-        <UML:Class xmi.id = 'I1441dc0m1066e78a649mm756b' name = 'Negotiation' visibility = 'public'
-          isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
-          isActive = 'false'>
-          <UML:ModelElement.stereotype>
-            <UML:Stereotype xmi.idref = 'I1441dc0m1066e78a649mm7861'/>
-          </UML:ModelElement.stereotype>
-        </UML:Class>
-        <UML:Association xmi.id = 'I1441dc0m1066e78a649mm7552' isSpecification = 'false'
-          isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
-          <UML:Association.connection>
-            <UML:AssociationEnd xmi.id = 'I1441dc0m1066e78a649mm7558' visibility = 'public'
-              isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
-              targetScope = 'instance' changeability = 'changeable'>
-              <UML:AssociationEnd.multiplicity>
-                <UML:Multiplicity xmi.id = 'I1441dc0m1066e78a649mm7556'>
-                  <UML:Multiplicity.range>
-                    <UML:MultiplicityRange xmi.id = 'I1441dc0m1066e78a649mm7557' lower = '1'
-                      upper = '1'/>
-                  </UML:Multiplicity.range>
-                </UML:Multiplicity>
-              </UML:AssociationEnd.multiplicity>
-              <UML:AssociationEnd.participant>
-                <UML:AssociationClass xmi.idref = 'I1441dc0m1066e78a649mm75da'/>
-              </UML:AssociationEnd.participant>
-            </UML:AssociationEnd>
-            <UML:AssociationEnd xmi.id = 'I1441dc0m1066e78a649mm7555' visibility = 'public'
-              isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
-              targetScope = 'instance' changeability = 'changeable'>
-              <UML:AssociationEnd.multiplicity>
-                <UML:Multiplicity xmi.id = 'I1441dc0m1066e78a649mm7553'>
-                  <UML:Multiplicity.range>
-                    <UML:MultiplicityRange xmi.id = 'I1441dc0m1066e78a649mm7554' lower = '1'
-                      upper = '1'/>
-                  </UML:Multiplicity.range>
-                </UML:Multiplicity>
-              </UML:AssociationEnd.multiplicity>
-              <UML:AssociationEnd.participant>
-                <UML:Class xmi.idref = 'I1441dc0m1066e78a649mm756b'/>
-              </UML:AssociationEnd.participant>
-            </UML:AssociationEnd>
-          </UML:Association.connection>
-        </UML:Association>
         <UML:Class xmi.id = 'I1441dc0m1066e78a649mm752b' name = 'Design' visibility = 'public'
           isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
           isActive = 'false'>
@@ -576,27 +244,10 @@
         <UML:Class xmi.id = 'I1441dc0m1066e78a649mm748f' name = 'Analysis' visibility = 'public'
           isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
           isActive = 'false'>
-          <UML:ModelElement.clientDependency>
-            <UML:Abstraction xmi.idref = 'I1441dc0m1066e78a649mm7467'/>
-          </UML:ModelElement.clientDependency>
           <UML:ModelElement.stereotype>
             <UML:Stereotype xmi.idref = 'I1441dc0m1066e78a649mm7825'/>
           </UML:ModelElement.stereotype>
         </UML:Class>
-        <UML:Interface xmi.id = 'I1441dc0m1066e78a649mm747c' name = 'Interface_3'
-          visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
-          isAbstract = 'false'/>
-        <UML:Abstraction xmi.id = 'I1441dc0m1066e78a649mm7467' isSpecification = 'false'>
-          <UML:ModelElement.stereotype>
-            <UML:Stereotype xmi.idref = 'I1441dc0m1066e78a649mm77a8'/>
-          </UML:ModelElement.stereotype>
-          <UML:Dependency.client>
-            <UML:Class xmi.idref = 'I1441dc0m1066e78a649mm748f'/>
-          </UML:Dependency.client>
-          <UML:Dependency.supplier>
-            <UML:Interface xmi.idref = 'I1441dc0m1066e78a649mm747c'/>
-          </UML:Dependency.supplier>
-        </UML:Abstraction>
         <UML:AssociationClass xmi.id = 'I1441dc0m1066e78a649mm7450' name = 'Design_Analysis'
           visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
           isAbstract = 'false' isActive = 'false'>
@@ -777,6 +428,41 @@
             </UML:Multiplicity>
           </UML:TagDefinition.multiplicity>
         </UML:TagDefinition>
+        <UML:Association xmi.id = 'I1441dc0m1066e78a649mm7552' isSpecification = 'false'
+          isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+          <UML:Association.connection>
+            <UML:AssociationEnd xmi.id = 'I1441dc0m1066e78a649mm7558' visibility = 'public'
+              isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
+              targetScope = 'instance' changeability = 'changeable'>
+              <UML:AssociationEnd.multiplicity>
+                <UML:Multiplicity xmi.id = 'I1441dc0m1066e78a649mm7556'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = 'I1441dc0m1066e78a649mm7557' lower = '1'
+                      upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:AssociationEnd.multiplicity>
+              <UML:AssociationEnd.participant>
+                <UML:AssociationClass xmi.idref = 'I1441dc0m1066e78a649mm75da'/>
+              </UML:AssociationEnd.participant>
+            </UML:AssociationEnd>
+            <UML:AssociationEnd xmi.id = 'I1441dc0m1066e78a649mm7555' visibility = 'public'
+              isSpecification = 'false' isNavigable = 'true' ordering = 'unordered' aggregation = 'none'
+              targetScope = 'instance' changeability = 'changeable'>
+              <UML:AssociationEnd.multiplicity>
+                <UML:Multiplicity xmi.id = 'I1441dc0m1066e78a649mm7553'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = 'I1441dc0m1066e78a649mm7554' lower = '1'
+                      upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:AssociationEnd.multiplicity>
+              <UML:AssociationEnd.participant>
+                <UML:Class xmi.idref = 'I1441dc0m1066e78a649mm7874'/>
+              </UML:AssociationEnd.participant>
+            </UML:AssociationEnd>
+          </UML:Association.connection>
+        </UML:Association>
       </UML:Namespace.ownedElement>
     </UML:Model>
     <UML:ActivityGraph xmi.id = 'I1441dc0m1066e78a649mm7f24' isSpecification = 'false'>
