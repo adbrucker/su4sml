@@ -42,6 +42,7 @@ open XMI_Core XMI_CommonBehavior
 
 type     StateVertex_Id = string
 type     Transition_Id  = string
+type     Stereotype_Id  = string
 
 datatype Procedure = mk_Procedure of 
                                  {xmiid            : string,
@@ -80,6 +81,8 @@ datatype Transition   = mk_Transition of
 				 (* mmm    : StateVertexId option *)
 			         }
 				 
+fun transition_source_of (mk_Transition{source,...}) = source
+fun transition_target_of (mk_Transition{target,...}) = target
 				   
 datatype PseudoStateVars = initial  | deep   | shallow |
                            join     | fork   | 
@@ -89,7 +92,7 @@ datatype StateVertex  =
          CompositeState 
 	 of {xmiid        : string,
              name         : string,
-             stereotype   : Stereotype list,
+             stereotype   : Stereotype_Id list,
              isSpecification : bool,
              isConcurrent : bool,
              entry        : Procedure option,
@@ -102,7 +105,7 @@ datatype StateVertex  =
        | SubactivityState
 	 of {xmiid        : string,
              name         : string,
-             stereotype   : Stereotype list,
+             stereotype   : Stereotype_Id list,
              isSpecification : bool,
              isConcurrent : bool,
              entry        : Procedure option,
@@ -117,7 +120,7 @@ datatype StateVertex  =
        | SimpleState
 	 of {xmiid        : string,
              name         : string,
-             stereotype   : Stereotype list,
+             stereotype   : Stereotype_Id list,
              isSpecification : bool,
              entry        : Procedure option,
              exit         : Procedure option,
@@ -128,7 +131,7 @@ datatype StateVertex  =
        | ActionState (* from ActivityGraphs *)
          of {xmiid        : string,
              name         : string,
-             stereotype   : Stereotype list,
+             stereotype   : Stereotype_Id list,
              isSpecification : bool,
              entry        : Procedure option,
              exit         : Procedure option,
@@ -141,7 +144,7 @@ datatype StateVertex  =
        | ObjectFlowState (* from ActivityGraphs *)
          of {xmiid        : string,
              name         : string,
-             stereotype   : Stereotype list,
+             stereotype   : Stereotype_Id list,
              isSpecification : bool,
              entry        : Procedure option,
              exit         : Procedure option, 
@@ -155,7 +158,7 @@ datatype StateVertex  =
        | FinalState
 	 of {xmiid        : string,
              name         : string,
-             stereotype   : Stereotype list,
+             stereotype   : Stereotype_Id list,
              isSpecification : bool,
              entry        : Procedure option,
              exit         : Procedure option,
@@ -166,7 +169,7 @@ datatype StateVertex  =
        | PseudoState
 	 of {xmiid        : string,
              name         : string,
-             stereotype   : Stereotype list,
+             stereotype   : Stereotype_Id list,
              isSpecification : bool,
              kind         : PseudoStateVars,
              entry        : Procedure option,
@@ -178,7 +181,7 @@ datatype StateVertex  =
        | SyncState
 	 of {xmiid        : string,
              name         : string,
-             stereotype   : Stereotype list,
+             stereotype   : Stereotype_Id list,
              isSpecification : bool,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list,
@@ -201,6 +204,48 @@ fun state_xmiid_of (CompositeState{xmiid,...}) = xmiid
   | state_xmiid_of (FinalState{xmiid,...}) = xmiid
   | state_xmiid_of (PseudoState{xmiid,...}) = xmiid
   | state_xmiid_of (SyncState{xmiid,...}) = xmiid
+
+fun state_subvertices_of (CompositeState{subvertex,...}) = subvertex
+  | state_subvertices_of (SubactivityState{subvertex,...}) = subvertex
+
+fun state_outgoing_trans_of (CompositeState{outgoing,...}) = outgoing
+  | state_outgoing_trans_of (SubactivityState{outgoing,...}) = outgoing
+  | state_outgoing_trans_of (SimpleState{outgoing,...}) = outgoing
+  | state_outgoing_trans_of (ActionState{outgoing,...}) = outgoing
+  | state_outgoing_trans_of (ObjectFlowState{outgoing,...}) = outgoing
+  | state_outgoing_trans_of (FinalState{outgoing,...}) = outgoing
+  | state_outgoing_trans_of (PseudoState{outgoing,...}) = outgoing
+  | state_outgoing_trans_of (SyncState{outgoing,...}) = outgoing
+
+
+fun state_incoming_trans_of (CompositeState{incoming,...}) = incoming
+  | state_incoming_trans_of (SubactivityState{incoming,...}) = incoming
+  | state_incoming_trans_of (SimpleState{incoming,...}) = incoming
+  | state_incoming_trans_of (ActionState{incoming,...}) = incoming
+  | state_incoming_trans_of (ObjectFlowState{incoming,...}) = incoming
+  | state_incoming_trans_of (FinalState{incoming,...}) = incoming
+  | state_incoming_trans_of (PseudoState{incoming,...}) = incoming
+  | state_incoming_trans_of (SyncState{incoming,...}) = incoming
+
+
+fun state_stereotype_of (CompositeState{stereotype,...}) = stereotype
+  | state_stereotype_of (SubactivityState{stereotype,...}) = stereotype
+  | state_stereotype_of (SimpleState{stereotype,...}) = stereotype
+  | state_stereotype_of (ActionState{stereotype,...}) = stereotype
+  | state_stereotype_of (ObjectFlowState{stereotype,...}) = stereotype
+  | state_stereotype_of (FinalState{stereotype,...}) = stereotype
+  | state_stereotype_of (PseudoState{stereotype,...}) = stereotype
+  | state_stereotype_of (SyncState{stereotype,...}) = stereotype
+
+
+fun state_taggedValue_of (CompositeState{taggedValue,...}) = taggedValue
+  | state_taggedValue_of (SubactivityState{taggedValue,...}) = taggedValue
+  | state_taggedValue_of (SimpleState{taggedValue,...}) = taggedValue
+  | state_taggedValue_of (ActionState{taggedValue,...}) = taggedValue
+  | state_taggedValue_of (ObjectFlowState{taggedValue,...}) = taggedValue
+  | state_taggedValue_of (FinalState{taggedValue,...}) = taggedValue
+  | state_taggedValue_of (PseudoState{taggedValue,...}) = taggedValue
+  | state_taggedValue_of (SyncState{taggedValue,...}) = taggedValue
 
 end
 

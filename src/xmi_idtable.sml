@@ -286,4 +286,14 @@ fun insert_model table (XMI.Package p) =
     end 
 
 
+fun initial_state_of table (XMI.mk_ActivityGraph ag) = 
+    valOf (List.find (fn (XMI.PseudoState{kind,...})  => kind = XMI.initial
+		       | _ => false) 
+		     (XMI.state_subvertices_of (#top ag)))
+
+
+fun successor_states_of table (st:XMI.StateVertex) =
+    map  ((find_state table) o  XMI.transition_target_of o 
+	  (find_transition table)) 
+	 (XMI.state_outgoing_trans_of st)
 end

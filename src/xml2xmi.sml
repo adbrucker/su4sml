@@ -537,11 +537,7 @@ fun mkStereotype tree =
     end 
 
 fun mkStereotypeR tree = 
-    let fun f atts trees =  { xmiid = getXmiIdref atts,
-			  name = "",
-			  baseClass = NONE, (*FIX*)
-			  stereotypeConstraint = NONE (*FIX*)
-			  }
+    let fun f atts trees =   getXmiIdref atts
     in XmlTree.apply_on "UML:Stereotype" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkStereotype: "^msg)
     end 
@@ -653,8 +649,7 @@ fun mkTransition tree =
 			    trigger= NONE, (* TO BE DONE *)
 		            effect = NONE  (* TO BE DONE *),
                             taggedValue = getTagVal trees}
-
-    in  XmlTree.apply_on "UML:Transition" f tree 
+    in XmlTree.apply_on "UML:Transition" f tree 
     end
 
 
