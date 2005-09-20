@@ -40,6 +40,20 @@ datatype HashTableEntry = Package of Rep_OclType.Path
 			| Attribute of Rep_OclType.Path
 			| Operation of Rep_OclType.Path
 		        | AssociationEnd of Rep_OclType.Path 
+			| State of XMI.StateVertex
+			| Transition of XMI.Transition 
+
+fun find_state t xmiid = 
+    (case valOf (HashTable.find t xmiid) 
+      of State x => x
+       | _                => raise Option) 
+    handle Option => raise IllFormed ("expected State "^xmiid^" in table")
+
+fun find_transition t xmiid = 
+    (case valOf (HashTable.find t xmiid) 
+      of Transition x => x
+       | _                => raise Option) 
+    handle Option => raise IllFormed ("expected Transition "^xmiid^" in table")
 
 fun find_generalization t xmiid = 
     (case valOf (HashTable.find t xmiid) 
@@ -178,6 +192,18 @@ fun insert_operation table path_prefix (a:XMI.Operation) =
 
 fun add_aend table xmiid (aend:Rep.associationend) = () (* FIX *)
 
+fun insert_state table (XMI.CompositeState st) =
+    (map (insert_state table) (#subvertex st);
+    HashTable.insert table (#xmiid st, State (XMI.CompositeState st)))
+  | insert_state table (XMI.SubactivityState st) =
+    (map (insert_state table) (#subvertex st);
+    HashTable.insert table (#xmiid st, State (XMI.SubactivityState st)))
+  | insert_state table (st:XMI.StateVertex) = 
+    HashTable.insert table (XMI.state_xmiid_of st, State st)
+    
+fun insert_transition table (XMI.mk_Transition trans) =
+    HashTable.insert table (#xmiid trans, Transition (XMI.mk_Transition trans))
+
 fun insert_activity_graph table (XMI.mk_ActivityGraph ag) =
     let val context = #contextxmiid ag 
     in  
@@ -186,7 +212,9 @@ fun insert_activity_graph table (XMI.mk_ActivityGraph ag) =
 					   table (context, Type (c,xs,aes,
 XMI.mk_ActivityGraph ag::ags))
 	   | _                => raise Option) 
-	      handle Option => raise IllFormed ("expected Type "^context^" in table (insert_activity_graph)")
+	      handle Option => raise IllFormed ("expected Type "^context^" in table (insert_activity_graph)");
+	map (insert_transition table) (#transitions ag);
+	insert_state table (#top ag)
     end
 
 

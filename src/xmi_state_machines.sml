@@ -184,8 +184,7 @@ datatype StateVertex  =
 	     incoming     : Transition_Id list,
              taggedValue  : TaggedValue list,
 	     bound        : int}
-(*     | StubState  *)
-	    
+(*     | StubState  *)	    
 and	StateMachine = mk_StateMachine of 
                            {xmiid            : string,
                             contextxmiid     : string,
@@ -193,6 +192,15 @@ and	StateMachine = mk_StateMachine of
                             top              : StateVertex,
                             transitions      : Transition list}
 
+
+fun state_xmiid_of (CompositeState{xmiid,...}) = xmiid
+  | state_xmiid_of (SubactivityState{xmiid,...}) = xmiid
+  | state_xmiid_of (SimpleState{xmiid,...}) = xmiid
+  | state_xmiid_of (ActionState{xmiid,...}) = xmiid
+  | state_xmiid_of (ObjectFlowState{xmiid,...}) = xmiid
+  | state_xmiid_of (FinalState{xmiid,...}) = xmiid
+  | state_xmiid_of (PseudoState{xmiid,...}) = xmiid
+  | state_xmiid_of (SyncState{xmiid,...}) = xmiid
 
 end
 
