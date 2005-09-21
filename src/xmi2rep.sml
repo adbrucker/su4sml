@@ -151,7 +151,8 @@ val filter_named_aends  = List.filter (fn {name=SOME _,...}:XMI.AssociationEnd =
 	
 fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 					   generalizations,attributes,operations,
-					   invariant,stereotype}) =
+					   invariant,stereotype,clientDependency,
+					   supplierDependency}) =
     let val parents = map ((find_classifier_type t) o (find_parent t)) 
 			  generalizations 
 	val filtered_parents = filter (fn x => x <> Rep_OclType.OclAny) parents

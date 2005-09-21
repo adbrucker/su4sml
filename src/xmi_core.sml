@@ -172,6 +172,16 @@ structure XMI_Core =
 struct
 open XMI_ExtensionMechanisms
 
+
+(* UML distinguishes between different kinds of dependencies:         *)
+(* Abstraction, Binding, Permission, and Usage. WE do not distinguish *)
+(* these at the moment                                                *)
+
+type Dependency = { xmiid: string,
+		    client: string,
+		    supplier: string,
+		    stereotype: string}
+
 (* from UML 1.5 Core: --------------------------------------------------------
  * A generalization is a taxonomic relationship between a more general 
  * element and a more specific element. The more specific element is 
@@ -270,7 +280,9 @@ type Class = { xmiid : string,
 	       (* inherited from ModelElement: *)
 	       (* xmi.idref to Constraint *)
 	       invariant: string list ,
-	       stereotype: string list}
+	       stereotype: string list,
+	       clientDependency: string list,
+	       supplierDependency: string list}
 
 (* from UML 1.5 Core: --------------------------------------------------------
  * A data type is a type whose values have no identity (i.e., they are 
@@ -318,7 +330,9 @@ type Interface = { xmiid : string,
 		   name: string,
 		   generalizations: string list,
 		   operations : Operation list,
-		   invariant: string list}  
+		   invariant: string list,
+		   clientDependency: string list,
+		   supplierDependency: string list}  
 
 
 type Collection = { xmiid : string,

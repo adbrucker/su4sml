@@ -60,7 +60,8 @@ datatype Package = Package of { xmiid          : string,
 				associations   : Association list,
 				generalizations: Generalization list,
 				constraints    : Constraint list,
-				stereotypes    : Stereotype list}
+				stereotypes    : Stereotype list,
+				dependencies   : Dependency list}
 		  
 end
 

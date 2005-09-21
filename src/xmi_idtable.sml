@@ -42,6 +42,7 @@ datatype HashTableEntry = Package of Rep_OclType.Path
 		        | AssociationEnd of Rep_OclType.Path 
 			| State of XMI.StateVertex
 			| Transition of XMI.Transition 
+		        | Dependency of XMI.Dependency
 
 fun find_state t xmiid = 
     (case valOf (HashTable.find t xmiid) 
@@ -54,6 +55,12 @@ fun find_transition t xmiid =
       of Transition x => x
        | _                => raise Option) 
     handle Option => raise IllFormed ("expected Transition "^xmiid^" in table")
+
+fun find_dependency t xmiid = 
+    (case valOf (HashTable.find t xmiid) 
+      of Dependency x => x
+       | _                => raise Option) 
+    handle Option => raise IllFormed ("expected Dependency "^xmiid^" in table")
 
 fun find_generalization t xmiid = 
     (case valOf (HashTable.find t xmiid) 
@@ -217,6 +224,8 @@ XMI.mk_ActivityGraph ag::ags))
 	insert_state table (#top ag)
     end
 
+fun insert_dependency table dep =
+    HashTable.insert table (#xmiid dep, Dependency dep)
 
 fun insert_classifier table package_prefix class = 
     let val id      = XMI.classifier_xmiid_of class
@@ -268,6 +277,7 @@ fun insert_package table package_prefix (XMI.Package p) =
 	map (insert_classifier     table full_name) (#classifiers p);
 	map (insert_package        table full_name) (#packages p);
 	map (insert_activity_graph table)           (#activity_graphs p);
+	map (insert_dependency     table)           (#dependencies p);
 	HashTable.insert table (#xmiid p,Package full_name)
     end 
 
@@ -295,5 +305,5 @@ fun initial_state_of table (XMI.mk_ActivityGraph ag) =
 fun successor_states_of table (st:XMI.StateVertex) =
     map  ((find_state table) o  XMI.transition_target_of o 
 	  (find_transition table)) 
-	 (XMI.state_outgoing_trans_of st)
+	 (XMI.state_outgoing_trans_of st)   
 end

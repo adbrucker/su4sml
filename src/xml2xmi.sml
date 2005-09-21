@@ -353,6 +353,8 @@ val filterPackages      = fn trees => append (XmlTree.filter "UML:Package" trees
 val filterStateMachines = XmlTree.filter "UML:StateMachine" 
 val filterActivityGraphs= XmlTree.filter "UML:ActivityGraph" 
 
+(* there may be other kinds of dependencies, but we do not parse them atm *)
+val filterDependencies = XmlTree.filter "UML:Abstraction" 
 
 (* FIX: other classifiers *) 
 fun filterClassifiers trees = 
@@ -369,6 +371,19 @@ fun filterClassifiers trees =
 			elem = "UML15OCL.Types.VoidType"       orelse
 			elem = "UML:AssociationClass"
 		    end) trees
+
+fun mkDependency tree =
+    let fun f atts trees =
+	    { xmiid    = getXmiId atts,
+	      client   = ((getXmiIdref o XmlTree.attributes_of o hd) 
+			      (XmlTree.follow "UML:Dependency.client" trees)),
+	      supplier = ((getXmiIdref o XmlTree.attributes_of o hd) 
+			      (XmlTree.follow "UML:Dependency.supplier" trees)),
+	      stereotype = ((getXmiIdref o XmlTree.attributes_of o hd) 
+				(XmlTree.follow "UML:ModelElement.stereotype" trees))}
+    in XmlTree.apply_on "UML:Abstraction" f tree
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkDependency: "^msg) 
+    end
 
 fun mkConstraint tree = 
     let fun f atts trees =  
@@ -457,9 +472,16 @@ fun mkClass atts trees
 	    invariant       = (map (getXmiIdref o XmlTree.attributes_of)
 				   (XmlTree.follow "UML:ModelElement.constraint" 
 						   trees)),
-	    stereotype      = map (getXmiIdref o XmlTree.attributes_of) 
-				  (XmlTree.follow "UML:ModelElement.stereotype" 
-						  trees)}
+	    stereotype      = (map (getXmiIdref o XmlTree.attributes_of) 
+				   (XmlTree.follow "UML:ModelElement.stereotype" 
+						   trees)),
+	    clientDependency = (map (getXmiIdref o XmlTree.attributes_of)
+				    (XmlTree.follow "UML:ModelElement.clientDependency"
+						    trees)),
+	    supplierDependency = (map (getXmiIdref o XmlTree.attributes_of)
+				      (XmlTree.follow "UML:ModelElement.supplierDependency"
+						      trees))}
+
 
 fun mkPrimitive atts trees 
   = XMI.Primitive { xmiid      = getXmiId atts,
@@ -477,7 +499,30 @@ fun mkPrimitive atts trees
 						     trees))
 				     }
     handle XmlTree.IllFormed msg => raise IllFormed ("in mkPrimitive: "^msg)
-    
+
+fun mkInterface atts trees 
+  = XMI.Interface { xmiid      = getXmiId atts,
+		    name       = getName atts,
+		    operations = (map mkOperation 
+				      ((XmlTree.filter "UML:Operation") 
+					   (XmlTree.follow "UML:Classifier.feature"
+							   trees))),
+		    generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
+					   (XmlTree.follow_all 
+						"UML:GeneralizableElement.generalization" 
+						trees)),
+		    invariant = (map (getXmiIdref o XmlTree.attributes_of)
+				     (XmlTree.follow "UML:ModelElement.constraint" 
+						     trees)),
+		    clientDependency = (map (getXmiIdref o XmlTree.attributes_of)
+					    (XmlTree.follow "UML:ModelElement.clientDependency"
+							    trees)),
+		    supplierDependency = (map (getXmiIdref o XmlTree.attributes_of)
+					      (XmlTree.follow "UML:ModelElement.supplierDependency"
+							      trees))
+		    }
+    handle XmlTree.IllFormed msg => raise IllFormed ("in mkPrimitive: "^msg)
+					  
 fun mkEnumeration atts trees 
   = XMI.Enumeration { xmiid      = getXmiId atts,
 		      name       = getName atts,
@@ -845,7 +890,8 @@ fun mkPackage tree =
 			       stereotypes     = (map mkStereotype
 						      (filterStereotypes trees)),
                                state_machines  = nil,
-                               activity_graphs = nil
+                               activity_graphs = nil,
+			       dependencies    = (map mkDependency (filterDependencies trees))
                               }
 	 end
      else raise IllFormed "did not find a UML:Model or UML: Package")
