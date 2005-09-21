@@ -356,6 +356,8 @@ val filterActivityGraphs= XmlTree.filter "UML:ActivityGraph"
 (* there may be other kinds of dependencies, but we do not parse them atm *)
 val filterDependencies = XmlTree.filter "UML:Abstraction" 
 
+val filterTagDefinitions = XmlTree.filter "UML:TagDefinition" 
+
 (* FIX: other classifiers *) 
 fun filterClassifiers trees = 
     filter (fn x => let val elem = XmlTree.tagname_of x in
@@ -451,6 +453,25 @@ fun mkAttribute tree =
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkAttribute: "^msg)
     end
 
+fun mkTaggedValue tree =
+    let fun f atts trees ={xmiid    = getXmiId atts,
+                           dataValue= XmlTree.text_of (hd (XmlTree.children_of (XmlTree.find "UML:TaggedValue.dataValue" trees))),
+                           tag_type = (getXmiIdref o XmlTree.attributes_of o 
+                                      (XmlTree.find "UML:TagDefinition") o
+                                      XmlTree.node_children_of o  
+                                      (XmlTree.find "UML:TaggedValue.type")) trees
+			   }
+    in  XmlTree.apply_on "UML:TaggedValue" f tree 
+    end
+
+fun mkTagDefinition tree =
+    let fun f atts trees = { xmiid = getXmiId atts,
+			     name = getName atts,
+			     multiplicity = (mkMultiplicity o hd o 
+					     (XmlTree.follow "UML:TagDefinition.multiplicity")) trees }
+    in XmlTree.apply_on "UML:TagDefinition" f tree
+    end
+	    
 fun mkClass atts trees 
   = XMI.Class { xmiid           = getXmiId atts,
 	    name            = getName atts,
@@ -475,6 +496,9 @@ fun mkClass atts trees
 	    stereotype      = (map (getXmiIdref o XmlTree.attributes_of) 
 				   (XmlTree.follow "UML:ModelElement.stereotype" 
 						   trees)),
+	    taggedValue   = (map mkTaggedValue 
+				 (XmlTree.follow "UML:ModelElement.taggedValue" 
+						 trees)),
 	    clientDependency = (map (getXmiIdref o XmlTree.attributes_of)
 				    (XmlTree.follow "UML:ModelElement.clientDependency"
 						    trees)),
@@ -655,16 +679,6 @@ fun mkGuard tree =
     end
 
 
-fun mkTaggedValue tree =
-    let fun f atts trees ={xmiid    = getXmiId atts,
-                           dataValue= "", (* BUG in unserem xml *)
-                           tag_type = (getXmiIdref o XmlTree.attributes_of o 
-                                      (XmlTree.find "UML:TagDefinition") o
-                                      XmlTree.node_children_of o  
-                                      (XmlTree.find "UML:TaggedValue.type")) trees
-                          }
-    in  XmlTree.apply_on "UML:TaggedValue" f tree 
-    end
 
 
 fun mkTransition tree = 
@@ -887,6 +901,8 @@ fun mkPackage tree =
 						     (filterConstraints trees)),
 			       stereotypes     = (map mkStereotype
 						      (filterStereotypes trees)),
+			       tag_definitions = (map mkTagDefinition
+						      (filterTagDefinitions trees)),
                                state_machines  = nil,
                                activity_graphs = nil,
 			       dependencies    = (map mkDependency (filterDependencies trees))

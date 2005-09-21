@@ -30,6 +30,7 @@ sig
     datatype Tree = Node of Tag * Tree list 
                   | Text of string
 
+    val text_of     : Tree -> string
     val tag_of      : Tree -> Tag
     val attributes_of : Tree -> Attribute list
     val children_of : Tree -> Tree list
@@ -70,8 +71,10 @@ val filter_nodes = List.filter (fn Node x => true
 
 val filter_text  = List.filter (fn Text x => true
 				 | _      => false)
-
-
+		   
+fun text_of (Text s) = s
+  | text_of _        = raise IllFormed "text_of called on Node element"
+			    
 fun tag_of        (Node (tag,trees)) = tag 
 fun attributes_of (Node ((elem,atts),trees)) = atts
 fun children_of   (Node ((elem,atts),trees)) = trees

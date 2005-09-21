@@ -281,6 +281,7 @@ type Class = { xmiid : string,
 	       (* xmi.idref to Constraint *)
 	       invariant: string list ,
 	       stereotype: string list,
+	       taggedValue: TaggedValue list,
 	       clientDependency: string list,
 	       supplierDependency: string list}
 
@@ -302,10 +303,10 @@ type Class = { xmiid : string,
  * and String. 
  * --------------------------------------------------------------------------*)
 type Primitive = { xmiid:           string,
-		      name:            string,
-		      operations:      Operation list,
-		      generalizations: string list,
-		      invariant:       string list}
+		   name:            string,
+		   operations:      Operation list,
+		   generalizations: string list,
+		   invariant:       string list}
 
 
 (* from UML 1.5 Core: --------------------------------------------------------

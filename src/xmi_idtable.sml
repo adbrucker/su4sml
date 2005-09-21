@@ -43,6 +43,13 @@ datatype HashTableEntry = Package of Rep_OclType.Path
 			| State of XMI.StateVertex
 			| Transition of XMI.Transition 
 		        | Dependency of XMI.Dependency
+		        | TagDefinition of string
+
+fun find_tagdefinition t xmiid =
+    (case valOf (HashTable.find t xmiid) 
+      of TagDefinition x => x
+       | _                => raise Option) 
+    handle Option => raise IllFormed ("expected TagDefinition "^xmiid^" in table")
 
 fun find_state t xmiid = 
     (case valOf (HashTable.find t xmiid) 
@@ -227,6 +234,9 @@ XMI.mk_ActivityGraph ag::ags))
 fun insert_dependency table dep =
     HashTable.insert table (#xmiid dep, Dependency dep)
 
+fun insert_tagdefinition table (td:XMI.TagDefinition) =
+    HashTable.insert table (#xmiid td, TagDefinition (#name td))
+
 fun insert_classifier table package_prefix class = 
     let val id      = XMI.classifier_xmiid_of class
 	val name    = XMI.classifier_name_of class
@@ -267,6 +277,8 @@ fun insert_classifier table package_prefix class =
 	  | _ => ()
     end
 
+
+
 (* recursively insert mapping of xmi.id's to model elements into Hashtable *)
 fun insert_package table package_prefix (XMI.Package p) =
     let val full_name = package_prefix @ [#name p]
@@ -278,6 +290,7 @@ fun insert_package table package_prefix (XMI.Package p) =
 	map (insert_package        table full_name) (#packages p);
 	map (insert_activity_graph table)           (#activity_graphs p);
 	map (insert_dependency     table)           (#dependencies p);
+	map (insert_tagdefinition  table)           (#tag_definitions p);
 	HashTable.insert table (#xmiid p,Package full_name)
     end 
 
@@ -293,6 +306,7 @@ fun insert_model table (XMI.Package p) =
 	map (insert_package        table full_name) (#packages p);
 	map (insert_activity_graph table)           (#activity_graphs p);
 	map (insert_dependency     table)           (#dependencies p);
+	map (insert_tagdefinition  table)           (#tag_definitions p);
 	HashTable.insert table (#xmiid p,Package full_name)
     end 
 

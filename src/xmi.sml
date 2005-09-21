@@ -61,7 +61,8 @@ datatype Package = Package of { xmiid          : string,
 				generalizations: Generalization list,
 				constraints    : Constraint list,
 				stereotypes    : Stereotype list,
-				dependencies   : Dependency list}
+				dependencies   : Dependency list,
+				tag_definitions: TagDefinition list}
 		  
 end
 
