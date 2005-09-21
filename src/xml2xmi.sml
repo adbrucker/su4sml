@@ -594,21 +594,19 @@ fun mkClassifier tree =
 	val atts  = XmlTree.attributes_of tree
 	val trees = XmlTree.node_children_of    tree
     in 
-	if elem = "UML:Class" orelse
-	   elem = "UML:AssociationClass" then               mkClass atts trees
-	else if elem = "UML:Interface" orelse (* FIX: use a custom mkInterface *) 
-		elem = "UML:DataType" orelse
-		elem = "UML:Primitive" then              mkPrimitive atts trees
-	else if elem = "UML:Enumeration" then         mkEnumeration atts trees
-	else if elem = "UML15OCL.Types.VoidType" then        mkVoid atts trees
-	else if elem = "UML15OCL.Types.CollectionType" then 
-	    mkCollection atts trees
-	else if elem = "UML15OCL.Types.SequenceType" then mkSequence atts trees
-	else if elem = "UML15OCL.Types.SetType" then           mkSet atts trees
-	else if elem = "UML15OCL.Types.BagType" then           mkBag atts trees
-	else if elem = "UML15OCL.Types.OrderedSetType" then
-	    mkOrderedSet atts trees
-	else raise IllFormed ("in mkClassifier: found unexpected element "^elem)
+	case elem of "UML:Class"                     => mkClass atts trees
+		   | "UML:AssociationClass"          => mkClass atts trees
+		   | "UML:Interface"                 => mkInterface atts trees
+		   | "UML:DataType"                  => mkPrimitive atts trees
+		   | "UML:Primitive"                 => mkPrimitive atts trees
+		   | "UML:Enumeration"               => mkEnumeration atts trees
+		   | "UML15OCL.Types.VoidType"       => mkVoid atts trees
+		   | "UML15OCL.Types.CollectionType" => mkCollection atts trees
+		   | "UML15OCL.Types.SequenceType"   => mkSequence atts trees
+		   | "UML15OCL.Types.SetType"        => mkSet atts trees
+		   | "UML15OCL.Types.BagType"        => mkBag atts trees
+		   | "UML15OCL.Types.OrderedSetType" => mkOrderedSet atts trees
+		   | _ => raise IllFormed ("in mkClassifier: found unexpected element "^elem)
     end
 
 
