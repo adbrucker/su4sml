@@ -321,4 +321,14 @@ fun successor_states_of table (st:XMI.StateVertex) =
     map  ((find_state table) o  XMI.transition_target_of o 
 	  (find_transition table)) 
 	 (XMI.state_outgoing_trans_of st)   
+
+(* returns a list of tag-value pairs *)
+fun class_taggedvalues_of table (XMI.Class c) = 
+    map (fn x => (find_tagdefinition table (#tag_type x),#dataValue x)) 
+	(#taggedValue c)
+
+(* returns the value of the given tag *)
+fun class_taggedvalue_of table tag (XMI.Class c) =
+    Option.map #2 ((List.find (fn (x,y) => x=tag)) 
+		       (class_taggedvalues_of table (XMI.Class c)))
 end
