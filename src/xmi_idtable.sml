@@ -292,6 +292,7 @@ fun insert_model table (XMI.Package p) =
 	map (insert_classifier     table full_name) (#classifiers p);
 	map (insert_package        table full_name) (#packages p);
 	map (insert_activity_graph table)           (#activity_graphs p);
+	map (insert_dependency     table)           (#dependencies p);
 	HashTable.insert table (#xmiid p,Package full_name)
     end 
 
