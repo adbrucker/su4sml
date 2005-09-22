@@ -207,10 +207,10 @@ fun insert_operation table path_prefix (a:XMI.Operation) =
 fun add_aend table xmiid (aend:Rep.associationend) = () (* FIX *)
 
 fun insert_state table (XMI.CompositeState st) =
-    (map (insert_state table) (#subvertex st);
+    (List.app (insert_state table) (#subvertex st);
     HashTable.insert table (#xmiid st, State (XMI.CompositeState st)))
   | insert_state table (XMI.SubactivityState st) =
-    (map (insert_state table) (#subvertex st);
+    (List.app (insert_state table) (#subvertex st);
     HashTable.insert table (#xmiid st, State (XMI.SubactivityState st)))
   | insert_state table (st:XMI.StateVertex) = 
     HashTable.insert table (XMI.state_xmiid_of st, State st)
@@ -227,7 +227,7 @@ fun insert_activity_graph table (XMI.mk_ActivityGraph ag) =
 XMI.mk_ActivityGraph ag::ags))
 	   | _                => raise Option) 
 	      handle Option => raise IllFormed ("expected Type "^context^" in table (insert_activity_graph)");
-	map (insert_transition table) (#transitions ag);
+	List.app (insert_transition table) (#transitions ag);
 	insert_state table (#top ag)
     end
 
@@ -264,16 +264,16 @@ fun insert_classifier table package_prefix class =
     in 
 	HashTable.insert table (id,Type (ocltype,aends,class,ag));
 	case class 
-	 of XMI.Class c => (map (insert_attribute table path) (#attributes c);
-				map (insert_operation table path) (#operations c); ())
-	  | XMI.Primitive c => (map (insert_operation table path) (#operations c); ())
-	  | XMI.Enumeration c => (map (insert_operation table path) (#operations c); ())
-	  | XMI.Interface c => (map (insert_operation table path) (#operations c); ())
-	  | XMI.Collection c => (map (insert_operation table path) (#operations c); ())
-	  | XMI.Sequence c => (map (insert_operation table path) (#operations c); ())
-	  | XMI.Set c => (map (insert_operation table path) (#operations c); ())
-	  | XMI.Bag c => (map (insert_operation table path) (#operations c); ())
-	  | XMI.OrderedSet c => (map (insert_operation table path) (#operations c); ())
+	 of XMI.Class c => (List.app (insert_attribute table path) (#attributes c);
+				List.app (insert_operation table path) (#operations c); ())
+	  | XMI.Primitive c => (List.app (insert_operation table path) (#operations c); ())
+	  | XMI.Enumeration c => (List.app (insert_operation table path) (#operations c); ())
+	  | XMI.Interface c => (List.app (insert_operation table path) (#operations c); ())
+	  | XMI.Collection c => (List.app (insert_operation table path) (#operations c); ())
+	  | XMI.Sequence c => (List.app (insert_operation table path) (#operations c); ())
+	  | XMI.Set c => (List.app (insert_operation table path) (#operations c); ())
+	  | XMI.Bag c => (List.app (insert_operation table path) (#operations c); ())
+	  | XMI.OrderedSet c => (List.app (insert_operation table path) (#operations c); ())
 	  | _ => ()
     end
 
@@ -283,14 +283,14 @@ fun insert_classifier table package_prefix class =
 fun insert_package table package_prefix (XMI.Package p) =
     let val full_name = package_prefix @ [#name p]
     in 
-	map (insert_generalization table)           (#generalizations p);
-	map (insert_constraint     table)           (#constraints p);
-	map (insert_stereotype     table)           (#stereotypes p);
-	map (insert_classifier     table full_name) (#classifiers p);
-	map (insert_package        table full_name) (#packages p);
-	map (insert_activity_graph table)           (#activity_graphs p);
-	map (insert_dependency     table)           (#dependencies p);
-	map (insert_tagdefinition  table)           (#tag_definitions p);
+	List.app (insert_generalization table)           (#generalizations p);
+	List.app (insert_constraint     table)           (#constraints p);
+	List.app (insert_stereotype     table)           (#stereotypes p);
+	List.app (insert_classifier     table full_name) (#classifiers p);
+	List.app (insert_package        table full_name) (#packages p);
+	List.app (insert_activity_graph table)           (#activity_graphs p);
+	List.app (insert_dependency     table)           (#dependencies p);
+	List.app (insert_tagdefinition  table)           (#tag_definitions p);
 	HashTable.insert table (#xmiid p,Package full_name)
     end 
 
@@ -299,14 +299,14 @@ fun insert_package table package_prefix (XMI.Package p) =
 fun insert_model table (XMI.Package p) = 
     let val full_name = nil
     in 
-	map (insert_generalization table)           (#generalizations p);
-	map (insert_constraint     table)           (#constraints p);
-	map (insert_stereotype     table)           (#stereotypes p);
-	map (insert_classifier     table full_name) (#classifiers p);
-	map (insert_package        table full_name) (#packages p);
-	map (insert_activity_graph table)           (#activity_graphs p);
-	map (insert_dependency     table)           (#dependencies p);
-	map (insert_tagdefinition  table)           (#tag_definitions p);
+	List.app (insert_generalization table)           (#generalizations p);
+	List.app (insert_constraint     table)           (#constraints p);
+	List.app (insert_stereotype     table)           (#stereotypes p);
+	List.app (insert_classifier     table full_name) (#classifiers p);
+	List.app (insert_package        table full_name) (#packages p);
+	List.app (insert_activity_graph table)           (#activity_graphs p);
+	List.app (insert_dependency     table)           (#dependencies p);
+	List.app (insert_tagdefinition  table)           (#tag_definitions p);
 	HashTable.insert table (#xmiid p,Package full_name)
     end 
 

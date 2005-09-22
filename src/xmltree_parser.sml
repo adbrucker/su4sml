@@ -226,7 +226,7 @@ fun writeEndTag stream name = TextIO.output (stream,"</"^name^">\n")
 
 fun writeStartTag stream tree = 
     (TextIO.output (stream,"<"^(tagname_of tree));
-     map (writeAttribute stream) (attributes_of tree);
+     List.app (writeAttribute stream) (attributes_of tree);
      TextIO.output (stream,">\n"))
 
 fun writeIndent stream 0 = ()
@@ -238,7 +238,7 @@ fun writeXmlTree indent stream tree =
     in 
 	writeIndent stream indent;
 	writeStartTag stream tree;
-	map (writeXmlTree (indent+1) stream) (children_of tree);
+	List.app (writeXmlTree (indent+1) stream) (children_of tree);
 	writeIndent stream indent;
 	writeEndTag stream elemName
     end

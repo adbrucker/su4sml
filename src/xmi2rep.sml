@@ -249,7 +249,7 @@ fun transform_assocation t (assoc:XMI.Association) =
 
 (* recursively transforms all associations in the package p, *)
 fun transform_associations t (XMI.Package p) = 
-    (map (transform_associations t) (#packages p);
+    (List.app (transform_associations t) (#packages p);
     List.app (transform_assocation t) (#associations p))
 
 (* transform a UML model into a list of Rep classes           *)
