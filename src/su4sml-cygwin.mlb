@@ -6,7 +6,7 @@ in
     $(MLTON_ROOT)/basis/basis.mlb
     ../lib/fxp/src/fxlib.mlb
   in
-    HashTable.sml
+    contrib/HashTable.sml
     library.sml
     rep_ocl.sig
     rep_ocl.sml
