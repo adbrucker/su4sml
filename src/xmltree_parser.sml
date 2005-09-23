@@ -191,14 +191,16 @@ fun readFile filename =
     let val currentDir = OS.FileSys.getDir()
 	fun su4sml_home () = if (getenv "HOLOCL_HOME") <> ""
 	                     then getenv "HOLOCL_HOME" 
-			                          else ".";
+			     else if (getenv "UML2CDL_HOME") <> ""
+			     then getenv "UML2CDL_HOME"
+			     else ".";
 	val _ = OS.FileSys.fileSize filename (* dummy check to see if the file exists...*)
 	val dtd = Dtd.initDtdTables()
 	(* how to do the following in a clean/portable way? *)
 	val _ = OS.FileSys.chDir (su4sml_home())
-	val _ = OS.FileSys.fileSize "dummy.xmi" (* dummy check to see if the file exists...*)
+	val _ = OS.FileSys.fileSize "UML15OCL.dtd" (* dummy check to see if the file exists...*)
 	val _ = Parser.parseDocument 
-		    (SOME (Uri.String2Uri ("file:dummy.xmi")))
+		    (SOME (Uri.String2Uri ("file:UML15OCL.dtd")))
 		    (SOME dtd) (dtd,nil,nil) 
 	val _ = OS.FileSys.chDir currentDir 
     in Parser.parseDocument

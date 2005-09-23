@@ -1,3 +1,4 @@
+<?xml version = '1.0' encoding = 'ISO-8859-1' ?>
 <!-- _______________________________________________________________ -->
 <!--                                                                 -->
 <!-- XMI is the top-level XML element for XMI transfer text          -->
@@ -10893,3 +10894,4 @@
 <!ELEMENT UML:UML (XMI.extension)* >
 <!ATTLIST UML:UML
    %XMI.element.att; %XMI.link.att;>
+<XMI/>
