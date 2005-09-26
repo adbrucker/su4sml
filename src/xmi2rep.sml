@@ -237,44 +237,6 @@ fun transform_package t (XMI.Package p) =
     end
 
 
-(* split an association into association ends, and put the association ends *)
-(* ends into the xmi.id table under the corresponding (i.e., opposite)      *)
-(* classifier.                                                              *)   
-(* 1. split the association into a list of two (or more) association ends   *)
-(* 2. pair each association end with the participant_id's of all other      *)
-(*    association ends: when a class is a participant in an association,    *)
-(*    this association end is a feature of all _other_ participants in the  *) 
-(*    association                                                           *)
-(* 3. insert the mapping xmi.id of class to association end into the        *)
-(*    hashtable                                                             *)
-(* 4. insert mapping xmi.id of association end to path into the hashtable   *)
-fun transform_assocation t (assoc:XMI.Association) =
-    let	val aends = #connection assoc
-	fun all_others x xs = List.filter 
-				  (fn (y:XMI.AssociationEnd) => y <> x) xs
-	fun pair_with ae aes = 
-	    map (fn (x:XMI.AssociationEnd) => (#participant_id x, ae)) aes
-	val mappings = List.concat (map (fn x => pair_with x (all_others x aends)) aends)
-	fun add_aend_to_type (id,ae) = 
-	    let val type_of_id = find_classifier_type t id
-		val cls_of_id = find_classifier t id
-		val aends_of_id = ae::(find_aends t id)
-		val ags_of_id  = find_activity_graph_of t id
-		val path_of_id = Xmi_IDTable.path_of_classifier type_of_id 
-		val path_of_ae = path_of_id @ [case #name ae of SOME x => x
-							      | NONE   => ""]
-	    in 
-		(HashTable.insert t (id,Type (type_of_id,aends_of_id,cls_of_id,ags_of_id));
-		 HashTable.insert t (#xmiid ae, AssociationEnd path_of_ae))
-	    end
-    in 
-	List.app add_aend_to_type mappings
-    end
-
-(* recursively transforms all associations in the package p, *)
-fun transform_associations t (XMI.Package p) = 
-    (List.app (transform_associations t) (#packages p);
-    List.app (transform_assocation t) (#associations p))
 
 (* transform a UML model into a list of Rep classes           *)
 (* 1. traverse package hierarchy and put xmi.id of all interesting *)
