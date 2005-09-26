@@ -172,6 +172,30 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
                         activity_graphs = nil,
 			thyname = NONE}
     end
+  | transform_classifier t (XMI.AssociationClass {xmiid,name,isActive,visibility,
+						  isLeaf,generalizations,attributes,
+						  operations,invariant,stereotype,
+						  clientDependency,connection
+						  supplierDependency,taggedValue}) =
+    let val parents = map ((find_classifier_type t) o (find_parent t)) 
+			  generalizations 
+	val filtered_parents = filter (fn x => x <> Rep_OclType.OclAny) parents
+    in
+	Rep.Class {name = path_of_classifier (find_classifier_type t xmiid), 
+			parent = case filtered_parents 
+				  of [] => NONE
+				   | xs => SOME (path_of_classifier (hd xs)),
+			attributes = map (transform_attribute t) attributes,
+			operations = map (transform_operation t) operations,
+			invariant  = map ((transform_constraint t) o 
+					  (find_constraint t)) invariant, 
+			associationends = map (transform_aend t) 
+					      ((filter_named_aends (find_aends t xmiid))), 
+			stereotypes = map (find_stereotype t) stereotype, 
+			interfaces = nil, (* FIX *)
+                        activity_graphs = nil,
+			thyname = NONE}
+    end
   | transform_classifier t (XMI.Primitive {xmiid,name,generalizations,
 					       operations,invariant}) =
     Rep.Primitive {name = case find_classifier_type t xmiid of Rep_OclType.Classifier x => x
