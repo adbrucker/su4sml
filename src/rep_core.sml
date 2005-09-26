@@ -317,7 +317,7 @@ fun name_of_op ({name,...}:operation) = name
 
 fun mangled_name_of_op ({name,arguments,result,...}:operation) = 
     let
-	val arg_typestrs = map (fn a => (Rep_OclType.string_of_OclType o snd ) a ) arguments
+	val arg_typestrs = map (fn a => (Rep_OclType.string_of_OclType o #2 ) a ) arguments
     in 
 	 foldr1 (fn (a,b) =>(a^"_"^b)) 
                 ((name::arg_typestrs)@[Rep_OclType.string_of_OclType result])

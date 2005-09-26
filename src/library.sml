@@ -47,46 +47,53 @@ fun filter (pred: 'a->bool) : 'a list -> 'a list =
 
 
 
-fun getenv var =
+(* fun getenv var =
   (case OS.Process.getEnv var of
       NONE => ""
         | SOME txt => txt);
+*)
 (*	                                
 fun print_depth n = 
    (Control.Print.printDepth := n div 2;
     Control.Print.printLength := n); 
-*)
+
 val cd = OS.FileSys.chDir;
 val pwd = OS.FileSys.getDir;
-
+*)
 
 fun foldr1 f l =
     let fun itr [x] = x
           | itr (x::l) = f(x, itr l)
     in  itr l  end;
     
+(* use Option.map instead 
 fun ap_some f (SOME x) = SOME(f x)
-   |ap_some f NONE     = NONE
+  |ap_some f NONE     = NONE
+*)
 
 fun separate s (x :: (xs as _ :: _)) = x :: s :: separate s xs
   | separate _ xs = xs;
-fun suffix sfx s = s ^ sfx;
+(* fun suffix sfx s = s ^ sfx;*)
 
 fun take (n, []) = []
   | take (n, x :: xs) =
     if n > 0 then x :: take (n - 1, xs) else [];
+    
     fun space_implode a bs = implode (separate a bs);
 
+(* use print instead
 fun std_output s = (TextIO.output (TextIO.stdOut, s); TextIO.flushOut TextIO.stdOut);
+*)
 
 exception ERROR;
+   
+(* val writeln = std_output o suffix "\n";*)
+(* fun error_msg s = writeln(s) *)
+fun error s = (print (s^"\n"); raise ERROR);
 
-    
-val writeln = std_output o suffix "\n";
-fun error_msg s = writeln(s)
-fun error s = (error_msg s; raise ERROR);
-
+(* use #1 and #2 instead
 fun fst (x, y) = x;
 fun snd (x, y) = y;
- 
+ *)
+
 end

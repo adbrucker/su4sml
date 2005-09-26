@@ -690,7 +690,6 @@ fun mkGeneralization tree =
 fun mkProcedure tree =
     let fun get_AttrL x = (XmlTree.attributes_of o (XmlTree.find "UML:ActionExpression") o
                         XmlTree.node_children_of o (XmlTree.find "UML:Action.script")) x
-                        handle _ => (writeln(getXmiId(XmlTree.attributes_of tree)); [])
         fun f atts trees = XMI.mk_Procedure{
                                xmiid = getXmiId atts,
                                name  = getName atts,
@@ -721,9 +720,9 @@ fun mkGuard tree =
 
 
 fun mkTransition tree = 
-    let val getGuard     = (ap_some (mkGuard  o 
-                                     (XmlTree.find "UML:Guard") o
-                                     XmlTree.node_children_of))  o
+    let val getGuard     = (Option.map (mkGuard  o 
+					(XmlTree.find "UML:Guard") o
+					XmlTree.node_children_of))  o
                            (XmlTree.find_some "UML:Transition.guard")
 
         val getTagVal    = List.concat o 
@@ -778,9 +777,9 @@ fun mkState tree =
         val getOutgoing  = getTrans "UML:StateVertex.outgoing"
         val getSubvertex = (map mkState) o XmlTree.node_children_of o 
                            (XmlTree.find "UML:CompositeState.subvertex")
-        val getEntry     = (ap_some (mkProcedure  o 
-                                     (XmlTree.find "UML:CallAction") o
-                                     XmlTree.node_children_of))  o
+        val getEntry     = (Option.map (mkProcedure  o 
+					(XmlTree.find "UML:CallAction") o
+					XmlTree.node_children_of))  o
                            (XmlTree.find_some "UML:State.entry")
         val getTagVal    = List.concat o 
                            (map ((map mkTaggedValue) o XmlTree.node_children_of)) o 
