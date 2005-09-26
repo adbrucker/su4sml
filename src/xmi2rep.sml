@@ -260,7 +260,7 @@ fun transform_assocation t (assoc:XMI.Association) =
 		val cls_of_id = find_classifier t id
 		val aends_of_id = ae::(find_aends t id)
 		val ags_of_id  = find_activity_graph_of t id
-		val path_of_id = case type_of_id of Rep_OclType.Classifier x => x
+		val path_of_id = Xmi_IDTable.path_of_classifier type_of_id 
 		val path_of_ae = path_of_id @ [case #name ae of SOME x => x
 							      | NONE   => ""]
 	    in 

@@ -441,6 +441,7 @@ datatype Classifier = Primitive   of Primitive
 		    | Void        of Void
 
 fun classifier_stereotype_of (Class{stereotype,...}) = stereotype
+  | classifier_stereotype_of (AssociationClass{stereotype,...}) = stereotype
   | classifier_stereotype_of _  = nil
 
 fun classifier_name_of (Primitive{name,...}) = name
@@ -477,6 +478,7 @@ fun classifier_generalizations_of (Primitive{generalizations,...}) = generalizat
   | classifier_generalizations_of (Set{generalizations,...}) = generalizations
   | classifier_generalizations_of (Bag{generalizations,...}) = generalizations
   | classifier_generalizations_of (OrderedSet{generalizations,...}) = generalizations
+  | classifier_generalizations_of _ = nil
   
 
 fun classifier_elementtype_of (Collection{elementtype,...}) = elementtype

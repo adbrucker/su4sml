@@ -120,6 +120,7 @@ fun find_package t xmiid  =
     handle Option => raise IllFormed ("expected Path "^xmiid^" in table")
 					
 fun path_of_classifier (Rep_OclType.Classifier x) = x
+  | path_of_classifier _ = raise IllFormed ("path_of_classifier called on non-Classifier argument")
 
 fun find_constraint t xmiid =
     (case valOf (HashTable.find t xmiid) 
@@ -326,9 +327,20 @@ fun successor_states_of table (st:XMI.StateVertex) =
 fun class_taggedvalues_of table (XMI.Class c) = 
     map (fn x => (find_tagdefinition table (#tag_type x),#dataValue x)) 
 	(#taggedValue c)
+  | class_taggedvalues_of table (XMI.AssociationClass c) = 
+    map (fn x => (find_tagdefinition table (#tag_type x),#dataValue x)) 
+	(#taggedValue c)
+  | class_taggedvalues_of table _ = raise IllFormed "class_taggedvalues_of called on an argument that doesn't support tagged values yet..."
+	
 
 (* returns the value of the given tag *)
 fun class_taggedvalue_of table tag (XMI.Class c) =
     Option.map #2 ((List.find (fn (x,y) => x=tag)) 
 		       (class_taggedvalues_of table (XMI.Class c)))
+  | class_taggedvalue_of table tag (XMI.AssociationClass c) =
+    Option.map #2 ((List.find (fn (x,y) => x=tag)) 
+		       (class_taggedvalues_of table (XMI.AssociationClass c)))
+  | class_taggedvalue_of table tag _ = raise IllFormed "class_taggedvalues_of called on an argument that doesn't support tagged values yet..."
+	
+
 end

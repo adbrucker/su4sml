@@ -750,14 +750,16 @@ fun mkTransition tree =
 
 
 fun getPseudoStateKindAttr atts = 
-    (case getStringAtt "kind" atts of
-         "initial"  => XMI.initial
-       | "deep"     => XMI.deep
-       | "shallow"  => XMI.shallow
-       | "join"     => XMI.join
-       | "fork"     => XMI.fork
-       | "junction" => XMI.junction
-       | "choice"   => XMI.choice)
+    let val att = getStringAtt "kind" atts 
+    in 	(case att of "initial"  => XMI.initial
+		   | "deep"     => XMI.deep
+		   | "shallow"  => XMI.shallow
+		   | "join"     => XMI.join
+		   | "fork"     => XMI.fork
+		   | "junction" => XMI.junction
+		   | "choice"   => XMI.choice
+		   | _          => raise IllFormed ("in getPseudoStateKind: found unexpected attribute value "^att))
+    end
 
 
 

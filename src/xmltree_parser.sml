@@ -75,11 +75,21 @@ val filter_text  = List.filter (fn Text x => true
 fun text_of (Text s) = s
   | text_of _        = raise IllFormed "text_of called on Node element"
 			    
-fun tag_of        (Node (tag,trees)) = tag 
+fun tag_of  (Node (tag,trees)) = tag 
+  | tag_of  _                  = raise IllFormed "tag_of called on a Text-Node"
+
 fun attributes_of (Node ((elem,atts),trees)) = atts
+  | attributes_of _ = raise IllFormed "attributes_of called on a Text-Node"
+
 fun children_of   (Node ((elem,atts),trees)) = trees
+  | children_of   _ = raise IllFormed "children_of called on a Text-Node"
+
 fun node_children_of (Node ((elem,atts),trees)) = filter_nodes trees
+  | node_children_of   _ = raise IllFormed "node_children_of called on a Text-Node"
+
 fun text_children_of (Node ((elem,atts),trees)) = filter_text trees
+  | text_children_of _ = raise IllFormed "node_children_of called on a Text-Node"
+
 fun tagname_of    (Node ((elem,atts),trees)) = elem
   | tagname_of    (Text _) = ""
 
