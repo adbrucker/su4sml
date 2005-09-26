@@ -395,7 +395,27 @@ type Association = { xmiid : string,
  * that belong to the relationship itself and not any of the classifiers.
  * not supported....
  * --------------------------------------------------------------------------*)
-(* type UMLAssociationClass = ... *)
+type AssociationClass = { xmiid : string,
+			  name : string,
+			  isActive : bool,
+			  visibility : VisibilityKind,
+			  (* inherited from GeneralizableElement: *)
+			  (* isRoot : bool,                       *)
+			  (* isAbstract : bool,                   *)
+			  isLeaf : bool,
+			  (* xmi.idref to Generalization *)
+			  generalizations: string list,
+			  (* inherited from Classifier: *)
+			  attributes : Attribute list,
+			  operations: Operation list,
+			  (* inherited from ModelElement: *)
+			  (* xmi.idref to Constraint *)
+			  invariant: string list ,
+			  stereotype: string list,
+			  taggedValue: TaggedValue list,
+			  clientDependency: string list,
+			  supplierDependency: string list,
+			  connection: AssociationEnd list}
 
 
 (* from UML 1.5 Core: --------------------------------------------------------	    
@@ -410,6 +430,7 @@ type Association = { xmiid : string,
  * --------------------------------------------------------------------------*)
 datatype Classifier = Primitive   of Primitive
 		    | Class       of Class     
+		    | AssociationClass of AssociationClass
 		    | Interface   of Interface 
 		    | Enumeration of Enumeration 
 		    | Collection  of Collection 
@@ -424,6 +445,7 @@ fun classifier_stereotype_of (Class{stereotype,...}) = stereotype
 
 fun classifier_name_of (Primitive{name,...}) = name
   | classifier_name_of (Class{name,...}) = name
+  | classifier_name_of (AssociationClass{name,...}) = name
   | classifier_name_of (Interface{name,...}) = name
   | classifier_name_of (Enumeration{name,...}) = name
   | classifier_name_of (Collection{name,...}) = name
@@ -435,6 +457,7 @@ fun classifier_name_of (Primitive{name,...}) = name
 
 fun classifier_xmiid_of (Primitive{xmiid,...}) = xmiid
   | classifier_xmiid_of (Class{xmiid,...}) = xmiid
+  | classifier_xmiid_of (AssociationClass{xmiid,...}) = xmiid
   | classifier_xmiid_of (Interface{xmiid,...}) = xmiid
   | classifier_xmiid_of (Enumeration{xmiid,...}) = xmiid
   | classifier_xmiid_of (Collection{xmiid,...}) = xmiid
@@ -446,6 +469,7 @@ fun classifier_xmiid_of (Primitive{xmiid,...}) = xmiid
 
 fun classifier_generalizations_of (Primitive{generalizations,...}) = generalizations
   | classifier_generalizations_of (Class{generalizations,...}) = generalizations
+  | classifier_generalizations_of (AssociationClass{generalizations,...}) = generalizations
   | classifier_generalizations_of (Interface{generalizations,...}) = generalizations
   | classifier_generalizations_of (Enumeration{generalizations,...}) = generalizations
   | classifier_generalizations_of (Collection{generalizations,...}) = generalizations
@@ -460,8 +484,6 @@ fun classifier_elementtype_of (Collection{elementtype,...}) = elementtype
   | classifier_elementtype_of (Set{elementtype,...}) = elementtype
   | classifier_elementtype_of (Bag{elementtype,...}) = elementtype
   | classifier_elementtype_of (OrderedSet{elementtype,...}) = elementtype
-
-
 
 
 end
