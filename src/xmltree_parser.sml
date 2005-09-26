@@ -199,26 +199,36 @@ structure Parser = Parse (structure Dtd = Dtd
 		   
 fun readFile filename = 
     let val currentDir = OS.FileSys.getDir()
-	fun su4sml_home () = if (getenv "HOLOCL_HOME") <> ""
-	                     then getenv "HOLOCL_HOME" 
-			     else if (getenv "UML2CDL_HOME") <> ""
-			     then getenv "UML2CDL_HOME"
-			     else ".";
-	val _ = OS.FileSys.fileSize filename (* dummy check to see if the file exists...*)
-	val dtd = Dtd.initDtdTables()
+	fun su4sml_home () = getOpt(OS.Process.getEnv "HOLOCL_HOME", 
+				    getOpt(OS.Process.getEnv "UML2CDL_HOME","."))
 	(* how to do the following in a clean/portable way? *)
-	val _ = OS.FileSys.chDir (su4sml_home())
-	val _ = OS.FileSys.fileSize "UML15OCL.dtd" (* dummy check to see if the file exists...*)
-	val _ = Parser.parseDocument 
-		    (SOME (Uri.String2Uri ("file:UML15OCL.dtd")))
-		    (SOME dtd) (dtd,nil,nil) 
-	val _ = OS.FileSys.chDir currentDir 
-    in Parser.parseDocument
-	   (SOME (Uri.String2Uri filename))
-	   (SOME dtd) (dtd,nil,nil)
+	fun read_dtd dtd = 
+	    let val _ = OS.FileSys.chDir (su4sml_home())
+		val _ = OS.FileSys.fileSize "UML15OCL.dtd" (* dummy check to see if the file exists...*)	     
+		val _ = Parser.parseDocument 
+			    (SOME (Uri.String2Uri ("file:UML15OCL.dtd")))
+			    (SOME dtd) (dtd,nil,nil) 
+		val _ = OS.FileSys.chDir currentDir 
+	    in ()
+	    end
+		handle SysErr => (print ("Warning: in readFile: "^ 
+					 "did not find file UML15OCL.dtd\n");
+				  OS.FileSys.chDir currentDir )
+	fun read_file dtd filename = 
+	    let val _ = OS.FileSys.fileSize filename (* dummy check to see if the file exists...*)
+	    in 
+		Parser.parseDocument
+		    (SOME (Uri.String2Uri filename))
+		    (SOME dtd) (dtd,nil,nil)
+	    end
+		handle SysErr => (print ("Warning: in readFile: did not find file "
+					 ^filename^"\n"); 
+				  Node (("",nil),nil))
+	val dtd = Dtd.initDtdTables()
+    in  (* read_dtd dtd; *)
+	read_file dtd filename
     end
-	handle SysErr => (print ("Warning: in readFile: did not find file "^filename^"\n"); 
-			  Node (("",nil),nil))
+	
 end
 
 
