@@ -175,7 +175,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
   | transform_classifier t (XMI.AssociationClass {xmiid,name,isActive,visibility,
 						  isLeaf,generalizations,attributes,
 						  operations,invariant,stereotype,
-						  clientDependency,connection
+						  clientDependency,connection,
 						  supplierDependency,taggedValue}) =
     let val parents = map ((find_classifier_type t) o (find_parent t)) 
 			  generalizations 
