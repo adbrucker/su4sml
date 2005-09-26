@@ -241,6 +241,11 @@ fun writeStartTag stream tree =
      List.app (writeAttribute stream) (attributes_of tree);
      TextIO.output (stream,">\n"))
 
+fun writeStartEndTag stream tree =
+    (TextIO.output (stream,"<"^(tagname_of tree));
+     List.app (writeAttribute stream) (attributes_of tree);
+     TextIO.output (stream, " />\n"))
+
 fun writeIndent stream 0 = ()
   | writeIndent stream n = (TextIO.output (stream, "  "); writeIndent stream (n-1))
     
@@ -249,10 +254,12 @@ fun writeXmlTree indent stream tree =
     let val elemName = tagname_of tree 
     in 
 	writeIndent stream indent;
-	writeStartTag stream tree;
-	List.app (writeXmlTree (indent+1) stream) (children_of tree);
-	writeIndent stream indent;
-	writeEndTag stream elemName
+	if children_of tree = nil 
+	then writeStartEndTag stream tree
+	else (writeStartTag stream tree;
+	      List.app (writeXmlTree (indent+1) stream) (children_of tree);
+	      writeIndent stream indent;
+	      writeEndTag stream elemName)
     end
 
 fun writeFile filename tree = 
