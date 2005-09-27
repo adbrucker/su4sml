@@ -343,6 +343,17 @@ fun class_taggedvalue_of table tag (XMI.Class c) =
   | class_taggedvalue_of table tag _ = raise IllFormed "class_taggedvalues_of called on an argument that doesn't support tagged values yet..."
 	
 
+(* returns a list of tag-value pairs *)
+fun state_taggedvalues_of table st = 
+    map (fn x => (find_tagdefinition table (#tag_type x),#dataValue x)) 
+	(XMI.state_taggedValue_of st)
+
+(* returns the value of the given tag *)
+fun state_taggedvalue_of table tag st =
+    Option.map #2 ((List.find (fn (x,y) => x=tag)) 
+		       (state_taggedvalues_of table st))
+    
+
 (* check whether a class has the given stereotype *)
 fun classifier_has_stereotype t st c = 
     List.exists (fn x => (find_stereotype t x) = st) 
