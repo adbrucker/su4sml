@@ -343,6 +343,12 @@ fun class_taggedvalue_of table tag (XMI.Class c) =
   | class_taggedvalue_of table tag _ = raise IllFormed "class_taggedvalues_of called on an argument that doesn't support tagged values yet..."
 	
 
+(* check whether a class has the given stereotype *)
+fun classifier_has_stereotype t st c = 
+    List.exists (fn x => (find_stereotype t x) = st) 
+		(XMI.classifier_stereotype_of c)
+
+
 
 (* split an association into association ends, and put the association ends *)
 (* ends into the xmi.id table under the corresponding (i.e., opposite)      *)
