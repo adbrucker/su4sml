@@ -923,7 +923,8 @@ fun mkActivityGraph tree =
 fun mkPackage tree = 
     (if XmlTree.tagname_of tree = "UML:Model" orelse
 	XmlTree.tagname_of tree = "UML:Package" then 
-	 let val trees = XmlTree.follow "UML:Namespace.ownedElement" 
+	 let val direct_childs = XmlTree.node_children_of tree
+	     val trees = XmlTree.follow "UML:Namespace.ownedElement" 
 				      (XmlTree.node_children_of tree)
 	     val atts = XmlTree.attributes_of tree in
 	         XMI.Package { xmiid           = getXmiId atts, 
@@ -945,7 +946,13 @@ fun mkPackage tree =
 						      (filterTagDefinitions trees)),
                                state_machines  = nil,
                                activity_graphs = nil,
-			       dependencies    = (map mkDependency (filterDependencies trees))
+			       dependencies    = (map mkDependency (filterDependencies trees)),
+			       stereotype = (map (getXmiIdref o XmlTree.attributes_of) 
+				   (XmlTree.follow "UML:ModelElement.stereotype" 
+						   direct_childs)), 
+			       taggedValue = (map mkTaggedValue 
+						  (XmlTree.follow "UML:ModelElement.taggedValue" 
+								  direct_childs))
                               }
 	 end
      else raise IllFormed "did not find a UML:Model or UML: Package")

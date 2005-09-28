@@ -354,6 +354,17 @@ fun state_taggedvalue_of table tag st =
 		       (state_taggedvalues_of table st))
     
 
+(* returns a list of tag-value pairs *)
+fun package_taggedvalues_of table (XMI.Package p) = 
+    map (fn x => (find_tagdefinition table (#tag_type x),#dataValue x)) 
+	(#taggedValue p)
+
+(* returns the value of the given tag *)
+fun package_taggedvalue_of table tag (XMI.Package p) =
+    Option.map #2 ((List.find (fn (x,y) => x=tag)) 
+		       (package_taggedvalues_of table (XMI.Package p)))
+    
+
 (* check whether a class has the given stereotype *)
 fun classifier_has_stereotype t st c = 
     List.exists (fn x => (find_stereotype t x) = st) 

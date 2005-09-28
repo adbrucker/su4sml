@@ -60,9 +60,11 @@ datatype Package = Package of { xmiid          : string,
 				associations   : Association list,
 				generalizations: Generalization list,
 				constraints    : Constraint list,
-				stereotypes    : Stereotype list,
+				stereotypes    : Stereotype list, (* contained stereotype definitions *)
 				dependencies   : Dependency list,
-				tag_definitions: TagDefinition list}
+				tag_definitions: TagDefinition list,
+				stereotype     : string list, (* idref to stereotype of this package *)
+				taggedValue    : TaggedValue list}
 		  
 end
 
