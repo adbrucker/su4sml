@@ -207,6 +207,7 @@ fun state_xmiid_of (CompositeState{xmiid,...}) = xmiid
 
 fun state_subvertices_of (CompositeState{subvertex,...}) = subvertex
   | state_subvertices_of (SubactivityState{subvertex,...}) = subvertex
+  | state_subvertices_of _ = raise IllFormed "state_subvertices_of called on a non-composite state"
 
 fun state_outgoing_trans_of (CompositeState{outgoing,...}) = outgoing
   | state_outgoing_trans_of (SubactivityState{outgoing,...}) = outgoing

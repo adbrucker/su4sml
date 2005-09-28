@@ -440,9 +440,12 @@ datatype Classifier = Primitive   of Primitive
                     | OrderedSet  of OrderedSet
 		    | Void        of Void
 
+exception IllFormed of string
+
 fun classifier_stereotype_of (Class{stereotype,...}) = stereotype
   | classifier_stereotype_of (AssociationClass{stereotype,...}) = stereotype
   | classifier_stereotype_of _  = nil
+
 
 fun classifier_name_of (Primitive{name,...}) = name
   | classifier_name_of (Class{name,...}) = name
@@ -486,7 +489,7 @@ fun classifier_elementtype_of (Collection{elementtype,...}) = elementtype
   | classifier_elementtype_of (Set{elementtype,...}) = elementtype
   | classifier_elementtype_of (Bag{elementtype,...}) = elementtype
   | classifier_elementtype_of (OrderedSet{elementtype,...}) = elementtype
-
+  | classifier_elementtype_of _ = raise IllFormed "classifier_elementtype_of called on a non-collection value"
 
 end
 
