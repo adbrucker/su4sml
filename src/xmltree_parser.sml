@@ -241,18 +241,25 @@ end =
 struct
 open XmlTree
 
-fun writeAttribute stream (name,value) =
-    TextIO.output (stream, " "^name^"=\""^value^"\"")
+val escape = String.translate(fn #"'"  => "&apos;"
+			       | #"<"  => "&lt;"
+			       | #">"  => "&gt;"
+			       | #"\"" => "&quot;"
+			       | #"&"  => "&amp;"
+			       | c     => str(c) ) 
 
-fun writeEndTag stream name = TextIO.output (stream,"</"^name^">\n")
+fun writeAttribute stream (name,value) =
+    TextIO.output (stream, " "^(escape name)^"=\""^(escape value)^"\"")
+
+fun writeEndTag stream name = TextIO.output (stream,"</"^(escape name)^">\n")
 
 fun writeStartTag stream tree = 
-    (TextIO.output (stream,"<"^(tagname_of tree));
+    (TextIO.output (stream,"<"^escape (tagname_of tree));
      List.app (writeAttribute stream) (attributes_of tree);
      TextIO.output (stream,">\n"))
 
 fun writeStartEndTag stream tree =
-    (TextIO.output (stream,"<"^(tagname_of tree));
+    (TextIO.output (stream,"<"^escape (tagname_of tree));
      List.app (writeAttribute stream) (attributes_of tree);
      TextIO.output (stream, " />\n"))
 
@@ -261,7 +268,7 @@ fun writeIndent stream 0 = ()
     
 
 fun writeXmlTree indent stream tree = 
-    let val elemName = tagname_of tree 
+    let val elemName = escape (tagname_of tree)
     in 
 	writeIndent stream indent;
 	if children_of tree = nil 
