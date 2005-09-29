@@ -462,7 +462,10 @@ fun mkAttribute tree =
 
 fun mkTaggedValue tree =
     let fun f atts trees ={xmiid    = getXmiId atts,
-                           dataValue= XmlTree.text_of (hd (XmlTree.children_of (XmlTree.find "UML:TaggedValue.dataValue" trees))),
+                           dataValue= (String.concat 
+					   (map XmlTree.text_of 
+						(XmlTree.children_of 
+						     (XmlTree.find "UML:TaggedValue.dataValue" trees)))),
                            tag_type = (getXmiIdref o XmlTree.attributes_of o 
                                       (XmlTree.find "UML:TagDefinition") o
                                       XmlTree.node_children_of o  
