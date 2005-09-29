@@ -215,6 +215,11 @@ fun readFile filename =
 					 "did not find file UML15OCL.dtd\n");
 				  OS.FileSys.chDir currentDir )
 	fun read_file dtd filename = 
+	    if filename = "-" then 
+		Parser.parseDocument
+		    (NONE)
+		    (SOME dtd) (dtd,nil,nil)
+	    else 
 	    let val _ = OS.FileSys.fileSize filename (* dummy check to see if the file exists...*)
 	    in 
 		Parser.parseDocument
@@ -237,6 +242,7 @@ end
 (* entities like "<", and is not UTF-8 clean         *)
 structure WriteXmlTree: sig
     val writeFile : string -> XmlTree.Tree -> unit
+    val writeStdOut : XmlTree.Tree -> unit
 end =
 struct
 open XmlTree
@@ -246,7 +252,7 @@ val escape = String.translate(fn #"'"  => "&apos;"
 			       | #">"  => "&gt;"
 			       | #"\"" => "&quot;"
 			       | #"&"  => "&amp;"
-			       | c     => str(c) ) 
+			       | c     => str(c))  
 
 fun writeAttribute stream (name,value) =
     TextIO.output (stream, " "^(escape name)^"=\""^(escape value)^"\"")
@@ -279,6 +285,7 @@ fun writeXmlTree indent stream tree =
 	      writeEndTag stream elemName)
     end
 
+
 fun writeFile filename tree = 
     let val stream = TextIO.openOut filename 
     in 
@@ -287,4 +294,11 @@ fun writeFile filename tree =
 	TextIO.closeOut stream
     end
 
+fun writeStdOut tree = 
+    let val stream = TextIO.stdOut
+    in 
+	TextIO.output (stream,"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+	writeXmlTree 0 stream tree;
+	TextIO.closeOut stream
+    end
 end
