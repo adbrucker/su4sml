@@ -205,6 +205,15 @@ fun state_xmiid_of (CompositeState{xmiid,...}) = xmiid
   | state_xmiid_of (PseudoState{xmiid,...}) = xmiid
   | state_xmiid_of (SyncState{xmiid,...}) = xmiid
 
+fun state_name_of (CompositeState{name,...}) = name
+  | state_name_of (SubactivityState{name,...}) = name
+  | state_name_of (SimpleState{name,...}) = name
+  | state_name_of (ActionState{name,...}) = name
+  | state_name_of (ObjectFlowState{name,...}) = name
+  | state_name_of (FinalState{name,...}) = name
+  | state_name_of (PseudoState{name,...}) = name
+  | state_name_of (SyncState{name,...}) = name
+
 fun state_subvertices_of (CompositeState{subvertex,...}) = subvertex
   | state_subvertices_of (SubactivityState{subvertex,...}) = subvertex
   | state_subvertices_of _ = raise IllFormed "state_subvertices_of called on a non-composite state"
