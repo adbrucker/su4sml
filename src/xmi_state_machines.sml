@@ -195,6 +195,13 @@ and	StateMachine = mk_StateMachine of
                             top              : StateVertex,
                             transitions      : Transition list}
 
+fun state_entry_of (CompositeState{entry,...}) = entry
+  | state_entry_of (SubactivityState{entry,...}) = entry
+  | state_entry_of (SimpleState{entry,...}) = entry
+  | state_entry_of (ActionState{entry,...}) = entry
+  | state_entry_of (ObjectFlowState{entry,...}) = entry
+  | state_entry_of (FinalState{entry,...}) = entry
+  | state_entry_of (PseudoState{entry,...}) = entry
 
 fun state_xmiid_of (CompositeState{xmiid,...}) = xmiid
   | state_xmiid_of (SubactivityState{xmiid,...}) = xmiid
