@@ -273,7 +273,10 @@ fun writeIndent stream 0 = ()
   | writeIndent stream n = (TextIO.output (stream, "  "); writeIndent stream (n-1))
     
 
-fun writeXmlTree indent stream tree = 
+fun writeXmlTree indent stream (Text s) =  
+    (writeIndent stream indent;
+     TextIO.output (stream, s^"\n"))
+  | writeXmlTree indent stream tree = 
     let val elemName = escape (tagname_of tree)
     in 
 	writeIndent stream indent;
