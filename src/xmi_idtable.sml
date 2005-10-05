@@ -44,6 +44,7 @@ datatype HashTableEntry = Package of Rep_OclType.Path
 			| Transition of XMI.Transition 
 		        | Dependency of XMI.Dependency
 		        | TagDefinition of string
+		        | ClassifierInState of string 
 
 fun find_tagdefinition t xmiid =
     (case valOf (HashTable.find t xmiid) 
@@ -152,11 +153,19 @@ fun filter_postcondition t cs
 			constr_type_name = "post"
 		    end) cs
 
+
 fun find_classifier t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Type (_,_,c,_) => c
        | _                => raise Option) 
     handle Option => raise IllFormed ("expected Classifier "^xmiid^" in table")
+
+fun find_classifierInState_classifier t cis_id =
+    (case valOf (HashTable.find t cis_id)
+      of ClassifierInState c => find_classifier t c
+       | _                   => raise Option)
+    handle Option =>  raise IllFormed ("expected ClassifierInState "
+				       ^cis_id^" in table")
 
 fun find_activity_graph_of t xmiid = 
     (case valOf (HashTable.find t xmiid) 
@@ -238,6 +247,9 @@ fun insert_dependency table dep =
 fun insert_tagdefinition table (td:XMI.TagDefinition) =
     HashTable.insert table (#xmiid td, TagDefinition (#name td))
 
+fun insert_classifierInState table cls_id cis_id =
+    HashTable.insert table (cis_id,ClassifierInState cls_id)
+
 fun insert_classifier table package_prefix class = 
     let val id      = XMI.classifier_xmiid_of class
 	val name    = XMI.classifier_name_of class
@@ -266,7 +278,9 @@ fun insert_classifier table package_prefix class =
 	HashTable.insert table (id,Type (ocltype,aends,class,ag));
 	case class 
 	 of XMI.Class c => (List.app (insert_attribute table path) (#attributes c);
-				List.app (insert_operation table path) (#operations c); ())
+			    List.app (insert_operation table path) (#operations c);
+			    List.app (insert_classifierInState table id) (#classifierInState c);
+			    ())
 	  | XMI.Primitive c => (List.app (insert_operation table path) (#operations c); ())
 	  | XMI.Enumeration c => (List.app (insert_operation table path) (#operations c); ())
 	  | XMI.Interface c => (List.app (insert_operation table path) (#operations c); ())
@@ -369,8 +383,6 @@ fun package_taggedvalue_of table tag (XMI.Package p) =
 fun classifier_has_stereotype t st c = 
     List.exists (fn x => (find_stereotype t x) = st) 
 		(XMI.classifier_stereotype_of c)
-
-
 
 (* split an association into association ends, and put the association ends *)
 (* ends into the xmi.id table under the corresponding (i.e., opposite)      *)

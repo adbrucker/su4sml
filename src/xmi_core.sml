@@ -283,7 +283,9 @@ type Class = { xmiid : string,
 	       stereotype: string list,
 	       taggedValue: TaggedValue list,
 	       clientDependency: string list,
-	       supplierDependency: string list}
+	       supplierDependency: string list,
+	       (* xmi.id's of contained ClassifierInStates: *)
+	       classifierInState: string list }
 
 (* from UML 1.5 Core: --------------------------------------------------------
  * A data type is a type whose values have no identity (i.e., they are 

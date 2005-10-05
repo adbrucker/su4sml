@@ -514,7 +514,11 @@ fun mkClass atts trees
 						    trees)),
 	    supplierDependency = (map (getXmiIdref o XmlTree.attributes_of)
 				      (XmlTree.follow "UML:ModelElement.supplierDependency"
-						      trees))}
+						      trees)),
+	    classifierInState = (map (getXmiId o XmlTree.attributes_of)
+				     (XmlTree.filter "UML:ClassifierInState"
+						     (XmlTree.follow "UML:Namespace.ownedElement"
+								     trees)))}
 
 fun mkAssociationClass atts trees 
   = XMI.AssociationClass { xmiid           = getXmiId atts,
@@ -790,6 +794,7 @@ fun mkState tree =
         val getStereo    = List.concat o 
                            (map ((map mkStereotypeR) o XmlTree.node_children_of)) o 
                            (XmlTree.filter "UML:ModelElement.stereotype")
+	fun getType t      = map (getTid o hd o XmlTree.node_children_of) (XmlTree.filter "UML:ObjectFlowState.type" (XmlTree.node_children_of t))
 
 (*
         val visibility = getVisibility atts
@@ -860,7 +865,7 @@ fun mkState tree =
                     outgoing     = getOutgoing trees, incoming = getIncoming trees, 
                     isSynch      = getBoolAtt "isSynch" atts,
                     parameter    = nil,
-                    type_        = NONE,
+                    type_        = hd (getType tree),
                     taggedValue  = getTagVal trees}
        |"UML:FinalState" => 
              XMI.FinalState{

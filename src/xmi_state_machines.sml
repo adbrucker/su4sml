@@ -154,7 +154,7 @@ datatype StateVertex  =
              isSynch      : bool,
              parameter    : Parameter list,
              taggedValue  : TaggedValue list,
-             type_        : Rep_OclType.Path option}
+             type_        : string}
        | FinalState
 	 of {xmiid        : string,
              name         : string,
@@ -195,6 +195,9 @@ and	StateMachine = mk_StateMachine of
                             top              : StateVertex,
                             transitions      : Transition list}
 
+fun state_type_of  (ObjectFlowState{type_,...}) = type_
+  | state_type_of  _ = raise IllFormed "state_type_of called on a non-ObjectFlow state"
+
 fun state_entry_of (CompositeState{entry,...}) = entry
   | state_entry_of (SubactivityState{entry,...}) = entry
   | state_entry_of (SimpleState{entry,...}) = entry
@@ -202,6 +205,7 @@ fun state_entry_of (CompositeState{entry,...}) = entry
   | state_entry_of (ObjectFlowState{entry,...}) = entry
   | state_entry_of (FinalState{entry,...}) = entry
   | state_entry_of (PseudoState{entry,...}) = entry
+  | state_entry_of _ = raise IllFormed "state_entry_of called on a state that does not have entry actions"
 
 fun state_xmiid_of (CompositeState{xmiid,...}) = xmiid
   | state_xmiid_of (SubactivityState{xmiid,...}) = xmiid
