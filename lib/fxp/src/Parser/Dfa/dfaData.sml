@@ -70,4 +70,4 @@ structure DfaBase =
       val emptyDfa : Dfa = Vector.fromList [(1,0,Vector.fromList nil,true)] 
    end
 
-structure DfaData = DfaBase : DfaData
+structure DfaData = DfaBase (* : DfaData *)

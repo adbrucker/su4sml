@@ -180,7 +180,7 @@ structure Uri :> Uri =
 	    val tmp = OS.FileSys.tmpName()
 	    val cmd = convertCommand Config.retrieveCommand (uri,tmp)
 	    val status = OS.Process.system cmd
-	    val _ = if status = OS.Process.success then ()
+	    val _ = if OS.Process.isSuccess status then ()
 		    else let val _ = (OS.FileSys.remove tmp 
 				      handle OS.SysErr _ => ())
 			     val cmd = convertCommand 
