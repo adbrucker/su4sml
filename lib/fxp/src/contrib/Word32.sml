@@ -1,3 +1,8 @@
+structure Word32 = LargeWord;
+(**********************************
+  OLD STUB BASED ON WORD8
+ **********************************)
+(*
 (*
     Title:      Standard Basis Library: Word32 Structure
     Author:     David Matthews
@@ -182,3 +187,4 @@ RunCall.addOverload it "=";
 val it : Word32.word * Word32.word -> bool =
 	RunCall.run_call2 RuntimeCalls.POLY_SYS_word_neq;
 RunCall.addOverload it "<>";
+*)
