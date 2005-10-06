@@ -254,8 +254,14 @@ val escape = String.translate(fn #"'"  => "&apos;"
 			       | #"&"  => "&amp;"
 			       | c     => str(c))  
 
+val escape2 = String.translate(fn #"<"  => "&lt;"
+				| #">"  => "&gt;"
+				| #"\"" => "&quot;"
+				| #"&"  => "&amp;"
+				| c     => str(c))  
+
 fun writeAttribute stream (name,value) =
-    TextIO.output (stream, " "^(escape name)^"=\""^(escape value)^"\"")
+    TextIO.output (stream, " "^(escape name)^"=\""^(escape2 value)^"\"")
 
 fun writeEndTag stream name = TextIO.output (stream,"</"^(escape name)^">\n")
 
