@@ -59,7 +59,7 @@ structure CharClasses : CharClasses =
       val op <<< = Word32.<<
       val op &&& = Word32.andb
       val op ||| = Word32.orb
-      val op & = Word32.andb
+      val op & = Word.andb
 
       val max32 = Word32.notb 0wx0
    
