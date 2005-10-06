@@ -214,7 +214,8 @@ type Attribute = { xmiid : string,
 		   changeability : ChangeableKind,
 		   (* inherited from Feature:           *)
 		   (* ownerScope : ... ,                *)
-		   visibility : VisibilityKind
+		   visibility : VisibilityKind,
+		   taggedValue : TaggedValue list
 				}
 
 

@@ -130,7 +130,7 @@ fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
      
 
 fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,
-			    ordering,multiplicity}) =
+			    ordering,multiplicity,taggedValue}) =
     let val cls_type = find_classifier_type t type_id 
     in
 	(name,if multiplicity = [(1,1)] 

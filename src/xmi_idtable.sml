@@ -358,6 +358,18 @@ fun class_taggedvalue_of table tag (XMI.Class c) =
 	
 
 (* returns a list of tag-value pairs *)
+fun attribute_taggedvalues_of table (a:XMI.Attribute) = 
+    map (fn x => (find_tagdefinition table (#tag_type x),#dataValue x)) 
+	(#taggedValue a)
+ 
+
+(* returns the value of the given tag *)
+fun attribute_taggedvalue_of table tag (a:XMI.Attribute) =
+    Option.map #2 ((List.find (fn (x,y) => x=tag)) 
+		       (attribute_taggedvalues_of table a))
+	
+
+(* returns a list of tag-value pairs *)
 fun state_taggedvalues_of table st = 
     map (fn x => (find_tagdefinition table (#tag_type x),#dataValue x)) 
 	(XMI.state_taggedValue_of st)

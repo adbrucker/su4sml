@@ -444,21 +444,6 @@ fun mkOperation tree =
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkOperation: "^msg)
     end
 
-fun mkAttribute tree = 
-    let fun f atts trees =
-	{ xmiid         = getXmiId atts,
-	  name          = getName atts,
-	  visibility    = getVisibility atts,
-	  changeability = getChangeabilityMaybe atts,
-	  ordering      = getOrderingMaybe atts, 
-	  type_id       = (getXmiIdref o XmlTree.attributes_of o hd o 
-			   (XmlTree.follow "UML:StructuralFeature.type")) trees,
-	  multiplicity   = if XmlTree.exists "UML:StructuralFeature.multiplicity" trees 
-			   then (mkMultiplicity o hd o (XmlTree.follow "UML:StructuralFeature.multiplicity")) trees
-			   else [(0,~1)]}
-    in XmlTree.apply_on "UML:Attribute" f tree
-       handle XmlTree.IllFormed msg => raise IllFormed ("in mkAttribute: "^msg)
-    end
 
 fun mkTaggedValue tree =
     let fun f atts trees ={xmiid    = getXmiId atts,
@@ -472,6 +457,24 @@ fun mkTaggedValue tree =
                                       (XmlTree.find "UML:TaggedValue.type")) trees
 			   }
     in  XmlTree.apply_on "UML:TaggedValue" f tree 
+    end
+
+fun mkAttribute tree = 
+    let fun f atts trees =
+	{ xmiid         = getXmiId atts,
+	  name          = getName atts,
+	  visibility    = getVisibility atts,
+	  changeability = getChangeabilityMaybe atts,
+	  ordering      = getOrderingMaybe atts, 
+	  type_id       = (getXmiIdref o XmlTree.attributes_of o hd o 
+			   (XmlTree.follow "UML:StructuralFeature.type")) trees,
+	  multiplicity   = if XmlTree.exists "UML:StructuralFeature.multiplicity" trees 
+			   then (mkMultiplicity o hd o (XmlTree.follow "UML:StructuralFeature.multiplicity")) trees
+			   else [(0,~1)],
+	  taggedValue   = (map mkTaggedValue 
+				 (XmlTree.follow "UML:ModelElement.taggedValue" trees)) }
+    in XmlTree.apply_on "UML:Attribute" f tree
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkAttribute: "^msg)
     end
 
 fun mkTagDefinition tree =
