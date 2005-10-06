@@ -32,7 +32,7 @@ signature IntSets =
 
 structure IntSets : IntSets = 
    struct
-      structure W = Word32
+      structure W = LargeWord
       val wordSize = W.wordSize
  
       type IntSet = W.word vector

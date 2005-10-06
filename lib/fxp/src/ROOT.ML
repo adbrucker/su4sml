@@ -21,10 +21,6 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-(* using polyml 4.1.4 we also need: *)
-(* use "contrib/Word32.sml";                *)
-
-
 use "Util/utilString.sml";
 use "Util/utilHash.sml";
 use "Util/utilCompare.sml";

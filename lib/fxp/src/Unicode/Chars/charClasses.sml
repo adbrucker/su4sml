@@ -55,19 +55,19 @@ structure CharClasses : CharClasses =
       val op -- = Chars.-
       val op || = Chars.orb
       val op && = Chars.andb
-      val op >>> = Word32.>>
-      val op <<< = Word32.<<
-      val op &&& = Word32.andb
-      val op ||| = Word32.orb
+      val op >>> = LargeWord.>>
+      val op <<< = LargeWord.<<
+      val op &&& = LargeWord.andb
+      val op ||| = LargeWord.orb
       val op & = Word.andb
 
-      val max32 = Word32.notb 0wx0
+      val max32 = LargeWord.notb 0wx0
    
       (*--------------------------------------------------------------------*)
       (* a char class is an array of words, interpreted as bitvectors.      *)
       (*--------------------------------------------------------------------*)
-      type MutableClass = Word32.word array
-      type CharClass = Word32.word vector
+      type MutableClass = LargeWord.word array
+      type CharClass = LargeWord.word vector
 
       (*--------------------------------------------------------------------*)
       (* each word in a char class holds 32 entries. Thus the for a char c  *)
