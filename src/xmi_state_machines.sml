@@ -268,6 +268,12 @@ fun state_taggedValue_of (CompositeState{taggedValue,...}) = taggedValue
   | state_taggedValue_of (PseudoState{taggedValue,...}) = taggedValue
   | state_taggedValue_of (SyncState{taggedValue,...}) = taggedValue
 
+fun state_is_fork (PseudoState{kind=fork,...}) = true
+  | state_is_fork _                            = false
+
+fun state_is_join (PseudoState{kind=join,...}) = true
+  | state_is_join _                            = false
+
 end
 
 
