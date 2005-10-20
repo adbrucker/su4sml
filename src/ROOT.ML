@@ -79,7 +79,7 @@ use "rep.sml";
 
 
 (* support functions *)
-use "ocl2string.sml"
+use "ocl2string.sml";
 
 (* ****************************************************** *)
 (* Main Conversion Processes  *)

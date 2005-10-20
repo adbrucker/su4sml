@@ -22,6 +22,13 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+structure ocl2string = 
+struct
+open Rep_OclType
+open Rep_OclTerm
+open Rep_Core
+
+
 fun ocl2string show_types oclterm =     
     let 
 	fun string_of_infix show_types src styp opname arg atyp rtyp 
