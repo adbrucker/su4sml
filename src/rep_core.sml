@@ -25,23 +25,30 @@
 structure Rep_Core :  REP_CORE = 
 struct
 open library
+
+type Visibility = XMI_DataTypes.VisibilityKind
+type Scope      = XMI_DataTypes.ScopeKind
+
 type operation = { name          : string,	
 		   precondition  : (string option * Rep_OclTerm.OclTerm) list,
 		   postcondition : (string option * Rep_OclTerm.OclTerm) list,
 		   arguments     : (string * Rep_OclType.OclType) list,
 		   result        : Rep_OclType.OclType,
-		   isQuery       : bool }     
+		   isQuery       : bool,
+		   visibility    : Visibility,
+                   scope         : Scope }     
 
 type associationend = {name : string,
 		       aend_type: Rep_OclType.OclType,
 		       multiplicity: (int*int) list,
+		       visibility: Visibility,
 		       ordered: bool }
 
 datatype Classifier =  
 	 Class of 
 	 { name        : Rep_OclType.Path, 
 	   parent      : Rep_OclType.Path option,
-	   attributes  : (string * Rep_OclType.OclType) list,
+	   attributes  : (string * Rep_OclType.OclType * Visibility * Scope) list,
 	   operations  : operation list,
 	   associationends : associationend list,
 	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
@@ -80,13 +87,16 @@ datatype Classifier =
 	  }
  
 (* convert an association end into the corresponding collection type *)
-fun assoc_to_attr_type {name,aend_type,multiplicity,ordered} =
+fun assoc_to_attr_type {name,aend_type,multiplicity,ordered,visibility} =
     if ordered then Rep_OclType.Sequence aend_type (* OrderedSet? *)
     else Rep_OclType.Set aend_type
     
 (* convert an association end into an attribute of the *)
 (* corresponding collection type                       *)
-fun assoc_to_attr (assoc:associationend) = (#name assoc,assoc_to_attr_type assoc)
+fun assoc_to_attr (assoc:associationend) = (#name assoc,
+					    assoc_to_attr_type assoc,
+					    #visibility assoc,
+					    XMI.InstanceScope)
 
 (* convert a multiplicity range into an invariant of the form *)
 (* size > lowerBound and size < upperBound )                 *)

@@ -24,26 +24,31 @@
 
 signature REP_CORE = 
 sig
+type Scope
+type Visibility
 type operation = { name          : string,	
 		   precondition  : (string option * Rep_OclTerm.OclTerm) list,
 		   postcondition : (string option * Rep_OclTerm.OclTerm) list,
 		   arguments     : (string * Rep_OclType.OclType) list,
 		   result        : Rep_OclType.OclType,
-		   isQuery       : bool
-				   }     
+		   isQuery       : bool,
+		   scope         : Scope,
+		   visibility    : Visibility	
+				   }     	
 
 type associationend = {name : string,
 		       aend_type : Rep_OclType.OclType,	
 		       multiplicity: (int * int) list,
-		       ordered: bool	
-				     }	       
+		       ordered: bool,
+		       visibility: Visibility
+				     }		
 	     
 
 datatype Classifier =  
 	 Class of 
 	 { name        : Rep_OclType.Path, 
 	   parent      : Rep_OclType.Path option,
-	   attributes  : (string * Rep_OclType.OclType) list,
+	   attributes  : (string * Rep_OclType.OclType * Visibility * Scope) list,
 	   operations  : operation list,
 	   associationends : associationend list,
 	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
@@ -95,7 +100,7 @@ val short_parent_name_of : Classifier -> string
 
 val thy_name_of       : Classifier -> string
 val update_thyname    : string -> Classifier -> Classifier
-val attributes_of     : Classifier -> (string * Rep_OclType.OclType) list
+val attributes_of     : Classifier -> (string * Rep_OclType.OclType * Visibility * Scope) list
 val operations_of     : Classifier -> operation list
 val invariant_of      : Classifier -> (string option * Rep_OclTerm.OclTerm) list
 val string_of_path    : string list -> string    

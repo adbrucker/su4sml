@@ -41,6 +41,7 @@ open XMI_OCL
 
 datatype AggregationKind        = NoAggregation | Aggregate | Composite
 
+datatype ScopeKind = InstanceScope | ClassifierScope
 
 (* from UML 1.5 Core: --------------------------------------------------------
  * ChangeableKind defines an enumeration that denotes how an AttributeLink or 
@@ -213,7 +214,8 @@ type Attribute = { xmiid : string,
 		   (* targetScope : ScopeKind           *)
 		   changeability : ChangeableKind,
 		   (* inherited from Feature:           *)
-		   (* ownerScope : ... ,                *)
+		   ownerScope : ScopeKind,               
+		   targetScope : ScopeKind,
 		   visibility : VisibilityKind,
 		   taggedValue : TaggedValue list
 				}
@@ -250,7 +252,7 @@ type Operation = { xmiid : string,
 		   isQuery : bool,
 		   parameter : Parameter list,
 		   (* inherited from Feature:            *)
-		   (* ownerScope : ScopeKind,            *)
+		   ownerScope : ScopeKind,            
 		   visibility : VisibilityKind,
 		   (* inherited from ModelElemt:         *)
 		   (* xmi.idref to UMLConstraint         *)
@@ -373,7 +375,7 @@ type AssociationEnd = { xmiid : string,
 			isNavigable: bool,
 			ordering : OrderingKind,
 			aggregation : AggregationKind,
-			(* targetScope: ScopeKind, *)
+			targetScope: ScopeKind,
 			multiplicity : Multiplicity,
 			changeability: ChangeableKind,
 			visibility : VisibilityKind,

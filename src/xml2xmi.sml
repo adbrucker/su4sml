@@ -81,12 +81,39 @@ fun getOrdering atts =
 		  | _ => raise IllFormed ("in getOrdering: found unexpected attribute value "^att)
     end 
 
+fun getTargetScope atts = 
+    let val att = getStringAtt "targetScope" atts 
+    in 
+	case att of "instance" => XMI.InstanceScope
+		  | "classifier"  => XMI.ClassifierScope
+		  | _ => raise IllFormed ("in getTargetScope: found unexpected attribute value "^att)
+    end 
+
+fun getTargetScopeMaybe atts = 
+    let val att = XmlTree.attvalue_of "targetScope" atts 
+    in 
+	case att of SOME "instance"   => XMI.InstanceScope
+		  | SOME "classifier" => XMI.ClassifierScope
+		  | NONE              => XMI.InstanceScope
+		  | SOME s => raise IllFormed ("in getTargetScope: found unexpected attribute value "^s)
+    end 
+
+fun getOwnerScopeMaybe atts = 
+    let val att = XmlTree.attvalue_of "ownerScope" atts 
+    in 
+	case att of SOME "instance" => XMI.InstanceScope
+		  | SOME "classifier"  => XMI.ClassifierScope
+		  | SOME s => raise IllFormed ("in getOwnerScope: found unexpected attribute value "^s)
+		  | NONE => XMI.InstanceScope
+    end 
+
 fun getOrderingMaybe atts = 
     let val att = XmlTree.attvalue_of "ordering" atts 
     in 
 	case att of SOME "unordered" => XMI.Unordered
 		  | SOME "ordered"   => XMI.Ordered
-		  | _                => XMI.Unordered
+		  | NONE             => XMI.Unordered
+		  | SOME s => raise IllFormed ("in getOrdering: found unexpected attribute value "^s)
     end 
 
 fun getAggregation atts = 
@@ -146,6 +173,7 @@ fun mkAssociationEnd tree =
 	      isNavigable    = getBoolAtt "isNavigable" atts,
 	      ordering       = getOrderingMaybe atts,
 	      aggregation    = getAggregationMaybe atts,
+	      targetScope    = getTargetScopeMaybe atts,
 	      multiplicity   = if XmlTree.exists "UML:AssociationEnd.multiplicity" trees 
 			       then (mkMultiplicity o hd o (XmlTree.follow "UML:AssociationEnd.multiplicity")) 
 					trees
@@ -433,6 +461,7 @@ fun mkOperation tree =
 	  name          = getName atts,
 	  visibility    = getVisibility atts,
 	  isQuery       = getBoolAtt "isQuery" atts,
+	  ownerScope    = getOwnerScopeMaybe atts,
 	  parameter     = (map mkParameter 
 			       (XmlTree.follow "UML:BehavioralFeature.parameter" 
 					       trees)),
@@ -471,6 +500,8 @@ fun mkAttribute tree =
 	  multiplicity   = if XmlTree.exists "UML:StructuralFeature.multiplicity" trees 
 			   then (mkMultiplicity o hd o (XmlTree.follow "UML:StructuralFeature.multiplicity")) trees
 			   else [(0,~1)],
+	  targetScope   = getTargetScopeMaybe atts,
+	  ownerScope    = getOwnerScopeMaybe atts,
 	  taggedValue   = (map mkTaggedValue 
 				 (XmlTree.follow "UML:ModelElement.taggedValue" trees)) }
     in XmlTree.apply_on "UML:Attribute" f tree

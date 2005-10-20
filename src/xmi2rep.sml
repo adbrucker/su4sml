@@ -115,7 +115,7 @@ fun transform_parameter t {xmiid,name,kind,type_id} =
     (name, find_classifier_type t type_id)
 
 fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
-			   constraints} =
+			   constraints,ownerScope} =
     {name=name,
      arguments = map (transform_parameter t)
 		     (filter (fn x => #kind x <> XMI.Return) parameter),
@@ -124,27 +124,34 @@ fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
      postcondition = map ((transform_constraint t) o (find_constraint t)) 
 			 (filter_postcondition t constraints), 
      result = find_classifier_type t ((#type_id o hd)(filter (fn x => #kind x = XMI.Return) parameter)),
+     visibility = visibility,
+     scope = ownerScope,
      isQuery = isQuery      (* FIX *)
      }
 
      
 
-fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,
-			    ordering,multiplicity,taggedValue}) =
+fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,ordering,
+			    multiplicity,taggedValue,ownerScope,targetScope}) =
     let val cls_type = find_classifier_type t type_id 
     in
-	(name,if multiplicity = [(1,1)] 
-	      then cls_type
-	      else if ordering = XMI.Ordered then Rep_OclType.Sequence cls_type
-	      else Rep_OclType.Set cls_type)
+	(name,
+	 if multiplicity = [(1,1)] 
+	 then cls_type
+	 else if ordering = XMI.Ordered then Rep_OclType.Sequence cls_type
+	 else Rep_OclType.Set cls_type,
+	 visibility,
+	 ownerScope
+	 )
     end
 
 fun transform_aend t ({xmiid,name,ordering,multiplicity,participant_id,
-		       isNavigable,aggregation,changeability,visibility})
+		       isNavigable,aggregation,changeability,visibility,targetScope})
   = {name         = valOf name,
      aend_type    = find_classifier_type t participant_id,
      multiplicity = multiplicity,
-     ordered      = if ordering = XMI.Ordered then true else false }
+     ordered      = if ordering = XMI.Ordered then true else false,
+     visibility   = visibility }
 
 val filter_named_aends  = List.filter (fn {name=SOME _,...}:XMI.AssociationEnd => true
 					| _ => false)
