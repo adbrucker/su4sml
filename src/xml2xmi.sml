@@ -208,8 +208,8 @@ fun mkAssociation tree =
     let fun f atts trees = { xmiid      = getXmiId atts, 
 			     name       = XmlTree.attvalue_of "name" atts,
 			     connection = (map mkAssociationEnd 
-					       (XmlTree.skip "UML:Association.connection" 
-								 (hd trees))) }
+					       (XmlTree.follow "UML:Association.connection" 
+								  trees)) }
     in 
 	XmlTree.apply_on "UML:Association" f tree
 	handle XmlTree.IllFormed msg => raise IllFormed ("in mkAssociation: "^msg)
