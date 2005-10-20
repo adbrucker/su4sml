@@ -24,5 +24,6 @@ Group is
     xmi.sml 
     xmltree_parser.sml
     xmi_idtable.sml
+    ocl2string.sml
     xml2xmi.sml 
     xmi2rep.sml  
