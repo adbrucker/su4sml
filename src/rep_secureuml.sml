@@ -29,11 +29,11 @@ datatype Resource = Entity of Rep_OclType.Path
 
 datatype ActionName = Create | Read | Update | Delete | FullAccess | Execute
 
-datatype ProtectedAction = SimpleAction of ActionName * Resource * string list 
-		         | CompositeAction of ActionName * Resource * string list
+datatype ProtectedAction = SimpleAction of ActionName * Resource 
+		         | CompositeAction of ActionName * Resource
 
 fun subordinated_actions (SimpleAction _) = nil
-  | subordinated_actions (CompositeAction (Read,Entity c,p)) = nil
+  | subordinated_actions (CompositeAction (Read,Entity c)) = nil
     (* let val read_attributes = ...
 	val read_methods = ...
     in 
