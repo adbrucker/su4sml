@@ -22,7 +22,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-structure ocl2string = 
+structure Ocl2String = 
 struct
 open Rep_OclType
 open Rep_OclTerm
@@ -62,6 +62,15 @@ fun ocl2string show_types oclterm =
 		 ^")):"^(string_of_OclType rtyp)
 	    else (ocl2string show_types src)
 		 ^"->"^opname^"("^(string_of_OclType arg)^")"
+	fun cs_list []  = ""
+	  | cs_list [a] = a
+	  | cs_list l   = foldl (fn (x,y) => (x^", "^y)) (hd l) (tl l)
+	fun arglist show_types args = cs_list 
+					  (map (fn (arg,atyp) 
+						   => if show_types 
+						      then "("^(ocl2string show_types arg)^"):"^(string_of_OclType atyp)
+						      else (ocl2string show_types arg)) args)
+				      
     in
     case oclterm of 
 	(**************************************)
@@ -79,8 +88,14 @@ fun ocl2string show_types oclterm =
 							     else "if "^(ocl2string show_types cterm)
 								  ^" then "^(ocl2string show_types tterm)
 								  ^" else "^(ocl2string show_types eterm)^" endif"
-      | AssociationEndCall(src,ts,p,t)    => error "NOT YET SUPPORTED: AssociationEndCall"
-      | AttributeCall(src,ts,p,t)         => error "NOT YET SUPPORTED: AtrributeCall"
+      | AssociationEndCall(src,styp,path,ptyp)    => if show_types
+						     then "(("^(ocl2string show_types src)^":"^(string_of_OclType styp)^")."
+							  ^(string_of_path path)^":"^(string_of_OclType ptyp)^")"
+						     else (ocl2string show_types src)^"."^(string_of_path path)
+      | AttributeCall(src,styp,path,ptyp)         => if show_types
+						     then "(("^(ocl2string show_types src)^":"^(string_of_OclType styp)^")."
+							  ^(hd (rev path))^":"^(string_of_OclType ptyp)^")"
+						     else (ocl2string show_types src)^"."^(hd (rev path))
       (**************************************)
       (* OperationCall                      *)
       (**************************************)
@@ -118,25 +133,19 @@ fun ocl2string show_types oclterm =
       | OperationCall (src,styp,["oclLib",classifier,"-"],[],rtyp)             => string_of_prefix1 show_types src styp "-" rtyp
       (* OCL String                          *)
 (*      | OperationCall (src,styp,["oclLib",classifier,"subString"],[(b,Integer),(e,Integer)],String) 
-	=> OclSubString u (ocl2holocl u  src) (ocl2holocl u  b) (ocl2holocl u  e)		 
+	=> OclSubString u (ocl2string u  src) (ocl2string u  b) (ocl2string u  e)		 
 *)
       | OperationCall (src,styp,["oclLib",classifier,opname],[(arg,atyp)],rtyp) => string_of_oo_infix show_types  src styp opname arg atyp rtyp
       | OperationCall (src,styp,["oclLib",classifier,opname],[],rtyp) =>  string_of_oo_postfix1 show_types src styp opname rtyp
-
-
-(*      (* OperationCalls to modell and Error *)
-      | OperationCall (src,styp,op_name,args,t) => let 
-      	    val Op = case (getoperation cl op_name) of
-			 SOME(Op) => Op
-		       | NONE     => error ("error: unknown OperationCall '"
-					    ^(string_of_path op_name)^":("^(string_of_OclType t)
-					    ^")'  in ocl2holocl")
-	    val m_name = mangled_name_of_op Op
-	in 
-	    (foldl (fn (t0,t1) => t1$t0) (Const((string_of_path (hc_path operation [m_name]))^".Op",dummyT))
-			   (map (fn a => ocl2holocl u (fst a)) ((src,styp)::args)))
-	end
- *)
+      (* OperationCalls to modell and Error *)
+(* TODO *)
+      | OperationCall (src,styp,op_name,args,t) => if show_types 
+						   then "("^(ocl2string show_types src)^"."^(hd (rev op_name))
+							^"("^arglist show_types args^")"
+							^")"^(string_of_OclType t)
+						   else (ocl2string show_types src)^"."^(hd (rev op_name))
+							^"("^arglist show_types args^")"
+ 
       (**************************************)
       (* Variable                           *) 
       (**************************************)
@@ -147,7 +156,7 @@ fun ocl2string show_types oclterm =
       (* Let                                *)
       (**************************************) 
       (* Error                              *)
-      | Let (s,_,_,_,_,_) => error ("error: unknown Let '"^(s)^"'  in ocl2holocl") 
+      | Let (s,_,_,_,_,_) => error ("error: unknown Let '"^(s)^"'  in ocl2string") 
       (**************************************)
       (* OperationWithType                  *)
       (**************************************)
@@ -157,16 +166,20 @@ fun ocl2string show_types oclterm =
       (* Iterate                            *)
       (**************************************)
       (* Error                              *)
-      | Iterate (_,s,_,src,_,c,_,_) =>  error ("error: unknown Iterate '"^(s)^"' in in ocl2holocl") 
+      | Iterate (_,s,_,src,_,c,_,_) =>  error ("error: unknown Iterate '"^(s)^"' in in ocl2string") 
       (**************************************)
       (* Iterator                           *)
       (**************************************)
-      (* forAll                              *)
-      | Iterator ("forAll",vars,src,styp,c,_,_) =>  ("error: unknown Iterrator 'forall' in in ocl2holocl") 
-      | Iterator ("exists",vars,src,styp,c,_,_) =>  ("error: unknown Iterrator 'exists' in in ocl2holocl")
-      | Iterator ("select",vars,src,styp,c,_,_) => ("error: unknown Iterrator 'select' in in ocl2holocl")
-      | Iterator ("collect",vars,src,styp,c,_,_) => ("error: unknown Iterrator 'collect' in in ocl2holocl")
-
+      (* forAll                             *)
+      | Iterator (iname,vars,src,styp,c,ctyp,rtyp) => if show_types 
+						      then "("^(ocl2string show_types src)^":"
+							   ^(string_of_OclType styp)^"->"^iname^"("
+							   ^(cs_list (map (fn (a,t) => a^":"^(string_of_OclType t)) 
+									  vars))
+							   ^"|"^(ocl2string show_types c)^")"
+						       else (ocl2string show_types src)^"->"^iname^"("
+							    ^(cs_list (map fst vars))
+							    ^"|"^(ocl2string show_types c)^")"
       (* OCL Collection                     *) 
    (* 
       | Iterate (src,styp,["oclLib",classifier,"iterate"],args,Collection _) => OclIterate u C be e  
@@ -176,11 +189,11 @@ fun ocl2string show_types oclterm =
       (* OCL OrderedSet                     *) 
       | Iterate (src,styp,["oclLib",classifier,"count"],[(arg,_)],OrderedSet _) => OclOSetCount u S e       *)
       (* Error                              *)
-      | Iterator (s,_,_,_,_,_,_) => error ("error: unknown Iterator '"^(s)^"' in in ocl2holocl") 
+      | Iterator (s,_,_,_,_,_,_) => error ("error: unknown Iterator '"^(s)^"' in in ocl2string") 
       (**************************************)
       (* Catch out                          *)
       (**************************************)
       (* Error                              *)
-      | _ => error ("error: unknown OCL-term in in ocl2holocl") 
+      | _ => error ("error: unknown OCL-term in in ocl2string") 
 end
 end
