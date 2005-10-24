@@ -88,8 +88,11 @@ datatype Classifier =
  
 (* convert an association end into the corresponding collection type *)
 fun assoc_to_attr_type {name,aend_type,multiplicity,ordered,visibility} =
-    if ordered then Rep_OclType.Sequence aend_type (* OrderedSet? *)
-    else Rep_OclType.Set aend_type
+    case multiplicity of 
+	[(0,1)] => aend_type
+      | [(1,1)] => aend_type
+      | _ =>if ordered then Rep_OclType.Sequence aend_type (* OrderedSet? *)
+	    else Rep_OclType.Set aend_type
     
 (* convert an association end into an attribute of the *)
 (* corresponding collection type                       *)
@@ -140,8 +143,21 @@ fun range_to_inv cls_name aend (a,b) =
 (*    FIXME: 2. is not implemented yet...                        *)
 fun assoc_to_inv cls_name (aend:associationend) =
     let val inv_name = "multiplicity_constraint_for_association_end_"^(#name aend)
-	val range_constraints = map (range_to_inv cls_name aend) 
-				    (#multiplicity aend)
+	val range_constraints = case (#multiplicity aend) of
+				    [(0,1)] => let
+					val attr_name = cls_name@[#name aend]
+					val attr_type = assoc_to_attr_type aend
+					val cls       = Rep_OclType.Classifier cls_name
+					val self      = Rep_OclTerm.Variable ("self",cls)
+					val attribute = Rep_OclTerm.AttributeCall (self,cls,attr_name,attr_type)
+				    in
+					[Rep_OclTerm.OperationCall (attribute,attr_type,
+								    ["oclIsDefined"],[],
+								    Rep_OclType.Boolean)]
+				    end
+				  | [(1,1)] => [] (* FIXME: should be aend->OclIsDefined() *)
+				  | _ =>  map (range_to_inv cls_name aend) 
+					      (#multiplicity aend)
 	fun ocl_or (x,y) = 
 	    Rep_OclTerm.OperationCall (x,Rep_OclType.Boolean,
 				    ["oclLib","Boolean","or"],
