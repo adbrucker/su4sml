@@ -155,12 +155,15 @@ fun transform_aend t ({xmiid,name,ordering,multiplicity,participant_id,
 
 val filter_named_aends  = List.filter (fn {name=SOME _,...}:XMI.AssociationEnd => true
 					| _ => false)
-	
+
+(* FIX *)	
+fun transform_activitygraph t act = Rep_StateMachine.SM_mk {top = "???????????????????????", transition = nil }
+
 fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 					   generalizations,attributes,operations,
 					   invariant,stereotype,clientDependency,
 					   supplierDependency,taggedValue,
-					   classifierInState}) =
+					   classifierInState,activity_graphs}) =
     let val parents = map ((find_classifier_type t) o (find_parent t)) 
 			  generalizations 
 	val filtered_parents = filter (fn x => x <> Rep_OclType.OclAny) parents
@@ -177,7 +180,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 					      ((filter_named_aends (find_aends t xmiid))), 
 			stereotypes = map (find_stereotype t) stereotype, 
 			interfaces = nil, (* FIX *)
-                        activity_graphs = nil,
+                        activity_graphs = map (transform_activitygraph t) activity_graphs, 
 			thyname = NONE}
     end
   | transform_classifier t (XMI.AssociationClass {xmiid,name,isActive,visibility,

@@ -25,10 +25,5 @@
 structure Rep : REP = 
 struct
 
-open Rep_Core Rep_StateMachine Rep_ActivityGraph Rep_SecureUML
-type Model = { classifiers:      Classifier list,
-	       permissions:      Permission list,
-	       role_inheritance: RoleHierarchy 
-				 }
-				 
+open Rep_Core Rep_StateMachine Rep_ActivityGraph
 end

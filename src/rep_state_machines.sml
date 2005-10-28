@@ -51,7 +51,7 @@ datatype Event  = SignalEvent  of Parameter list
 				 (*   | ChangeEvent  of Parameter list  *)
 				 
 				 
-datatype Transition   = T_ml of  {source  : StateVertex_Id,
+datatype Transition   = T_mk of  {source  : StateVertex_Id,
                                   target  : StateVertex_Id,
 			 	  guard   : Guard  option,
 				  trigger : Event  option,

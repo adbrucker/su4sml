@@ -37,8 +37,8 @@ end
 
 structure XMI_StateMachines =
 struct
-open XMI_Core XMI_CommonBehavior
-
+open XMI_ExtensionMechanisms XMI_CommonBehavior
+exception IllFormed of string
 
 type     StateVertex_Id = string
 type     Transition_Id  = string

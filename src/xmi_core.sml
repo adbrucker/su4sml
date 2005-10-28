@@ -25,124 +25,6 @@
 
 
 
-structure XMI_DataTypes =
-(* from UML 1.5 Core Overview: ----------------------------------------------
- * The Data Types package is the subpackage that specifies the different data 
- * types that are used to define UML. 
- * 
- * the following constructs are currently not represented: ArgListsExpression,
- * Boolean, BooleanExpression, CallConcurrencyKind, Expression, Geometry, 
- * Integer, LocationReference, Mapping, MappingExpression, Name, 
- * ProcedureExpression, PseudostateKind, ScopeKind, String, TimeExpression, 
- * TypeExpression, UnlimitedInteger
- * --------------------------------------------------------------------------*)
-struct
-open XMI_OCL
-
-datatype AggregationKind        = NoAggregation | Aggregate | Composite
-
-datatype ScopeKind = InstanceScope | ClassifierScope
-
-(* from UML 1.5 Core: --------------------------------------------------------
- * ChangeableKind defines an enumeration that denotes how an AttributeLink or 
- * LinkEnd may be modified.
- * --------------------------------------------------------------------------*)
-datatype ChangeableKind = Changeable (* No restrictions on modification.     *)
-			| Frozen     (* The value may not be changed from the*)
-			             (* source end after the creation and    *)
-			             (* initialization of the source object. *)
-			             (* Operations on the other end may      *)
-			             (* change a value.                      *)
-			| AddOnly    (* If the multiplicity is not fixed,    *)
-                                     (* values may be added at any time from *)
-                                     (* the source object, but once created a*)
-                                     (* value may not be removed from the    *)
-                                     (* source end. Operations on the other  *)
-                                     (* end may change a value.              *)
-
-(* from UML 1.5 Data Types: --------------------------------------------------
- * a Multiplicity [consists of a list of MultiplicityRanges and] defines a 
- * non-empty set of non-negative integers. 
- * a MultiplicityRange defines a range of integers. The upper bound of the 
- * range cannot be below the lower bound. The lower bound must be a 
- * nonnegative integer. The upper bound must be a nonnegative integer or the 
- * special value unlimited, which indicates there is no upper bound on the 
- * range. 
- * --------------------------------------------------------------------------*)
-(* provisionally, we denote the upper bound 'unlimited' by "-1"              *)
-type Multiplicity = (int * int) list
-
-datatype OrderingKind           = Unordered | Ordered 
-datatype ParameterDirectionKind = In | Out | Inout | Return
-
-
-(* from UML 1.5 Core: --------------------------------------------------------
- * VisibilityKind defines an enumeration that denotes how the element to which 
- * it refers is seen outside the enclosing name space.
- * --------------------------------------------------------------------------*)
-datatype VisibilityKind = public (* Other elements may see and use the target*)
-				(* element.                                  *)
-                    | private   (* Only the source element may see and use   *)
-                                (* the target element.                       *)
-                    | protected (* Descendants of the source element may see *)
-                                (* and use the target element.               *)
-                    | package   (* Elements declared in the same package as  *)
-                                (* the target element may see and use the    *)
-                                (* target                                    *)
-
-
-end
-
-
-structure XMI_ExtensionMechanisms =
-(* from UML 1.5 Extension Mechanisms Overview:--------------------------------
- * The Extension Mechanisms package is the subpackage that specifies how 
- * specific UML model elements are customized and extended with new semantics 
- * by using stereotypes, constraints, tag definitions, and tagged values. 
- * A coherent set of such extensions, defined for specific purposes, 
- * constitutes a UML profile.
- * --------------------------------------------------------------------------*)
-struct
-open XMI_DataTypes
-                    
-(* from UML 1.5 Extension Mechanisms:-----------------------------------------
- * The stereotype concept provides a way of branding (classifying) model 
- * elements so that they behave in some respects as if they were instances of 
- * new virtual metamodel constructs. These model elements have the same 
- * structure (attributes, associations, operations) as similar non-stereotyped 
- * model elements of the same kind. The stereotype may specify additional 
- * constraints and tag definitions that apply to model elements. In addition, 
- * a stereotype may be used to indicate a difference in meaning or usage 
- * between two model elements with identical structure.
- * --------------------------------------------------------------------------*)
-type Stereotype = {xmiid: string, 
-		   name: string,
-		   (* extendedElement: string list        *)
-		   (* definedTag: string list             *)
-		   stereotypeConstraint: Constraint option,
-		   baseClass: string option}
-
-(* from UML 1.5 Extension Mechanisms:-----------------------------------------
- * A tag definition specifies the tagged values that can be attached to a kind 
- * of model element.
- * --------------------------------------------------------------------------*)
-type TagDefinition = {xmiid: string,
-		      name: string,
-		      multiplicity: Multiplicity}
-
-(* from UML 1.5 Extension Mechanisms:-----------------------------------------
- * A tagged value allows information to be attached to any model element in 
- * conformance with its tag definition. Although a tagged value, being an 
- * instance of a kind of ModelElement, automatically inherits the name 
- * attribute, the name that is actually used in the tagged value is the name 
- * of the associated tag definition. 
- * --------------------------------------------------------------------------*)
-type TaggedValue = {xmiid: string,
-		    dataValue: string, (* the value of the tag *)
-		    tag_type: string   (* xmi.idref to TagDefinition *)
-		    }
-end
-
 
 
 structure XMI_Core = 
@@ -171,7 +53,7 @@ structure XMI_Core =
  *    TemplateArgument, TemplateParameter, Usage
  * --------------------------------------------------------------------------*)
 struct
-open XMI_ExtensionMechanisms
+open XMI_ExtensionMechanisms XMI_ActivityGraphs
 
 
 (* UML distinguishes between different kinds of dependencies:         *)
@@ -221,18 +103,7 @@ type Attribute = { xmiid : string,
 				}
 
 
-(* from UML 1.5 Core: --------------------------------------------------------
- * A parameter is an unbound variable that can be changed, passed, or 
- * returned. A parameter may include a name, type, and direction of 
- * communication. Parameters are used in the specification of operations, 
- * messages and events, templates, etc. 
- * not supported: attribute defaultValue 
- * --------------------------------------------------------------------------*)
-type Parameter = { xmiid : string,
-		   name : string,
-		   kind : ParameterDirectionKind,
-		   (* defaultValue : ..., *)
-		   type_id : string (* xmi.idref to type *)}
+
 		 
 (* fom UML 1.5 Core: ---------------------------------------------------------	    
  * An operation is a service that can be requested from an object to effect 
@@ -288,7 +159,8 @@ type Class = { xmiid : string,
 	       clientDependency: string list,
 	       supplierDependency: string list,
 	       (* xmi.id's of contained ClassifierInStates: *)
-	       classifierInState: string list }
+	       classifierInState: string list,
+	       activity_graphs: ActivityGraph list}
 
 (* from UML 1.5 Core: --------------------------------------------------------
  * A data type is a type whose values have no identity (i.e., they are 

@@ -49,9 +49,11 @@ OS.FileSys.chDir "../../../src";
      (although the supported Poseidon is apparantly based
      on Version 1.4 or something ...).  *)
 use "xmi_ocl.sml"; 
-use "xmi_core.sml"; 
+use "xmi_datatypes.sml";
+use "xmi_extension_mechanisms.sml";
 use "xmi_state_machines.sml"; 
 use "xmi_activity_graphs.sml"; 
+use "xmi_core.sml"; 
 use "xmi.sml"; 
 
 
@@ -70,16 +72,17 @@ use "rep_activity_graphs.sig";
 use "rep_activity_graphs.sml";
 use "rep_core.sig";
 use "rep_core.sml";
-use "rep_secureuml.sig";
-use "rep_secureuml.sml";
+(* use "rep_secureuml.sig"; *)
+(* use "rep_secureuml.sml"; *)
 use "rep.sig";
 use "rep.sml";
 
 
 
 
+
 (* support functions *)
-use "ocl2string.sml";
+(* use "ocl2string.sml";*)
 
 (* ****************************************************** *)
 (* Main Conversion Processes  *)
@@ -90,3 +93,10 @@ use "xml2xmi.sml";        (* conversion XML to XMI *);
 use "xmi_idtable.sml";    (* auxiliary table to store and dereference xmi.id's *)
 use "xmi2rep.sml";        (* conversion XMI to Rep *)
 
+
+(* use "mds.sig";
+use "component_uml.sml";
+use "secure_uml.sml";
+use "rep_secure.sig";
+use "rep_secure.sml";
+*)

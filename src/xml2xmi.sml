@@ -158,6 +158,19 @@ fun getKind atts =
 		  | "return" => XMI.Return
 		  | _ => raise IllFormed ("in getKind: found unexpected attribute value "^att)
     end 
+
+fun getPseudoStateKindAttr atts = 
+    let val att = getStringAtt "kind" atts 
+    in 	(case att of "initial"  => XMI.initial
+		   | "deep"     => XMI.deep
+		   | "shallow"  => XMI.shallow
+		   | "join"     => XMI.join
+		   | "fork"     => XMI.fork
+		   | "junction" => XMI.junction
+		   | "choice"   => XMI.choice
+		   | _          => raise IllFormed ("in getPseudoStateKind: found unexpected attribute value "^att))
+    end
+
 	
 fun getRange atts = (getIntAtt "lower" atts, getIntAtt "upper" atts)
 
@@ -165,6 +178,7 @@ fun mkMultiplicity tree = map (getRange o XmlTree.attributes_of)
 			   (((XmlTree.filter "UML:MultiplicityRange") o 
 			     (XmlTree.skip   "UML:Multiplicity.range") o hd o 
 			     (XmlTree.skip   "UML:Multiplicity")) tree)
+
 
 fun mkAssociationEnd tree = 
     let fun f atts trees =  
@@ -515,218 +529,12 @@ fun mkTagDefinition tree =
 					     (XmlTree.follow "UML:TagDefinition.multiplicity")) trees }
     in XmlTree.apply_on "UML:TagDefinition" f tree
     end
-	    
-fun mkClass atts trees 
-  = XMI.Class { xmiid           = getXmiId atts,
-	    name            = getName atts,
-	    isActive        = getBoolAtt "isActive" atts,
-	    visibility      = getVisibility atts,
-	    isLeaf          = getBoolAtt "isLeaf" atts,
-	    generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
-				  (XmlTree.follow_all 
-				       "UML:GeneralizableElement.generalization" 
-				       trees)),
-	    attributes      = (map mkAttribute 
-				   ((XmlTree.filter "UML:Attribute") 
-					(XmlTree.follow "UML:Classifier.feature"
-							trees))),
-	    operations      = (map mkOperation 
-				   ((XmlTree.filter "UML:Operation") 
-					(XmlTree.follow "UML:Classifier.feature"
-							trees))),
-	    invariant       = (map (getXmiIdref o XmlTree.attributes_of)
-				   (XmlTree.follow "UML:ModelElement.constraint" 
-						   trees)),
-	    stereotype      = (map (getXmiIdref o XmlTree.attributes_of) 
-				   (XmlTree.follow "UML:ModelElement.stereotype" 
-						   trees)),
-	    taggedValue   = (map mkTaggedValue 
-				 (XmlTree.follow "UML:ModelElement.taggedValue" 
-						 trees)),
-	    clientDependency = (map (getXmiIdref o XmlTree.attributes_of)
-				    (XmlTree.follow "UML:ModelElement.clientDependency"
-						    trees)),
-	    supplierDependency = (map (getXmiIdref o XmlTree.attributes_of)
-				      (XmlTree.follow "UML:ModelElement.supplierDependency"
-						      trees)),
-	    classifierInState = (map (getXmiId o XmlTree.attributes_of)
-				     (XmlTree.filter "UML:ClassifierInState"
-						     (XmlTree.follow "UML:Namespace.ownedElement"
-								     trees)))}
-
-fun mkAssociationClass atts trees 
-  = XMI.AssociationClass { xmiid           = getXmiId atts,
-			   name            = getName atts,
-			   isActive        = getBoolAtt "isActive" atts,
-			   visibility      = getVisibility atts,
-			   isLeaf          = getBoolAtt "isLeaf" atts,
-	    generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
-				   (XmlTree.follow_all 
-					"UML:GeneralizableElement.generalization" 
-					trees)),
-	    attributes      = (map mkAttribute 
-				   ((XmlTree.filter "UML:Attribute") 
-					(XmlTree.follow "UML:Classifier.feature"
-							trees))),
-	    operations      = (map mkOperation 
-				   ((XmlTree.filter "UML:Operation") 
-					(XmlTree.follow "UML:Classifier.feature"
-							trees))),
-	    invariant       = (map (getXmiIdref o XmlTree.attributes_of)
-				   (XmlTree.follow "UML:ModelElement.constraint" 
-						   trees)),
-	    stereotype      = (map (getXmiIdref o XmlTree.attributes_of) 
-				   (XmlTree.follow "UML:ModelElement.stereotype" 
-						   trees)),
-	    taggedValue   = (map mkTaggedValue 
-				 (XmlTree.follow "UML:ModelElement.taggedValue" 
-						 trees)),
-	    clientDependency = (map (getXmiIdref o XmlTree.attributes_of)
-				    (XmlTree.follow "UML:ModelElement.clientDependency"
-						    trees)),
-	    supplierDependency = (map (getXmiIdref o XmlTree.attributes_of)
-				      (XmlTree.follow "UML:ModelElement.supplierDependency"
-						      trees)),
-	    connection = (map mkAssociationEnd (XmlTree.follow "UML:Association.connection" 
-							       trees))}
-
-
-fun mkPrimitive atts trees 
-  = XMI.Primitive { xmiid      = getXmiId atts,
-		    name       = getName atts,
-		    operations = (map mkOperation 
-				      ((XmlTree.filter "UML:Operation") 
-					   (XmlTree.follow "UML:Classifier.feature"
-							   trees))),
-		    generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
-					   (XmlTree.follow_all 
-						"UML:GeneralizableElement.generalization" 
-						trees)),
-		    invariant = (map (getXmiIdref o XmlTree.attributes_of)
-				     (XmlTree.follow "UML:ModelElement.constraint" 
-						     trees))
-				     }
-    handle XmlTree.IllFormed msg => raise IllFormed ("in mkPrimitive: "^msg)
-
-fun mkInterface atts trees 
-  = XMI.Interface { xmiid      = getXmiId atts,
-		    name       = getName atts,
-		    operations = (map mkOperation 
-				      ((XmlTree.filter "UML:Operation") 
-					   (XmlTree.follow "UML:Classifier.feature"
-							   trees))),
-		    generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
-					   (XmlTree.follow_all 
-						"UML:GeneralizableElement.generalization" 
-						trees)),
-		    invariant = (map (getXmiIdref o XmlTree.attributes_of)
-				     (XmlTree.follow "UML:ModelElement.constraint" 
-						     trees)),
-		    clientDependency = (map (getXmiIdref o XmlTree.attributes_of)
-					    (XmlTree.follow "UML:ModelElement.clientDependency"
-							    trees)),
-		    supplierDependency = (map (getXmiIdref o XmlTree.attributes_of)
-					      (XmlTree.follow "UML:ModelElement.supplierDependency"
-							      trees))
-		    }
-    handle XmlTree.IllFormed msg => raise IllFormed ("in mkPrimitive: "^msg)
-					  
-fun mkEnumeration atts trees 
-  = XMI.Enumeration { xmiid      = getXmiId atts,
-		      name       = getName atts,
-		      operations = (map mkOperation 
-					((XmlTree.filter "UML:Operation") 
-					     (XmlTree.follow "UML:Classifier.feature"
-							     trees))),
-		      generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
-					     (XmlTree.follow_all 
-						  "UML:GeneralizableElement.generalization" 
-						  trees)),
-		      literals = nil, (* FIX *)
-		      invariant = (map (getXmiIdref o XmlTree.attributes_of)
-				       (XmlTree.follow "UML:ModelElement.constraint" 
-						       trees)
-				       )}
-		      handle XmlTree.IllFormed msg => raise IllFormed ("in mkEnumeration: "^msg)
-							    
-fun mkVoid atts trees = XMI.Void { xmiid = getXmiId atts, 
-				       name  = getName atts }
-    handle XmlTree.IllFormed msg => raise IllFormed ("in mkVoid: "^msg)
-
-
-fun mkGenericCollection atts trees = 
-    { xmiid      = getXmiId atts,
-      name       = getName atts,
-      operations = (map mkOperation 
-			((XmlTree.filter "UML:Operation") 
-			     (XmlTree.follow "UML:Classifier.feature"
-					     trees))),
-      generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
-			     (XmlTree.follow_all 
-				  "UML:GeneralizableElement.generalization" 
-				  trees)),
-      elementtype = ((getXmiIdref o XmlTree.attributes_of o hd) 
-			 (XmlTree.follow 
-			      "OCL.Types.CollectionType.elementType" 
-			      trees))
-      }
-    handle XmlTree.IllFormed msg => raise IllFormed ("in mkGenericCollection: "^msg)
-
-				  
-fun mkCollection atts trees = XMI.Collection (mkGenericCollection atts trees)
-fun mkSequence   atts trees = XMI.Sequence   (mkGenericCollection atts trees)
-fun mkSet        atts trees = XMI.Set        (mkGenericCollection atts trees)
-fun mkBag        atts trees = XMI.Bag        (mkGenericCollection atts trees)
-fun mkOrderedSet atts trees = XMI.OrderedSet (mkGenericCollection atts trees)
-
-fun mkStereotype tree = 
-    let fun f atts trees =  { xmiid = getXmiId atts,
-			      name = getName atts,
-			      baseClass = NONE, (*FIX*)
-			      stereotypeConstraint = NONE (*FIX*)
-			  }
-    in XmlTree.apply_on "UML:Stereotype" f tree
-       handle XmlTree.IllFormed msg => raise IllFormed ("in mkStereotype: "^msg)
-    end 
 
 fun mkStereotypeR tree = 
     let fun f atts trees =   getXmiIdref atts
     in XmlTree.apply_on "UML:Stereotype" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkStereotype: "^msg)
     end 
-
-fun mkClassifier tree = 
-    let val elem  = XmlTree.tagname_of    tree
-	val atts  = XmlTree.attributes_of tree
-	val trees = XmlTree.node_children_of    tree
-    in 
-	case elem of "UML:Class"                     => mkClass atts trees
-		   | "UML:AssociationClass"          => mkAssociationClass atts trees
-		   | "UML:Interface"                 => mkInterface atts trees
-		   | "UML:DataType"                  => mkPrimitive atts trees
-		   | "UML:Primitive"                 => mkPrimitive atts trees
-		   | "UML:Enumeration"               => mkEnumeration atts trees
-		   | "UML15OCL.Types.VoidType"       => mkVoid atts trees
-		   | "UML15OCL.Types.CollectionType" => mkCollection atts trees
-		   | "UML15OCL.Types.SequenceType"   => mkSequence atts trees
-		   | "UML15OCL.Types.SetType"        => mkSet atts trees
-		   | "UML15OCL.Types.BagType"        => mkBag atts trees
-		   | "UML15OCL.Types.OrderedSetType" => mkOrderedSet atts trees
-		   | _ => raise IllFormed ("in mkClassifier: found unexpected element "^elem)
-    end
-
-
-    
-fun mkGeneralization tree = 
-    let fun f atts trees =
-	{ xmiid     = getXmiId atts,
-	  child_id  = (getXmiIdref o XmlTree.attributes_of o hd o
-		       (XmlTree.follow "UML:Generalization.child")) trees, 
-	  parent_id = (getXmiIdref o XmlTree.attributes_of o hd o 
-		       (XmlTree.follow "UML:Generalization.parent")) trees }
-    in XmlTree.apply_on "UML:Generalization" f tree
-       handle XmlTree.IllFormed msg => raise IllFormed ("in mkGeneralization: "^msg)
-    end
 
 fun mkProcedure tree =
     let fun get_AttrL x = (XmlTree.attributes_of o (XmlTree.find "UML:ActionExpression") o
@@ -743,6 +551,7 @@ fun mkProcedure tree =
        (* POSEIDON specific ! According to UML 1.5, should be: "UML:Method" *)
     end
 
+
 fun mkGuard tree = 
     let val getExpr = XmlTree.attributes_of o (XmlTree.find "UML:BooleanExpression") o
                       XmlTree.node_children_of o (XmlTree.find "UML:Guard.expression") 
@@ -756,8 +565,6 @@ fun mkGuard tree =
                                expression      = nil}
     in   XmlTree.apply_on "UML:Guard" f tree 
     end
-
-
 
 
 fun mkTransition tree = 
@@ -786,19 +593,6 @@ fun mkTransition tree =
 		            effect = NONE  (* TO BE DONE *),
                             taggedValue = getTagVal trees}
     in XmlTree.apply_on "UML:Transition" f tree 
-    end
-
-
-fun getPseudoStateKindAttr atts = 
-    let val att = getStringAtt "kind" atts 
-    in 	(case att of "initial"  => XMI.initial
-		   | "deep"     => XMI.deep
-		   | "shallow"  => XMI.shallow
-		   | "join"     => XMI.join
-		   | "fork"     => XMI.fork
-		   | "junction" => XMI.junction
-		   | "choice"   => XMI.choice
-		   | _          => raise IllFormed ("in getPseudoStateKind: found unexpected attribute value "^att))
     end
 
 
@@ -941,6 +735,9 @@ and mkStateMachine tree =
     end;
 
 
+
+
+
 fun mkActivityGraph tree =
     let fun f atts trees = XMI.mk_ActivityGraph 
                            {isSpecification = getBoolAtt "isSpecification" atts,
@@ -959,6 +756,230 @@ fun mkActivityGraph tree =
 
     in  XmlTree.apply_on "UML:ActivityGraph" f tree
     end;
+	    
+fun mkClass atts trees 
+  = XMI.Class { xmiid           = getXmiId atts,
+	    name            = getName atts,
+	    isActive        = getBoolAtt "isActive" atts,
+	    visibility      = getVisibility atts,
+	    isLeaf          = getBoolAtt "isLeaf" atts,
+	    generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
+				  (XmlTree.follow_all 
+				       "UML:GeneralizableElement.generalization" 
+				       trees)),
+	    attributes      = (map mkAttribute 
+				   ((XmlTree.filter "UML:Attribute") 
+					(XmlTree.follow "UML:Classifier.feature"
+							trees))),
+	    operations      = (map mkOperation 
+				   ((XmlTree.filter "UML:Operation") 
+					(XmlTree.follow "UML:Classifier.feature"
+							trees))),
+	    invariant       = (map (getXmiIdref o XmlTree.attributes_of)
+				   (XmlTree.follow "UML:ModelElement.constraint" 
+						   trees)),
+	    stereotype      = (map (getXmiIdref o XmlTree.attributes_of) 
+				   (XmlTree.follow "UML:ModelElement.stereotype" 
+						   trees)),
+	    taggedValue   = (map mkTaggedValue 
+				 (XmlTree.follow "UML:ModelElement.taggedValue" 
+						 trees)),
+	    clientDependency = (map (getXmiIdref o XmlTree.attributes_of)
+				    (XmlTree.follow "UML:ModelElement.clientDependency"
+						    trees)),
+	    supplierDependency = (map (getXmiIdref o XmlTree.attributes_of)
+				      (XmlTree.follow "UML:ModelElement.supplierDependency"
+						      trees)),
+	    classifierInState = (map (getXmiId o XmlTree.attributes_of)
+				     (XmlTree.filter "UML:ClassifierInState"
+						     (XmlTree.follow "UML:Namespace.ownedElement"
+								     trees))),
+	    activity_graphs = (map mkActivityGraph (XmlTree.filter "UML:ActivityGraph"
+				   (XmlTree.follow "UML:Namespace.ownedElement" trees))) }
+
+fun mkAssociationClass atts trees 
+  = XMI.AssociationClass { xmiid           = getXmiId atts,
+			   name            = getName atts,
+			   isActive        = getBoolAtt "isActive" atts,
+			   visibility      = getVisibility atts,
+			   isLeaf          = getBoolAtt "isLeaf" atts,
+	    generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
+				   (XmlTree.follow_all 
+					"UML:GeneralizableElement.generalization" 
+					trees)),
+	    attributes      = (map mkAttribute 
+				   ((XmlTree.filter "UML:Attribute") 
+					(XmlTree.follow "UML:Classifier.feature"
+							trees))),
+	    operations      = (map mkOperation 
+				   ((XmlTree.filter "UML:Operation") 
+					(XmlTree.follow "UML:Classifier.feature"
+							trees))),
+	    invariant       = (map (getXmiIdref o XmlTree.attributes_of)
+				   (XmlTree.follow "UML:ModelElement.constraint" 
+						   trees)),
+	    stereotype      = (map (getXmiIdref o XmlTree.attributes_of) 
+				   (XmlTree.follow "UML:ModelElement.stereotype" 
+						   trees)),
+	    taggedValue   = (map mkTaggedValue 
+				 (XmlTree.follow "UML:ModelElement.taggedValue" 
+						 trees)),
+	    clientDependency = (map (getXmiIdref o XmlTree.attributes_of)
+				    (XmlTree.follow "UML:ModelElement.clientDependency"
+						    trees)),
+	    supplierDependency = (map (getXmiIdref o XmlTree.attributes_of)
+				      (XmlTree.follow "UML:ModelElement.supplierDependency"
+						      trees)),
+	    connection = (map mkAssociationEnd (XmlTree.follow "UML:Association.connection" 
+							       trees))}
+
+
+fun mkPrimitive atts trees 
+  = XMI.Primitive { xmiid      = getXmiId atts,
+		    name       = getName atts,
+		    operations = (map mkOperation 
+				      ((XmlTree.filter "UML:Operation") 
+					   (XmlTree.follow "UML:Classifier.feature"
+							   trees))),
+		    generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
+					   (XmlTree.follow_all 
+						"UML:GeneralizableElement.generalization" 
+						trees)),
+		    invariant = (map (getXmiIdref o XmlTree.attributes_of)
+				     (XmlTree.follow "UML:ModelElement.constraint" 
+						     trees))
+				     }
+    handle XmlTree.IllFormed msg => raise IllFormed ("in mkPrimitive: "^msg)
+
+fun mkInterface atts trees 
+  = XMI.Interface { xmiid      = getXmiId atts,
+		    name       = getName atts,
+		    operations = (map mkOperation 
+				      ((XmlTree.filter "UML:Operation") 
+					   (XmlTree.follow "UML:Classifier.feature"
+							   trees))),
+		    generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
+					   (XmlTree.follow_all 
+						"UML:GeneralizableElement.generalization" 
+						trees)),
+		    invariant = (map (getXmiIdref o XmlTree.attributes_of)
+				     (XmlTree.follow "UML:ModelElement.constraint" 
+						     trees)),
+		    clientDependency = (map (getXmiIdref o XmlTree.attributes_of)
+					    (XmlTree.follow "UML:ModelElement.clientDependency"
+							    trees)),
+		    supplierDependency = (map (getXmiIdref o XmlTree.attributes_of)
+					      (XmlTree.follow "UML:ModelElement.supplierDependency"
+							      trees))
+		    }
+    handle XmlTree.IllFormed msg => raise IllFormed ("in mkPrimitive: "^msg)
+					  
+fun mkEnumeration atts trees 
+  = XMI.Enumeration { xmiid      = getXmiId atts,
+		      name       = getName atts,
+		      operations = (map mkOperation 
+					((XmlTree.filter "UML:Operation") 
+					     (XmlTree.follow "UML:Classifier.feature"
+							     trees))),
+		      generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
+					     (XmlTree.follow_all 
+						  "UML:GeneralizableElement.generalization" 
+						  trees)),
+		      literals = nil, (* FIX *)
+		      invariant = (map (getXmiIdref o XmlTree.attributes_of)
+				       (XmlTree.follow "UML:ModelElement.constraint" 
+						       trees)
+				       )}
+		      handle XmlTree.IllFormed msg => raise IllFormed ("in mkEnumeration: "^msg)
+							    
+fun mkVoid atts trees = XMI.Void { xmiid = getXmiId atts, 
+				       name  = getName atts }
+    handle XmlTree.IllFormed msg => raise IllFormed ("in mkVoid: "^msg)
+
+
+fun mkGenericCollection atts trees = 
+    { xmiid      = getXmiId atts,
+      name       = getName atts,
+      operations = (map mkOperation 
+			((XmlTree.filter "UML:Operation") 
+			     (XmlTree.follow "UML:Classifier.feature"
+					     trees))),
+      generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
+			     (XmlTree.follow_all 
+				  "UML:GeneralizableElement.generalization" 
+				  trees)),
+      elementtype = ((getXmiIdref o XmlTree.attributes_of o hd) 
+			 (XmlTree.follow 
+			      "OCL.Types.CollectionType.elementType" 
+			      trees))
+      }
+    handle XmlTree.IllFormed msg => raise IllFormed ("in mkGenericCollection: "^msg)
+
+				  
+fun mkCollection atts trees = XMI.Collection (mkGenericCollection atts trees)
+fun mkSequence   atts trees = XMI.Sequence   (mkGenericCollection atts trees)
+fun mkSet        atts trees = XMI.Set        (mkGenericCollection atts trees)
+fun mkBag        atts trees = XMI.Bag        (mkGenericCollection atts trees)
+fun mkOrderedSet atts trees = XMI.OrderedSet (mkGenericCollection atts trees)
+
+fun mkStereotype tree = 
+    let fun f atts trees =  { xmiid = getXmiId atts,
+			      name = getName atts,
+			      baseClass = NONE, (*FIX*)
+			      stereotypeConstraint = NONE (*FIX*)
+			  }
+    in XmlTree.apply_on "UML:Stereotype" f tree
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkStereotype: "^msg)
+    end 
+
+
+fun mkClassifier tree = 
+    let val elem  = XmlTree.tagname_of    tree
+	val atts  = XmlTree.attributes_of tree
+	val trees = XmlTree.node_children_of    tree
+    in 
+	case elem of "UML:Class"                     => mkClass atts trees
+		   | "UML:AssociationClass"          => mkAssociationClass atts trees
+		   | "UML:Interface"                 => mkInterface atts trees
+		   | "UML:DataType"                  => mkPrimitive atts trees
+		   | "UML:Primitive"                 => mkPrimitive atts trees
+		   | "UML:Enumeration"               => mkEnumeration atts trees
+		   | "UML15OCL.Types.VoidType"       => mkVoid atts trees
+		   | "UML15OCL.Types.CollectionType" => mkCollection atts trees
+		   | "UML15OCL.Types.SequenceType"   => mkSequence atts trees
+		   | "UML15OCL.Types.SetType"        => mkSet atts trees
+		   | "UML15OCL.Types.BagType"        => mkBag atts trees
+		   | "UML15OCL.Types.OrderedSetType" => mkOrderedSet atts trees
+		   | _ => raise IllFormed ("in mkClassifier: found unexpected element "^elem)
+    end
+
+
+    
+fun mkGeneralization tree = 
+    let fun f atts trees =
+	{ xmiid     = getXmiId atts,
+	  child_id  = (getXmiIdref o XmlTree.attributes_of o hd o
+		       (XmlTree.follow "UML:Generalization.child")) trees, 
+	  parent_id = (getXmiIdref o XmlTree.attributes_of o hd o 
+		       (XmlTree.follow "UML:Generalization.parent")) trees }
+    in XmlTree.apply_on "UML:Generalization" f tree
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkGeneralization: "^msg)
+    end
+
+
+(* TODO:
+
+fun mkSignalEvent
+
+fun mkCallEvent
+
+fun mkEvent
+
+fun  filterEvents
+
+*)
+
+
 
 
 
@@ -994,7 +1015,8 @@ fun mkPackage tree =
 						   direct_childs)), 
 			       taggedValue = (map mkTaggedValue 
 						  (XmlTree.follow "UML:ModelElement.taggedValue" 
-								  direct_childs))
+								  direct_childs)),
+			       events = nil (* map mkEvent (filterEvents trees)*)
                               }
 	 end
      else raise IllFormed "did not find a UML:Model or UML: Package")

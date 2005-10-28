@@ -27,8 +27,5 @@ sig
 
 include REP_CORE
 include REP_ACTIVITY_GRAPH 
-include REP_SECUREUML
-
-type Model
 				 
 end
