@@ -38,9 +38,6 @@ datatype Action = create
 		| destroy
 		| sequence
 
-datatype StateMachine = SM_mk of {top : StateVertex_Id,
-                                  transition : Transition_Id list}
-
 datatype Guard        = G_mk of  {expression : Rep_OclTerm.OclTerm}
 
 type     Parameter    = Rep_OclType.OclType
@@ -51,7 +48,8 @@ datatype Event  = SignalEvent  of Parameter list
 				 (*   | ChangeEvent  of Parameter list  *)
 				 
 				 
-datatype Transition   = T_mk of  {source  : StateVertex_Id,
+datatype Transition   = T_mk of  {trans_id : Transition_Id,
+				  source  : StateVertex_Id,
                                   target  : StateVertex_Id,
 			 	  guard   : Guard  option,
 				  trigger : Event  option,
@@ -60,49 +58,52 @@ datatype Transition   = T_mk of  {source  : StateVertex_Id,
 			         }
 				 
 				   
-datatype PseudoStateVars = initial | (* deep | shallow | *)  
-                           join | fork | 
-                           junction | choice 
+type PseudoStateVars = XMI_StateMachines.PseudoStateVars
 				  
 datatype StateVertex  = 
-         State_CompositState 
-	 of {outgoing     : Transition_Id list,
+         State_CompositeState 
+	 of {state_id     : StateVertex_Id,
+	     outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list, 
-	     container    : StateVertex_Id option,
-	     subvertex    : StateVertex_Id list,
-             isConcurrent : bool,
-             submachine   : StateMachine * 
+	     subvertex    : StateVertex list,
+             isConcurrent : bool
+             (*submachine   : StateMachine * 
                             {isDynamic : bool
                              (* + dynamicArguments 
-                                + dynamicMultiplicity *)} option}
+                                + dynamicMultiplicity *)} option *)}
                             (* variant for Subactivity State *)
        | State_SimpleState
-	 of {outgoing     : Transition_Id list,
-	     incoming     : Transition_Id list,
-	     container    : StateVertex_Id option}
+	 of {state_id     : StateVertex_Id,
+	     outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list}
        | SimpleState_ActionState (* from ActivityGraphs *)
-         of {isDynamic    : bool 
+         of {state_id     : StateVertex_Id,
+	     outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list,
+	     isDynamic    : bool 
              (* + dynamicArguments + dynamicMultiplicity *)}
        | SimpleState_ObjectflowState (* from ActivityGraphs *)
-         of {isSynch      : bool,
+         of {state_id     : StateVertex_Id,
+	     outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list,
+	     isSynch      : bool,
              parameter    : Parameter list,
              types        : Rep_OclType.Path list (* Classifier_Id *)}
        | State_FinalState
-	 of {outgoing     : Transition_Id list,
-	     incoming     : Transition_Id list,
-	     container    : StateVertex_Id option}
+	 of {state_id     : StateVertex_Id,
+	     incoming     : Transition_Id list}
        | PseudoState
-	 of {kind         : PseudoStateVars,
+	 of {state_id     : StateVertex_Id,
+	     kind         : PseudoStateVars,
              outgoing     : Transition_Id list,
-	     incoming     : Transition_Id list,
-	     container    : StateVertex_Id option}
+	     incoming     : Transition_Id list}
        | SyncState
-	 of {outgoing     : Transition_Id list,
-	     incoming     : Transition_Id list,
-	     container    : StateVertex_Id option}
+	 of {state_id     : StateVertex_Id,
+	     outgoing     : Transition_Id list,
+	     incoming     : Transition_Id list}
 (*	  | StubState  *)
-	    
-	    
+and StateMachine = SM_mk of {top : StateVertex,
+                                  transition : Transition list}
 
 				 
 end

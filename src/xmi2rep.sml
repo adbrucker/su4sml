@@ -156,8 +156,43 @@ fun transform_aend t ({xmiid,name,ordering,multiplicity,participant_id,
 val filter_named_aends  = List.filter (fn {name=SOME _,...}:XMI.AssociationEnd => true
 					| _ => false)
 
-(* FIX *)	
-fun transform_activitygraph t act = Rep_StateMachine.SM_mk {top = "???????????????????????", transition = nil }
+(* FIX *)
+fun transform_state t (XMI.CompositeState {xmiid,outgoing,incoming,subvertex,
+					   isConcurrent,...}) =
+    Rep.State_CompositeState {state_id = xmiid,
+			      outgoing = outgoing,
+			      incoming = incoming,
+			      subvertex = map (transform_state t) subvertex,
+			      isConcurrent = isConcurrent  }
+  | transform_state t (XMI.SimpleState {xmiid,outgoing,incoming,...}) =
+    Rep.State_SimpleState {state_id = xmiid,
+			   outgoing = outgoing,
+			   incoming = incoming }
+  | transform_state t (XMI.ActionState {xmiid,outgoing,incoming,isDynamic,...}) =
+    Rep.SimpleState_ActionState {state_id = xmiid,
+				 outgoing = outgoing,
+				 incoming = incoming,
+				 isDynamic = isDynamic}
+  | transform_state t (XMI.FinalState {xmiid,incoming,...}) =
+    Rep.State_FinalState {state_id = xmiid,
+			  incoming = incoming}
+  | transform_state t (XMI.PseudoState {xmiid,incoming,outgoing,kind,...}) = 
+    Rep.PseudoState {state_id = xmiid,
+		     outgoing = outgoing,
+		     incoming = incoming,
+		     kind = kind }
+
+fun transform_transition t (XMI.mk_Transition trans) 
+  = Rep.T_mk { trans_id = #xmiid trans ,
+	       source = #source trans,
+	       target = #target trans,
+	       guard  = NONE, (* FIX *)
+	       trigger = NONE, (* FIX *)
+	       effect = NONE} (* FIX *)
+
+fun transform_activitygraph t (XMI.mk_ActivityGraph act) = 
+    Rep_StateMachine.SM_mk {top = transform_state t (#top act), 
+			    transition = map (transform_transition t) (#transitions act) }
 
 fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 					   generalizations,attributes,operations,
