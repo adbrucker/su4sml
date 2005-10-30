@@ -24,6 +24,7 @@
 
 structure Ocl2String = 
 struct
+open library
 open Rep_OclType
 open Rep_OclTerm
 open Rep_Core
@@ -135,17 +136,20 @@ fun ocl2string show_types oclterm =
 (*      | OperationCall (src,styp,["oclLib",classifier,"subString"],[(b,Integer),(e,Integer)],String) 
 	=> OclSubString u (ocl2string u  src) (ocl2string u  b) (ocl2string u  e)		 
 *)
-      | OperationCall (src,styp,["oclLib",classifier,opname],[(arg,atyp)],rtyp) => string_of_oo_infix show_types  src styp opname arg atyp rtyp
+
       | OperationCall (src,styp,["oclLib",classifier,opname],[],rtyp) =>  string_of_oo_postfix1 show_types src styp opname rtyp
+      | OperationCall (src,styp,["oclLib",classifier,opname],[(arg,atyp)],rtyp) => string_of_oo_infix show_types  src styp opname arg atyp rtyp
+  
+
       (* OperationCalls to modell and Error *)
 (* TODO *)
-      | OperationCall (src,styp,op_name,args,t) => if show_types 
+(*      | OperationCall (src,styp,op_name,args,t) => if show_types 
 						   then "("^(ocl2string show_types src)^"."^(hd (rev op_name))
 							^"("^arglist show_types args^")"
 							^")"^(string_of_OclType t)
 						   else (ocl2string show_types src)^"."^(hd (rev op_name))
 							^"("^arglist show_types args^")"
- 
+ *)
       (**************************************)
       (* Variable                           *) 
       (**************************************)
@@ -178,7 +182,7 @@ fun ocl2string show_types oclterm =
 									  vars))
 							   ^"|"^(ocl2string show_types c)^")"
 						       else (ocl2string show_types src)^"->"^iname^"("
-							    ^(cs_list (map fst vars))
+							    ^(cs_list (map #1 vars))
 							    ^"|"^(ocl2string show_types c)^")"
       (* OCL Collection                     *) 
    (* 
@@ -189,8 +193,8 @@ fun ocl2string show_types oclterm =
       (* OCL OrderedSet                     *) 
       | Iterate (src,styp,["oclLib",classifier,"count"],[(arg,_)],OrderedSet _) => OclOSetCount u S e       *)
       (* Error                              *)
-      | Iterator (s,_,_,_,_,_,_) => error ("error: unknown Iterator '"^(s)^"' in in ocl2string") 
-      (**************************************)
+  (*    | Iterator (s,_,_,_,_,_,_) => error ("error: unknown Iterator '"^(s)^"' in in ocl2string") 
+   *)   (**************************************)
       (* Catch out                          *)
       (**************************************)
       (* Error                              *)
