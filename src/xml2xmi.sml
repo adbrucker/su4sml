@@ -33,6 +33,7 @@ open library
 exception NotYetImplemented
 (* generic exception if something is wrong *)
 exception IllFormed of string
+exception OCLIllFormed of string
 
 
 
@@ -281,12 +282,12 @@ fun mkOCLExpression tree =
 		val op_ref = 
 		    findXmiIdRef 
 			"OCL.Expressions.OperationCallExp.referredOperation" trees
-		val op_args = XmlTree.follow_all 
+		val op_args = XmlTree.follow 
 				  "OCL.Expressions.OperationCallExp.arguments"
 				  trees 
 	    in XMI.OperationCallExp 
 		   { source            = mkOCLExpression op_src,
-		     arguments         = map (mkOCLExpression o hd) op_args,
+		     arguments         = map mkOCLExpression op_args,
 		     referredOperation = op_ref,
 		     expression_type   = findExpressionType trees }
 	    end
@@ -387,7 +388,7 @@ fun mkOCLExpression tree =
 				      source    = mkOCLExpression iterator_src,
 				      expression_type = findExpressionType trees }
 	    end
-	else raise IllFormed ("in mkOCLExpression: found unexpected element "^elem)
+	else raise OCLIllFormed ("in mkOCLExpression: found unexpected element "^elem)
     end
 
 fun getAssociations t = (map mkAssociation (XmlTree.filter "UML:Association" t))@
@@ -448,8 +449,7 @@ fun mkConstraint tree =
 	in { xmiid = getXmiId atts,
 	     name  = case XmlTree.attvalue_of "name" atts of SOME s => SOME s | _ => NONE,
 	     constraint_type = st_type_ref, 
-	     body = (mkOCLExpression expr   (* if something goes wrong, we return *)
-		     handle _ => triv_expr) (* return trivial expression "true"   *)
+	     body = (mkOCLExpression expr) 
 	     }
 	end
     in XmlTree.apply_on "UML:Constraint" f tree
