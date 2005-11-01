@@ -258,6 +258,9 @@ fun findExpressionType trees = findXmiIdRef "OCL.Expressions.OclExpression.type"
 val triv_expr = XMI.LiteralExp {symbol = "true", 
 				    expression_type = "bool" }
 
+(* FIX: this is only a dummy implementation *)
+fun mkCollectionLiteralPart x = XMI_OCL.IdRef (getXmiIdref (XmlTree.attributes_of x))
+
 fun mkOCLExpression tree = 
     let val elem  = XmlTree.tagname_of tree
 	val atts  = XmlTree.attributes_of tree
@@ -275,6 +278,9 @@ fun mkOCLExpression tree =
 	else if elem = "UML15OCL.Expressions.RealLiteralExp" then
 	    XMI.LiteralExp { symbol          = getStringAtt "realSymbol" atts,
 				 expression_type = findExpressionType trees }
+	else if elem = "UML15OCL.Expressions.CollectionLiteralExp" then
+	    XMI.CollectionLiteralExp { parts = map mkCollectionLiteralPart (XmlTree.follow "OCL.Expressions.CollectionLiteralExp.parts" trees),
+				      expression_type = findExpressionType trees }
 	else if elem = "UML15OCL.Expressions.OperationCallExp" then
 	    let val op_src = hd (XmlTree.follow 
 				      "OCL.Expressions.PropertyCallExp.source"
