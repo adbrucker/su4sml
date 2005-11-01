@@ -43,9 +43,14 @@ type VariableDeclaration = { xmiid: string,
 			     name: string,
 			     declaration_type: string }
 			   
+datatype 'a ptr = IdRef of string | P of 'a	
 			   
+(* FIX: LiteralExp should probably be renamed to PrimitiveLiteralExp *)
+(* FIX: there should be also EnumLiteralExp and TupleLiteralExp *)
 datatype OCLExpression = LiteralExp of { symbol          : string,
 					 expression_type : string }
+                       | CollectionLiteralExp of { parts: CollectionLiteralPart ptr list,
+						   expression_type : string}
 		       | IfExp    of { condition       : OCLExpression,
 				      thenExpression  : OCLExpression,
 				      elseExpression  : OCLExpression,
@@ -83,6 +88,12 @@ datatype OCLExpression = LiteralExp of { symbol          : string,
 				       body            : OCLExpression,
 				       source          : OCLExpression,
 				       expression_type : string}
+and CollectionLiteralPart = CollectionItem of { item : OCLExpression ptr,
+						expression_type: string }
+                          | CollectionRange of { first: OCLExpression ptr,
+						 last: OCLExpression ptr,
+						 expression_type: string}
+
 
 fun expression_type_of (LiteralExp{expression_type,...})           = expression_type
   | expression_type_of (IfExp{expression_type,...})                = expression_type
