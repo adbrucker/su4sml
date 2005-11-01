@@ -38,17 +38,31 @@ type operation = { name          : string,
 		   visibility    : Visibility,
                    scope         : Scope }     
 
-type associationend = {name : string,
-		       aend_type: Rep_OclType.OclType,
-		       multiplicity: (int*int) list,
-		       visibility: Visibility,
-		       ordered: bool }
+type associationend = {
+     name : string,
+     aend_type: Rep_OclType.OclType,
+     multiplicity: (int*int) list,
+     visibility: Visibility,
+     ordered: bool,
+     init : (string option * Rep_OclTerm.OclTerm) option
+}
+
+type attribute = {
+     name : string,
+     attr_type : Rep_OclType.OclType,
+     visibility : Visibility,
+     scope: Scope,
+     init : (string option * Rep_OclTerm.OclTerm) option
+}
+
+
+
 
 datatype Classifier =  
 	 Class of 
 	 { name        : Rep_OclType.Path, 
 	   parent      : Rep_OclType.Path option,
-	   attributes  : (string * Rep_OclType.OclType * Visibility * Scope) list,
+	   attributes  : attribute list,
 	   operations  : operation list,
 	   associationends : associationend list,
 	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
@@ -87,7 +101,7 @@ datatype Classifier =
 	  }
  
 (* convert an association end into the corresponding collection type *)
-fun assoc_to_attr_type {name,aend_type,multiplicity,ordered,visibility} =
+fun assoc_to_attr_type {name,aend_type,multiplicity,ordered,visibility,init} =
     case multiplicity of 
 	[(0,1)] => aend_type
       | [(1,1)] => aend_type
@@ -96,10 +110,11 @@ fun assoc_to_attr_type {name,aend_type,multiplicity,ordered,visibility} =
     
 (* convert an association end into an attribute of the *)
 (* corresponding collection type                       *)
-fun assoc_to_attr (assoc:associationend) = (#name assoc,
-					    assoc_to_attr_type assoc,
-					    #visibility assoc,
-					    XMI.InstanceScope)
+fun assoc_to_attr (assoc:associationend) = {name = #name assoc,
+					    attr_type = assoc_to_attr_type assoc,
+					    visibility = #visibility assoc,
+					    scope = XMI.InstanceScope,
+					    init = #init assoc}
 
 (* convert a multiplicity range into an invariant of the form *)
 (* size > lowerBound and size < upperBound )                 *)
@@ -144,7 +159,8 @@ fun range_to_inv cls_name aend (a,b) =
 fun assoc_to_inv cls_name (aend:associationend) =
     let val inv_name = "multiplicity_constraint_for_association_end_"^(#name aend)
 	val range_constraints = case (#multiplicity aend) of
-				    [(0,1)] => let
+				    [(0,1)] => []
+				  | [(1,1)] => let
 					val attr_name = cls_name@[#name aend]
 					val attr_type = assoc_to_attr_type aend
 					val cls       = Rep_OclType.Classifier cls_name
@@ -155,7 +171,6 @@ fun assoc_to_inv cls_name (aend:associationend) =
 								    ["oclIsDefined"],[],
 								    Rep_OclType.Boolean)]
 				    end
-				  | [(1,1)] => [] (* FIXME: should be aend->OclIsDefined() *)
 				  | _ =>  map (range_to_inv cls_name aend) 
 					      (#multiplicity aend)
 	fun ocl_or (x,y) = 

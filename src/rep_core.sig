@@ -40,15 +40,23 @@ type associationend = {name : string,
 		       aend_type : Rep_OclType.OclType,	
 		       multiplicity: (int * int) list,
 		       ordered: bool,
-		       visibility: Visibility
-				     }		
-	     
+		       visibility: Visibility,
+		       init: (string option * Rep_OclTerm.OclTerm) option
+		      }		
+
+type attribute = {
+     name : string,
+     attr_type : Rep_OclType.OclType,
+     visibility : Visibility,
+     scope: Scope,
+     init : (string option * Rep_OclTerm.OclTerm) option
+}
 
 datatype Classifier =  
 	 Class of 
 	 { name        : Rep_OclType.Path, 
 	   parent      : Rep_OclType.Path option,
-	   attributes  : (string * Rep_OclType.OclType * Visibility * Scope) list,
+	   attributes  : attribute list,
 	   operations  : operation list,
 	   associationends : associationend list,
 	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
@@ -100,7 +108,7 @@ val short_parent_name_of : Classifier -> string
 
 val thy_name_of       : Classifier -> string
 val update_thyname    : string -> Classifier -> Classifier
-val attributes_of     : Classifier -> (string * Rep_OclType.OclType * Visibility * Scope) list
+val attributes_of     : Classifier -> attribute list
 val operations_of     : Classifier -> operation list
 val invariant_of      : Classifier -> (string option * Rep_OclTerm.OclTerm) list
 val string_of_path    : string list -> string    

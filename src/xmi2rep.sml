@@ -135,14 +135,15 @@ fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,ordering
 			    multiplicity,taggedValue,ownerScope,targetScope}) =
     let val cls_type = find_classifier_type t type_id 
     in
-	(name,
-	 if multiplicity = [(1,1)] 
-	 then cls_type
-	 else if ordering = XMI.Ordered then Rep_OclType.Sequence cls_type
-	 else Rep_OclType.Set cls_type,
-	 visibility,
-	 ownerScope
-	 )
+	{name= name,
+	 attr_type = if multiplicity = [(1,1)] 
+		     then cls_type
+		     else if ordering = XMI.Ordered then Rep_OclType.Sequence cls_type
+		     else Rep_OclType.Set cls_type,
+	 visibility = visibility,
+	 scope = ownerScope,
+	 init = NONE (* FIX *)
+	}
     end
 
 fun transform_aend t ({xmiid,name,ordering,multiplicity,participant_id,
@@ -151,7 +152,9 @@ fun transform_aend t ({xmiid,name,ordering,multiplicity,participant_id,
      aend_type    = find_classifier_type t participant_id,
      multiplicity = multiplicity,
      ordered      = if ordering = XMI.Ordered then true else false,
-     visibility   = visibility }
+     visibility   = visibility,
+     init         = NONE (* FIX *)
+    }
 
 val filter_named_aends  = List.filter (fn {name=SOME _,...}:XMI.AssociationEnd => true
 					| _ => false)
