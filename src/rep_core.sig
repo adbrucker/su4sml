@@ -41,7 +41,7 @@ type associationend = {name : string,
 		       multiplicity: (int * int) list,
 		       ordered: bool,
 		       visibility: Visibility,
-		       init: (string option * Rep_OclTerm.OclTerm) option
+		       init: Rep_OclTerm.OclTerm option
 		      }		
 
 type attribute = {
@@ -49,7 +49,7 @@ type attribute = {
      attr_type : Rep_OclType.OclType,
      visibility : Visibility,
      scope: Scope,
-     init : (string option * Rep_OclTerm.OclTerm) option
+     init : Rep_OclTerm.OclTerm option
 }
 
 datatype Classifier =  

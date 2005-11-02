@@ -132,7 +132,7 @@ fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
      
 
 fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,ordering,
-			    multiplicity,taggedValue,ownerScope,targetScope}) =
+			    multiplicity,taggedValue,ownerScope,targetScope,initialValue}) =
     let val cls_type = find_classifier_type t type_id 
     in
 	{name= name,
@@ -142,7 +142,7 @@ fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,ordering
 		     else Rep_OclType.Set cls_type,
 	 visibility = visibility,
 	 scope = ownerScope,
-	 init = NONE (* FIX *)
+	 init = Option.map (transform_expression t) initialValue
 	}
     end
 

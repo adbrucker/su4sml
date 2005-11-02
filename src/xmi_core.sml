@@ -89,7 +89,7 @@ type Generalization = { xmiid: string,
 type Attribute = { xmiid : string,
 		   name : string,
 		   type_id : string, (* xmi.idref to type *)
-		   (* initialValue : ...,               *)
+		   initialValue : OCLExpression option,               
 		   (* inherited from StructuralFeature: *)
 		   multiplicity : Multiplicity, 
 		   ordering : OrderingKind,           

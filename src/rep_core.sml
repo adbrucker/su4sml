@@ -44,7 +44,7 @@ type associationend = {
      multiplicity: (int*int) list,
      visibility: Visibility,
      ordered: bool,
-     init : (string option * Rep_OclTerm.OclTerm) option
+     init : Rep_OclTerm.OclTerm option
 }
 
 type attribute = {
@@ -52,7 +52,7 @@ type attribute = {
      attr_type : Rep_OclType.OclType,
      visibility : Visibility,
      scope: Scope,
-     init : (string option * Rep_OclTerm.OclTerm) option
+     init : Rep_OclTerm.OclTerm option
 }
 
 
