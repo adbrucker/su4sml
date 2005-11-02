@@ -153,6 +153,15 @@ fun filter_postcondition t cs
 			constr_type_name = "post"
 		    end) cs
 
+fun filter_bodyconstraint t cs
+  = filter (fn x => let val constraint = find_constraint t x
+			val name = #name constraint
+			val constr_type_ref = #constraint_type constraint
+			val constr_type_name = find_stereotype t constr_type_ref
+		    in 
+			constr_type_name = "body"
+		    end) cs
+
 
 fun find_classifier t xmiid =
     (case valOf (HashTable.find t xmiid) 

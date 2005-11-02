@@ -100,6 +100,7 @@ fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) =
 		       )
   | transform_expression t _ = raise NotYetImplemented
 
+
 fun transform_constraint t ({xmiid,name,body,...}:XMI.Constraint) = 
 	let val n_name = case name of 
 		(SOME s) => if (s = "") then NONE else (SOME(s))
@@ -111,24 +112,46 @@ fun transform_constraint t ({xmiid,name,body,...}:XMI.Constraint) =
 		     | ParseXMI.IllFormed msg => (print ("Warning: in Xmi2Mdr.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
 	end
 
+fun transform_bodyconstraint result_type t ({xmiid,name,body,...}:XMI.Constraint) = 
+    let	val result = Rep_OclTerm.Variable ("result",result_type)
+	val equal = ["OclLib","OclAny","="]
+	val body = transform_expression t body
+	val body_type = result_type
+    in 
+	(SOME "body",Rep_OclTerm.OperationCall (result, result_type,
+						equal,[(body,body_type)],
+						Rep_OclType.Boolean))
+    end
+	handle NotYetImplemented => (print "Warning: in Xmi2Mdr.transform_constraint: Something is not yet implemented.\n";(NONE, triv_expr))
+	     | IllFormed msg => (print ("Warning: in Xmi2Mdr.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
+	     | ParseXMI.IllFormed msg => (print ("Warning: in Xmi2Mdr.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
+
 fun transform_parameter t {xmiid,name,kind,type_id} =
     (name, find_classifier_type t type_id)
 
 fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
 			   constraints,ownerScope} =
-    {name=name,
-     arguments = map (transform_parameter t)
-		     (filter (fn x => #kind x <> XMI.Return) parameter),
-     precondition = map ((transform_constraint t) o (find_constraint t)) 
-			(filter_precondition t constraints),
-     postcondition = map ((transform_constraint t) o (find_constraint t)) 
-			 (filter_postcondition t constraints), 
-     result = find_classifier_type t ((#type_id o hd)(filter (fn x => #kind x = XMI.Return) parameter)),
-     visibility = visibility,
-     scope = ownerScope,
-     isQuery = isQuery      (* FIX *)
-     }
-
+    let val result_type =  find_classifier_type t 
+						((#type_id o hd) (filter (fn x => #kind x = XMI.Return) 
+									 parameter))
+    in
+	{name=name,
+	 arguments = (map (transform_parameter t)
+			  (filter (fn x => #kind x <> XMI.Return) parameter)),
+	 precondition = (map ((transform_constraint t) o (find_constraint t)) 
+			     (filter_precondition t constraints)),
+	 postcondition = List.concat [map ((transform_constraint t) o 
+					   (find_constraint t))
+					  (filter_postcondition t constraints), 
+					  map ((transform_bodyconstraint result_type t) o
+					       (find_constraint t))
+					      (filter_bodyconstraint t constraints)],
+	 result = result_type,
+	 visibility = visibility,
+	 scope = ownerScope,
+	 isQuery = isQuery      (* FIX *)
+	 }
+    end
      
 
 fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,ordering,
