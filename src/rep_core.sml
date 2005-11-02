@@ -151,6 +151,9 @@ fun range_to_inv cls_name aend (a,b) =
 				     Rep_OclType.Boolean)
     end
 
+
+
+
 (* calculate the invariants of an association end:               *)
 (* 1. multiplicity constraints                                   *)
 (* 2. consistency constraints between opposing association ends  *)
@@ -210,6 +213,61 @@ fun normalize (Class {name,parent,attributes,operations,associationends,invarian
 			   thyname = #thyname p,
                            activity_graphs=nil})
   | normalize c = c
+
+
+fun rm_init_attr (attr:attribute) = {
+    name = #name attr,
+    attr_type = #attr_type attr,
+    visibility = #visibility attr,
+    scope = #scope attr,
+    init = NONE
+}:attribute
+
+
+fun init_to_inv cls_name (attr:attribute) = 
+    case (#init attr) of
+	NONE => (SOME ("init_"^(#name attr)),
+		      Rep_OclTerm.Literal ("true",Rep_OclType.Boolean))
+      | SOME(init) => let
+	    val attr_name = cls_name@[#name attr]
+	    val attr_type = #attr_type attr
+	    val cls       = Rep_OclType.Classifier cls_name
+	    val self      = Rep_OclTerm.Variable ("self",cls)
+	    val attribute = Rep_OclTerm.AttributeCall (self,cls,attr_name,attr_type)
+	in	
+            (SOME ("init_"^(#name attr)),
+	     Rep_OclTerm.OperationCall
+		 (Rep_OclTerm.OperationCall
+		      (self,cls,
+		       ["oclLib","OclAny","oclIsNew"],[],Rep_OclType.Boolean),Rep_OclType.Boolean,
+		  ["oclLib","Boolean","implies"],
+		  [(Rep_OclTerm.OperationCall (attribute,
+			 attr_type,["oclLib","OclAny","="],
+			 [(init,attr_type)],Rep_OclType.Boolean),Rep_OclType.Boolean)],
+		  Rep_OclType.Boolean)
+	    )
+		
+	end
+
+
+fun normalize_init (Class {name,parent,attributes,operations,associationends,invariant,
+		      stereotypes,interfaces,thyname,activity_graphs}) =
+	       Class {name   = name,
+		      parent = parent,
+		      attributes = (map rm_init_attr attributes),
+		      operations = operations,
+		      associationends = nil,
+		      invariant = append (map (init_to_inv  name) attributes)  
+					  invariant,
+		      stereotypes = stereotypes,
+                      interfaces = interfaces,
+		      thyname = thyname,
+                      activity_graphs=activity_graphs}
+  | normalize_init c = c
+
+
+
+
 
 val OclAnyC = Class{name=["OclAny"],parent=NONE,attributes=[],
 			  operations=[], interfaces=[],

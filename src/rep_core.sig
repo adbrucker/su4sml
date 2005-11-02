@@ -97,6 +97,7 @@ datatype Classifier =
 val OclAnyC : Classifier
 
 val normalize : Classifier -> Classifier
+val normalize_init : Classifier -> Classifier
 
 val name_of       : Classifier -> Rep_OclType.Path 
 val package_of    : Classifier -> Rep_OclType.Path
