@@ -690,9 +690,6 @@ fun mkState tree =
              XMI.PseudoState {
                     xmiid=xmiid,name=name,isSpecification=isSpecification,
                     stereotype   = getStereo trees,
-                    entry        = getEntry trees,
-                    exit         = getExit trees,
-                    doActivity   = getDo trees,
                     kind         = getPseudoStateKindAttr atts,
                     outgoing     = getOutgoing trees,incoming = getIncoming trees,
                     taggedValue  = getTagVal trees}
@@ -724,7 +721,7 @@ fun mkState tree =
                     entry        = getEntry trees,
                     exit         = getExit trees,
                     doActivity   = getDo trees,
-                    outgoing     = getOutgoing trees,incoming = getIncoming trees,
+                    incoming = getIncoming trees,
                     taggedValue  = getTagVal trees}
        |"UML:SyncState" => 
              XMI.SyncState{

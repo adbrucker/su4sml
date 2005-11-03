@@ -164,7 +164,6 @@ datatype StateVertex  =
              exit         : Procedure option,
              doActivity   : Procedure option,
              taggedValue  : TaggedValue list,
-             outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list }
        | PseudoState
 	 of {xmiid        : string,
@@ -172,9 +171,6 @@ datatype StateVertex  =
              stereotype   : Stereotype_Id list,
              isSpecification : bool,
              kind         : PseudoStateVars,
-             entry        : Procedure option,
-             exit         : Procedure option,
-             doActivity   : Procedure option,
              taggedValue  : TaggedValue list,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list }
@@ -204,7 +200,6 @@ fun state_entry_of (CompositeState{entry,...}) = entry
   | state_entry_of (ActionState{entry,...}) = entry
   | state_entry_of (ObjectFlowState{entry,...}) = entry
   | state_entry_of (FinalState{entry,...}) = entry
-  | state_entry_of (PseudoState{entry,...}) = entry
   | state_entry_of _ = raise IllFormed "state_entry_of called on a state that does not have entry actions"
 
 fun state_xmiid_of (CompositeState{xmiid,...}) = xmiid
@@ -234,7 +229,6 @@ fun state_outgoing_trans_of (CompositeState{outgoing,...}) = outgoing
   | state_outgoing_trans_of (SimpleState{outgoing,...}) = outgoing
   | state_outgoing_trans_of (ActionState{outgoing,...}) = outgoing
   | state_outgoing_trans_of (ObjectFlowState{outgoing,...}) = outgoing
-  | state_outgoing_trans_of (FinalState{outgoing,...}) = outgoing
   | state_outgoing_trans_of (PseudoState{outgoing,...}) = outgoing
   | state_outgoing_trans_of (SyncState{outgoing,...}) = outgoing
 
