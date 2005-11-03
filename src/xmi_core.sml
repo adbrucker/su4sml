@@ -160,7 +160,8 @@ type Class = { xmiid : string,
 	       supplierDependency: string list,
 	       (* xmi.id's of contained ClassifierInStates: *)
 	       classifierInState: string list,
-	       activity_graphs: ActivityGraph list}
+	       activity_graphs: ActivityGraph list,
+	       state_machines: StateMachine list}
 
 (* from UML 1.5 Core: --------------------------------------------------------
  * A data type is a type whose values have no identity (i.e., they are 

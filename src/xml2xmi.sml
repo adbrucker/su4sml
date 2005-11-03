@@ -62,6 +62,8 @@ val getBody      = getStringAtt "body"
 val getXmiId     = getStringAtt "xmi.id"    
 val getName      = getStringAtt "name"      
 val getXmiIdref  = getStringAtt "xmi.idref" 
+
+fun getMaybeEmptyName atts = Option.getOpt(XmlTree.attvalue_of "name" atts,"")
 		 
 fun getVisibility atts = 
     let val att = XmlTree.attvalue_of "visibility" atts 
@@ -553,7 +555,7 @@ fun mkProcedure tree =
                         XmlTree.node_children_of o (XmlTree.find "UML:Action.script")) x
         fun f atts trees = XMI.mk_Procedure{
                                xmiid = getXmiId atts,
-                               name  = getName atts,
+                               name  = getMaybeEmptyName atts,
                                isSpecification = getBoolAtt "isSpecification" atts,
                                isAsynchronous  = getBoolAtt "isAsynchronous"  atts,
                                language        = getLang(get_AttrL trees),
@@ -614,7 +616,7 @@ fun mkState tree =
 	val atts         = XmlTree.attributes_of tree
 	val trees        = XmlTree.node_children_of   tree
         val xmiid        = getXmiId atts
-        val name         = getName atts
+        val name         = Option.getOpt(XmlTree.attvalue_of "name" atts,"")
         val isSpecification =  getBoolAtt "isSpecification" atts
         val getTid       = getXmiIdref o XmlTree.attributes_of
         fun getTrans str = List.concat o 
@@ -628,6 +630,14 @@ fun mkState tree =
 					(XmlTree.find "UML:CallAction") o
 					XmlTree.node_children_of))  o
                            (XmlTree.find_some "UML:State.entry")
+        val getExit     = (Option.map (mkProcedure  o 
+					(XmlTree.find "UML:CallAction") o
+					XmlTree.node_children_of))  o
+                           (XmlTree.find_some "UML:State.exit")
+        val getDo     = (Option.map (mkProcedure  o 
+					(XmlTree.find "UML:CallAction") o
+					XmlTree.node_children_of))  o
+                           (XmlTree.find_some "UML:State.doActivity")
         val getTagVal    = List.concat o 
                            (map ((map mkTaggedValue) o XmlTree.node_children_of)) o 
                            (XmlTree.filter "UML:ModelElement.taggedValue")
@@ -648,8 +658,8 @@ fun mkState tree =
                     outgoing     = getOutgoing trees, incoming = getIncoming trees, 
 	            subvertex    = getSubvertex trees,
                     entry        = getEntry trees,
-                    exit         = NONE,
-                    doActivity   = NONE,
+                    exit         = getExit trees,
+                    doActivity   = getDo trees,
                     taggedValue  = getTagVal trees}
         |"UML:SubactivityState" => 
              XMI.SubactivityState{
@@ -660,8 +670,8 @@ fun mkState tree =
                     outgoing     = getOutgoing trees, incoming = getIncoming trees, 
 	            subvertex    = getSubvertex trees,
                     entry        = getEntry trees,
-                    exit         = NONE,
-                    doActivity   = NONE,
+                    exit         = getExit trees,
+                    doActivity   = getDo trees,
                     submachine   = mkStateMachine (hd trees) 
                     (* HACK ! So far, no UML tool supports this. Parser has to be adapted
                        of we find a first example ... *),
@@ -673,16 +683,16 @@ fun mkState tree =
                     outgoing     = getOutgoing trees, incoming = getIncoming trees, 
                     isDynamic    = getBoolAtt "isDynamic" atts,
                     entry        = getEntry trees,
-                    exit         = NONE,
-                    doActivity   = NONE,
+                    exit         = getExit trees,
+                    doActivity   = getDo trees,
                     taggedValue  = getTagVal trees}
        |"UML:Pseudostate" => 
              XMI.PseudoState {
                     xmiid=xmiid,name=name,isSpecification=isSpecification,
                     stereotype   = getStereo trees,
                     entry        = getEntry trees,
-                    exit         = NONE,
-                    doActivity   = NONE,
+                    exit         = getExit trees,
+                    doActivity   = getDo trees,
                     kind         = getPseudoStateKindAttr atts,
                     outgoing     = getOutgoing trees,incoming = getIncoming trees,
                     taggedValue  = getTagVal trees}
@@ -691,8 +701,8 @@ fun mkState tree =
                     xmiid=xmiid,name=name,isSpecification=isSpecification,
                     stereotype   = getStereo trees,
                     entry        = getEntry trees,
-                    exit         = NONE,
-                    doActivity   = NONE,
+                    exit         = getExit trees,
+                    doActivity   = getDo trees,
                     outgoing     = getOutgoing trees, incoming = getIncoming trees,
                     taggedValue  = getTagVal trees}
        |"UML:ObjectFlowState" => 
@@ -700,8 +710,8 @@ fun mkState tree =
                     xmiid=xmiid,name=name,isSpecification=isSpecification,
                     stereotype   = getStereo trees,
                     entry        = getEntry trees,
-                    exit         = NONE,
-                    doActivity   = NONE,
+                    exit         = getExit trees,
+                    doActivity   = getDo trees,
                     outgoing     = getOutgoing trees, incoming = getIncoming trees, 
                     isSynch      = getBoolAtt "isSynch" atts,
                     parameter    = nil,
@@ -712,8 +722,8 @@ fun mkState tree =
                     xmiid=xmiid,name=name,isSpecification=isSpecification,
                     stereotype   = getStereo trees,
                     entry        = getEntry trees,
-                    exit         = NONE,
-                    doActivity   = NONE,
+                    exit         = getExit trees,
+                    doActivity   = getDo trees,
                     outgoing     = getOutgoing trees,incoming = getIncoming trees,
                     taggedValue  = getTagVal trees}
        |"UML:SyncState" => 
@@ -806,6 +816,8 @@ fun mkClass atts trees
 				     (XmlTree.filter "UML:ClassifierInState"
 						     (XmlTree.follow "UML:Namespace.ownedElement"
 								     trees))),
+	    state_machines = (map mkStateMachine (XmlTree.filter "UML:StateMachine"
+				   (XmlTree.follow "UML:Namespace.ownedElement" trees))),
 	    activity_graphs = (map mkActivityGraph (XmlTree.filter "UML:ActivityGraph"
 				   (XmlTree.follow "UML:Namespace.ownedElement" trees))) }
 
@@ -1064,8 +1076,8 @@ fun findXmiContent tree = valOf (XmlTree.dfs "XMI.content" tree)
     handle Option => raise IllFormed "in findXmiContent: did not find XMI.content"
 			       
 fun readFile f = (mkXmiContent o findXmiContent o ParseXmlTree.readFile) f
-    handle XmlTree.IllFormed msg =>  (print ("Warning: "^msg^"\n"); emptyXmiContent)
-	 | IllFormed msg => (print ("Warning: "^msg^"\n"); emptyXmiContent)
+(*    handle XmlTree.IllFormed msg =>  (print ("Warning: "^msg^"\n"); emptyXmiContent)
+	 | IllFormed msg => (print ("Warning: "^msg^"\n"); emptyXmiContent)*)
 end
 
 

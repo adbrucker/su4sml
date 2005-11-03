@@ -224,7 +224,8 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 					   generalizations,attributes,operations,
 					   invariant,stereotype,clientDependency,
 					   supplierDependency,taggedValue,
-					   classifierInState,activity_graphs}) =
+					   classifierInState,activity_graphs,
+					   state_machines}) =
     let val parents = map ((find_classifier_type t) o (find_parent t)) 
 			  generalizations 
 	val filtered_parents = filter (fn x => x <> Rep_OclType.OclAny) parents
