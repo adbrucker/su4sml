@@ -15,10 +15,17 @@ Group is
     rep_activity_graphs.sml
     rep_core.sig
     rep_core.sml
+    mds.sig
+    secure_uml.sml
+    component_uml.sml
+    rep_secure.sig
+    rep_secure.sml
     rep.sig
     rep.sml
     xmi_ocl.sml 
     xmi_core.sml 
+    xmi_datatypes.sml
+    xmi_extension_mechanisms.sml
     xmi_state_machines.sml 
     xmi_activity_graphs.sml 
     xmi.sml 
