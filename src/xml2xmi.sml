@@ -683,8 +683,6 @@ fun mkState tree =
                     outgoing     = getOutgoing trees, incoming = getIncoming trees, 
                     isDynamic    = getBoolAtt "isDynamic" atts,
                     entry        = getEntry trees,
-                    exit         = getExit trees,
-                    doActivity   = getDo trees,
                     taggedValue  = getTagVal trees}
        |"UML:Pseudostate" => 
              XMI.PseudoState {

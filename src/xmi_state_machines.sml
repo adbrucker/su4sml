@@ -134,8 +134,6 @@ datatype StateVertex  =
              stereotype   : Stereotype_Id list,
              isSpecification : bool,
              entry        : Procedure option,
-             exit         : Procedure option,
-             doActivity   : Procedure option,
              outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list, 
              taggedValue  : TaggedValue list,
