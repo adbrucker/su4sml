@@ -92,12 +92,15 @@ fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) =
 				 find_classifier_type t expression_type
 				 )
   | transform_expression t (XMI.IteratorExp {name,iterators,body,source,expression_type}) = 
-    Rep_OclTerm.Iterator (name,
-		       map (fn x => (#name x, find_classifier_type t (#declaration_type x))) iterators,
-		       transform_expression t source, find_classifier_type t (XMI.expression_type_of source),
-		       transform_expression t body, find_classifier_type t (XMI.expression_type_of body),
-		       find_classifier_type t expression_type
-		       )
+    let val _ = map (insert_variable_dec t) iterators 
+    in
+	Rep_OclTerm.Iterator (name,
+			      map (fn x => (#name x, find_classifier_type t (#declaration_type x))) iterators,
+			      transform_expression t source, find_classifier_type t (XMI.expression_type_of source),
+			      transform_expression t body, find_classifier_type t (XMI.expression_type_of body),
+			      find_classifier_type t expression_type
+			      )
+    end
   | transform_expression t _ = raise NotYetImplemented
 
 
