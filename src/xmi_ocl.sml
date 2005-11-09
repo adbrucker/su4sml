@@ -94,6 +94,7 @@ withtype VariableDeclaration = { xmiid: string,
 
 
 fun expression_type_of (LiteralExp{expression_type,...})           = expression_type
+  | expression_type_of (CollectionLiteralExp{expression_type,...}) = expression_type
   | expression_type_of (IfExp{expression_type,...})                = expression_type
   | expression_type_of (AssociationEndCallExp{expression_type,...}) = expression_type
   | expression_type_of (AssociationClassCallExp{expression_type,...}) = expression_type

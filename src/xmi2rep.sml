@@ -45,6 +45,9 @@ val triv_expr = Rep_OclTerm.Literal ("true",Rep_OclType.Boolean)
 
 fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) = 
     Rep_OclTerm.Literal (symbol,find_classifier_type t expression_type)
+  | transform_expression t (XMI.CollectionLiteralExp {parts,expression_type}) = 
+    Rep_OclTerm.CollectionLiteral (map (transform_collection_part t) parts,
+				   find_classifier_type t expression_type)
   | transform_expression t (XMI.IfExp {condition,thenExpression,
 					   elseExpression,expression_type}) = 
     Rep_OclTerm.If (transform_expression t condition, 
@@ -114,6 +117,13 @@ fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) =
 			      )
     end
   | transform_expression t _ = raise NotYetImplemented
+and transform_collection_part t (XMI.CollectionItem {item,expression_type}) =
+    Rep_OclTerm.CollectionItem (transform_expression t item,
+				find_classifier_type t expression_type)
+  | transform_collection_part t (XMI.CollectionRange {first,last,expression_type}) =
+    Rep_OclTerm.CollectionRange (transform_expression t first,
+				 transform_expression t last,
+				 find_classifier_type t expression_type)
 
 
 fun transform_constraint t ({xmiid,name,body,...}:XMI.Constraint) = 

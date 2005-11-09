@@ -62,6 +62,7 @@ open Rep_OclType
 
 datatype OclTerm = 
 	 Literal            of string * OclType    (* Literal with type *)
+       | CollectionLiteral  of CollectionPart list * OclType (* content with type *)
        | If                 of OclTerm * OclType   (* condition   *)
 			       * OclTerm * OclType (* then        *)
 			       * OclTerm * OclType (* else        *)
@@ -93,5 +94,9 @@ datatype OclTerm =
 			       * OclTerm * OclType       (* source             *)
 			       * OclTerm * OclType       (* iterator-body      *)
 			       * OclType                 (* result type        *)
+and CollectionPart = CollectionItem of OclTerm * OclType
+	           | CollectionRange of OclTerm   (* first *)
+		         		 * OclTerm (* last  *)
+                                         * OclType
 end
 
