@@ -232,18 +232,6 @@ fun mkAssociation tree =
 	handle XmlTree.IllFormed msg => raise IllFormed ("in mkAssociation: "^msg)
     end
 
-fun mkVariableDec tree = 
-    let fun f atts trees = 
-	    { xmiid = getXmiId atts,
-	      name  = getName atts,
-	      declaration_type = (getXmiIdref o XmlTree.attributes_of o hd o 
-				  (XmlTree.follow "OCL.Expressions.VariableDeclaration.type")) trees
-	      }
-    in XmlTree.apply_on "UML15OCL.Expressions.VariableDeclaration" f tree
-       handle XmlTree.IllFormed msg => raise IllFormed ("in mkVariableDec: "^msg)
-    end
-
-	
 (* find the xmi.idref attribute of an element pinted to by name *)
 fun findXmiIdRef name trees = (getXmiIdref o XmlTree.attributes_of o hd)
 				  (XmlTree.follow name trees)
@@ -261,7 +249,7 @@ val triv_expr = XMI.LiteralExp {symbol = "true",
 				    expression_type = "bool" }
 
 (* FIX: this is only a dummy implementation *)
-fun mkCollectionLiteralPart x = XMI_OCL.IdRef (getXmiIdref (XmlTree.attributes_of x))
+fun mkCollectionLiteralPart x = (getXmiIdref (XmlTree.attributes_of x))
 
 fun mkOCLExpression tree = 
     let val elem  = XmlTree.tagname_of tree
@@ -281,7 +269,7 @@ fun mkOCLExpression tree =
 	    XMI.LiteralExp { symbol          = getStringAtt "realSymbol" atts,
 				 expression_type = findExpressionType trees }
 	else if elem = "UML15OCL.Expressions.CollectionLiteralExp" then
-	    XMI.CollectionLiteralExp { parts = map mkCollectionLiteralPart (XmlTree.follow "OCL.Expressions.CollectionLiteralExp.parts" trees),
+	    XMI.CollectionLiteralExp { parts = nil, (* map mkCollectionLiteralPart (XmlTree.follow "OCL.Expressions.CollectionLiteralExp.parts" trees), *)
 				      expression_type = findExpressionType trees }
 	else if elem = "UML15OCL.Expressions.OperationCallExp" then
 	    let val op_src = hd (XmlTree.follow 
@@ -373,13 +361,29 @@ fun mkOCLExpression tree =
 	    in XMI.LetExp 
 		   { variable        = { xmiid            = var_xmiid,
 					 name             = var_name, 
-					 declaration_type = var_type_ref },
-		     initExpression  = mkOCLExpression init_exp ,
+					 declaration_type = var_type_ref,
+					 init = SOME (mkOCLExpression init_exp)},
 		     inExpression    = mkOCLExpression in_exp,
 		     expression_type = findExpressionType trees }
 	    end
 	else if elem = "UML15OCL.Expressions.IterateExp"  then 
-	    raise NotYetImplemented
+	    let val iterator_src = (hd o XmlTree.follow 
+					     "OCL.Expressions.PropertyCallExp.source") 
+				       trees
+		val iterator_body = (hd o XmlTree.follow 
+					     "OCL.Expressions.LoopExp.body") 
+				       trees
+		val iterators = XmlTree.follow "OCL.Expressions.LoopExp.iterators" 
+					       trees 
+		val iterate_result = (hd o XmlTree.follow "OCL.Expressions.IterateExp.result") 
+						    trees
+	    in 
+		XMI.IterateExp { result = mkVariableDec iterate_result,
+				  iterators = map mkVariableDec iterators,
+				  body      = mkOCLExpression iterator_body,
+				  source    = mkOCLExpression iterator_src,
+				  expression_type = findExpressionType trees }
+	    end
 	else if elem = "UML15OCL.Expressions.IteratorExp" then 
 	    let val iterator_src = (hd o XmlTree.follow 
 					     "OCL.Expressions.PropertyCallExp.source") 
@@ -391,13 +395,27 @@ fun mkOCLExpression tree =
 					       trees 
 	    in 
 		XMI.IteratorExp { name      = getName atts,
-				      iterators = map mkVariableDec iterators,
-				      body      = mkOCLExpression iterator_body,
-				      source    = mkOCLExpression iterator_src,
-				      expression_type = findExpressionType trees }
+				  iterators = map mkVariableDec iterators,
+				  body      = mkOCLExpression iterator_body,
+				  source    = mkOCLExpression iterator_src,
+				  expression_type = findExpressionType trees }
 	    end
-	else raise OCLIllFormed ("in mkOCLExpression: found unexpected element "^elem)
+	else raise IllFormed ("in mkOCLExpression: found unexpected element "^elem)
     end
+and mkVariableDec vtree = 
+    let fun f atts trees = 
+	    { xmiid = getXmiId atts,
+	      name  = getName atts,
+	      init = Option.map (mkOCLExpression o hd o XmlTree.node_children_of)
+				(XmlTree.find_some "OCL.Expressions.VariableDeclaration.initExpression" trees),
+	      declaration_type = (getXmiIdref o XmlTree.attributes_of o hd o 
+				  (XmlTree.follow "OCL.Expressions.VariableDeclaration.type")) trees
+	      }
+    in XmlTree.apply_on "UML15OCL.Expressions.VariableDeclaration" f vtree
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkVariableDec: "^msg)
+    end
+
+	
 
 fun getAssociations t = (map mkAssociation (XmlTree.filter "UML:Association" t))@
 			 (map mkAssociationFromAssociationClass 
@@ -1049,7 +1067,7 @@ fun mkXmiContent tree =
 	      constraints = (map mkConstraint (filterConstraints trees)),
 	      classifiers = (map mkClassifier (filterClassifiers trees)),
 	      stereotypes = (map mkStereotype (filterStereotypes trees)),
-	      variable_declarations = map mkVariableDec   (filterVariableDecs trees),
+	      variable_declarations = map mkVariableDec (filterVariableDecs trees),
               activity_graphs = map mkActivityGraph(filterActivityGraphs trees),
               state_machines  = map mkStateMachine (filterStateMachines trees)}
     in XmlTree.apply_on "XMI.content" f tree

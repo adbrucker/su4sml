@@ -32,24 +32,12 @@
 
 structure XMI_OCL = 
 struct
-(* from OCL 2.0 Expressions: -------------------------------------------------
- * A VariableDeclaration declares a variable name and binds it to a type. The 
- * variable can be used in expressions where the variable is in scope. This 
- * metaclass represents amongst others the variables self and result and the 
- * variables defined using the Let expression.
- * not supported: initExpression 
- * --------------------------------------------------------------------------*)
-type VariableDeclaration = { xmiid: string,
-			     name: string,
-			     declaration_type: string }
-			   
-datatype 'a ptr = IdRef of string | P of 'a	
 			   
 (* FIX: LiteralExp should probably be renamed to PrimitiveLiteralExp *)
 (* FIX: there should be also EnumLiteralExp and TupleLiteralExp *)
 datatype OCLExpression = LiteralExp of { symbol          : string,
 					 expression_type : string }
-                       | CollectionLiteralExp of { parts: CollectionLiteralPart ptr list,
+                       | CollectionLiteralExp of { parts: CollectionLiteralPart list,
 						   expression_type : string}
 		       | IfExp    of { condition       : OCLExpression,
 				      thenExpression  : OCLExpression,
@@ -75,7 +63,6 @@ datatype OCLExpression = LiteralExp of { symbol          : string,
        | VariableExp             of { referredVariable: string,
 				       expression_type : string }
        | LetExp                  of { variable        : VariableDeclaration,
-				       initExpression  : OCLExpression,
 				       inExpression    : OCLExpression,
 				       expression_type : string }
        | IterateExp              of { iterators       : VariableDeclaration list, 
@@ -88,11 +75,22 @@ datatype OCLExpression = LiteralExp of { symbol          : string,
 				       body            : OCLExpression,
 				       source          : OCLExpression,
 				       expression_type : string}
-and CollectionLiteralPart = CollectionItem of { item : OCLExpression ptr,
+and CollectionLiteralPart = CollectionItem of { item : OCLExpression,
 						expression_type: string }
-                          | CollectionRange of { first: OCLExpression ptr,
-						 last: OCLExpression ptr,
+                          | CollectionRange of { first: OCLExpression,
+						 last: OCLExpression,
 						 expression_type: string}
+(* from OCL 2.0 Expressions: -------------------------------------------------
+ * A VariableDeclaration declares a variable name and binds it to a type. The 
+ * variable can be used in expressions where the variable is in scope. This 
+ * metaclass represents amongst others the variables self and result and the 
+ * variables defined using the Let expression.
+ * not supported: initExpression 
+ * --------------------------------------------------------------------------*)
+withtype VariableDeclaration = { xmiid: string,
+				 name: string,
+				 declaration_type: string,
+				 init: OCLExpression option}
 
 
 fun expression_type_of (LiteralExp{expression_type,...})           = expression_type

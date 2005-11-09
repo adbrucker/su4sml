@@ -170,7 +170,7 @@ fun ocl2string show_types oclterm =
       (* Iterate                            *)
       (**************************************)
       (* Error                              *)
-      | Iterate (_,s,_,src,_,c,_,_) =>  error ("error: unknown Iterate '"^(s)^"' in in ocl2string") 
+      | Iterate (_,s,_,_,src,_,c,_,_) =>  error ("error: unknown Iterate '"^(s)^"' in in ocl2string") 
       (**************************************)
       (* Iterator                           *)
       (**************************************)

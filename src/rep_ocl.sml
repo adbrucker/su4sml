@@ -61,20 +61,37 @@ struct
 open Rep_OclType
 
 datatype OclTerm = 
-	 Literal of string * OclType
-       | If of  OclTerm * OclType 
-		 * OclTerm * OclType 
-		 * OclTerm * OclType * OclType 
-       | AssociationEndCall of OclTerm * OclType * Path * OclType
-       | AttributeCall      of OclTerm * OclType * Path * OclType
-       | OperationCall         of OclTerm * OclType * Path 
-				* (OclTerm * OclType) list * OclType 
-       | OperationWithType of OclTerm * OclType * string * OclType * OclType 
-       | Variable           of string * OclType
-       | Let of string * OclType * OclTerm * OclType * OclTerm * OclType
-       | Iterate of (string * OclType) list * string * OclType 
-		     * OclTerm * OclType * OclTerm * OclType * OclType
-       | Iterator of string * (string * OclType) list
-		      * OclTerm * OclType * OclTerm * OclType * OclType
+	 Literal            of string * OclType    (* Literal with type *)
+       | If                 of OclTerm * OclType   (* condition   *)
+			       * OclTerm * OclType (* then        *)
+			       * OclTerm * OclType (* else        *)
+			       * OclType           (* result type *)
+       | AssociationEndCall of OclTerm * OclType (* source      *)
+			       * Path            (* assoc.-enc  *)
+			       * OclType         (* result type *)
+       | AttributeCall      of OclTerm * OclType (* source      *)
+			       * Path            (* attribute   *)
+			       * OclType         (* result type *)
+       | OperationCall      of OclTerm * OclType          (* source      *)
+			       * Path                     (* operation   *)
+			       * (OclTerm * OclType) list (* parameters  *)
+			       * OclType                  (* result tupe *)
+       | OperationWithType  of OclTerm * OclType  (* source         *)
+			       * string * OclType (* type parameter *)
+			       * OclType          (* result type    *)
+       | Variable           of string * OclType    (* name with type *)
+       | Let                of string * OclType    (* variable *)
+			       * OclTerm * OclType (* rhs      *)
+			       * OclTerm * OclType (* in       *)
+       | Iterate            of (string * OclType) list      (* iterator variables *)
+			       * string * OclType * OclTerm (* result variable    *)
+			       * OclTerm * OclType          (* source             *)
+			       * OclTerm * OclType          (* iterator body      *)
+			       * OclType                    (* result type        *)
+       | Iterator           of string                    (* name of iterator   *)
+			       * (string * OclType) list (* iterator variables *)
+			       * OclTerm * OclType       (* source             *)
+			       * OclTerm * OclType       (* iterator-body      *)
+			       * OclType                 (* result type        *)
 end
 
