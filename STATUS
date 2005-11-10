@@ -1,0 +1,180 @@
+==============================================================================
+                      Supported for various UML Modelelements:
+==============================================================================
+
+"Core" Package:
+
+------------------------------------------------------------------------------
+ModelElement           | Status
+-----------------------+------------------------------------------------------
+Association            |
+AssociationClass       | not used in rep_*
+AssociationEnd         |
+Attribute              |
+Class                  |
+Generalization         | only single inheritance in rep_*
+Operation              |
+Interface              | used in rep_*?
+Dependency             | does not distinguish between different kind of 
+                       | dependencies (abstraction, binding, permission, usage)
+Parameter              |
+------------------------------------------------------------------------------
+
+
+
+"Datatypes" Package:
+
+------------------------------------------------------------------------------
+ModelElement           | Status
+-----------------------+------------------------------------------------------
+AggregationKind        | not used in rep_*
+ScopeKind              |
+ChangeableKind         | not used in rep_* 
+                       | (should be converted into invariants?)
+Multiplicity           |
+OrderingKind           | dresden (and we) use sequences for ordered 
+                       | association ends, but UML/OCL specifies OrderedSet
+ParameterDirectionKind | UML/OCL allows several return parameters, we allow
+                       | only one
+VisibilityKind         |
+------------------------------------------------------------------------------
+
+
+
+"Extension Mechanisms" Package:
+
+------------------------------------------------------------------------------
+ModelElement           | Status
+-----------------------+------------------------------------------------------
+Stereotype             | constraints attached to stereotypes are not used.
+                       | Not all modelelements in xmi_* can have stereotypes.
+                       | In rep_*, only classifiers can have stereotypes.
+TaggedValue            | Not all modelelements in xmi_* can have taggedvalues.
+                       | In rep_*, no tagged values are used.
+------------------------------------------------------------------------------
+
+
+"Model Management" Package:
+
+ModelElement           | Status
+-----------------------+------------------------------------------------------
+Package                | xmi_* does not distinguish between models, packages,
+                       | and subsystems.
+                       | rep_* has no notion of packages.
+------------------------------------------------------------------------------
+
+
+
+"Statemachines" Package:
+
+ModelElement              | Status
+--------------------------+---------------------------------------------------
+Transition                |
+Event                     | no support for TimeEvent and ChangeEvent
+  (SignalEven, CallEvent) |
+Guard                     | the guard's expression is just a string
+PseudoStateVars           |
+StateVertex               | no support for StubState's
+                          | Argouml, Poseidon do not support Subactivity states
+StateMachine              | 
+ActivityGraph             | argouml, poseidon do not support partitions
+------------------------------------------------------------------------------
+
+
+
+
+
+==============================================================================
+                      Support for various types of constraints:
+==============================================================================
+
+------------------------------------------------------------------------------
+stereo- |                | expression-   |
+ type   | context        |    type       | Status
+--------+----------------+---------------+------------------------------------
+ inv:   | classifier     | Boolean       | done
+ pre:   | operation      | Boolean       | done
+ post:  | operation      | Boolean       | done
+ body:  | operation      | result type   | done (converted to post)
+ init:  | attribute or   | same type     | done
+        | AssociationEnd |               |                
+ def:   | classifier     | declared type | dresden-ocl should add the 
+        |                |               | defined attribute/operation
+        |                |               | to the model with appropriate
+        |                |               | invariant, resp. postcondition,
+        |                |               | but does currently not.
+ derive:| attribute or   | same type     | not yet implemented in dresden-ocl
+        | AssociationEnd |               | 
+ guard: | transistion of | Boolean       | not implemented in dresden-ocl
+        | state machine  |               | (not clear, how this should be 
+        |                |               |  done.)
+------------------------------------------------------------------------------
+
+
+
+
+ 
+==============================================================================
+                     Support for various expression-types:
+==============================================================================
+
+------------------------------------------------------------------------------
+Type                 | Status
+---------------------+--------------------------------------------------------
+Primitive Types      | ok
+  (Boolean, Integer, | 
+   Real, String)     | 
+User-defined Classes | ok, (only single inheritance in rep_*, 
+                     |      no restriction in xmi_*)
+Interfaces           | ??
+Collections          | ok, but dresden-ocl does not support OrderedSet
+ (Set,Sequence,Bag)  |
+VoidType,OclAny      | ok
+EnumerationTypes     | -- (planned)
+TupleTypes           | -- (planned)
+OclModelElementType  | -- (not planned)
+OclMessageType       | -- (not planned)
+------------------------------------------------------------------------------
+
+
+
+
+
+==============================================================================
+                   Supported subset of OCL expressions:
+==============================================================================
+
+------------------------------------------------------------------------------
+Expression               | Status
+-------------------------+----------------------------------------------------
+IfExp                    | ok
+VariableExp              | ok
+AssociationEndCallExp    | ok (no support for "qualifiers")
+AttributeCallExp         | ok
+OperationCallExp         | ok
+OperationWithTypeCallExp | ok
+LetExp:                  | ok
+IteratorExp              | ok
+IterateExp               | ok
+PrimitiveLiteralExp      | ok (called "LiteralExp" in current code)
+CollectionLiteralExp     | only support for empty collections,
+                         | full support is planned.
+AssociationClassCallExp  | -- (planned)
+EnumLiteralExp           | -- (planned)
+TupleLiteralExp          | -- (planned)
+OclMessageExp            | -- (not planned)
+------------------------------------------------------------------------------
+
+
+
+
+
+==============================================================================
+                           Miscellaneous Issues:
+==============================================================================
+
+TBD
+
+
+
+
