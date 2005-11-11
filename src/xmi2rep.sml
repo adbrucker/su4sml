@@ -240,17 +240,38 @@ fun transform_state t (XMI.CompositeState {xmiid,outgoing,incoming,subvertex,
 		     incoming = incoming,
 		     kind = kind }
 
+(* a primitive hack: we take the body of the guard g as the name of an *)
+(* operation to be called in order to check whether the guard is true  *)
+fun transform_guard t (XMI.mk_Guard g) =
+    let val self_type = Rep_OclType.DummyT (* FIX *)
+	val package_path = nil (* FIX *) 
+    in
+	Rep_OclTerm.OperationCall ( Rep_OclTerm.Variable ("self",self_type),
+				    self_type,
+				    List.concat [package_path,[#body g]],nil,
+				    Rep_OclType.Boolean )
+    end
+
+fun transform_event t (XMI.CallEvent ev) =
+    Rep.CallEvent (find_operation t (#operation ev),
+		   map (transform_parameter t) (#parameter ev))
+
 fun transform_transition t (XMI.mk_Transition trans) 
   = Rep.T_mk { trans_id = #xmiid trans ,
 	       source = #source trans,
 	       target = #target trans,
-	       guard  = NONE, (* FIX *)
-	       trigger = NONE, (* FIX *)
+	       guard  = Option.map (transform_guard t) (#guard trans),
+	       trigger = Option.map ((transform_event t) o (find_event t)) 
+				    (#trigger trans),
 	       effect = NONE} (* FIX *)
 
 fun transform_activitygraph t (XMI.mk_ActivityGraph act) = 
     Rep_StateMachine.SM_mk {top = transform_state t (#top act), 
 			    transition = map (transform_transition t) (#transitions act) }
+
+fun transform_statemachine t (XMI.mk_StateMachine st) = 
+    Rep_StateMachine.SM_mk {top = transform_state t (#top st), 
+			    transition = map (transform_transition t) (#transitions st) }
 
 fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 					   generalizations,attributes,operations,
@@ -274,7 +295,8 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 					      ((filter_named_aends (find_aends t xmiid))), 
 			stereotypes = map (find_stereotype t) stereotype, 
 			interfaces = nil, (* FIX *)
-                        activity_graphs = map (transform_activitygraph t) activity_graphs, 
+                        activity_graphs = List.concat [map (transform_activitygraph t) activity_graphs,
+						       map (transform_statemachine t) state_machines], 
 			thyname = NONE}
     end
   | transform_classifier t (XMI.AssociationClass {xmiid,name,isActive,visibility,

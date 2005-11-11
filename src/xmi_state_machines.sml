@@ -64,7 +64,11 @@ datatype Guard  = mk_Guard of    {xmiid            : string,
                                   expression       : string list}
 
 datatype Event  = SignalEvent  of Parameter list
-                | CallEvent    of Parameter list
+                | CallEvent    of { xmiid : string,
+				    name: string,
+				    operation: string, (* xmi.idref *)
+				    parameter:  Parameter list
+					       }
 				 (*   | TimeEvent    of Parameter list  *)
 				 (*   | ChangeEvent  of Parameter list  *)
 				 
@@ -75,7 +79,7 @@ datatype Transition   = mk_Transition of
                                   source  : StateVertex_Id,
                                   target  : StateVertex_Id,
 			 	  guard   : Guard  option,
-				  trigger : Event  option,
+				  trigger : string  option, (* xmi.idref to Event *)
 				  effect  : Procedure option,
                                   taggedValue  : TaggedValue list
 				 (* mmm    : StateVertexId option *)

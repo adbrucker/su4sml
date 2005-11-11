@@ -65,7 +65,7 @@ datatype Package = Package of { xmiid          : string,
 				tag_definitions: TagDefinition list,
 				stereotype     : string list, (* idref to stereotype of this package *)
 				taggedValue    : TaggedValue list,
-				events: Event list}
+				events         : Event list}
 		  
 end
 

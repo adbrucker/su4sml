@@ -45,7 +45,8 @@ datatype HashTableEntry = Package of Rep_OclType.Path
 		        | Dependency of XMI.Dependency
 		        | TagDefinition of string
 		        | ClassifierInState of string 
-
+		        | Event of XMI.Event
+ 
 fun find_tagdefinition t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of TagDefinition x => x
@@ -57,6 +58,12 @@ fun find_state t xmiid =
       of State x => x
        | _                => raise Option) 
     handle Option => raise IllFormed ("expected State "^xmiid^" in table")
+
+fun find_event t xmiid = 
+    (case valOf (HashTable.find t xmiid) 
+      of Event x => x
+       | _                => raise Option) 
+    handle Option => raise IllFormed ("expected Event "^xmiid^" in table")
 
 fun find_transition t xmiid = 
     (case valOf (HashTable.find t xmiid) 
@@ -234,6 +241,9 @@ fun insert_state table (XMI.CompositeState st) =
   | insert_state table (st:XMI.StateVertex) = 
     HashTable.insert table (XMI.state_xmiid_of st, State st)
     
+fun insert_event table (e as XMI.CallEvent ev) =
+    HashTable.insert table (#xmiid ev, Event e)
+
 fun insert_transition table (XMI.mk_Transition trans) =
     HashTable.insert table (#xmiid trans, Transition (XMI.mk_Transition trans))
 
@@ -315,6 +325,7 @@ fun insert_package table package_prefix (XMI.Package p) =
 	List.app (insert_activity_graph table)           (#activity_graphs p);
 	List.app (insert_dependency     table)           (#dependencies p);
 	List.app (insert_tagdefinition  table)           (#tag_definitions p);
+	List.app (insert_event          table)           (#events p);
 	HashTable.insert table (#xmiid p,Package full_name)
     end 
 
@@ -331,6 +342,7 @@ fun insert_model table (XMI.Package p) =
 	List.app (insert_activity_graph table)           (#activity_graphs p);
 	List.app (insert_dependency     table)           (#dependencies p);
 	List.app (insert_tagdefinition  table)           (#tag_definitions p);
+	List.app (insert_event          table)           (#events p);
 	HashTable.insert table (#xmiid p,Package full_name)
     end 
 

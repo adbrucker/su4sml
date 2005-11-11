@@ -29,6 +29,7 @@ sig
 type     StateVertex_Id
 type     Transition_Id
 	 
+(* Effects are not yet parsed. When we do, we will have to change this type. *)
 datatype Action = create 
 		| call 
 		| return
@@ -38,12 +39,14 @@ datatype Action = create
 		| destroy
 		| sequence
 
-datatype Guard        = G_mk of  {expression : Rep_OclTerm.OclTerm}
+(* perhaps this type has to be changes according to what we can expect *)
+(* from CASE tools                                                     *)
+type Guard        = Rep_OclTerm.OclTerm
 
-type     Parameter    = Rep_OclType.OclType
+type Parameter    = string * Rep_OclType.OclType
 	      
 datatype Event  = SignalEvent  of Parameter list
-                | CallEvent    of Parameter list
+                | CallEvent    of Rep_OclType.Path * Parameter list
 				 (*   | TimeEvent    of Parameter list  *)
 				 (*   | ChangeEvent  of Parameter list  *)
 				 

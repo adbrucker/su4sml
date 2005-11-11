@@ -29,6 +29,8 @@ struct
 type     StateVertex_Id = string
 type     Transition_Id  = string
 	 
+(* The action datatype should probably be a operation call for our purposes? *) 
+
 datatype Action = create 
 		| call 
 		| return
@@ -38,12 +40,11 @@ datatype Action = create
 		| destroy
 		| sequence
 
-datatype Guard        = G_mk of  {expression : Rep_OclTerm.OclTerm}
-
-type     Parameter    = Rep_OclType.OclType
+type Guard     = Rep_OclTerm.OclTerm
+type Parameter = string * Rep_OclType.OclType
 	      
 datatype Event  = SignalEvent  of Parameter list
-                | CallEvent    of Parameter list
+                | CallEvent    of Rep_OclType.Path * Parameter list
 				 (*   | TimeEvent    of Parameter list  *)
 				 (*   | ChangeEvent  of Parameter list  *)
 				 
@@ -103,7 +104,7 @@ datatype StateVertex  =
 	     incoming     : Transition_Id list}
 (*	  | StubState  *)
 and StateMachine = SM_mk of {top : StateVertex,
-                                  transition : Transition list}
+                             transition : Transition list}
 
 				 
 end

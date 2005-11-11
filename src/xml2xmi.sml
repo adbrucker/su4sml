@@ -428,6 +428,7 @@ val filterPackages      = fn trees => append (XmlTree.filter "UML:Package" trees
 				             (XmlTree.filter "UML:Model" trees)			      
 val filterStateMachines = XmlTree.filter "UML:StateMachine" 
 val filterActivityGraphs= XmlTree.filter "UML:ActivityGraph" 
+val filterEvents        = XmlTree.filter "UML:CallEvent" (* add SignalEvents? *)
 
 (* there may be other kinds of dependencies, but we do not parse them atm *)
 val filterDependencies = XmlTree.filter "UML:Abstraction" 
@@ -589,7 +590,7 @@ fun mkGuard tree =
                       XmlTree.node_children_of o (XmlTree.find "UML:Guard.expression") 
         fun f atts trees = XMI.mk_Guard{
                                xmiid = getXmiId atts,
-                               name  = getName atts,
+                               name  = getMaybeEmptyName atts,
                                isSpecification = getBoolAtt "isSpecification" atts,
                                visibility      = getVisibility atts,
                                language        = getLang(getExpr trees),
@@ -604,7 +605,9 @@ fun mkTransition tree =
 					(XmlTree.find "UML:Guard") o
 					XmlTree.node_children_of))  o
                            (XmlTree.find_some "UML:Transition.guard")
-
+	val getTrigger     = (Option.map (getXmiIdref o XmlTree.attributes_of o
+					 hd o XmlTree.node_children_of))  o
+			    (XmlTree.find_some "UML:Transition.trigger")
         val getTagVal    = List.concat o 
                            (map ((map mkTaggedValue) o XmlTree.node_children_of)) o 
                            (XmlTree.filter "UML:ModelElement.taggedValue")
@@ -621,7 +624,7 @@ fun mkTransition tree =
                                       (XmlTree.find "UML:Transition.target"))
                                      (trees),
 			    guard  = getGuard trees, 
-			    trigger= NONE, (* TO BE DONE *)
+			    trigger= getTrigger trees,
 		            effect = NONE  (* TO BE DONE *),
                             taggedValue = getTagVal trees}
     in XmlTree.apply_on "UML:Transition" f tree 
@@ -1004,17 +1007,25 @@ fun mkGeneralization tree =
     end
 
 
-(* TODO:
+fun mkCallEvent atts trees =
+    XMI.CallEvent {xmiid = getXmiId atts,
+		   name = getMaybeEmptyName atts,
+		   operation = (getXmiIdref o XmlTree.attributes_of o hd o 
+		       (XmlTree.follow "UML:CallEvent.operation")) trees,
+		   parameter = (map mkParameter 
+			       (XmlTree.follow "UML:Event.parameter" 
+					       trees))
+		   }
 
-fun mkSignalEvent
-
-fun mkCallEvent
-
-fun mkEvent
-
-fun  filterEvents
-
-*)
+(* TODO: mkSignalEvent, etc ? *)
+fun mkEvent tree = 
+    let val elem  = XmlTree.tagname_of    tree
+	val atts  = XmlTree.attributes_of tree
+	val trees = XmlTree.node_children_of    tree
+    in 
+	case elem of "UML:CallEvent"                     => mkCallEvent atts trees
+		   | _ => raise IllFormed ("in mkEvent: found unexpected element "^elem)
+    end
 
 
 
@@ -1053,7 +1064,7 @@ fun mkPackage tree =
 			       taggedValue = (map mkTaggedValue 
 						  (XmlTree.follow "UML:ModelElement.taggedValue" 
 								  direct_childs)),
-			       events = nil (* map mkEvent (filterEvents trees)*)
+			       events =  map mkEvent (filterEvents trees)
                               }
 	 end
      else raise IllFormed "did not find a UML:Model or UML: Package")
