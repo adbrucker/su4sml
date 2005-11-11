@@ -85,8 +85,12 @@ fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) =
 				find_classifier_type t expression_type)    
   | transform_expression t (XMI.VariableExp {referredVariable,expression_type})=
     let val var_dec = find_variable_dec t referredVariable
+	val name     = #name var_dec
+	val var_name = if name = "" 
+		       then "anonIterVar_"^ (#xmiid var_dec)
+		       else name
     in 
-	Rep_OclTerm.Variable (#name var_dec,find_classifier_type t expression_type)
+	Rep_OclTerm.Variable (var_name,find_classifier_type t expression_type)
     end
   | transform_expression t (XMI.AssociationEndCallExp {source, referredAssociationEnd, expression_type}) =
     Rep_OclTerm.AssociationEndCall (transform_expression t source,
@@ -98,7 +102,10 @@ fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) =
     let val _ = map (insert_variable_dec t) iterators 
     in
 	Rep_OclTerm.Iterator (name,
-			      map (fn x => (#name x, find_classifier_type t (#declaration_type x))) iterators,
+			      map (fn x => (if #name x = ""
+					    then "anonIterVar_" ^ (#xmiid x)
+					    else #name x, 
+					    find_classifier_type t (#declaration_type x))) iterators,
 			      transform_expression t source, find_classifier_type t (XMI.expression_type_of source),
 			      transform_expression t body, find_classifier_type t (XMI.expression_type_of body),
 			      find_classifier_type t expression_type
