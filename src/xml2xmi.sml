@@ -541,12 +541,14 @@ fun mkAttribute tree =
 					   "OCL.Expressions.ExpressionInOcl.bodyExpression") o
 				      (XmlTree.follow "UML15OCL.Expressions.ExpressionInOcl") o 
 				       XmlTree.node_children_of) 
-				     (XmlTree.find_some "UML:Attribute.initialValue" trees),
+				     (XmlTree.find_some "UML:Attribute.initialValue" trees)
+	                   handle _ => NONE,
 	  type_id       = (getXmiIdref o XmlTree.attributes_of o hd o 
 			   (XmlTree.follow "UML:StructuralFeature.type")) trees,
 	  multiplicity   = if XmlTree.exists "UML:StructuralFeature.multiplicity" trees 
 			   then (mkMultiplicity o hd o (XmlTree.follow "UML:StructuralFeature.multiplicity")) trees
-			   else [(0,~1)],
+			   else [(0,~1)]
+			   handle _ => [(1,1)],
 	  targetScope   = getTargetScopeMaybe atts,
 	  ownerScope    = getOwnerScopeMaybe atts,
 	  taggedValue   = (map mkTaggedValue 
