@@ -182,6 +182,24 @@ fun hookCharRef ((dtd,content,stack),(_,c,_)) = (* FIX *)
 fun hookFinish (dtd,[elem],nil) = elem
   | hookFinish _ = raise IllFormed
 
+
+fun print_message (pos,msg) = 
+    TextIO.output (TextIO.stdErr, ErrorString.Position2String pos^": "^msg)
+
+fun hookError (x as (dtd,content,stack),(pos,ErrorData.ERR_NO_DTD)) = 
+    (Dtd.setHasDtd dtd; x)
+  |  hookError (x,(pos,err)) = 
+     (print_message (pos, "Error: "^
+			  (String.concatWith " " (Errors.errorMessage err))^
+			  "\n"); 
+      x)
+
+fun hookWarning (x,(pos,warn)) = 
+    (print_message (pos, "Warning: "^
+			 (String.concatWith " " (Errors.warningMessage warn))^
+			 "\n"); 
+     x) 
+
 end
 
 structure ParseXmlTree : sig
@@ -204,15 +222,16 @@ fun readFile filename =
 	(* how to do the following in a clean/portable way? *)
 	fun read_dtd dtd = 
 	    let val _ = OS.FileSys.chDir (su4sml_home())
-		val _ = OS.FileSys.fileSize "UML15OCL.dtd" (* dummy check to see if the file exists...*)	     
+		(* dummy check to see if the file exists...*)	     
+		val _ = OS.FileSys.fileSize "UML15OCL.xmi" 
 		val _ = Parser.parseDocument 
-			    (SOME (Uri.String2Uri ("file:UML15OCL.dtd")))
+			    (SOME (Uri.String2Uri ("file:UML15OCL.xmi")))
 			    (SOME dtd) (dtd,nil,nil) 
 		val _ = OS.FileSys.chDir currentDir 
 	    in ()
 	    end
 		handle SysErr => (print ("Warning: in readFile: "^ 
-					 "did not find file UML15OCL.dtd\n");
+					 "did not find file UML15OCL.xmi\n");
 				  OS.FileSys.chDir currentDir )
 	fun read_file dtd filename = 
 	    if filename = "-" then 
@@ -220,7 +239,8 @@ fun readFile filename =
 		    (NONE)
 		    (SOME dtd) (dtd,nil,nil)
 	    else 
-	    let val _ = OS.FileSys.fileSize filename (* dummy check to see if the file exists...*)
+	    let (* dummy check to see if the file exists...*)
+		val _ = OS.FileSys.fileSize filename 
 	    in 
 		Parser.parseDocument
 		    (SOME (Uri.String2Uri filename))
@@ -228,18 +248,16 @@ fun readFile filename =
 	    end
 		handle SysErr => (print ("Warning: in readFile: did not find file "
 					 ^filename^"\n"); 
-				  Node (("",nil),nil))
+				  Node (("",nil),nil)) 
 	val dtd = Dtd.initDtdTables()
-    in  (* read_dtd dtd; *)
-	read_file dtd filename
+    in  ( read_dtd dtd; 
+	  read_file dtd filename )
     end
-	
 end
 
 
 (* supposed to print a XmlTree to a xml file.        *)
-(* Works in principle, but currently does not escape *)
-(* entities like "<", and is not UTF-8 clean         *)
+(* Works in principle, but is not UTF-8 clean        *)
 structure WriteXmlTree: sig
     val writeFile : string -> XmlTree.Tree -> unit
     val writeStdOut : XmlTree.Tree -> unit
