@@ -219,7 +219,7 @@ fun readFile filename =
     let val currentDir = OS.FileSys.getDir()
 	fun su4sml_home () = case OS.Process.getEnv "HOLOCL_HOME" of
 			     SOME p => p^"lib/su4sml/src"
-			     NONE => getOpt(OS.Process.getEnv "UML2CDL_HOME",".")
+			   | NONE => getOpt(OS.Process.getEnv "UML2CDL_HOME",".")
 	(* how to do the following in a clean/portable way? *)
 	fun read_dtd dtd = 
 	    let val _ = OS.FileSys.chDir (su4sml_home())
