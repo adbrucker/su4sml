@@ -217,8 +217,9 @@ structure Parser = Parse (structure Dtd = Dtd
 		   
 fun readFile filename = 
     let val currentDir = OS.FileSys.getDir()
-	fun su4sml_home () = getOpt(OS.Process.getEnv "HOLOCL_HOME", 
-				    getOpt(OS.Process.getEnv "UML2CDL_HOME","."))
+	fun su4sml_home () = case OS.Process.getEnv "HOLOCL_HOME" of
+			     SOME p => p^"lib/su4sml/src"
+			     NONE => getOpt(OS.Process.getEnv "UML2CDL_HOME",".")
 	(* how to do the following in a clean/portable way? *)
 	fun read_dtd dtd = 
 	    let val _ = OS.FileSys.chDir (su4sml_home())
