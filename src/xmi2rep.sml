@@ -146,7 +146,7 @@ fun transform_constraint t ({xmiid,name,body,...}:XMI.Constraint) =
 
 fun transform_bodyconstraint result_type t ({xmiid,name,body,...}:XMI.Constraint) = 
     let	val result = Rep_OclTerm.Variable ("result",result_type)
-	val equal = ["OclLib","OclAny","="]
+	val equal = ["oclLib","OclAny","="]
 	val body = transform_expression t body
 	val body_type = result_type
     in 
