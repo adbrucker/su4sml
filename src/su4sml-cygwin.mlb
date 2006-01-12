@@ -8,6 +8,14 @@ in
   in
     contrib/HashTable.sml
     library.sml
+    xmi_ocl.sml 
+    xmltree_parser.sml
+    xmi_datatypes.sml
+    xmi_extension_mechanisms.sml
+    xmi_state_machines.sml 
+    xmi_activity_graphs.sml 
+    xmi_core.sml 
+    xmi.sml 
     rep_ocl.sig
     rep_ocl.sml
     rep_state_machines.sig
@@ -18,15 +26,14 @@ in
     rep_core.sml
     rep.sig
     rep.sml
-    xmi_ocl.sml 
-    xmi_core.sml 
-    xmi_state_machines.sml 
-    xmi_activity_graphs.sml 
-    xmi.sml 
-    xmltree_parser.sml
-    xmi_idtable.sml
+    mds.sig
+    component_uml.sml
+    secure_uml.sml
     ocl2string.sml
+    xmi_idtable.sml
     xml2xmi.sml 
     xmi2rep.sml  
+    rep_secure.sig
+    rep_secure.sml
   end
 end
