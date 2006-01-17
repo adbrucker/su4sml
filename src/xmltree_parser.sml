@@ -217,9 +217,16 @@ structure Parser = Parse (structure Dtd = Dtd
 		   
 fun readFile filename = 
     let val currentDir = OS.FileSys.getDir()
+
+        (* HOLOCL_HOME resp. SU4SML_HOME should point to the top-level directory *)
+	(* of the corresponding library.  The semantics of UML2CDL_HOME should   *)
+	(* probably be fixed                                                     *)
 	fun su4sml_home () = case OS.Process.getEnv "HOLOCL_HOME" of
 			     SOME p => p^"/lib/su4sml/src"
-			   | NONE => getOpt(OS.Process.getEnv "UML2CDL_HOME",".")
+			   | NONE => (case OS.Process.getEnv "SU4SML_HOME" of
+					  SOME p => p^"/src"
+					| NONE => getOpt(OS.Process.getEnv "UML2CDL_HOME",".")
+
 	(* how to do the following in a clean/portable way? *)
 	fun read_dtd dtd = 
 	    let val _ = OS.FileSys.chDir (su4sml_home())
