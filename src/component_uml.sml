@@ -36,9 +36,11 @@ type Resource = string * Rep_OclType.Path
 val resource_types = ["Entity","EntityMethod","EntityAttribute"]
 
 (* does nothing sensible, but perhaps you get the idea...*)
-fun contained_resources ("Entity",c) = nil
-
-
+(* FIXME: do something sensible *)
+fun contained_resources ("Entity",c)             = nil
+fun entity_contained_attributes ("Entity",c)     = nil
+fun entity_contained_read_methods ("Entity",c)   = nil
+fun entity_contained_update_methods ("Entity",c) = nil
 
 datatype Action = SimpleAction of string * Resource
                 | CompositeAction of string * Resource
@@ -61,11 +63,28 @@ fun resource_of (SimpleAction x)    = #2 x
 
 (* does nothing sensible, but perhaps you get the idea...*)
 fun subordinated_actions (SimpleAction _) = nil
-  | subordinated_actions (CompositeAction ("read",("Entity", c))) = 
-    let val read_attributes = nil
-	val read_methods = nil
+  | subordinated_actions (CompositeAction ("read",         e as ("Entity", c))) = 
+    let val read_attributes = List.map (fn x => SimpleAction ("read", x)) 
+				       (entity_contained_attributes e)
+	val read_methods = List.map (fn x => SimpleAction ("execute",x)) 
+				    (entity_contained_read_methods e)
     in 
 	List.concat [read_attributes,read_methods]
     end 
-  | subordinated_actions (CompositeAction _) = nil 
+  | subordinated_actions (CompositeAction ("full_access",  e as ("Entity",c)))
+    = [SimpleAction ("create",e), 
+       CompositeAction ("read",e),
+       CompositeAction ("update",e),
+       SimpleAction ("delete",e)]
+  | subordinated_actions (CompositeAction ("update",       e as ("Entity",c))) =
+    let val update_attributes = List.map (fn x => SimpleAction ("update", x)) 
+				       (entity_contained_attributes e)
+	val update_methods = List.map (fn x => SimpleAction ("execute",x)) 
+				    (entity_contained_update_methods e)
+    in 
+	List.concat [update_attributes,update_methods]
+	end
+  | subordinated_actions (CompositeAction ("full_access", a as ("EntityAttribute", ae)))
+    = [SimpleAction ("read", a),
+       SimpleAction ("update", a)]
 end

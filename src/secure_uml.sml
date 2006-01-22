@@ -77,11 +77,42 @@ fun is_empty (c:Configuration) = List.null (#permissions c) andalso
 fun users_of p = nil
 fun check_permission (u,p) = false
 fun permissions_of u = nil
-fun parse (cs:Rep_Core.Classifier list) = (cs,{config_type = "SecureUML",
-					       permissions = nil,
-					       subjects = nil,
-					       roles = nil,
-					       sa = nil})
+
+fun has_no_stereotype strings (Rep.Class c) = not (List.exists (fn stereotype => 
+								   List.exists (fn x => x = stereotype) 
+									       strings) (#stereotypes c))
+fun has_stereotype string (Rep.Class c) = List.exists (fn x => x=string) (#stereotypes c)
+
+fun filter_permission cs = List.filter (has_stereotype "Permission") cs
+(* FIXME: handle groups also *)
+fun filter_subject cs = List.filter (has_stereotype "User") cs
+fun filter_role cs = List.filter (has_stereotype "Role") cs
+
+fun mkRole (Rep.Class c)  = Rep.string_of_path (#name c)
+
+(* FIXME: handle groups also *)
+fun mkSubject (Rep.Class c) = User (Rep.string_of_path (#name c))
+
+fun mkPermission (Rep.Class c) =  {name=(Rep.string_of_path (#name c)),
+				   (* FIXME: find attributes/aends with a type with stereotype "Role" *) 
+				   roles=nil,  
+				   (* FIXME: find attached constraints *)
+				   constraints=nil, 
+				   (* FIXME: root resource is attribute/aend withh stereotype "Entity" *)
+				   (* resources are given by the name of the attributes *)
+				   (* actiontypes are given by the type of the attributes *)
+				   actions= nil}
+
+(* FIXME *) 
+fun mkPartialOrder xs = ListPair.zip (xs,xs)
+
+fun parse (cs:Rep_Core.Classifier list) = (List.filter (has_no_stereotype ["Permission","Role","Subject"]) cs,
+					   {config_type = "SecureUML",
+					    permissions = map mkPermission (filter_permission cs),
+					    subjects = map mkSubject (filter_subject cs),
+					    roles = mkPartialOrder (map mkRole (filter_role cs)),
+					    (* FIXME: find associations between Users and Roles. *)
+					    sa = nil})
 
 
 
