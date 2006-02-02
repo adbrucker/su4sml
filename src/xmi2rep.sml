@@ -222,15 +222,18 @@ fun transform_state t (XMI.CompositeState {xmiid,outgoing,incoming,subvertex,
 			      incoming = incoming,
 			      subvertex = map (transform_state t) subvertex,
 			      isConcurrent = isConcurrent  }
-  | transform_state t (XMI.SimpleState {xmiid,outgoing,incoming,...}) =
+  | transform_state t (XMI.SimpleState {xmiid,outgoing,incoming,name,...}) =
     Rep.State_SimpleState {state_id = xmiid,
 			   outgoing = outgoing,
-			   incoming = incoming }
-  | transform_state t (XMI.ActionState {xmiid,outgoing,incoming,isDynamic,...}) =
+			   incoming = incoming,
+			   name     = name}
+  | transform_state t (XMI.ActionState {xmiid,outgoing,incoming,isDynamic,
+					name,...}) =
     Rep.SimpleState_ActionState {state_id = xmiid,
 				 outgoing = outgoing,
 				 incoming = incoming,
-				 isDynamic = isDynamic}
+				 isDynamic = isDynamic,
+				 name      = name}
   | transform_state t (XMI.FinalState {xmiid,incoming,...}) =
     Rep.State_FinalState {state_id = xmiid,
 			  incoming = incoming}
@@ -256,6 +259,12 @@ fun transform_event t (XMI.CallEvent ev) =
     Rep.CallEvent (find_operation t (#operation ev),
 		   map (transform_parameter t) (#parameter ev))
 
+fun transform_proc t (XMI.mk_Procedure proc) = 
+    Rep.Proc_mk { proc_id    = #xmiid proc,
+		  language   = #language proc,
+		  body       = #body proc,
+		  expression = #expression proc }
+
 fun transform_transition t (XMI.mk_Transition trans) 
   = Rep.T_mk { trans_id = #xmiid trans ,
 	       source = #source trans,
@@ -263,7 +272,7 @@ fun transform_transition t (XMI.mk_Transition trans)
 	       guard  = Option.map (transform_guard t) (#guard trans),
 	       trigger = Option.map ((transform_event t) o (find_event t)) 
 				    (#trigger trans),
-	       effect = NONE} (* FIX *)
+	       effect = Option.map (transform_proc t) (#effect trans)}
 
 fun transform_activitygraph t (XMI.mk_ActivityGraph act) = 
     Rep_StateMachine.SM_mk {top = transform_state t (#top act), 
@@ -398,12 +407,12 @@ fun transformXMI ({classifiers,constraints,packages,
 	handle Empty => raise Option
 
 fun readXMI f = (transformXMI o ParseXMI.readFile) f
-    handle ParseXMI.IllFormed msg => (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^f^":\n"^msg^"\n"); 
+   (* handle ParseXMI.IllFormed msg => (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^f^":\n"^msg^"\n"); 
 				      nil)
 	 | Option => (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^f^"\n"); 
 				      nil)
 	 | IllFormed msg => (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^f^": "^msg^"\n"); 
-				      nil)
+				      nil)*)
 end
 
 

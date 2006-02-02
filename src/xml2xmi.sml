@@ -38,7 +38,7 @@ exception OCLIllFormed of string
 
 
 fun getStringAtt string atts = valOf (XmlTree.attvalue_of string atts)
-    handle Option => raise IllFormed ("in getAttValue: did not find attribute "^string)
+    handle Option => raise IllFormed ("in getStringAtt: did not find attribute "^string)
 
 fun getBoolAtt string atts = 
     let val att = getStringAtt string atts
@@ -181,7 +181,7 @@ fun mkMultiplicity tree = map (getRange o XmlTree.attributes_of)
 			   (((XmlTree.filter "UML:MultiplicityRange") o 
 			     (XmlTree.skip   "UML:Multiplicity.range") o hd o 
 			     (XmlTree.skip   "UML:Multiplicity")) tree)
-
+			   handle Empty => raise IllFormed ("Empty in mkMultiplicity")
 
 fun mkAssociationEnd tree = 
     let fun f atts trees =  
@@ -202,6 +202,9 @@ fun mkAssociationEnd tree =
     in 
 	XmlTree.apply_on "UML:AssociationEnd" f tree
 	handle XmlTree.IllFormed msg => raise IllFormed ("in mkAssociationEnd: "^msg)
+	     | Empty => raise IllFormed ("Empty in mkAssociationEnd")
+	     | _ => raise IllFormed ("Error in mkAssociationEnd")
+
     end
 
 
@@ -230,9 +233,10 @@ fun mkAssociation tree =
     in 
 	XmlTree.apply_on "UML:Association" f tree
 	handle XmlTree.IllFormed msg => raise IllFormed ("in mkAssociation: "^msg)
+	     | _ => raise IllFormed ("Error in mkAssociation")
     end
 
-(* find the xmi.idref attribute of an element pinted to by name *)
+(* find the xmi.idref attribute of an element pointed to by name *)
 fun findXmiIdRef name trees = (getXmiIdref o XmlTree.attributes_of o hd)
 				  (XmlTree.follow name trees)
 
@@ -420,7 +424,8 @@ and mkVariableDec vtree =
 fun getAssociations t = (map mkAssociation (XmlTree.filter "UML:Association" t))@
 			 (map mkAssociationFromAssociationClass 
 			      (XmlTree.filter "UML:AssociationClass" t))
-			
+			handle _ => raise IllFormed ("Error in getAssociations") 
+
 val filterConstraints   = XmlTree.filter "UML:Constraint"  
 val filterStereotypes   = XmlTree.filter "UML:Stereotype" 
 val filterVariableDecs  = XmlTree.filter "UML15OCL.Expressions.VariableDeclaration" 
@@ -494,12 +499,13 @@ fun mkParameter tree =
 				       trees }
     in XmlTree.apply_on "UML:Parameter" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkParameter: "^msg)
+	    | _ => raise IllFormed ("Error in mkParameter")
     end
 
 fun mkOperation tree = 
     let fun f atts trees =
 	{ xmiid         = getXmiId atts,
-	  name          = getName atts,
+	  name          = getName atts, 
 	  visibility    = getVisibility atts,
 	  isQuery       = getBoolAtt "isQuery" atts,
 	  ownerScope    = getOwnerScopeMaybe atts,
@@ -512,6 +518,9 @@ fun mkOperation tree =
 			       }
     in XmlTree.apply_on "UML:Operation" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkOperation: "^msg)
+	    | IllFormed msg =>  raise IllFormed ("in mkOperation: "^msg)
+	    | _ => raise IllFormed ("Error in mkOperation")
+
     end
 
 
@@ -527,6 +536,7 @@ fun mkTaggedValue tree =
                                       (XmlTree.find "UML:TaggedValue.type")) trees
 			   }
     in  XmlTree.apply_on "UML:TaggedValue" f tree 
+	handle XmlTree.IllFormed msg => raise IllFormed ("in mkTaggedValue: "^msg)
     end
 
 fun mkAttribute tree = 
@@ -555,6 +565,8 @@ fun mkAttribute tree =
 				 (XmlTree.follow "UML:ModelElement.taggedValue" trees)) }
     in XmlTree.apply_on "UML:Attribute" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkAttribute: "^msg)
+	    | _ => raise IllFormed ("Error in mkAttribute")
+
     end
 
 fun mkTagDefinition tree =
@@ -563,6 +575,7 @@ fun mkTagDefinition tree =
 			     multiplicity = (mkMultiplicity o hd o 
 					     (XmlTree.follow "UML:TagDefinition.multiplicity")) trees }
     in XmlTree.apply_on "UML:TagDefinition" f tree
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkTagDefinition: "^msg)
     end
 
 fun mkStereotypeR tree = 
@@ -571,6 +584,20 @@ fun mkStereotypeR tree =
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkStereotype: "^msg)
     end 
 
+fun mkProcedure tree = 
+    let fun f atts trees = XMI.mk_Procedure 
+			       {xmiid = getXmiId atts,
+				name = getMaybeEmptyName atts,
+				isSpecification = getBoolAtt "isSpecification" atts,
+				isAsynchronous = false, (* FIX *)
+				language = getLang atts,
+				body = getBody atts,
+				expression = nil (*FIX *)}
+    in XmlTree.apply_on "UML:Procedure" f tree
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkGuard: "^msg)
+    end
+	
+(* UML1.4 specific?
 fun mkProcedure tree =
     let fun get_AttrL x = (XmlTree.attributes_of o (XmlTree.find "UML:ActionExpression") o
                         XmlTree.node_children_of o (XmlTree.find "UML:Action.script")) x
@@ -583,9 +610,10 @@ fun mkProcedure tree =
                                body            = getBody(get_AttrL trees),
                                expression      = nil}
     in XmlTree.apply_on "UML:CallAction" f tree 
-       (* POSEIDON specific ! According to UML 1.5, should be: "UML:Method" *)
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkProcedure: "^msg)
+    (* POSEIDON specific ! According to UML 1.5, should be: "UML:Method" *)
     end
-
+*)
 
 fun mkGuard tree = 
     let val getExpr = XmlTree.attributes_of o (XmlTree.find "UML:BooleanExpression") o
@@ -599,6 +627,7 @@ fun mkGuard tree =
                                body            = getBody(getExpr trees),
                                expression      = nil}
     in   XmlTree.apply_on "UML:Guard" f tree 
+	 handle XmlTree.IllFormed msg => raise IllFormed ("in mkGuard: "^msg)
     end
 
 
@@ -613,7 +642,10 @@ fun mkTransition tree =
         val getTagVal    = List.concat o 
                            (map ((map mkTaggedValue) o XmlTree.node_children_of)) o 
                            (XmlTree.filter "UML:ModelElement.taggedValue")
-
+	val getEffect    = (Option.map (mkProcedure o 
+					(XmlTree.find "UML:Procedure") o
+					XmlTree.node_children_of)) o
+			   (XmlTree.find_some "UML:Transition.effect")
         fun f atts trees = XMI.mk_Transition  
                            {isSpecification = getBoolAtt "isSpecification" atts,
                             xmiid  = getXmiId atts,
@@ -627,9 +659,10 @@ fun mkTransition tree =
                                      (trees),
 			    guard  = getGuard trees, 
 			    trigger= getTrigger trees,
-		            effect = NONE  (* TO BE DONE *),
+		            effect = getEffect trees,
                             taggedValue = getTagVal trees}
     in XmlTree.apply_on "UML:Transition" f tree 
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkTransition: "^msg)
     end
 
 
@@ -753,9 +786,9 @@ fun mkState tree =
                     taggedValue  = getTagVal trees}
 
        | _ => raise IllFormed ("in mkState: Unknown State Vertex.")
-
      end
-
+	handle _ => raise IllFormed ("Error in mkState")
+					     
 
 and mkStateMachine tree =
     let fun f atts trees = XMI.mk_StateMachine 
@@ -772,6 +805,8 @@ and mkStateMachine tree =
                                            (XmlTree.find "UML:StateMachine.transitions"))
                                            (trees)}
     in  XmlTree.apply_on "UML:StateMachine" f tree
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkStateMachine: "^msg)
+	    | _ => raise IllFormed ("Error in mkStateMachine")
     end;
 
 
@@ -795,6 +830,7 @@ fun mkActivityGraph tree =
                             partition    = nil}
 
     in  XmlTree.apply_on "UML:ActivityGraph" f tree
+       handle XmlTree.IllFormed msg => raise IllFormed ("in mkActivityGraph: "^msg)
     end;
 	    
 fun mkClass atts trees 
@@ -838,6 +874,9 @@ fun mkClass atts trees
 				   (XmlTree.follow "UML:Namespace.ownedElement" trees))),
 	    activity_graphs = (map mkActivityGraph (XmlTree.filter "UML:ActivityGraph"
 				   (XmlTree.follow "UML:Namespace.ownedElement" trees))) }
+    handle IllFormed msg => raise IllFormed ("Error in mkClass "^((getName atts)
+								  ^": "^msg))
+	 | _ => raise IllFormed ("Error in mkClass "^(getName atts))
 
 fun mkAssociationClass atts trees 
   = XMI.AssociationClass { xmiid           = getXmiId atts,
@@ -874,6 +913,7 @@ fun mkAssociationClass atts trees
 						      trees)),
 	    connection = (map mkAssociationEnd (XmlTree.follow "UML:Association.connection" 
 							       trees))}
+    handle _ => raise IllFormed ("Error in mkClass")
 
 
 fun mkPrimitive atts trees 
@@ -1028,7 +1068,7 @@ fun mkEvent tree =
 	case elem of "UML:CallEvent"                     => mkCallEvent atts trees
 		   | _ => raise IllFormed ("in mkEvent: found unexpected element "^elem)
     end
-
+	handle _ => raise IllFormed ("Error in mkEvent")
 
 
 
@@ -1068,10 +1108,10 @@ fun mkPackage tree =
 								  direct_childs)),
 			       events =  map mkEvent (filterEvents trees)
                               }
+		 handle Empty => raise IllFormed ("Error Empty in mkPackage "^(getName atts))
 	 end
      else raise IllFormed "did not find a UML:Model or UML: Package")
     handle XmlTree.IllFormed msg => raise IllFormed ("in mkPackage: "^msg)
-				  
 				 
 
 fun mkXmiContent tree =
@@ -1102,8 +1142,8 @@ fun findXmiContent tree = valOf (XmlTree.dfs "XMI.content" tree)
     handle Option => raise IllFormed "in findXmiContent: did not find XMI.content"
 			       
 fun readFile f = (mkXmiContent o findXmiContent o ParseXmlTree.readFile) f
-(*    handle XmlTree.IllFormed msg =>  (print ("Warning: "^msg^"\n"); emptyXmiContent)
-	 | IllFormed msg => (print ("Warning: "^msg^"\n"); emptyXmiContent)*)
+    handle XmlTree.IllFormed msg =>  (print ("Warning: "^msg^"\n"); emptyXmiContent)
+	 | IllFormed msg => (print ("Warning: "^msg^"\n"); emptyXmiContent)
 end
 
 

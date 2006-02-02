@@ -29,16 +29,12 @@ struct
 type     StateVertex_Id = string
 type     Transition_Id  = string
 	 
-(* The action datatype should probably be a operation call for our purposes? *) 
 
-datatype Action = create 
-		| call 
-		| return
-		| send
-		| terminate
-		| uninterpreted
-		| destroy
-		| sequence
+
+datatype Procedure = Proc_mk of {proc_id          : string,
+				 language         : string,
+				 body             : string,
+				 expression       : string list}
 
 type Guard     = Rep_OclTerm.OclTerm
 type Parameter = string * Rep_OclType.OclType
@@ -54,7 +50,7 @@ datatype Transition   = T_mk of  {trans_id : Transition_Id,
                                   target  : StateVertex_Id,
 			 	  guard   : Guard  option,
 				  trigger : Event  option,
-				  effect  : Action option
+				  effect  : Procedure option
 				 (* mmm    : StateVertexId option *)
 			         }
 				 
@@ -74,11 +70,13 @@ datatype StateVertex  =
                                 + dynamicMultiplicity *)} option *)}
                             (* variant for Subactivity State *)
        | State_SimpleState
-	 of {state_id     : StateVertex_Id,
+	 of {name         : string,
+	     state_id     : StateVertex_Id,
 	     outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list}
        | SimpleState_ActionState (* from ActivityGraphs *)
-         of {state_id     : StateVertex_Id,
+         of {name         : string,
+	     state_id     : StateVertex_Id,
 	     outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list,
 	     isDynamic    : bool 

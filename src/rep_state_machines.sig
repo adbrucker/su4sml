@@ -28,17 +28,12 @@ sig
     
 type     StateVertex_Id
 type     Transition_Id
-	 
-(* Effects are not yet parsed. When we do, we will have to change this type. *)
-datatype Action = create 
-		| call 
-		| return
-		| send
-		| terminate
-		| uninterpreted
-		| destroy
-		| sequence
 
+datatype Procedure = Proc_mk of {proc_id          : string,
+				 language         : string,
+				 body             : string,
+				 expression       : string list}
+	 
 (* perhaps this type has to be changes according to what we can expect *)
 (* from CASE tools                                                     *)
 type Guard        = Rep_OclTerm.OclTerm
@@ -56,7 +51,7 @@ datatype Transition   = T_mk of  {trans_id: Transition_Id,
                                   target  : StateVertex_Id,
 			 	  guard   : Guard  option,
 				  trigger : Event  option,
-				  effect  : Action option
+				  effect  : Procedure option
 				 (* mmm    : StateVertexId option *)
 			         }
 				 
@@ -76,11 +71,13 @@ datatype StateVertex  =
                                 + dynamicMultiplicity *)} option *)}
                             (* variant for Subactivity State *)
        | State_SimpleState
-	 of {state_id     : StateVertex_Id,
+	 of {name         : string,
+	     state_id     : StateVertex_Id,
 	     outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list}
        | SimpleState_ActionState (* from ActivityGraphs *)
-         of {state_id     : StateVertex_Id,
+         of {name         : string,
+	     state_id     : StateVertex_Id,
 	     outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list,
 	     isDynamic    : bool 
