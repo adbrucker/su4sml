@@ -216,8 +216,9 @@ val filter_named_aends  = List.filter (fn {name=SOME _,...}:XMI.AssociationEnd =
 
 (* FIX *)
 fun transform_state t (XMI.CompositeState {xmiid,outgoing,incoming,subvertex,
-					   isConcurrent,...}) =
-    Rep.State_CompositeState {state_id = xmiid,
+					   isConcurrent,name,...}) =
+    Rep.State_CompositeState {name     = name,
+			      state_id = xmiid,
 			      outgoing = outgoing,
 			      incoming = incoming,
 			      subvertex = map (transform_state t) subvertex,

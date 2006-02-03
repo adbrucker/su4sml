@@ -59,7 +59,8 @@ type PseudoStateVars = XMI_StateMachines.PseudoStateVars
 				  
 datatype StateVertex  = 
          State_CompositeState 
-	 of {state_id     : StateVertex_Id,
+	 of {name         : string,
+	     state_id     : StateVertex_Id,
 	     outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list, 
 	     subvertex    : StateVertex list,
