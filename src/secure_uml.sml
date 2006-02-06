@@ -78,10 +78,17 @@ fun users_of p = nil
 fun check_permission (u,p) = false
 fun permissions_of u = nil
 
-fun has_no_stereotype strings (Rep.Class c) = not (List.exists (fn stereotype => 
-								   List.exists (fn x => x = stereotype) 
-									       strings) (#stereotypes c))
-fun has_stereotype string (Rep.Class c) = List.exists (fn x => x=string) (#stereotypes c)
+fun stereotypes_of (Rep.Class {stereotypes,...})       = stereotypes
+  | stereotypes_of (Rep.Enumeration {stereotypes,...}) = stereotypes
+  | stereotypes_of (Rep.Primitive {stereotypes,...})   = stereotypes
+  | stereotypes_of (Rep.Interface {stereotypes,...})   = stereotypes
+
+fun has_no_stereotype strings c = 
+    not (List.exists (fn stereotype =>  List.exists (fn x => x = stereotype) 
+						    strings) (stereotypes_of c))
+
+fun has_stereotype string c = 
+    List.exists (fn x => x=string) (stereotypes_of c)
 
 fun filter_permission cs = List.filter (has_stereotype "Permission") cs
 (* FIXME: handle groups also *)
