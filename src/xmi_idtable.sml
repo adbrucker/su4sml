@@ -280,6 +280,8 @@ fun insert_classifier table package_prefix class =
 			   else if name = "String"  then Rep_OclType.String
 			   else if name = "Real"    then Rep_OclType.Real
 			   else if name = "OclVoid" then Rep_OclType.OclVoid
+                           (* this shouldn't be necessary: *) 
+			   else if name = "Void"    then Rep_OclType.OclVoid 
 			   else if name = "OclAny"  then Rep_OclType.OclAny
 			   (* now this is really ugly... *)
 			   else if String.isPrefix "Collection(" name then Rep_OclType.Collection (Rep_OclType.Classifier [XMI.classifier_elementtype_of class])
@@ -310,7 +312,7 @@ fun insert_classifier table package_prefix class =
 	  | XMI.OrderedSet c => (List.app (insert_operation table path) (#operations c); ())
 	  | _ => ()
     end
-
+	
 
 
 (* recursively insert mapping of xmi.id's to model elements into Hashtable *)
