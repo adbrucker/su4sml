@@ -140,16 +140,15 @@ fun ocl2string show_types oclterm =
       | OperationCall (src,styp,["oclLib",classifier,opname],[],rtyp) =>  string_of_oo_postfix1 show_types src styp opname rtyp
       | OperationCall (src,styp,["oclLib",classifier,opname],[(arg,atyp)],rtyp) => string_of_oo_infix show_types  src styp opname arg atyp rtyp
   
-
       (* OperationCalls to modell and Error *)
-(* TODO *)
-(*      | OperationCall (src,styp,op_name,args,t) => if show_types 
+      (* TODO *)
+      | OperationCall (src,styp,op_name,args,t) => if show_types 
 						   then "("^(ocl2string show_types src)^"."^(hd (rev op_name))
 							^"("^arglist show_types args^")"
 							^")"^(string_of_OclType t)
 						   else (ocl2string show_types src)^"."^(hd (rev op_name))
 							^"("^arglist show_types args^")"
- *)
+							
       (**************************************)
       (* Variable                           *) 
       (**************************************)
@@ -200,4 +199,66 @@ fun ocl2string show_types oclterm =
       (* Error                              *)
       | _ => error ("error: unknown OCL-term in in ocl2string") 
 end
+end
+
+structure Rep2String = 
+struct
+
+fun precond2string (SOME n,t) = "    pre "^n^":\n         "^ 
+				(Ocl2String.ocl2string false t)^"\n"
+  | precond2string (NONE,t) = "    pre: "^ (Ocl2String.ocl2string false t)^"\n"
+
+fun postcond2string (SOME n,t) = "    post "^n^":\n         "^ 
+				 (Ocl2String.ocl2string false t)^"\n" 
+  | postcond2string (NONE,t) = "    post: "^ (Ocl2String.ocl2string false t)^"\n"
+
+fun inv2string (SOME n,t) = "  inv "^n^":\n       "^(Ocl2String.ocl2string false t)^"\n"
+  | inv2string (NONE,t) = "  inv: "^(Ocl2String.ocl2string false t)^"\n"
+
+fun argument2string (n,t) = n^":"^(Rep_OclType.string_of_OclType t)
+
+fun stereotype2string st = "<<"^st^">> "
+
+fun operation2string ({name,arguments,result,precondition,postcondition,...}:Rep.operation) = 
+    "  "^name^
+    "("^String.concatWith ", " (map argument2string arguments)^
+    ") : "^Rep_OclType.string_of_OclType result^"\n"^
+    String.concat (map precond2string precondition)^
+    String.concat (map postcond2string postcondition)
+
+fun attribute2string ({name,attr_type,...}:Rep.attribute) = 
+    "  "^name^" : "^(Rep_OclType.string_of_OclType attr_type)^"\n"
+
+fun parent2string (SOME p) = " extends "^Rep.string_of_path p
+  |parent2string NONE = ""
+
+fun classifier2string (Rep.Class x) =
+    String.concat (map stereotype2string (#stereotypes x))^
+    "class "^Rep.string_of_path (#name x)^
+    parent2string (#parent x)^
+    " {\n"^
+    String.concat (map inv2string (#invariant x))^
+    String.concat (map attribute2string (#attributes x))^
+    String.concat (map operation2string (#operations x))^
+    "}\n"
+  | classifier2string (Rep.Interface x) =
+    String.concat (map stereotype2string (#stereotypes x))^
+    "interface "^Rep.string_of_path (#name x)^"{\n"^
+    String.concat (map operation2string (#operations x))^
+    "}\n"
+  | classifier2string (Rep.Primitive x) =
+    String.concat (map stereotype2string (#stereotypes x))^
+    "primitive "^Rep.string_of_path (#name x)^"{\n"^
+    String.concat (map operation2string (#operations x))^
+    "}\n"
+  | classifier2string (Rep.Enumeration x) =
+    String.concat (map stereotype2string (#stereotypes x))^
+    "enum "^Rep.string_of_path (#name x)^"{\n"^
+    String.concat (map operation2string (#operations x))^
+    "}\n"
+
+fun printClass (x:Rep.Classifier) = print (classifier2string x)
+
+fun printList (x:Rep.Classifier list) = 
+    print (String.concatWith "\n\n" (map classifier2string x ))
 end
