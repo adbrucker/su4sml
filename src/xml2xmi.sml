@@ -557,7 +557,7 @@ fun mkAttribute tree =
 			   (XmlTree.follow "UML:StructuralFeature.type")) trees,
 	  multiplicity   = if XmlTree.exists "UML:StructuralFeature.multiplicity" trees 
 			   then (mkMultiplicity o hd o (XmlTree.follow "UML:StructuralFeature.multiplicity")) trees
-			   else [(0,~1)]
+			   else [(1,1)]
 			   handle _ => [(1,1)],
 	  targetScope   = getTargetScopeMaybe atts,
 	  ownerScope    = getOwnerScopeMaybe atts,
@@ -1044,8 +1044,10 @@ fun mkGeneralization tree =
 		       (XmlTree.follow "UML:Generalization.child")) trees, 
 	  parent_id = (getXmiIdref o XmlTree.attributes_of o hd o 
 		       (XmlTree.follow "UML:Generalization.parent")) trees }
+	handle Empty => raise IllFormed ("Empty in mkGeneralization: "^getXmiId atts)
     in XmlTree.apply_on "UML:Generalization" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkGeneralization: "^msg)
+	    
     end
 
 
@@ -1108,7 +1110,7 @@ fun mkPackage tree =
 								  direct_childs)),
 			       events =  map mkEvent (filterEvents trees)
                               }
-		 handle Empty => raise IllFormed ("Error Empty in mkPackage "^(getName atts))
+(*		 handle Empty => raise IllFormed ("Error Empty in mkPackage "^(getName atts))*)
 	 end
      else raise IllFormed "did not find a UML:Model or UML: Package")
     handle XmlTree.IllFormed msg => raise IllFormed ("in mkPackage: "^msg)
