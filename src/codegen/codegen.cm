@@ -5,9 +5,8 @@ Group is
   $/smlnj-lib.cm
 #else
 #endif
-     ../lib/su4sml/src/su4sml.cm
      compiler/compiler_ext.sig
-     compiler/mlton.sml	
+     compiler/smlnj.sml	
      gcg_library.sml
      gcg_helper.sml
      tpl_parser.sig

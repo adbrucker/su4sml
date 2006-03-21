@@ -100,3 +100,8 @@ use "secure_uml.sml";
 use "rep_secure.sig";
 use "rep_secure.sml";
 
+(* ******************************************************** *)
+(* codegen-module, developed by Raphael Eidenbenz           *)
+OS.FileSys.chDir "codegen"; 
+use "ROOT.ML"; 
+OS.FileSys.chDir "..";

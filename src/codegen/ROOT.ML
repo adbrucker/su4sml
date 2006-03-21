@@ -21,14 +21,6 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-(*
-OS.FileSys.chDir "../../../src";
-*)
-
-OS.FileSys.chDir "../lib/su4sml/src"; 
-use "ROOT.ML";
-OS.FileSys.chDir "../../../src";
-
 OS.FileSys.chDir "compiler";
 
 use "compiler_ext.sig";

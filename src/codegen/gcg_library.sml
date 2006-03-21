@@ -21,6 +21,8 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+structure GCG_Library = struct
+(* is this used anywhere? *)
 exception GCG_Error
 
 fun gcg_error s = (print ("Error:"^s^"\n"); raise GCG_Error);
@@ -43,3 +45,4 @@ end
 val curry = fn f => fn x => fn y => f (x, y)
 val uncurry = fn f => fn (x, y) => f x y
 			     
+end

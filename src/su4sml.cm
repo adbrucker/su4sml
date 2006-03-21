@@ -1,7 +1,7 @@
 Group is
 #if(defined(SMLNJ_VERSION))
   $/basis.cm 
-  $smlnj/compiler/compiler.cm
+  $smlnj/compiler/current.cm
   $/smlnj-lib.cm
 #else
 #endif
@@ -34,3 +34,19 @@ Group is
     ocl2string.sml
     xml2xmi.sml 
     xmi2rep.sml  
+    codegen/compiler/compiler_ext.sig
+    codegen/compiler/smlnj.sml	
+    codegen/gcg_library.sml
+    codegen/gcg_helper.sml
+    codegen/tpl_parser.sig
+    codegen/tpl_parser.sml
+    codegen/cartridge.sig
+    codegen/base_cartridge.sig
+    codegen/base_cartridge.sml
+    codegen/c#_cartridge.sml
+    codegen/c#_net1_cartridge.sml
+    codegen/secureuml_cartridge.sig
+    codegen/secureuml_cartridge.sml
+    codegen/gcg_core.sig
+    codegen/gcg_core.sml
+    codegen/codegen.sml
