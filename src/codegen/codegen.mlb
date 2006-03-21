@@ -1,0 +1,28 @@
+ann
+  "warnMatch false"
+  "allowFFI true"
+  "sequenceUnit false"
+  "allowExport true"
+in
+  local
+    $(MLTON_ROOT)/basis/basis.mlb
+    ../lib/su4sml/src/su4sml-cygwin.mlb
+  in
+     compiler/compiler_ext.sig
+     compiler/mlton.sml	
+     gcg_library.sml
+     gcg_helper.sml
+     tpl_parser.sig
+     tpl_parser.sml
+     cartridge.sig
+     base_cartridge.sig
+     base_cartridge.sml
+     "c#_cartridge.sml"
+     "c#_net1_cartridge.sml"
+     secureuml_cartridge.sig
+     secureuml_cartridge.sml
+     gcg_core.sig
+     gcg_core.sml
+     codegen.sml
+  end
+end
