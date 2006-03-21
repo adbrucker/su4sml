@@ -60,14 +60,14 @@ fun super2Native "ClassifierScope" = "static"
  			 (*(gcg_warning ("Couldn't lookup \""^s^"\" in c#_cartridge.super2Native !");s)*)
  			 s
  
-fun startWithSmallLetter s = let val sl = explode s
+fun startWithSmallLetter s = let val sl = String.explode s
  			     in
- 			       implode ((Char.toLower (hd sl))::(tl sl))
+ 			       String.implode ((Char.toLower (hd sl))::(tl sl))
  			     end
  
-fun startWithCapital s = let val sl = explode s
+fun startWithCapital s = let val sl = String.explode s
  			     in
- 			       implode ((Char.toUpper (hd sl))::(tl sl))
+ 			       String.implode ((Char.toUpper (hd sl))::(tl sl))
 			     end
 (*	lookup  environment -> string -> string			
  * overrides some lookup entries of the base cartridge 

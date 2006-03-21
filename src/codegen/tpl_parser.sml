@@ -67,7 +67,7 @@ fun replaceSafely ("",_,_) = ""
  * removes space- and tab-characters  
  *)
 fun cleanLine s = let fun removeWspace s = 
-			implode (List.filter (fn c => not (Char.isSpace c)) (explode s)) 
+			String.implode (List.filter (fn c => not (Char.isSpace c)) (String.explode s)) 
 		   fun concatWith [] d = ""
 			   | concatWith [s] d = s^" "
   			   | concatWith (h::t) d = h^d^(concatWith t d)
