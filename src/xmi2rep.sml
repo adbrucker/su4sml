@@ -261,6 +261,8 @@ fun transform_guard t (XMI.mk_Guard g) =
 fun transform_event t (XMI.CallEvent ev) =
     Rep.CallEvent (find_operation t (#operation ev),
 		   map (transform_parameter t) (#parameter ev))
+  | transform_event t (XMI.SignalEvent ev) =
+    Rep.SignalEvent []
 
 fun transform_proc t (XMI.mk_Procedure proc) = 
     Rep.Proc_mk { proc_id    = #xmiid proc,

@@ -63,7 +63,7 @@ datatype Guard  = mk_Guard of    {xmiid            : string,
                                   body             : string option,
                                   expression       : XMI_OCL.OCLExpression option}
 
-datatype Event  = SignalEvent  of Parameter list
+datatype Event  = SignalEvent  of {xmiid : string, parameter: Parameter list}
                 | CallEvent    of { xmiid : string,
 				    name: string,
 				    operation: string, (* xmi.idref *)

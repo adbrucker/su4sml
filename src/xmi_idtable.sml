@@ -243,6 +243,8 @@ fun insert_state table (XMI.CompositeState st) =
     
 fun insert_event table (e as XMI.CallEvent ev) =
     HashTable.insert table (#xmiid ev, Event e)
+  | insert_event  table (e as XMI.SignalEvent ev) =
+    HashTable.insert table (#xmiid ev, Event e)
 
 fun insert_transition table (XMI.mk_Transition trans) =
     HashTable.insert table (#xmiid trans, Transition (XMI.mk_Transition trans))

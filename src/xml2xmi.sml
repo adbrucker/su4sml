@@ -433,7 +433,8 @@ val filterPackages      = fn trees => append (XmlTree.filter "UML:Package" trees
 				             (XmlTree.filter "UML:Model" trees)			      
 val filterStateMachines = XmlTree.filter "UML:StateMachine" 
 val filterActivityGraphs= XmlTree.filter "UML:ActivityGraph" 
-val filterEvents        = XmlTree.filter "UML:CallEvent" (* add SignalEvents? *)
+val filterEvents        = fn x => append (XmlTree.filter "UML:CallEvent" x)
+				       (XmlTree.filter "UML:SignalEvent" x)(* add SignalEvents? *)
 
 (* there may be other kinds of dependencies, but we do not parse them atm *)
 val filterDependencies = XmlTree.filter "UML:Abstraction" 
@@ -619,20 +620,20 @@ fun mkGuard tree =
     let val getExpr =  XmlTree.node_children_of o (XmlTree.find "UML:Guard.expression")
 		val getBoolExpr = XmlTree.attributes_of o (XmlTree.find "UML:BooleanExpression") o
                       XmlTree.node_children_of o (XmlTree.find "UML:Guard.expression") 
-        val getOclExpr = (XmlTree.find "UML:ExpressionInOcl") o
+        val getOclExpr = (XmlTree.find "UML15OCL:Expressions.ExpressionInOcl") o
                       XmlTree.node_children_of o (XmlTree.find "UML:Guard.expression")
         fun f atts trees = XMI.mk_Guard{
                                xmiid = getXmiId atts,
                                name  = getMaybeEmptyName atts,
                                isSpecification = getBoolAtt "isSpecification" atts,
                                visibility      = getVisibility atts,
-                               language        = if XmlTree.exists "UML:ExpressionInOCL" (getExpr trees) 
+                               language        = if XmlTree.exists "UML15OCL:Expressions.ExpressionInOcl" (getExpr trees) 
 												 then getLang(XmlTree.attributes_of (getOclExpr trees))
-												 else getLang(getBoolExpr trees),
-                               body            = if XmlTree.exists "UML:ExpressionInOCL" (getExpr trees) 
+												 else "blubb"(* getLang(getBoolExpr trees)*),
+                               body            = if XmlTree.exists "UML15OCL:Expressions.ExpressionInOCL" (getExpr trees) 
 												 then NONE 
-												 else SOME (getBody (getBoolExpr trees)) ,
-                               expression      = if XmlTree.exists "UML:ExpressionInOCL" (getExpr trees) 
+												 else SOME "blah"(*(getBody (getBoolExpr trees))*) ,
+                               expression      = if XmlTree.exists "UML15OCL:Expressions.ExpressionInOcl" (getExpr trees) 
 												 then SOME (mkOCLExpression (getOclExpr trees))
 												 else NONE}
     in   XmlTree.apply_on "UML:Guard" f tree 
@@ -815,6 +816,7 @@ and mkStateMachine tree =
                                            (trees)}
     in  XmlTree.apply_on "UML:StateMachine" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkStateMachine: "^msg)
+	    | IllFormed msg => raise IllFormed ("in mkStateMachine: "^msg)
 	    | _ => raise IllFormed ("Error in mkStateMachine")
     end;
 
@@ -1070,6 +1072,9 @@ fun mkCallEvent atts trees =
 					       trees))
 		   }
 
+fun mkSignalEvent atts trees = XMI.SignalEvent {xmiid = getXmiId atts,
+                                                parameter = []}
+
 (* TODO: mkSignalEvent, etc ? *)
 fun mkEvent tree = 
     let val elem  = XmlTree.tagname_of    tree
@@ -1077,6 +1082,7 @@ fun mkEvent tree =
 	val trees = XmlTree.node_children_of    tree
     in 
 	case elem of "UML:CallEvent"                     => mkCallEvent atts trees
+		   | "UML:SignalEvent" => mkSignalEvent atts trees
 		   | _ => raise IllFormed ("in mkEvent: found unexpected element "^elem)
     end
 	handle _ => raise IllFormed ("Error in mkEvent")
