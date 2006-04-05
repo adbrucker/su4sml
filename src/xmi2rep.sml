@@ -250,10 +250,12 @@ fun transform_guard t (XMI.mk_Guard g) =
     let val self_type = Rep_OclType.DummyT (* FIX *)
 	val package_path = nil (* FIX *) 
     in
-	Rep_OclTerm.OperationCall ( Rep_OclTerm.Variable ("self",self_type),
-				    self_type,
-				    List.concat [package_path,[#body g]],nil,
-				    Rep_OclType.Boolean )
+	case #expression g of
+		NONE => Rep_OclTerm.OperationCall ( Rep_OclTerm.Variable ("self",self_type),
+											self_type,
+											List.concat [package_path,[Option.valOf(#body g)]],nil,
+											Rep_OclType.Boolean )
+	  | SOME exp => transform_expression t exp
     end
 
 fun transform_event t (XMI.CallEvent ev) =
@@ -408,12 +410,12 @@ fun transformXMI ({classifiers,constraints,packages,
 	handle Empty => raise Option
 
 fun readXMI f = (transformXMI o ParseXMI.readFile) f
-   (* handle ParseXMI.IllFormed msg => (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^f^":\n"^msg^"\n"); 
+    handle ParseXMI.IllFormed msg => (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^f^":\n"^msg^"\n"); 
 				      nil)
 	 | Option => (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^f^"\n"); 
 				      nil)
 	 | IllFormed msg => (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^f^": "^msg^"\n"); 
-				      nil)*)
+				      nil)
 end
 
 

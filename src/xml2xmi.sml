@@ -616,16 +616,25 @@ fun mkProcedure tree =
 *)
 
 fun mkGuard tree = 
-    let val getExpr = XmlTree.attributes_of o (XmlTree.find "UML:BooleanExpression") o
+    let val getExpr =  XmlTree.node_children_of o (XmlTree.find "UML:Guard.expression")
+		val getBoolExpr = XmlTree.attributes_of o (XmlTree.find "UML:BooleanExpression") o
                       XmlTree.node_children_of o (XmlTree.find "UML:Guard.expression") 
+        val getOclExpr = (XmlTree.find "UML:ExpressionInOcl") o
+                      XmlTree.node_children_of o (XmlTree.find "UML:Guard.expression")
         fun f atts trees = XMI.mk_Guard{
                                xmiid = getXmiId atts,
                                name  = getMaybeEmptyName atts,
                                isSpecification = getBoolAtt "isSpecification" atts,
                                visibility      = getVisibility atts,
-                               language        = getLang(getExpr trees),
-                               body            = getBody(getExpr trees),
-                               expression      = nil}
+                               language        = if XmlTree.exists "UML:ExpressionInOCL" (getExpr trees) 
+												 then getLang(XmlTree.attributes_of (getOclExpr trees))
+												 else getLang(getBoolExpr trees),
+                               body            = if XmlTree.exists "UML:ExpressionInOCL" (getExpr trees) 
+												 then NONE 
+												 else SOME (getBody (getBoolExpr trees)) ,
+                               expression      = if XmlTree.exists "UML:ExpressionInOCL" (getExpr trees) 
+												 then SOME (mkOCLExpression (getOclExpr trees))
+												 else NONE}
     in   XmlTree.apply_on "UML:Guard" f tree 
 	 handle XmlTree.IllFormed msg => raise IllFormed ("in mkGuard: "^msg)
     end

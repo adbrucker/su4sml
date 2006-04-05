@@ -60,8 +60,8 @@ datatype Guard  = mk_Guard of    {xmiid            : string,
                                   name             : string,
                                   visibility       : VisibilityKind, 
                                   language         : string,
-                                  body             : string,
-                                  expression       : string list}
+                                  body             : string option,
+                                  expression       : XMI_OCL.OCLExpression option}
 
 datatype Event  = SignalEvent  of Parameter list
                 | CallEvent    of { xmiid : string,
