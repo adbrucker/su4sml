@@ -174,12 +174,13 @@ fun find_classifier t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Type (_,_,c,_) => c
        | _                => raise Option) 
-    handle Option => raise IllFormed ("expected Classifier "^xmiid^" in table")
+    handle Option => raise IllFormed ("expected Classifier "^xmiid^" in table (in find_classifer)")
 
 fun find_classifierInState_classifier t cis_id =
     (case valOf (HashTable.find t cis_id)
       of ClassifierInState c => find_classifier t c
-       | _                   => raise Option)
+       | Type (_,_,c,_)      => c
+	   | _                   => raise Option)
     handle Option =>  raise IllFormed ("expected ClassifierInState "
 				       ^cis_id^" in table")
 
@@ -187,7 +188,7 @@ fun find_activity_graph_of t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Type (_,_,_,ag) => ag
        | _                => raise Option) 
-    handle Option => raise IllFormed ("expected Classifier "^xmiid^" in table")
+    handle Option => raise IllFormed ("expected Classifier "^xmiid^" in table (in find_activity_graph_of)")
 
 			
 fun find_classifier_type t xmiid
@@ -207,9 +208,9 @@ fun find_classifier_type t xmiid
 		      | Rep_OclType.Set        (Rep_OclType.Classifier [x]) => Rep_OclType.Set (find_classifier_type t x)
 		      | Rep_OclType.Bag        (Rep_OclType.Classifier [x]) => Rep_OclType.Bag (find_classifier_type t x)
 		      | Rep_OclType.OrderedSet (Rep_OclType.Classifier [x]) => Rep_OclType.OrderedSet (find_classifier_type t x)
-		      | _ => raise Option
+		      | _ => raise IllFormed ("unexpected Classifier-Type "^xmiid^" in table")
 	 end
-	handle Option => raise IllFormed ("expected Classifier "^xmiid^" in table")
+	handle Option => raise IllFormed ("expected Classifier "^xmiid^" in table (in find_classifier_type)")
 		    
 
 fun insert_constraint table (c:XMI.Constraint) =

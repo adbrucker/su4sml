@@ -51,7 +51,7 @@ datatype Procedure = mk_Procedure of
                                   isAsynchronous   : bool,
                                   language         : string,
                                   body             : string,
-                                  expression       : string list
+                                  expression       : string 
                           (*      method     : Method list, NOT YET IMPLEMENTED *)
                           (*      isList     : bool NOT SUPPORTED BY POSEIDON *)}
 

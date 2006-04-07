@@ -32,7 +32,7 @@ type     Transition_Id
 datatype Procedure = Proc_mk of {proc_id          : string,
 				 language         : string,
 				 body             : string,
-				 expression       : string list}
+				 expression       : string }
 	 
 (* perhaps this type has to be changes according to what we can expect *)
 (* from CASE tools                                                     *)

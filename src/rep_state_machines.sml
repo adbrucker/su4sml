@@ -34,7 +34,7 @@ type     Transition_Id  = string
 datatype Procedure = Proc_mk of {proc_id          : string,
 				 language         : string,
 				 body             : string,
-				 expression       : string list}
+				 expression       : string }
 
 type Guard     = Rep_OclTerm.OclTerm
 type Parameter = string * Rep_OclType.OclType

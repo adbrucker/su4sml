@@ -585,36 +585,36 @@ fun mkStereotypeR tree =
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkStereotype: "^msg)
     end 
 
+fun mkAction atts trees = 
+	let val expr = hd (XmlTree.follow "UML:Action.script" trees)
+			handle Empty => raise IllFormed "in mkAction: did not find expression for action"
+		val expr_atts = XmlTree.attributes_of expr
+	in
+	XMI.mk_Procedure {xmiid = getXmiId atts,
+					  name = getMaybeEmptyName atts,
+					  isSpecification = getBoolAtt "isSpecification" atts,
+					  isAsynchronous = getBoolAtt "isAsynchronous" atts ,
+					  language = getLang expr_atts,
+					  body = getBody expr_atts,
+					  expression = "" (*FIX *)}
+	end
+		handle IllFormed msg => raise IllFormed ("in mkAction: "^msg)
+
+(* This works for ArgoUML, i.e. 1.4 metamodels... *)
 fun mkProcedure tree = 
-    let fun f atts trees = XMI.mk_Procedure 
-			       {xmiid = getXmiId atts,
-				name = getMaybeEmptyName atts,
-				isSpecification = getBoolAtt "isSpecification" atts,
-				isAsynchronous = false, (* FIX *)
-				language = getLang atts,
-				body = getBody atts,
-				expression = nil (*FIX *)}
-    in XmlTree.apply_on "UML:Procedure" f tree
-       handle XmlTree.IllFormed msg => raise IllFormed ("in mkGuard: "^msg)
-    end
-	
-(* UML1.4 specific?
-fun mkProcedure tree =
-    let fun get_AttrL x = (XmlTree.attributes_of o (XmlTree.find "UML:ActionExpression") o
-                        XmlTree.node_children_of o (XmlTree.find "UML:Action.script")) x
-        fun f atts trees = XMI.mk_Procedure{
-                               xmiid = getXmiId atts,
-                               name  = getMaybeEmptyName atts,
-                               isSpecification = getBoolAtt "isSpecification" atts,
-                               isAsynchronous  = getBoolAtt "isAsynchronous"  atts,
-                               language        = getLang(get_AttrL trees),
-                               body            = getBody(get_AttrL trees),
-                               expression      = nil}
-    in XmlTree.apply_on "UML:CallAction" f tree 
-       handle XmlTree.IllFormed msg => raise IllFormed ("in mkProcedure: "^msg)
-    (* POSEIDON specific ! According to UML 1.5, should be: "UML:Method" *)
-    end
-*)
+    let val elem  = XmlTree.tagname_of    tree
+		val atts  = XmlTree.attributes_of tree
+		val trees = XmlTree.node_children_of    tree
+    in 
+		if elem = "UML:CallAction"      orelse
+		   elem = "UML:CreateAction"    orelse
+		   elem = "UML:DestroyAction"   orelse
+           elem = "UML:ReturnAction"    orelse
+           elem = "UML:SendAction"      orelse
+           elem = "UML:TerminateAction" orelse
+		   elem = "UML:UninterpretedAction" then  mkAction atts trees
+		else raise IllFormed ("in mkProcedure: found unexpected element "^elem^".")
+	end
 
 fun mkGuard tree = 
     let val getExpr =  XmlTree.node_children_of o (XmlTree.find "UML:Guard.expression")
@@ -692,18 +692,15 @@ fun mkState tree =
         val getOutgoing  = getTrans "UML:StateVertex.outgoing"
         val getSubvertex = (map mkState) o XmlTree.node_children_of o 
                            (XmlTree.find "UML:CompositeState.subvertex")
-        val getEntry     = (Option.map (mkProcedure  o 
-					(XmlTree.find "UML:CallAction") o
-					XmlTree.node_children_of))  o
-                           (XmlTree.find_some "UML:State.entry")
-        val getExit     = (Option.map (mkProcedure  o 
-					(XmlTree.find "UML:CallAction") o
-					XmlTree.node_children_of))  o
-                           (XmlTree.find_some "UML:State.exit")
-        val getDo     = (Option.map (mkProcedure  o 
-					(XmlTree.find "UML:CallAction") o
-					XmlTree.node_children_of))  o
-                           (XmlTree.find_some "UML:State.doActivity")
+        val getEntry     = (Option.map (mkProcedure  o hd o 
+										XmlTree.node_children_of)  o
+							(XmlTree.find_some "UML:State.entry"))
+        val getExit     = (Option.map (mkProcedure  o hd o 
+									   XmlTree.node_children_of)  o
+                           (XmlTree.find_some "UML:State.exit"))
+        val getDo     = (Option.map (mkProcedure  o hd o
+									 XmlTree.node_children_of)  o
+						 (XmlTree.find_some "UML:State.doActivity"))
         val getTagVal    = List.concat o 
                            (map ((map mkTaggedValue) o XmlTree.node_children_of)) o 
                            (XmlTree.filter "UML:ModelElement.taggedValue")
@@ -797,7 +794,7 @@ fun mkState tree =
 
        | _ => raise IllFormed ("in mkState: Unknown State Vertex.")
      end
-	handle _ => raise IllFormed ("Error in mkState")
+(*	handle _ => raise IllFormed ("Error in mkState")*)
 					     
 
 and mkStateMachine tree =
@@ -1114,8 +1111,8 @@ fun mkPackage tree =
 						      (filterStereotypes trees)),
 			       tag_definitions = (map mkTagDefinition
 						      (filterTagDefinitions trees)),
-                               state_machines  = nil,
-                               activity_graphs = nil,
+				   state_machines  = nil,
+				   activity_graphs = map mkActivityGraph(filterActivityGraphs trees),
 			       dependencies    = (map mkDependency (filterDependencies trees)),
 			       stereotype = (map (getXmiIdref o XmlTree.attributes_of) 
 				   (XmlTree.follow "UML:ModelElement.stereotype" 
