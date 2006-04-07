@@ -642,20 +642,19 @@ fun mkGuard tree =
 
 
 fun mkTransition tree = 
-    let val getGuard     = (Option.map (mkGuard  o 
-					(XmlTree.find "UML:Guard") o
-					XmlTree.node_children_of))  o
-                           (XmlTree.find_some "UML:Transition.guard")
-	val getTrigger     = (Option.map (getXmiIdref o XmlTree.attributes_of o
-					 hd o XmlTree.node_children_of))  o
-			    (XmlTree.find_some "UML:Transition.trigger")
-        val getTagVal    = List.concat o 
+    let val getGuard  = (Option.map (mkGuard  o 
+									 (XmlTree.find "UML:Guard") o
+									 XmlTree.node_children_of))  o
+						(XmlTree.find_some "UML:Transition.guard")
+		val getTrigger= (Option.map (getXmiIdref o XmlTree.attributes_of o
+									 hd o XmlTree.node_children_of))  o
+						(XmlTree.find_some "UML:Transition.trigger")
+        val getTagVal = List.concat o 
                            (map ((map mkTaggedValue) o XmlTree.node_children_of)) o 
                            (XmlTree.filter "UML:ModelElement.taggedValue")
-	val getEffect    = (Option.map (mkProcedure o 
-					(XmlTree.find "UML:Procedure") o
-					XmlTree.node_children_of)) o
-			   (XmlTree.find_some "UML:Transition.effect")
+		val getEffect = (Option.map (mkProcedure  o hd o 
+									 XmlTree.node_children_of)  o
+						 (XmlTree.find_some "UML:Transition.effect"))
         fun f atts trees = XMI.mk_Transition  
                            {isSpecification = getBoolAtt "isSpecification" atts,
                             xmiid  = getXmiId atts,
