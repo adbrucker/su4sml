@@ -160,7 +160,7 @@ fun range_to_inv cls_name aend (a,b) =
 (*    i.e., A.b.a->includes(A)                                   *)
 (*    FIXME: 2. is not implemented yet...                        *)
 fun assoc_to_inv cls_name (aend:associationend) =
-    let val inv_name = "multiplicity_constraint_for_association_end_"^(#name aend)
+    let val inv_name = "multconstraint_for_aend_"^(#name aend)
 	val range_constraints = case (#multiplicity aend) of
 				    [(0,1)] => []
 				  | [(1,1)] => let
