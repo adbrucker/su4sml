@@ -426,7 +426,14 @@ fun getAssociations t = (map mkAssociation (XmlTree.filter "UML:Association" t))
 			      (XmlTree.filter "UML:AssociationClass" t))
 			handle _ => raise IllFormed ("Error in getAssociations") 
 
-val filterConstraints   = XmlTree.filter "UML:Constraint"  
+ 
+fun filterConstraints trees = List.filter 
+								  (fn x => (XmlTree.tagname_of o hd o
+											(XmlTree.follow "UML:Constraint.body") o
+											XmlTree.node_children_of) x 
+										   ="UML15OCL.Expressions.ExpressionInOcl") 
+								  (XmlTree.filter "UML:Constraint" trees)
+
 val filterStereotypes   = XmlTree.filter "UML:Stereotype" 
 val filterVariableDecs  = XmlTree.filter "UML15OCL.Expressions.VariableDeclaration" 
 val filterPackages      = fn trees => append (XmlTree.filter "UML:Package" trees)
@@ -654,7 +661,7 @@ fun mkTransition tree =
                            (XmlTree.filter "UML:ModelElement.taggedValue")
 		val getEffect = (Option.map (mkProcedure  o hd o 
 									 XmlTree.node_children_of)  o
-						 (XmlTree.find_some "UML:Transition.effect"))
+						 (XmlTree.find_some "UML:Transition.effect")) 
         fun f atts trees = XMI.mk_Transition  
                            {isSpecification = getBoolAtt "isSpecification" atts,
                             xmiid  = getXmiId atts,

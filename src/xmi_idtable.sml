@@ -142,6 +142,10 @@ fun find_associationend t xmiid  =
        | _                   => raise Option) 
     handle Option => raise IllFormed ("expected AssociationEnd "^xmiid^" in table")
 		
+
+fun filter_exists t cs = 
+	filter (fn x => Option.isSome (HashTable.find t x)) cs 
+
 fun filter_precondition t  cs 
   = filter (fn x => let val constraint = find_constraint t x
 			val name = #name constraint

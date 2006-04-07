@@ -166,18 +166,19 @@ fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
     let val result_type =  find_classifier_type t 
 						((#type_id o hd) (filter (fn x => #kind x = XMI.Return) 
 									 parameter))
+		val checked_constraints = filter_exists t constraints
     in
 	{name=name,
 	 arguments = (map (transform_parameter t)
 			  (filter (fn x => #kind x <> XMI.Return) parameter)),
 	 precondition = (map ((transform_constraint t) o (find_constraint t)) 
-			     (filter_precondition t constraints)),
+			     (filter_precondition t checked_constraints)),
 	 postcondition = List.concat [map ((transform_constraint t) o 
 					   (find_constraint t))
 					  (filter_postcondition t constraints), 
 					  map ((transform_bodyconstraint result_type t) o
 					       (find_constraint t))
-					      (filter_bodyconstraint t constraints)],
+					      (filter_bodyconstraint t checked_constraints)],
 	 result = result_type,
 	 visibility = visibility,
 	 scope = ownerScope,
@@ -295,7 +296,8 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 					   state_machines}) =
     let val parents = map ((find_classifier_type t) o (find_parent t)) 
 			  generalizations 
-	val filtered_parents = filter (fn x => x <> Rep_OclType.OclAny) parents
+		val filtered_parents = filter (fn x => x <> Rep_OclType.OclAny) parents
+ 		val checked_invariants = filter_exists t invariant
     in
 	Rep.Class {name = path_of_classifier (find_classifier_type t xmiid), 
 			parent = case filtered_parents 
@@ -304,7 +306,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 			attributes = map (transform_attribute t) attributes,
 			operations = map (transform_operation t) operations,
 			invariant  = map ((transform_constraint t) o 
-					  (find_constraint t)) invariant, 
+					  (find_constraint t)) checked_invariants, 
 			associationends = map (transform_aend t) 
 					      ((filter_named_aends (find_aends t xmiid))), 
 			stereotypes = map (find_stereotype t) stereotype, 
@@ -320,7 +322,8 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 						  supplierDependency,taggedValue}) =
     let val parents = map ((find_classifier_type t) o (find_parent t)) 
 			  generalizations 
-	val filtered_parents = filter (fn x => x <> Rep_OclType.OclAny) parents
+		val filtered_parents = filter (fn x => x <> Rep_OclType.OclAny) parents
+		val checked_invariants = filter_exists t invariant
     in
 	Rep.Class {name = path_of_classifier (find_classifier_type t xmiid), 
 			parent = case filtered_parents 
@@ -329,7 +332,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 			attributes = map (transform_attribute t) attributes,
 			operations = map (transform_operation t) operations,
 			invariant  = map ((transform_constraint t) o 
-					  (find_constraint t)) invariant, 
+					  (find_constraint t)) checked_invariants, 
 			associationends = map (transform_aend t) 
 					      ((filter_named_aends (find_aends t xmiid))), 
 			stereotypes = map (find_stereotype t) stereotype, 
@@ -338,7 +341,9 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 			thyname = NONE}
     end
   | transform_classifier t (XMI.Primitive {xmiid,name,generalizations,
-					       operations,invariant}) =
+										   operations,invariant}) =
+	let val checked_invariants = filter_exists t invariant
+	in
     Rep.Primitive {name = case find_classifier_type t xmiid of Rep_OclType.Classifier x => x
 								  | _ => raise Option, 
 			parent = NONE,    (* FIX *)
@@ -346,22 +351,26 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 			associationends = map (transform_aend t) 
 					      (filter_named_aends (find_aends t xmiid)), 
 			invariant = map ((transform_constraint t) o 
-					 (find_constraint t)) invariant,
+					 (find_constraint t)) checked_invariants,
 			stereotypes = nil, (*FIX *)
 			interfaces = nil, (* FIX *)
 		   thyname = NONE}
+	end
   | transform_classifier t (XMI.Enumeration {xmiid,name,generalizations,
 						 operations,literals,invariant}) =
+	let val checked_invariants = filter_exists t invariant
+	in
     Rep.Enumeration {name = case find_classifier_type t xmiid of Rep_OclType.Classifier x => x
 								    | _ => raise Option, 
 			  parent = NONE,    (* FIX *)
 			  literals = literals,
 			  operations = map (transform_operation t) operations,
 			  invariant =   map ((transform_constraint t) o 
-					     (find_constraint t)) invariant,
+					     (find_constraint t)) checked_invariants,
 			  stereotypes = nil, (* FIX *)
 			  interfaces = nil, (* FIX *)
 		   thyname = NONE}
+	end
   | transform_classifier t (_) = raise IllFormed "Not supported Classifier type found."
 			   
 
