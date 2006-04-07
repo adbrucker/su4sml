@@ -10079,7 +10079,9 @@
 
 <!ELEMENT UML:Transition.guard (UML:Guard)* >
 
-<!ELEMENT UML:Transition.effect (UML:Procedure)* >
+<!ELEMENT UML:Transition.effect (UML:CallAction | UML:CreateAction | 
+    UML:DestroyAction | UML:ReturnAction | UML:SendAction |
+    UML:TerminateAction | UML:UninterpretedAction |UML:Procedure)* > 
 
 <!ELEMENT UML:Transition.trigger (UML:Event | 
     UML:ChangeEvent | UML:CallEvent | UML:TimeEvent | UML:SignalEvent)* >
