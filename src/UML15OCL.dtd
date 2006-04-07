@@ -4448,10 +4448,6 @@
    isSpecification CDATA #IMPLIED
    %XMI.element.att; %XMI.link.att;>
 
-<!ELEMENT UML:TerminateAction (XMI.extension)* >
-<!ATTLIST UML:TerminateAction
-   %XMI.element.att; %XMI.link.att;>
-
 <!ELEMENT UML:Instance.classifier (UML15OCL.Types.BagType | 
     UML:Classifier | UML:Artifact | UML15OCL.Types.TupleType | 
     UML:ClassifierRole | UML:Actor | UML15OCL.Types.OrderedSetType | 
@@ -4859,51 +4855,58 @@
 
 <!-- added for UML 1.4 (ArgoUML) compatibility -->
 
-<!ELEMENT UML:CallAction (UML:ModelElement.isSpecification |
+<!ELEMENT UML:CallAction (UML:ModelElement.name | UML:ModelElement.isSpecification |
     UML:ModelElement.isAsynchronous | UML:Action.script | XMI.extension)* >
 <!ATTLIST UML:CallAction
+   name CDATA #IMPLIED
    isSpecification CDATA #IMPLIED
    isAsynchronous CDATA #IMPLIED
    %XMI.element.att; %XMI.link.att;>
 
-<!ELEMENT UML:CreateAction (UML:ModelElement.isSpecification |
+<!ELEMENT UML:CreateAction (UML:ModelElement.name | UML:ModelElement.isSpecification |
     UML:ModelElement.isAsynchronous | UML:Action.script | XMI.extension)* >
 <!ATTLIST UML:CreateAction
+   name CDATA #IMPLIED
    isSpecification CDATA #IMPLIED
    isAsynchronous CDATA #IMPLIED
    %XMI.element.att; %XMI.link.att;>
 
-<!ELEMENT UML:DestroyAction (UML:ModelElement.isSpecification |
+<!ELEMENT UML:DestroyAction (UML:ModelElement.name | UML:ModelElement.isSpecification |
     UML:ModelElement.isAsynchronous | UML:Action.script | XMI.extension)* >
 <!ATTLIST UML:DestroyAction
+   name CDATA #IMPLIED
    isSpecification CDATA #IMPLIED
    isAsynchronous CDATA #IMPLIED
    %XMI.element.att; %XMI.link.att;>
 
-<!ELEMENT UML:ReturnAction (UML:ModelElement.isSpecification |
+<!ELEMENT UML:ReturnAction (UML:ModelElement.name | UML:ModelElement.isSpecification |
     UML:ModelElement.isAsynchronous | UML:Action.script | XMI.extension)* >
 <!ATTLIST UML:ReturnAction
+   name CDATA #IMPLIED
    isSpecification CDATA #IMPLIED
    isAsynchronous CDATA #IMPLIED
    %XMI.element.att; %XMI.link.att;>
 
-<!ELEMENT UML:SendAction (UML:ModelElement.isSpecification |
+<!ELEMENT UML:SendAction (UML:ModelElement.name | UML:ModelElement.isSpecification |
     UML:ModelElement.isAsynchronous | UML:Action.script | XMI.extension)* >
 <!ATTLIST UML:SendAction
+   name CDATA #IMPLIED
    isSpecification CDATA #IMPLIED
    isAsynchronous CDATA #IMPLIED
    %XMI.element.att; %XMI.link.att;>
 
-<!ELEMENT UML:TerminateAction (UML:ModelElement.isSpecification |
+<!ELEMENT UML:TerminateAction (UML:ModelElement.name | UML:ModelElement.isSpecification |
     UML:ModelElement.isAsynchronous | UML:Action.script | XMI.extension)* >
 <!ATTLIST UML:TerminateAction
+   name CDATA #IMPLIED
    isSpecification CDATA #IMPLIED
    isAsynchronous CDATA #IMPLIED
    %XMI.element.att; %XMI.link.att;>
 
-<!ELEMENT UML:UninterpretedAction (UML:ModelElement.isSpecification |
+<!ELEMENT UML:UninterpretedAction (UML:ModelElement.name | UML:ModelElement.isSpecification |
     UML:ModelElement.isAsynchronous | UML:Action.script | XMI.extension)* >
 <!ATTLIST UML:UninterpretedAction
+   name CDATA #IMPLIED
    isSpecification CDATA #IMPLIED
    isAsynchronous CDATA #IMPLIED
    %XMI.element.att; %XMI.link.att;>
