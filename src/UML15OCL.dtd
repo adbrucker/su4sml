@@ -4857,8 +4857,55 @@
    isSpecification CDATA #IMPLIED
    %XMI.element.att; %XMI.link.att;>
 
-<!ELEMENT UML:UninterpretedAction (XMI.extension)* >
+<!-- added for UML 1.4 (ArgoUML) compatibility -->
+
+<!ELEMENT UML:CallAction (UML:ModelElement.isSpecification |
+    UML:ModelElement.isAsynchronous | UML:Action.script | XMI.extension)* >
+<!ATTLIST UML:CallAction
+   isSpecification CDATA #IMPLIED
+   isAsynchronous CDATA #IMPLIED
+   %XMI.element.att; %XMI.link.att;>
+
+<!ELEMENT UML:CreateAction (UML:ModelElement.isSpecification |
+    UML:ModelElement.isAsynchronous | UML:Action.script | XMI.extension)* >
+<!ATTLIST UML:CreateAction
+   isSpecification CDATA #IMPLIED
+   isAsynchronous CDATA #IMPLIED
+   %XMI.element.att; %XMI.link.att;>
+
+<!ELEMENT UML:DestroyAction (UML:ModelElement.isSpecification |
+    UML:ModelElement.isAsynchronous | UML:Action.script | XMI.extension)* >
+<!ATTLIST UML:DestroyAction
+   isSpecification CDATA #IMPLIED
+   isAsynchronous CDATA #IMPLIED
+   %XMI.element.att; %XMI.link.att;>
+
+<!ELEMENT UML:ReturnAction (UML:ModelElement.isSpecification |
+    UML:ModelElement.isAsynchronous | UML:Action.script | XMI.extension)* >
+<!ATTLIST UML:ReturnAction
+   isSpecification CDATA #IMPLIED
+   isAsynchronous CDATA #IMPLIED
+   %XMI.element.att; %XMI.link.att;>
+
+<!ELEMENT UML:SendAction (UML:ModelElement.isSpecification |
+    UML:ModelElement.isAsynchronous | UML:Action.script | XMI.extension)* >
+<!ATTLIST UML:SendAction
+   isSpecification CDATA #IMPLIED
+   isAsynchronous CDATA #IMPLIED
+   %XMI.element.att; %XMI.link.att;>
+
+<!ELEMENT UML:TerminateAction (UML:ModelElement.isSpecification |
+    UML:ModelElement.isAsynchronous | UML:Action.script | XMI.extension)* >
+<!ATTLIST UML:TerminateAction
+   isSpecification CDATA #IMPLIED
+   isAsynchronous CDATA #IMPLIED
+   %XMI.element.att; %XMI.link.att;>
+
+<!ELEMENT UML:UninterpretedAction (UML:ModelElement.isSpecification |
+    UML:ModelElement.isAsynchronous | UML:Action.script | XMI.extension)* >
 <!ATTLIST UML:UninterpretedAction
+   isSpecification CDATA #IMPLIED
+   isAsynchronous CDATA #IMPLIED
    %XMI.element.att; %XMI.link.att;>
 
 <!ELEMENT UML:NodeInstance.resident (UML:ComponentInstance)* >
@@ -7143,18 +7190,6 @@
    isSpecification CDATA #IMPLIED
    isReadOnly CDATA #IMPLIED
    isSynchronous CDATA #IMPLIED
-   %XMI.element.att; %XMI.link.att;>
-
-<!-- included for compatibility with Poseidon 3.1               -->
-<!-- the allowed elements are just a guess. It may be necessary -->
-<!-- to add more...                                             -->
-<!ELEMENT UML:CallAction (UML:Action.script |
-	  UML:ModelElement.constraint | UML:ModelElement.stereotype |
-	  XMI.extension)* >
-<!ATTLIST UML:CallAction
-   name CDATA #IMPLIED
-   isSpecification CDATA #IMPLIED
-   isAsynchronous CDATA #IMPLIED
    %XMI.element.att; %XMI.link.att;>
 
 <!ELEMENT UML:VariableAction.variable (UML:Variable)* >
@@ -9461,16 +9496,24 @@
 <!ATTLIST UML:Collaborations
    %XMI.element.att; %XMI.link.att;>
 
-<!ELEMENT UML:State.entry (UML:Procedure)* >
+<!-- relaxed for UML 1.4 (ArgoUML) compatibility -->
 
-<!ELEMENT UML:State.exit (UML:Procedure)* >
+<!ELEMENT UML:State.entry (UML:Procedure | UML:CallAction |
+    UML:CreateAction | UML:DestroyAction | UML:ReturnAction |
+    UML:SendAction | UML:TerminateAction | UML:UninterpretedAction)* >
+
+<!ELEMENT UML:State.exit (UML:Procedure | UML:CallAction |
+    UML:CreateAction | UML:DestroyAction | UML:ReturnAction |
+    UML:SendAction | UML:TerminateAction | UML:UninterpretedAction)* >
 
 <!ELEMENT UML:State.deferrableEvent (UML:Event | 
     UML:ChangeEvent | UML:CallEvent | UML:TimeEvent | UML:SignalEvent)* >
 
 <!ELEMENT UML:State.internalTransition (UML:Transition)* >
 
-<!ELEMENT UML:State.doActivity (UML:Procedure)* >
+<!ELEMENT UML:State.doActivity (UML:Procedure | UML:CallAction |
+    UML:CreateAction | UML:DestroyAction | UML:ReturnAction |
+    UML:SendAction | UML:TerminateAction | UML:UninterpretedAction)* >
 
 <!ELEMENT UML:State.stateMachine (UML:StateMachine | 
     UML:ActivityGraph)* >
