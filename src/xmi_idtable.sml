@@ -441,6 +441,7 @@ fun transform_assocation t (assoc:XMI.Association) =
 	    map (fn (x:XMI.AssociationEnd) => (#participant_id x, ae)) aes
 	val mappings = List.concat (map (fn x => pair_with x (all_others x aends)) aends)
 	fun add_aend_to_type (id,ae) = 
+		if not (Option.isSome (HashTable.find t id)) then () else 
 	    let val type_of_id  = find_classifier_type t id
 		val cls_of_id   = find_classifier t id
 		val aends_of_id = ae::(find_aends t id)
