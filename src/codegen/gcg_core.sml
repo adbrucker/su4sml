@@ -26,17 +26,6 @@
 functor GCG_Core (C: CARTRIDGE): GCG  = 
 struct
 
-(* FIX: do not open so many structures... *)
-open Rep
-open Rep_OclType
-open Tpl_Parser
-open Rep_SecureUML_ComponentUML.Security
-open ComponentUML
-open Gcg_Helper
-open Ocl2String
-open TextIO
-
-
 val curFile = ref "";
 
 
@@ -44,14 +33,14 @@ val out = ref TextIO.stdOut;
 
 fun closeFile ()= if (!curFile = "") 
 			then ()
-		  else (closeOut (!out); 
+		  else (TextIO.closeOut (!out); 
 		  	print ((!curFile)^" ... done\n");
 		  	curFile := "") 
 		  
 
 fun openFile file = (closeFile ();
 		     print ("opening "^file^"...\n");
-		     assureDir file;
+		     Gcg_Helper.assureDir file;
 		     out := (TextIO.openOut file);
 		     curFile := file
 		     )
@@ -84,7 +73,7 @@ fun map2EveryOther f [] = []
   | map2EveryOther f [a] = [a]
   | map2EveryOther f (a::b::z) = a::(f b)::(map2EveryOther f z)  
 
-fun substituteVars e s = let val tkl = (joinEscapeSplitted "$") (fieldSplit s #"$")
+fun substituteVars e s = let val tkl = (Gcg_Helper.joinEscapeSplitted "$") (Gcg_Helper.fieldSplit s #"$")
 			in
 			  String.concat (map2EveryOther (C.lookup e) tkl)
 			end
@@ -95,31 +84,31 @@ fun substituteVars e s = let val tkl = (joinEscapeSplitted "$") (fieldSplit s #"
  * it traverses a templateParseTree and executes the given instructions
  *)
 (* write :  C.environment -> TemplateTree -> ()    *)
-fun write env (RootNode(l))  = List.app (write env) l
-  | write env (OpenFileLeaf(file)) = openFile (substituteVars env file)
-  | write env (EvalLeaf(l)) = let fun collectEval 		[] 	    = ""
-  				| collectEval ((TextLeaf(expr))::t) = expr^"\n"^(collectEval t)
+fun write env (Tpl_Parser.RootNode(l))  = List.app (write env) l
+  | write env (Tpl_Parser.OpenFileLeaf(file)) = openFile (substituteVars env file)
+  | write env (Tpl_Parser.EvalLeaf(l)) = let fun collectEval 		[] 	    = ""
+  				| collectEval ((Tpl_Parser.TextLeaf(expr))::t) = expr^"\n"^(collectEval t)
   				| collectEval 		_	    = 
-  				     gcg_error "eval failed: TextLeaf expected in gcg_core.write." 
+  				     Gcg_Helper.gcg_error "eval failed: TextLeaf expected in gcg_core.write." 
   			  in
   			    eval (substituteVars env (collectEval l))
   			  end
-  | write env (TextLeaf(s)) =  writeLine (substituteVars env s)
-  | write env (IfNode(cond,l)) 
+  | write env (Tpl_Parser.TextLeaf(s)) =  writeLine (substituteVars env s)
+  | write env (Tpl_Parser.IfNode(cond,l)) 
   	=   let (*val list_of_environments = C.foreach listType env
 		fun write_children e = List.app (fn tree => write e tree) children
 		*)
 		fun writeThen _ []           = ()
-  		 |  writeThen _ [ElseNode(_)]= ()
+  		 |  writeThen _ [Tpl_Parser.ElseNode(_)]= ()
   		 |  writeThen e (h::t)	    = (write e h ;writeThen e t) 
   	    in
   	    	if (C.evalCondition env cond) 
   		then writeThen env l
-  		else (case (List.last l) of nd as (ElseNode(_)) => write env nd
+  		else (case (List.last l) of nd as (Tpl_Parser.ElseNode(_)) => write env nd
   			  		    |          _        => ()	)
   	    end
-  | write env (ElseNode(l)) = List.app (write env) l
-  | write env (ForEachNode(listType,children)) 
+  | write env (Tpl_Parser.ElseNode(l)) = List.app (write env) l
+  | write env (Tpl_Parser.ForEachNode(listType,children)) 
   	=	let val list_of_environments = C.foreach listType env
 		    fun write_children e = List.app (fn tree => write e tree) children
 		in 
