@@ -36,13 +36,12 @@ exception IllFormed of string
 
 open Xmi_IDTable
 
+(** thrown when something is not yet implemented *)
 exception NotYetImplemented
-
-
-
 
 val triv_expr = Rep_OclTerm.Literal ("true",Rep_OclType.Boolean)
 
+(** transform an xmi ocl expression into a rep ocl term *)
 fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) = 
     Rep_OclTerm.Literal (symbol,find_classifier_type t expression_type)
   | transform_expression t (XMI.CollectionLiteralExp {parts,expression_type}) = 
@@ -288,6 +287,7 @@ fun transform_statemachine t (XMI.mk_StateMachine st) =
     Rep_StateMachine.SM_mk {top = transform_state t (#top st), 
 			    transition = map (transform_transition t) (#transitions st) }
 
+(** transform a XMI.Classifier classifier into a Rep.Classifier *)
 fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 					   generalizations,attributes,operations,
 					   invariant,stereotype,clientDependency,
@@ -374,7 +374,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
   | transform_classifier t (_) = raise IllFormed "Not supported Classifier type found."
 			   
 
-(* recursively transform all classes in the package *)
+(** recursively transform all classes in the package. *)
 fun transform_package t (XMI.Package p) =
     let (* we do not transform the ocl library *)
 	val filteredPackages = 
@@ -388,17 +388,20 @@ fun transform_package t (XMI.Package p) =
 
 
 
-(* transform a UML model into a list of Rep classes           *)
-(* 1. traverse package hierarchy and put xmi.id of all interesting *)
-(*    model elements into the hashtable                            *) 
-(* 2. traverse again to find all associations, transform them into *)
-(*    association ends and map the correct classes to them         *)
-(*    (We have to handle associations seperately because there is  *)
-(*     no direct link from classes to their association ends in    *)
-(*     the xmi file)                                               *)
-(* 3. traverse again, transforming all remaining model elements,   *)
-(*    i.e., classes with their operations, attributes,             *)
-(*    constraints, etc                                             *)
+(** transform a UML model into a list of Rep classes.              
+ *
+ * 1. traverse package hierarchy and put xmi.id of all interesting 
+ *    model elements into the hashtable                            
+ *
+ * 2. traverse again to find all associations, transform them into 
+ *    association ends and map the correct classes to them         
+ *    (We have to handle associations seperately because there is  
+ *     no direct link from classes to their association ends in    
+ *     the xmi file)                                               
+ *
+ * 3. traverse again, transforming all remaining model elements,   
+ *    i.e., classes with their operations, attributes,             
+ *    constraints, etc                                             *)
 fun transformXMI ({classifiers,constraints,packages,
 		   stereotypes,variable_declarations,state_machines, activity_graphs}) =
     let val (xmiid_table: (string,HashTableEntry) HashTable.hash_table) =
@@ -420,6 +423,10 @@ fun transformXMI ({classifiers,constraints,packages,
     end
 	handle Empty => raise Option
 
+
+(** read an transform a .xmi file
+ *  @return a list of rep classifiers, or nil in case of problems
+ *) 
 fun readXMI f = (transformXMI o ParseXMI.readFile) f
     handle ParseXMI.IllFormed msg => (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^f^":\n"^msg^"\n"); 
 				      nil)
