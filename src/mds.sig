@@ -31,7 +31,7 @@ sig
     
     type Resource
 
-    val resource_types: string list
+    (* val resource_types: string list *)
 
     val contained_resources : Resource -> Resource list
 
@@ -39,7 +39,7 @@ sig
     datatype Action = SimpleAction of string * Resource
                     | CompositeAction of string * Resource
 					 
-    val action_names: string list
+    (* val action_names: string list *)
 
     val subordinated_actions:   Action -> Action list
 
