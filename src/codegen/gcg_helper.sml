@@ -38,13 +38,14 @@
 		 val isInPermission : ComponentUML.Action -> Permission -> bool
 	 end*) =
  struct
- open Rep
+
+(* open Rep 
  open Rep_OclType
  open Rep_OclTerm
  open Rep_SecureUML_ComponentUML.Security
- open ComponentUML
+ open ComponentUML 
  open XMI_DataTypes
-
+*)
 exception GCG_Error
 
 fun gcg_error s = (print ("Error:"^s^"\n"); raise GCG_Error);
@@ -68,7 +69,7 @@ val curry = fn f => fn x => fn y => f (x, y)
 val uncurry = fn f => fn (x, y) => f x y
  
  
-
+(*
 val emptyClassifier = (Primitive({ name=["",""],
 	   			parent=NONE,
 	   			operations=[],
@@ -105,7 +106,7 @@ val emptyPermission = ({actions = [],
     			 } : Permission)
 val emptyRole = ""
 val emptyConstraint = (Literal("",DummyT))
-val emptyResource = (("",[]) : Resource)
+val emptyResource = (ComponentUML.EntityMethod emptyOperation : Resource)
 val emptyAction = SimpleAction("", emptyResource)
 
 val emptyModel = (nil, {config_type = "",
@@ -113,23 +114,22 @@ val emptyModel = (nil, {config_type = "",
 	       		subjects = nil,
 	       		roles = nil,
 	       		sa = nil}):Rep_SecureUML_ComponentUML.Model
-
+*)
 
 fun isSuffix  [] _ = true
  |  isSuffix  _ [] = false
  |  isSuffix (h1::t1) (h2::t2) = (h1=h2) andalso (isSuffix t1 t2)
 
-fun resPath_of a = #2 (resource_of a) 
+(* fun resPath_of a = #2 (resource_of a) *)
 
-fun actionType_of (SimpleAction (t,_)) = t
- |  actionType_of (CompositeAction (t,_)) = t
  
+(*
 fun actionTypes_compatible _ "full_access"   = true
  |  actionTypes_compatible "read" "read"     = true
  |  actionTypes_compatible "update" "update" = true
  |  actionTypes_compatible _ _ = false
- 
-(* checks if a1 is part of a2 *)
+ *)
+(* checks if a1 is part of a2 
 fun is_contained_in a1 (a2 as (SimpleAction _)) = (a1 = a2)
  |  is_contained_in a1  a2 = let
  				val p1 = resPath_of a1
@@ -138,16 +138,18 @@ fun is_contained_in a1 (a2 as (SimpleAction _)) = (a1 = a2)
  				val at2 = actionType_of a2
  			     in
  			        (isSuffix p2 p1) andalso (actionTypes_compatible at1 at2)
- 			     end
+ 			     end *)
 
-(* fun is_contained_in a1 a2 = (a1 = a2) orelse List.exists (fn x=> x=true)) (List.map (is_contained_in a1) (subordinated_actions a2))) *)
+fun is_contained_in a1 a2 = (a1 = a2) orelse 
+							List.exists (fn x=> x=true) ((List.map (is_contained_in a1) (ComponentUML.subordinated_actions a2))) 
 
-fun isInPermission a (p:Permission) = List.exists (is_contained_in a) (#actions p)
+fun isInPermission a (p:Rep_SecureUML_ComponentUML.Security.Permission) = List.exists (is_contained_in a) (#actions p)
 
-fun resource_to_string (s,p) = "("^s^", "^(string_of_path p)^")"
+
+(* fun resource_to_string (s,p) = "("^s^", "^(string_of_path p)^")"
 fun action_to_string (SimpleAction (s,r)) = "SimpleAction("^s^", "^(resource_to_string r)^"))"
  |  action_to_string (CompositeAction (s,r)) = "CompositeAction("^s^", "^(resource_to_string r)^"))"
-
+*)
 
 
 fun assureDir file = let val dirList = rev (tl (rev (String.tokens (fn c => c = #"/") file)))

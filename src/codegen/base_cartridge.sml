@@ -23,111 +23,108 @@
 
 structure Base_Cartridge : BASE_CARTRIDGE =
 struct
- (* translation functions *)
- open Rep_OclType
- open Rep
- open Tpl_Parser
- open Rep_SecureUML_ComponentUML.Security
- open ComponentUML
- open Gcg_Helper
-  (* type translation table *)
+(* translation functions *)
+(* type translation table *)
  
  fun  oclType2Native t        = Rep_OclType.string_of_OclType t
  
- fun visibility2Native public = "public"
-  |  visibility2Native private = "private"
-  |  visibility2Native protected = "protected"
-  |  visibility2Native package = "package"
+ fun visibility2Native XMI.public = "public"
+  |  visibility2Native XMI.private = "private"
+  |  visibility2Native XMI.protected = "protected"
+  |  visibility2Native XMI.package = "package"
   
- fun scope2Native ClassifierScope = "ClassifierScope"
-  |  scope2Native InstanceScope = "InstanceScope"
+ fun scope2Native XMI.ClassifierScope = "ClassifierScope"
+  |  scope2Native XMI.InstanceScope = "InstanceScope"
   
  
  type environment = {model	     : Rep_SecureUML_ComponentUML.Model,
- 			curClassifier: Classifier,
- 		    	curOperation : operation,
- 		    	curAttribute : attribute,
- 		    	curArgument  : string * OclType
-		    }
+					 curClassifier: Rep_Core.Classifier option,
+					 curOperation : Rep_Core.operation option,
+					 curAttribute : Rep_Core.attribute option ,
+					 curArgument  : (string * Rep_OclType.OclType) option
+									}
 		    
 (* service functions for other cartridges to have access to the current
  * list items
  *)
 fun model (env : environment) = #model env
-fun curClassifier (env : environment) = #curClassifier env
-fun curAttribute (env : environment) = #curAttribute env
-fun curOperation (env : environment) = #curOperation env
-fun curArgument (env : environment)  = #curArgument env
-	
+fun curClassifier (env : environment) = (#curClassifier env)
+fun curAttribute (env : environment) =  (#curAttribute env)
+fun curOperation (env : environment) =  (#curOperation env)
+fun curArgument (env : environment)  =  (#curArgument env)
+
+fun curClassifier' (env : environment) = Option.valOf((#curClassifier env))
+fun curAttribute' (env : environment) =  Option.valOf((#curAttribute env))
+fun curOperation' (env : environment) =  Option.valOf((#curOperation env))
+fun curArgument' (env : environment)  =  Option.valOf((#curArgument env))
 
 fun initEnv model = { model = model,
-			curClassifier = emptyClassifier,
-			curOperation = emptyOperation,
-			curAttribute = emptyAttribute,
-			curArgument  = emptyArgument
+			curClassifier = NONE,
+			curOperation = NONE,
+			curAttribute = NONE,
+			curArgument  = NONE
 		       } : environment
 
 
-
-fun lookup (env : environment) "classifier_name"  	= short_name_of (#curClassifier env)
-  | lookup (env : environment) "classifier_package" = if ((#curClassifier env) = emptyClassifier) then (* not in foreach-loop yet *)
-  				        Rep_OclType.string_of_path (package_of (hd (#1 (#model env))))
-  				  else 
-  				  	Rep_OclType.string_of_path (package_of (#curClassifier env))
+(* FIX: check for NONEs in arguments environment *)
+fun lookup (env : environment) "classifier_name"  	= Rep_Core.short_name_of (curClassifier' env)
+  | lookup (env : environment) "classifier_package" = (case (#curClassifier env) of 
+														  NONE  =>  Rep_OclType.string_of_path (Rep.package_of (hd (#1 (#model env))))
+														| SOME c => Rep_OclType.string_of_path (Rep.package_of (curClassifier' env)))
   				  
-  | lookup (env : environment) "classifier_parent" 	= short_parent_name_of (#curClassifier env)
-  | lookup (env : environment) "attribute_name" 	= #name (#curAttribute env)
-  | lookup (env : environment) "attribute_type" 	= oclType2Native (#attr_type (#curAttribute env))
-  | lookup (env : environment) "attribute_visibility"= visibility2Native(#visibility (#curAttribute env))
-  | lookup (env : environment) "attribute_scope"	= scope2Native (#scope (#curAttribute env))
-  | lookup (env : environment) "operation_name" 	= name_of_op (#curOperation env)
-  | lookup (env : environment) "operation_result_type"= oclType2Native (result_of_op (#curOperation env))
-  | lookup (env : environment) "operation_visibility"= visibility2Native (#visibility (#curOperation env))
-  | lookup (env : environment) "operation_scope"	= scope2Native (#scope (#curOperation env))
-  | lookup (env : environment) "argument_name" 	= #1 (#curArgument env)
-  | lookup (env : environment) "argument_type" 	= oclType2Native (#2 (#curArgument env))
-  | lookup _ s = (gcg_warning ("Couldn't lookup \""^s^"\" in base_cartridge.lookup !"); s)
+  | lookup (env : environment) "classifier_parent" 	= Rep_Core.short_parent_name_of (curClassifier' env)
+  | lookup (env : environment) "attribute_name" 	= #name (curAttribute' env)
+  | lookup (env : environment) "attribute_type" 	= oclType2Native (#attr_type (curAttribute' env))
+  | lookup (env : environment) "attribute_visibility"= visibility2Native(#visibility (curAttribute' env))
+  | lookup (env : environment) "attribute_scope"	= scope2Native (#scope (curAttribute' env))
+  | lookup (env : environment) "operation_name" 	= Rep.name_of_op (curOperation' env)
+  | lookup (env : environment) "operation_result_type"= oclType2Native (Rep.result_of_op (curOperation' env))
+  | lookup (env : environment) "operation_visibility"= visibility2Native (#visibility (curOperation' env))
+  | lookup (env : environment) "operation_scope"	= scope2Native (#scope (curOperation' env))
+  | lookup (env : environment) "argument_name" 	= #1 (curArgument' env)
+  | lookup (env : environment) "argument_type" 	= oclType2Native (#2 (curArgument' env))
+  | lookup _ s = (Gcg_Helper.gcg_warning ("Couldn't lookup \""^s^"\" in base_cartridge.lookup !"); s)
 
 
 		 
 fun evalCondition (env : environment) "isClass" 	  
-		= (case (#curClassifier env)  of (Class{...}) => true 
+		= (case (#curClassifier env)  of SOME (Rep.Class{...}) => true 
 					  |    _ 	    => false)
   | evalCondition (env : environment) "isInterface"   
-  		= (case (#curClassifier env)  of (Interface{...}) => true 
+  		= (case (#curClassifier env)  of SOME (Rep.Interface{...}) => true 
 						 |    _ 	  => false)
   | evalCondition (env : environment) "isEnumeration" 
-  		= (case (#curClassifier env)  of (Enumeration{...}) => true 
+  		= (case (#curClassifier env)  of SOME (Rep.Enumeration{...}) => true 
 						 |    _ 	    => false)
   | evalCondition (env : environment) "isPrimitive"   
-  		= (case (#curClassifier env)  of (Primitive{...}) => true 
+  		= (case (#curClassifier env)  of SOME (Rep.Primitive{...}) => true 
 						 |    _ 	  => false)
   | evalCondition (env : environment) "hasParent"     
   		= let val parentName = 
-  				Rep_OclType.string_of_path (parent_name_of (#curClassifier env))
+  				Rep_OclType.string_of_path (Rep.parent_name_of (curClassifier' env))
   		  in
   		    (parentName <> "OclAny")
   		  end
-  | evalCondition (env : environment) "first_classifier" = (#curClassifier env = hd (#1 (#model env)))
-  | evalCondition (env : environment) "first_attribute"  = (#curAttribute  env = hd (attributes_of (#curClassifier env)))
-  | evalCondition (env : environment) "first_operation"  = (#curOperation  env = hd (operations_of (#curClassifier env)))
-  | evalCondition (env : environment) "first_argument"   = (#curArgument   env = hd (arguments_of_op (#curOperation env)))
-  | evalCondition (env : environment) "last_classifier"  = (#curClassifier env = List.last (#1 (#model env)))
-  | evalCondition (env : environment) "last_attribute"   = (#curAttribute env = List.last (attributes_of (#curClassifier env)))
-  | evalCondition (env : environment) "last_operation"   = (#curOperation env  = List.last (operations_of (#curClassifier env)))
-  | evalCondition (env : environment) "last_argument"    = (#curArgument env  = List.last (arguments_of_op (#curOperation env)))
-  | evalCondition (env : environment) "attribute_isPublic" 	= ((#visibility (#curAttribute env)) = public)
-  | evalCondition (env : environment) "attribute_isPrivate" = ((#visibility (#curAttribute env)) = private)
-  | evalCondition (env : environment) "attribute_isProtected"=((#visibility (#curAttribute env)) = protected)
-  | evalCondition (env : environment) "attribute_isPackage" = ((#visibility (#curAttribute env)) = package)
-  | evalCondition (env : environment) "attribute_isStatic"	= ((#scope (#curAttribute env)) = ClassifierScope)
-  | evalCondition (env : environment) "operation_isPublic" 	= ((#visibility (#curOperation env)) = public)
-  | evalCondition (env : environment) "operation_isPrivate" = ((#visibility (#curOperation env)) = private)
-  | evalCondition (env : environment) "operation_isProtected"=((#visibility (#curOperation env)) = protected)
-  | evalCondition (env : environment) "operation_isPackage" = ((#visibility (#curOperation env)) = package)
-  | evalCondition (env : environment) "operation_isStatic"  = ((#scope (#curOperation env)) = ClassifierScope)
+  | evalCondition (env : environment) "first_classifier" = (curClassifier' env = hd (#1 (#model env)))
+  | evalCondition (env : environment) "first_attribute"  = (curAttribute'  env = hd (Rep_Core.attributes_of (curClassifier' env)))
+  | evalCondition (env : environment) "first_operation"  = (curOperation'  env = hd (Rep_Core.operations_of (curClassifier' env)))
+  | evalCondition (env : environment) "first_argument"   = (curArgument'   env = hd (Rep_Core.arguments_of_op (curOperation' env)))
+  | evalCondition (env : environment) "last_classifier"  = (curClassifier' env = List.last (#1 (#model env)))
+  | evalCondition (env : environment) "last_attribute"   = (curAttribute' env = List.last (Rep_Core.attributes_of (curClassifier' env)))
+  | evalCondition (env : environment) "last_operation"   = (curOperation' env  = List.last (Rep_Core.operations_of (curClassifier' env)))
+  | evalCondition (env : environment) "last_argument"    = (curArgument' env  = List.last (Rep_Core.arguments_of_op (curOperation' env)))
+  | evalCondition (env : environment) "attribute_isPublic" 	= ((#visibility (curAttribute' env)) = XMI.public)
+  | evalCondition (env : environment) "attribute_isPrivate" = ((#visibility (curAttribute' env)) = XMI.private)
+  | evalCondition (env : environment) "attribute_isProtected"=((#visibility (curAttribute' env)) = XMI.protected)
+  | evalCondition (env : environment) "attribute_isPackage" = ((#visibility (curAttribute' env)) = XMI.package)
+  | evalCondition (env : environment) "attribute_isStatic"	= ((#scope (curAttribute' env)) = XMI.ClassifierScope)
+  | evalCondition (env : environment) "operation_isPublic" 	= ((#visibility (curOperation' env)) = XMI.public)
+  | evalCondition (env : environment) "operation_isPrivate" = ((#visibility (curOperation' env)) = XMI.private)
+  | evalCondition (env : environment) "operation_isProtected"=((#visibility (curOperation' env)) = XMI.protected)
+  | evalCondition (env : environment) "operation_isPackage" = ((#visibility (curOperation' env)) = XMI.package)
+  | evalCondition (env : environment) "operation_isStatic"  = ((#scope (curOperation' env)) = XMI.ClassifierScope)
   | evalCondition (env : environment)  s		
-  		= gcg_error ("Couldn't evaluate if-condition: "^s^" in base_cartridge.evalCondition")
+  		= Gcg_Helper.gcg_error ("Couldn't evaluate if-condition: "^s^" in base_cartridge.evalCondition")
 
 		 
 (* fun foreach_classifier: environment -> environment list *)
@@ -135,48 +132,48 @@ fun foreach_classifier (env : environment)
 			= let val cl = #1 (#model env);
 				 fun env_from_classifier c = 
 				 	{ model = (#model env),
-					  curClassifier = c,
-					  curOperation = emptyOperation,
-					  curAttribute = emptyAttribute,
-					  curArgument  = emptyArgument
+					  curClassifier = SOME c,
+					  curOperation = NONE,
+					  curAttribute = NONE,
+					  curArgument  = NONE
 		       			}
 			     in 
 			       List.map env_from_classifier cl
 			     end
 			     
 fun foreach_attribute (env : environment) 
-			= let val attrs = attributes_of (#curClassifier env);
+			= let val attrs = Rep_Core.attributes_of (curClassifier' env);
 				 fun env_from_attr a = 
 				 	{ model = #model env,
-					  curClassifier = (#curClassifier env),
-					  curOperation = emptyOperation,
-					  curAttribute = a,
-					  curArgument  = emptyArgument
+					  curClassifier = SOME (curClassifier' env),
+					  curOperation = NONE,
+					  curAttribute = SOME a,
+					  curArgument  = NONE
 		       			}
 			     in 
 			       List.map env_from_attr attrs
 			     end
 			     
 fun foreach_operation (env : environment) 
-			= let val ops = operations_of (#curClassifier env);
+			= let val ops = Rep_Core.operations_of (curClassifier' env);
 				 fun env_from_op operation = 
 				 	{ model = #model env,
-					  curClassifier = (#curClassifier env),
-					  curOperation = operation,
-					  curAttribute = emptyAttribute,
-					  curArgument  = emptyArgument
+					  curClassifier = SOME (curClassifier' env),
+					  curOperation = SOME operation,
+					  curAttribute = NONE,
+					  curArgument  = NONE
 		       			}
 			     in 
 			       List.map env_from_op ops
 			     end
 fun foreach_argument (env : environment) 
-			= let val args = arguments_of_op (#curOperation env);
+			= let val args = Rep_Core.arguments_of_op (curOperation' env);
 				 fun env_from_argument arg = 
 				 	{ model = #model env,
-					  curClassifier = (#curClassifier env),
-					  curOperation = (#curOperation env),
-					  curAttribute = emptyAttribute,
-					  curArgument  = arg
+					  curClassifier = SOME (curClassifier' env),
+					  curOperation = SOME (curOperation' env),
+					  curAttribute = NONE,
+					  curArgument  = SOME arg
 		       			}
 			     in 
 			       List.map env_from_argument args
@@ -189,7 +186,7 @@ fun foreach "classifier_list" env = foreach_classifier env
  (* hier muss man das Environment noch etwas umpacken 
  |  foreach listType env = map (pack env) (<SuperCartridge>.foreach name (unpack env))
   *)
- |  foreach s _ = gcg_error ("Couldn't write foreach "^s^" ." ^
+ |  foreach s _ = Gcg_Helper.gcg_error ("Couldn't write foreach "^s^" ." ^
    				"\""^s^"\" not defined in base_cartridge.foreach ")
 
 end

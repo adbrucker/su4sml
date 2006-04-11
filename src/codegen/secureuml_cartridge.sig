@@ -34,9 +34,9 @@ sig
  val foreach : string ->  environment -> environment list
 
 (* specific for SECUREUML_CARTRIDGE *)
- val curPermissionSet: environment -> Rep_SecureUML_ComponentUML.Security.Permission list
- val curPermission : environment -> Rep_SecureUML_ComponentUML.Security.Permission
- val curRole : environment -> string
- val curConstraint : environment -> Rep_OclTerm.OclTerm
+ val curPermissionSet: environment -> Rep_SecureUML_ComponentUML.Security.Permission list option
+ val curPermission : environment -> Rep_SecureUML_ComponentUML.Security.Permission option
+ val curRole : environment -> string option
+ val curConstraint : environment -> Rep_OclTerm.OclTerm option 
  
 end

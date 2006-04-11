@@ -91,14 +91,14 @@ val printTTree = printTplTree ""
 
 fun isComment s = (String.isPrefix "//" s)
 
-(* returns the left part of l up to the element where f evaluates to true 
+(** returns the left part of l up to the element where f evaluates to true 
  *)
 fun itemsUntil f [] = []
   | itemsUntil f (h::t) = if (f h) then []
   			  else h::(itemsUntil f t)
 		   
   				   
-(* splits line into tokens considering handling escaped @ *)
+(** splits line into tokens considering handling escaped @ *)
 fun tokenize line = let val l =   joinEscapeSplitted "@" (fieldSplit line #"@");
 		    in
 		      (hd l)::(itemsUntil isComment (tl l))
@@ -118,9 +118,9 @@ fun getType l = let val sl = tokenize l
 		end
 
 
-(* 
+(** 
  * getContent line 
- * returns the content of a line
+ * @return the content of a line
  *)		
 fun getContent l = let val sl = tokenize l 
 		   in 
@@ -141,9 +141,9 @@ fun preprocess s = let val rl = replaceSafely(replaceSafely(cleanLine s,"@nl ","
 		   end
 
 
-(* buildTree 
- * builds the TemplateTree
- * returns a TemplateTree list
+(**
+ * builds the TemplateTree.
+ * @return a TemplateTree list
  *)
 fun buildTree (SOME line) = let fun getNode ("text",c) 	  = (TextLeaf(c))::(buildTree (readNextLine()))
 			 	  | getNode ("foreach",c) = ForEachNode(c,(buildTree (readNextLine())))::(buildTree (readNextLine()))
@@ -165,22 +165,22 @@ fun buildTree (SOME line) = let fun getNode ("text",c) 	  = (TextLeaf(c))::(buil
 
 fun codegen_env _ = getOpt(OS.Process.getEnv "CODEGEN_HOME",".")
 			
-(* calls the external cpp ( C PreProcessor)
+(** calls the external cpp ( C PreProcessor)
  * writes merged template to a file with extension .tmp instead of .tpl
  * and returns this file 
  *)
-fun call_cpp file = let (*val targetFile = String.substring (file,0,size file -4) ^".tmp";*)
-			val targetFile = OS.FileSys.tmpName () 
-		    in
-		      (* (OS.Process.system ("cd $CODEGEN; cpp "^file^" "^targetFile^" -P -C"); *)
-		        (OS.Process.system ("cpp "^codegen_env()^"/"^file^" "^targetFile^" -P -C");
-		       targetFile)
-		    end
+fun call_cpp file = 
+	let (*val targetFile = String.substring (file,0,size file -4) ^".tmp";*)
+		val targetFile = OS.FileSys.tmpName () 
+		val _ = OS.Process.system ("cpp "^codegen_env()^"/"^file^" "^targetFile^" -P -C")
+	in
+		targetFile
+	end
 
 
 		    
-(*  parse [template-file] 
- *  returns the parsed template tree		     
+(**  parse [template-file] 
+ *  @return the parsed template tree		     
  *)
 fun parse file = let val mergedTpl = call_cpp file;
 		     val u = opentFile mergedTpl;

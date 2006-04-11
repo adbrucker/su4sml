@@ -29,9 +29,9 @@ sig
 
 (* specific for BASE_CARTRIDGE *)
  val model  : environment -> Rep_SecureUML_ComponentUML.Model
- val curClassifier: environment -> Rep.Classifier
- val curAttribute: environment -> Rep.attribute
- val curOperation: environment -> Rep.operation
- val curArgument  : environment -> string * Rep_OclType.OclType
- 
-end
+ val curClassifier: environment -> Rep.Classifier option
+ val curAttribute: environment -> Rep.attribute option
+ val curOperation: environment -> Rep.operation option
+ val curArgument  : environment -> (string * Rep_OclType.OclType) option
+
+ end

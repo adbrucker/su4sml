@@ -26,6 +26,7 @@
 functor GCG_Core (C: CARTRIDGE): GCG  = 
 struct
 
+(* FIX: do not open so many structures... *)
 open Rep
 open Rep_OclType
 open Tpl_Parser

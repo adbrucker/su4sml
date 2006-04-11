@@ -6,7 +6,6 @@ ann
 in
   local
     $(MLTON_ROOT)/basis/basis.mlb
-    ../lib/su4sml/src/su4sml-cygwin.mlb
   in
      compiler/compiler_ext.sig
      compiler/mlton.sml	
