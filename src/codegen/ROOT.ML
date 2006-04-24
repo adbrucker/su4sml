@@ -39,10 +39,13 @@ use "tpl_parser.sml";
 use "cartridge.sig";
 use "base_cartridge.sig";
 use "base_cartridge.sml";
+use "security_cartridge.sig";
+use "design_cartridge.sig";
 use "c#_cartridge.sml";
 use "c#_net1_cartridge.sml";
 use "secureuml_cartridge.sig";
 use "secureuml_cartridge.sml";
+use "componentuml_cartridge.sml";
 (*
 use "java_cartridge.sml";
 *)
