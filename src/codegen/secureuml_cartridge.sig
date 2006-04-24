@@ -26,17 +26,13 @@ signature SECUREUML_CARTRIDGE =
 sig
 
 (* from CARTRIDGE *)
- type environment
- val initEnv : Rep_SecureUML_ComponentUML.Model ->  environment
-
- val lookup : environment -> string -> string
- val evalCondition : environment -> string -> bool
- val foreach : string ->  environment -> environment list
-
+ include BASE_CARTRIDGE
 (* specific for SECUREUML_CARTRIDGE *)
  val curPermissionSet: environment -> Rep_SecureUML_ComponentUML.Security.Permission list option
  val curPermission : environment -> Rep_SecureUML_ComponentUML.Security.Permission option
  val curRole : environment -> string option
  val curConstraint : environment -> Rep_OclTerm.OclTerm option 
- 
+
+val isInPermission :  Rep_SecureUML_ComponentUML.Security.Design.Action -> Rep_SecureUML_ComponentUML.Security.Permission -> bool
+ structure Security:SECURITY_LANGUAGE
 end

@@ -29,7 +29,7 @@
 signature DESIGN_LANGUAGE =
 sig	  
     
-    type Resource
+    eqtype Resource
 
     (* val resource_types: string list *)
 
@@ -64,7 +64,7 @@ sig
     type User	
     val name_of         :              User -> string		
     
-    type Permission	
+    eqtype Permission	
 	 
     (* a bit unclear, which of the following we really need *)
     val users_of        :        Permission -> User list	

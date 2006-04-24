@@ -10,7 +10,6 @@ type Role = string
 
 type RoleAssignment = (Subject * Role) list
 
-
 type RoleHierarchy = (Role * Role) list
 
 (* computes the reflexiv and transitive closure of rh starting from *)
@@ -24,8 +23,8 @@ datatype Resource = Entity of Rep_OclType.Path
                   | EntityAttribute of Rep_OclType.Path
 (* | EntityAssociationEnd of Rep.Path ??? *)
 
-
-(* fun contained_resources e = ... *)
+(* FIX: *)
+fun contained_resources e = nil
 
 datatype ActionName = Create | Read | Update | Delete | FullAccess | Execute
 
@@ -41,7 +40,6 @@ fun subordinated_actions (SimpleAction _) = nil
     end *)
 (*  | subordinated_actions (CompositeAction (_,_)) = ...*)
     
-
 
 type Permission = { name:        string,
 		    roles:       Role list,

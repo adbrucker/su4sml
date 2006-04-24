@@ -39,3 +39,6 @@ end
 structure Rep_SecureUML_ComponentUML 
   = Rep_Secure(structure Security = SecureUML(structure Design=ComponentUML))
 			
+
+(* structure Rep_SecureUML_ControllerUML
+  = Rep_Secure(structure Security = SecureUML(structure Design=ControllerUML))*)

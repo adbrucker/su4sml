@@ -23,7 +23,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-(* SecureUML is a simple security language, based on RBAC, where permissions *)
+(** SecureUML is a simple security language, based on RBAC, where permissions *)
 (* can be further constrained using OCL: *)
 functor SecureUML(structure Design: DESIGN_LANGUAGE):SECURITY_LANGUAGE =
 struct
@@ -41,13 +41,11 @@ datatype Subject = Group of string * (string list)
 type Role = string
 type SubjectAssignment = (Subject * (Role list)) list
 
-
-(* fun actions_of (p:Permission) = #actions p*)
 				 
 type Permission = {name: string,
-		   roles: Role list,
-		   constraints: Rep_OclTerm.OclTerm list,
-		   actions: Design.Action list }
+				   roles: Role list,
+				   constraints: Rep_OclTerm.OclTerm list,
+				   actions: Design.Action list }
 
 fun actions_of (p:Permission) = #actions p
 
@@ -61,11 +59,11 @@ fun closure_of (x:'a partial_order) = ...
 *) 
 
 type Configuration = { config_type: Config_Type,
-		       permissions: Permission list,
-		       subjects: Subject list,
-		       (* groups: Group partial_order,*)
-		       roles: Role partial_order,
-		       sa: SubjectAssignment }
+					   permissions: Permission list,
+					   subjects: Subject list,
+					   (* groups: Group partial_order,*)
+					   roles: Role partial_order,
+					   sa: SubjectAssignment }
 
 fun type_of  (c:Configuration) = #config_type c
 

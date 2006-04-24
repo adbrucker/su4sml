@@ -41,6 +41,7 @@ Group is
     codegen/tpl_parser.sig
     codegen/tpl_parser.sml
     codegen/cartridge.sig
+    codegen/security_cartridge.sig	
     codegen/base_cartridge.sig
     codegen/base_cartridge.sml
     codegen/c#_cartridge.sml
@@ -50,3 +51,4 @@ Group is
     codegen/gcg_core.sig
     codegen/gcg_core.sml
     codegen/codegen.sml
+    codegen/componentuml_cartridge.sml

@@ -35,5 +35,6 @@ in
     xmi2rep.sml  
     rep_secure.sig
     rep_secure.sml
+	codegen/codegen.mlb
   end
 end

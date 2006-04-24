@@ -25,7 +25,7 @@
 structure library =
 struct
 infix |>
-fun (x |> f) = f x;
+(* fun (x |> f) = f x;*)
 
 
 fun filter (pred: 'a->bool) : 'a list -> 'a list =
@@ -91,9 +91,8 @@ exception ERROR;
 (* fun error_msg s = writeln(s) *)
 fun error s = (print (s^"\n"); raise ERROR);
 
-(* use #1 and #2 instead
-fun fst (x, y) = x;
-fun snd (x, y) = y;
- *)
+fun fst (x, y) = x
+
+fun snd (x, y) = y
 
 end

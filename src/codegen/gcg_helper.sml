@@ -140,10 +140,6 @@ fun is_contained_in a1 (a2 as (SimpleAction _)) = (a1 = a2)
  			        (isSuffix p2 p1) andalso (actionTypes_compatible at1 at2)
  			     end *)
 
-fun is_contained_in a1 a2 = (a1 = a2) orelse 
-							List.exists (fn x=> x=true) ((List.map (is_contained_in a1) (ComponentUML.subordinated_actions a2))) 
-
-fun isInPermission a (p:Rep_SecureUML_ComponentUML.Security.Permission) = List.exists (is_contained_in a) (#actions p)
 
 
 (* fun resource_to_string (s,p) = "("^s^", "^(string_of_path p)^")"

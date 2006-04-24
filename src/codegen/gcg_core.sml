@@ -66,8 +66,7 @@ fun eval s = (print ("<eval>\n");
 
 
 
-(* map2EveryOther f l applies f to every other 
- * element in l starting  with the second
+(** applies f to every other element in l starting with the second
  *)
 fun map2EveryOther f [] = []
   | map2EveryOther f [a] = [a]
@@ -79,11 +78,10 @@ fun substituteVars e s = let val tkl = (Gcg_Helper.joinEscapeSplitted "$") (Gcg_
 			end
 			
 
-(*
- * write is the main function of gcg_core.
- * it traverses a templateParseTree and executes the given instructions
+(**
+ * main function of gcg_core.
+ * traverses a templateParseTree and executes the given instructions
  *)
-(* write :  C.environment -> TemplateTree -> ()    *)
 fun write env (Tpl_Parser.RootNode(l))  = List.app (write env) l
   | write env (Tpl_Parser.OpenFileLeaf(file)) = openFile (substituteVars env file)
   | write env (Tpl_Parser.EvalLeaf(l)) = let fun collectEval 		[] 	    = ""

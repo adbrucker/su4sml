@@ -56,21 +56,23 @@ sig
 end =
 struct
 open library
+
 exception IllFormed of string
 
+(** A name-value pair. *)
 type Attribute = (string * string) 
 
-(* Tags consist of element names, and a list of attribute name-value pairs *)
+(** Tags consist of element names, and a list of attribute name-value pairs. *)
 type Tag = string * Attribute list
 
 datatype Tree = Node of Tag * Tree list
               | Text of string
 
 val filter_nodes = List.filter (fn Node x => true
-				 | _      => false)
+								 | _      => false)
 
 val filter_text  = List.filter (fn Text x => true
-				 | _      => false)
+								 | _      => false)
 		   
 fun text_of (Text s) = s
   | text_of _        = raise IllFormed "text_of called on Node element"

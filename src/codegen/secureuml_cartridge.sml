@@ -24,18 +24,14 @@
  ******************************************************************************)
 
 
-functor SecureUML_Cartridge(SuperCart : BASE_CARTRIDGE) : SECUREUML_CARTRIDGE =
+functor SecureUML_Cartridge(structure SuperCart : BASE_CARTRIDGE; structure D: DESIGN_LANGUAGE) : SECURITY_LANGUAGE_CARTRIDGE =
  struct
 
-(*
- open Rep_SecureUML_ComponentUML.Security
- open ComponentUML
- open Gcg_Helper
- open Ocl2String
-*)
- 
- type environment = { curPermissionSet: Rep_SecureUML_ComponentUML.Security.Permission list option,
- 		      curPermission : Rep_SecureUML_ComponentUML.Security.Permission option,
+
+ structure Security = SecureUML(structure Design = D)
+
+ type environment = { curPermissionSet: Security.Permission list option,
+ 		      curPermission : Security.Permission option,
 		      curRole : string option,
 		      curConstraint : Rep_OclTerm.OclTerm option,	
  		      extension : SuperCart.environment }
@@ -79,56 +75,11 @@ fun curClassifier (env : environment) = SuperCart.curClassifier (unpack env)
 fun curAttribute (env : environment) = SuperCart.curAttribute (unpack env)
 fun curOperation (env : environment) = SuperCart.curOperation (unpack env)
 
-type permissionContext = {permissions : Rep_SecureUML_ComponentUML.Security.Permission list,
-	 		  setter_permissions : Rep_SecureUML_ComponentUML.Security.Permission list,
-	 		  getter_permissions : Rep_SecureUML_ComponentUML.Security.Permission list,
-	 		  constructor_permissions : Rep_SecureUML_ComponentUML.Security.Permission list,
-	 		  destructor_permissions : Rep_SecureUML_ComponentUML.Security.Permission list}
+fun is_contained_in a1 a2 = (a1 = a2) orelse 
+							List.exists (fn x=> x=true) ((List.map (is_contained_in a1) (D.subordinated_actions a2))) 
 
-fun permissionsForAction (e : environment) a 
-		= List.filter (Gcg_Helper.isInPermission a) (#permissions (#2 (getModel e)))
-                       	    		
-(* computePermissionContext: environment -> permissionContext
- * compute Permissions according to actual environment 
- *)
-fun computePermissionContext (env : environment)=
-      let 
-		  fun getAction "set" = ComponentUML.SimpleAction ("update", (ComponentUML.EntityAttribute (Option.valOf(curAttribute env))))
-			|  getAction "get" = ComponentUML.SimpleAction ("read", (ComponentUML.EntityAttribute (Option.valOf(curAttribute env))))
-			|  getAction "execute" = ComponentUML.SimpleAction ("execute", (ComponentUML.EntityMethod (Option.valOf(curOperation env))))
-			|  getAction "create" = ComponentUML.SimpleAction ("create", (ComponentUML.Entity (Option.valOf(curClassifier env))))
-			|  getAction "delete" = ComponentUML.SimpleAction ("delete", (ComponentUML.Entity (Option.valOf (curClassifier env))))
-			|  getAction s = Gcg_Helper.gcg_error ("invalid action_type \""^s^"\" in secureUML_cartridge.computePermissionContext:getAction.") 
-      in
-	if Option.isSome(curAttribute env) then
-	  {permissions = [],
-	   setter_permissions = (permissionsForAction env (getAction "set")),
-	   getter_permissions = (permissionsForAction env (getAction "get")),
-	   constructor_permissions = [],
-	   destructor_permissions = []
-	  }
-	else if Option.isSome(curOperation env) then
-	  {permissions = permissionsForAction env (getAction "execute"),
-	   setter_permissions = [],
-	   getter_permissions = [],
-	   constructor_permissions = [],
-	   destructor_permissions = []
-	  }
-	else if Option.isSome(curClassifier env) then
-	  {permissions = [],
-	   setter_permissions = [],
-	   getter_permissions = [],
-	   constructor_permissions = permissionsForAction env (getAction "create"),
-	   destructor_permissions  = permissionsForAction env (getAction "delete")
-	  }
-	else
-	  {permissions = #permissions (#2 (getModel env)),
-	   setter_permissions = [],
-	   getter_permissions = [],
-	   constructor_permissions = [],
-	   destructor_permissions = []
-	  }
-      end 
+
+fun isInPermission a (p:Security.Permission) = List.exists (is_contained_in a) (#actions p)
                        
 fun name_of_role  r 	= r
                            
@@ -154,66 +105,7 @@ fun evalCondition (env : environment) "first_permission" = (curPermission' env 	
 
 
 (********** ADDING FOREACH TYPE **********************************************)
-
-(* fun foreach_<new_list_type>: environment -> environment list *)
-fun foreach_permission (env : environment) 
-			= let val plist = #permissions (computePermissionContext env);      
-			      fun env_from_list_item c ={curPermissionSet = SOME plist,
-						        curPermission = SOME c,
-						        curRole       = NONE,
-						        curConstraint = NONE,
-						        extension = #extension env 
-						        } : environment
-			  in 
-			       List.map env_from_list_item plist
-			     end
 			     
-fun foreach_readPermission (env : environment) 
-			= let val plist = #getter_permissions (computePermissionContext env);      
-			      fun env_from_list_item c ={curPermissionSet = SOME plist,
-						        curPermission = SOME c,
-						        curRole       = NONE ,
-						        curConstraint = NONE,
-						        extension = #extension env 
-						        } : environment
-			  in 
-			       List.map env_from_list_item plist
-			     end
-
-fun foreach_updatePermission (env : environment) 
-			= let val plist = #setter_permissions (computePermissionContext env);      
-			      fun env_from_list_item c ={curPermissionSet = SOME plist,
-						        curPermission = SOME c,
-						        curRole       = NONE ,
-						        curConstraint = NONE,
-						        extension = #extension env 
-						        } : environment
-			  in 
-			       List.map env_from_list_item plist
-			     end
-fun foreach_createPermission (env : environment) 
-			= let val plist = #constructor_permissions (computePermissionContext env);      
-			      fun env_from_list_item c ={curPermissionSet = SOME plist,
-						        curPermission = SOME c,
-						        curRole       = NONE ,
-						        curConstraint = NONE,
-						        extension = #extension env 
-						        } : environment
-			  in 
-			       List.map env_from_list_item plist
-			     end
-
-fun foreach_deletePermission (env : environment) 
-			= let val plist = #destructor_permissions (computePermissionContext env);      
-			      fun env_from_list_item c ={curPermissionSet = SOME plist,
-						        curPermission = SOME c,
-						        curRole       = NONE ,
-						        curConstraint = NONE,
-						        extension = #extension env 
-						        } : environment
-			  in 
-			       List.map env_from_list_item plist
-			     end
 
 fun foreach_role (env : environment) 
 			= let val roles = #roles (curPermission' env);      
@@ -240,12 +132,7 @@ fun foreach_constraint (env : environment)
 			     end
 			     		
 			     
-fun foreach "permission_list" env = foreach_permission env
- |  foreach "readPermission_list" env = foreach_readPermission env
- |  foreach "updatePermission_list" env = foreach_updatePermission env
- |  foreach "createPermission_list" env = foreach_createPermission env
- |  foreach "deletePermission_list" env = foreach_deletePermission env
- |  foreach "role_list"  env  	  = foreach_role env 
+fun foreach "role_list"  env  	  = foreach_role env 
  |  foreach "constraint_list" env = foreach_constraint env
   (* pass unknown list types to superior cartridge by unpacking environments, 
    * having SuperCart compute environment list, pack into native environment again*)

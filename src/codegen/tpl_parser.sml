@@ -46,8 +46,8 @@ datatype TemplateTree =   RootNode of TemplateTree list
 			
 
 
-(* replaceSafely (s,v,x)
- * replaces every v in s with x or if v is escaped removes "\" 
+(**
+ *  replaceSafely (s,v,x) replaces every v in s with x or if v is escaped removes "\" 
  *)
 fun replaceSafely ("",_,_) = ""
   | replaceSafely (s,v,x) = let val v_size = size v and 
@@ -61,8 +61,7 @@ fun replaceSafely ("",_,_) = ""
 		      end
 		      
 
-(* 
- * cleanLine [string]
+(** 
  * splits string into tokens and
  * removes space- and tab-characters  
  *)
@@ -104,9 +103,8 @@ fun tokenize line = let val l =   joinEscapeSplitted "@" (fieldSplit line #"@");
 		      (hd l)::(itemsUntil isComment (tl l))
 		    end
 
-(* 
- * getType line 
- * extracts the type of line
+(** 
+ * extracts the type of line.
  * line type must be first token in line!
  * if no control tag in line -> "text" returned
  *)
@@ -129,8 +127,7 @@ fun getContent l = let val sl = tokenize l
 		     else String.concat(tl(fieldSplit (String.concat(tl(sl))) #" "))
 		   end
 
-(* 
- * preprocess [line]
+(**
  * cleans line, replaces nl and tabs
  * so that no space char is left out
  *)			  
@@ -165,7 +162,7 @@ fun buildTree (SOME line) = let fun getNode ("text",c) 	  = (TextLeaf(c))::(buil
 
 fun codegen_env _ = getOpt(OS.Process.getEnv "CODEGEN_HOME",".")
 			
-(** calls the external cpp ( C PreProcessor)
+(** calls the external cpp ( C PreProcessor).
  * writes merged template to a file with extension .tmp instead of .tpl
  * and returns this file 
  *)
@@ -179,7 +176,7 @@ fun call_cpp file =
 
 
 		    
-(**  parse [template-file] 
+(**  parse template-file
  *  @return the parsed template tree		     
  *)
 fun parse file = let val mergedTpl = call_cpp file;
