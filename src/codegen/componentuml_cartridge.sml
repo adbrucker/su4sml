@@ -4,6 +4,8 @@
 functor ComponentUML_Cartridge(SuperCart : SECURITY_LANGUAGE_CARTRIDGE) : DESIGN_LANGUAGE_CARTRIDGE = 
 struct
 
+structure Design = ComponentUML
+
 (* TODO: fill out *)
 type environment = {extension: SuperCart.environment}
 
@@ -13,11 +15,15 @@ fun unpack (env : environment) = #extension env
 (* pack : environment -> SuperCart.environment -> environment *)
 fun pack (env: environment) (new_env : SuperCart.environment) = {extension = new_env} 
 
+fun initEnv model = {extension = SuperCart.initEnv model}
+fun model (env : environment) = SuperCart.model (unpack env)
 fun curClassifier (env : environment) = SuperCart.curClassifier (unpack env)
 fun curAttribute (env : environment) = SuperCart.curAttribute (unpack env)
 fun curOperation (env : environment) = SuperCart.curOperation (unpack env)
 fun curArgument (env : environment) = SuperCart.curArgument (unpack env)
 
+
+fun permissionsForAction env _ = nil
 
 (* computePermissionContext: environment -> permissionContext
  * compute Permissions according to actual environment 
@@ -53,7 +59,7 @@ fun computePermissionContext (env : environment)=
 	   destructor_permissions  = permissionsForAction env (getAction "delete")
 	  }
 	else
-	  {permissions = #permissions (#2 (getModel env)),
+	  {permissions = #permissions (#2 (model env)),
 	   setter_permissions = [],
 	   getter_permissions = [],
 	   constructor_permissions = [],
@@ -73,7 +79,7 @@ fun lookup (env : environment) s =  SuperCart.lookup (unpack env) s
 fun evalCondition (env : environment) s = SuperCart.evalCondition (unpack env) s
 
 (********** ADDING FOREACH TYPE **********************************************)
-
+(*
 fun foreach_readPermission (env : environment) 
 			= let val plist = #getter_permissions (computePermissionContext env);      
 			      fun env_from_list_item c ={curPermissionSet = SOME plist,
@@ -120,10 +126,10 @@ fun foreach_deletePermission (env : environment)
 			  in 
 			       List.map env_from_list_item plist
 			     end
+*)
 
 
-
-fun foreach "..." env =  map (pack env) (SuperCart.foreach listType (unpack env))
+fun foreach listType env =  map (pack env) (SuperCart.foreach listType (unpack env))
 
 
 end

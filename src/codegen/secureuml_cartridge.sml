@@ -70,10 +70,11 @@ fun pack (env: environment) (new_env : SuperCart.environment)
                     
                     
 (* Helper functions that get the SuperCartridge's needed environment values *)                    
-fun getModel (env : environment) = SuperCart.model (unpack env)
+fun model (env : environment) = SuperCart.model (unpack env)
 fun curClassifier (env : environment) = SuperCart.curClassifier (unpack env)
 fun curAttribute (env : environment) = SuperCart.curAttribute (unpack env)
 fun curOperation (env : environment) = SuperCart.curOperation (unpack env)
+fun curArgument (env : environment) = SuperCart.curArgument (unpack env)
 
 fun is_contained_in a1 a2 = (a1 = a2) orelse 
 							List.exists (fn x=> x=true) ((List.map (is_contained_in a1) (D.subordinated_actions a2))) 

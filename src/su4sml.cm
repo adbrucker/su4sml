@@ -52,3 +52,4 @@ Group is
     codegen/gcg_core.sml
     codegen/codegen.sml
     codegen/componentuml_cartridge.sml
+    codegen/design_cartridge.sig
