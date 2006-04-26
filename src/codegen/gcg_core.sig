@@ -23,15 +23,3 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-signature GCG = 
-sig
-
-(*structure C : CARTRIDGE*)
-
-val writeLine : string -> unit
-
-val generate  : Rep_SecureUML_ComponentUML.Model -> string -> unit
-(*
-val generate :  C.environment -> unit
-*)
-end

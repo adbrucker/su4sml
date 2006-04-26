@@ -21,13 +21,42 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+(** the minimal signature every code-generator cartridge has to implement. *)
 signature CARTRIDGE =
 sig
- (* translation functions *)
- type environment
- val initEnv : Rep_SecureUML_ComponentUML.Model ->  environment
- 
- val lookup : environment -> string -> string
- val evalCondition : environment -> string -> bool
- val foreach : string ->  environment -> environment list
+	
+	(** 
+	 * the environment in which template-file statements are to be evaluated. 
+	 * Ususally this will contain lists of model elements and
+	 * "pointers" to the "current" elements
+	 *)
+	type environment
+
+	(** 
+	 * The particular model from which model element information is
+	 * taken. 
+	 * This can be cartridge specific.
+	 *)
+	type Model
+		 
+	(** 
+	 * returns the model information as it is part of the current
+	 * environment. 
+	 *) 
+	val getModel : environment -> Model
+
+	(** initialze the environment by parsing the given classifier list *)
+	val initEnv : Rep.Model ->  environment
+													   
+	(** look up string-valued variables in the environment by name. *)
+	val lookup : environment -> string -> string
+
+	(** evaluate boolean-valued predicates in the environment by name. *)
+	val evalCondition : environment -> string -> bool
+
+	(** 
+	 * return a list of environment, where the "current" element
+	 * iterates over a given list. 
+	 *)
+	val foreach : string ->  environment -> environment list
 end

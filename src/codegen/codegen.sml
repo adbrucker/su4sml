@@ -43,15 +43,15 @@ structure JavaSecure_Gcg = GCG_Core (Java_Cartridge(SecureUML_Cartridge(Base_Car
 *)
 
 fun generate xmi_file "base" = 
-	Base_Gcg.generate ( Rep_SecureUML_ComponentUML.readXMI xmi_file) "templates/base.tpl"
+	Base_Gcg.generate ( Xmi2Rep.readXMI xmi_file) "templates/base.tpl"
  |  generate xmi_file "c#"   = 
- 	CSharp_Gcg.generate ( Rep_SecureUML_ComponentUML.readXMI xmi_file) "templates/C#.tpl"
+ 	CSharp_Gcg.generate ( Xmi2Rep.readXMI xmi_file) "templates/C#.tpl"
  |  generate xmi_file "c#_secure" = 
- 	CSharpSecure_Gcg.generate ( Rep_SecureUML_ComponentUML.readXMI xmi_file) "templates/C#_SecureUML.tpl"
+ 	CSharpSecure_Gcg.generate ( Xmi2Rep.readXMI xmi_file) "templates/C#_SecureUML.tpl"
  |  generate xmi_file "c#_net1"   = 
- 	CSharp_NET1_Gcg.generate ( Rep_SecureUML_ComponentUML.readXMI xmi_file) "templates/C#.tpl"
+ 	CSharp_NET1_Gcg.generate ( Xmi2Rep.readXMI xmi_file) "templates/C#.tpl"
  |  generate xmi_file "c#_secure_net1" = 
- 	CSharpSecure_NET1_Gcg.generate ( Rep_SecureUML_ComponentUML.readXMI xmi_file) "templates/C#_SecureUML.tpl"
+ 	CSharpSecure_NET1_Gcg.generate ( Xmi2Rep.readXMI xmi_file) "templates/C#_SecureUML.tpl"
  (*
  |  generate "java" = Java_Gcg.generate model "templates/java.tpl"
  |  generate "java_secure" = JavaSecure_Gcg.generate model "templates/java_SecureUML.tpl"

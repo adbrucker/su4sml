@@ -23,48 +23,44 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+signature GCG = 
+sig
+
+val writeLine : string -> unit
+val generate  : Rep.Model -> string -> unit
+
+end
+
 functor GCG_Core (C: CARTRIDGE): GCG  = 
 struct
 
-val curFile = ref "";
+val curFile = ref ""
 
 
-val out = ref TextIO.stdOut;
+val out = ref TextIO.stdOut
 
 fun closeFile ()= if (!curFile = "") 
-			then ()
-		  else (TextIO.closeOut (!out); 
-		  	print ((!curFile)^" ... done\n");
-		  	curFile := "") 
+				  then ()
+				  else (TextIO.closeOut (!out); 
+						print ((!curFile)^" ... done\n");
+						curFile := "") 
 		  
 
 fun openFile file = (closeFile ();
-		     print ("opening "^file^"...\n");
-		     Gcg_Helper.assureDir file;
-		     out := (TextIO.openOut file);
-		     curFile := file
-		     )
+					 print ("opening "^file^"...\n");
+					 Gcg_Helper.assureDir file;
+					 out := (TextIO.openOut file);
+					 curFile := file
+					 )
 		     
-
-
-
 fun initOut () =  (out := TextIO.stdOut;
-		   curFile := "")
+				   curFile := "")
 		  
-
-
 fun writeLine s = TextIO.output (!out,s)
 
-
-
-
-
 fun eval s = (print ("<eval>\n");
-	      CompilerExt.eval true s;
-	      print "<>\n")
-
-
-
+			  CompilerExt.eval true s;
+			  print "<>\n")
 
 (** applies f to every other element in l starting with the second
  *)
@@ -78,10 +74,7 @@ fun substituteVars e s = let val tkl = (Gcg_Helper.joinEscapeSplitted "$") (Gcg_
 			end
 			
 
-(**
- * main function of gcg_core.
- * traverses a templateParseTree and executes the given instructions
- *)
+(** traverses a templateParseTree and executes the given instructions *)
 fun write env (Tpl_Parser.RootNode(l))  = List.app (write env) l
   | write env (Tpl_Parser.OpenFileLeaf(file)) = openFile (substituteVars env file)
   | write env (Tpl_Parser.EvalLeaf(l)) = let fun collectEval 		[] 	    = ""
@@ -114,17 +107,17 @@ fun write env (Tpl_Parser.RootNode(l))  = List.app (write env) l
      		end
      				
 
-		
+(** generate code according to the given template file for the given model *)
 fun generate model template 
-		   = let val env = C.initEnv  model ;
-			 val tree = Tpl_Parser.parse template
-		     in
-		       (initOut();
-		       (*printTTree tree;*)
-		       write env tree;
-		       closeFile () ) 
-		       handle GCG_Error => (closeFile(); raise GCG_Error)
-		     end
-
-
+  = let val env = C.initEnv  model 
+		val tree = Tpl_Parser.parse template
+	in
+		(initOut();
+		 (*printTTree tree;*)
+		 write env tree;
+		 closeFile () ) 
+		handle GCG_Error => (closeFile(); raise GCG_Error)
+	end
+		
+		
 end

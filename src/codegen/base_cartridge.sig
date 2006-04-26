@@ -22,16 +22,25 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+(** 
+ * This cartridge knows about the basic elements of UML class diagrams.
+ * The elements are classifiers, attributes, and operations with their
+ * parameters in terms of the Rep interface
+ *) 
 signature BASE_CARTRIDGE =
 sig
+	include CARTRIDGE
+	
+(** returns the current classifier. *)
+val curClassifier: environment -> Rep.Classifier option
+								  
+(** returns the current attribute *)
+val curAttribute: environment -> Rep.attribute option
+								 
+(** returns the current operation *)
+val curOperation: environment -> Rep.operation option
 
- include CARTRIDGE
-
-(* specific for BASE_CARTRIDGE *)
- val model  : environment -> Rep_SecureUML_ComponentUML.Model
- val curClassifier: environment -> Rep.Classifier option
- val curAttribute: environment -> Rep.attribute option
- val curOperation: environment -> Rep.operation option
- val curArgument  : environment -> (string * Rep_OclType.OclType) option
-
- end
+(** returns the current operation parameter *)
+val curArgument  : environment -> (string * Rep_OclType.OclType) option
+								  
+end

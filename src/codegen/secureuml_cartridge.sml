@@ -24,58 +24,65 @@
  ******************************************************************************)
 
 
-functor SecureUML_Cartridge(structure SuperCart : BASE_CARTRIDGE; structure D: DESIGN_LANGUAGE) : SECURITY_LANGUAGE_CARTRIDGE =
- struct
+functor SecureUML_Cartridge(structure SuperCart : BASE_CARTRIDGE; 
+						    structure D: DESIGN_LANGUAGE) 
+		: SECUREUML_CARTRIDGE =
+struct
 
+structure Security = SecureUML(structure Design = D)
 
- structure Security = SecureUML(structure Design = D)
-
- type environment = { curPermissionSet: Security.Permission list option,
- 		      curPermission : Security.Permission option,
-		      curRole : string option,
-		      curConstraint : Rep_OclTerm.OclTerm option,	
- 		      extension : SuperCart.environment }
- 
- 
- (* service functions for other cartridges to have access to the current
-  * list items
-  * FIX: check for NONE's
+type Model = Rep.Classifier list * Security.Configuration
+					 
+type environment = { model           : Model,
+					 curPermissionSet: Security.Permission list option,
+					 curPermission   : Security.Permission option,
+					 curRole         : string option,
+					 curConstraint   : Rep_OclTerm.OclTerm option,	
+					 extension       : SuperCart.environment }
+				   
+fun getPermissions conf = Security.getPermissions conf
+				   
+(* service functions for other cartridges to have access to the current
+ * list items
+ * FIX: check for NONE's
   *)
- fun curPermissionSet (env : environment) =  (#curPermissionSet env)
- fun curPermission (env : environment) =  (#curPermission env)
- fun curRole (env : environment) =  (#curRole env)
- fun curConstraint (env : environment)  =  (#curConstraint env)
+fun curPermissionSet (env : environment) =  (#curPermissionSet env)
+fun curPermission (env : environment) =  (#curPermission env)
+fun curRole (env : environment) =  (#curRole env)
+fun curConstraint (env : environment)  =  (#curConstraint env)
 
- fun curPermissionSet' (env : environment) = Option.valOf (#curPermissionSet env)
- fun curPermission'    (env : environment) = Option.valOf (#curPermission env)
- fun curRole'          (env : environment) = Option.valOf (#curRole env)
- fun curConstraint'    (env : environment) = Option.valOf (#curConstraint env)
- 
- fun initEnv model = { curPermissionSet = NONE,
-		       curPermission = NONE,
- 		       curRole       = NONE,
- 		       curConstraint = NONE,
- 		       extension = SuperCart.initEnv model } : environment
-
+fun curPermissionSet' (env : environment) = Option.valOf (#curPermissionSet env)
+fun curPermission'    (env : environment) = Option.valOf (#curPermission env)
+fun curRole'          (env : environment) = Option.valOf (#curRole env)
+fun curConstraint'    (env : environment) = Option.valOf (#curConstraint env)
+											
+fun initEnv model = { model = Security.parse model, 
+					  curPermissionSet = NONE,
+					  curPermission = NONE,
+					  curRole       = NONE,
+					  curConstraint = NONE,
+					  extension = SuperCart.initEnv model } : environment
+															  
 (* unpack : environment -> SuperCart.environment *)
 fun unpack (env : environment) = #extension env
 
 (* pack : environment -> SuperCart.environment -> environment *)
 fun pack (env: environment) (new_env : SuperCart.environment) 
-		= { curPermissionSet = #curPermissionSet env,
-		    curPermission = #curPermission env,
- 		    curRole       = #curRole env,
- 		    curConstraint = #curConstraint env,
-                    extension=new_env}
-                    
-                    
+  = { model            = #model env,
+	  curPermissionSet = #curPermissionSet env,
+	  curPermission    = #curPermission env,
+	  curRole          = #curRole env,
+	  curConstraint    = #curConstraint env,
+	  extension        = new_env}
+	
+	
 (* Helper functions that get the SuperCartridge's needed environment values *)                    
-fun model (env : environment) = SuperCart.model (unpack env)
+fun getModel (env : environment) = #model env
 fun curClassifier (env : environment) = SuperCart.curClassifier (unpack env)
 fun curAttribute (env : environment) = SuperCart.curAttribute (unpack env)
 fun curOperation (env : environment) = SuperCart.curOperation (unpack env)
 fun curArgument (env : environment) = SuperCart.curArgument (unpack env)
-
+									  
 fun is_contained_in a1 a2 = (a1 = a2) orelse 
 							List.exists (fn x=> x=true) ((List.map (is_contained_in a1) (D.subordinated_actions a2))) 
 
@@ -109,28 +116,28 @@ fun evalCondition (env : environment) "first_permission" = (curPermission' env 	
 			     
 
 fun foreach_role (env : environment) 
-			= let val roles = #roles (curPermission' env);      
-			      fun env_from_list_item r ={curPermissionSet = #curPermissionSet env,
-						        curPermission = #curPermission env,
-						        curRole       = SOME r ,
-						        curConstraint = NONE,
-						        extension = #extension env 
-						        } : environment
-			  in 
-			       List.map env_from_list_item roles
-			     end
-			     		
+  = let val roles = #roles (curPermission' env);      
+			fun env_from_list_item r ={ model = #model env,
+									    curPermissionSet = #curPermissionSet env,
+										curPermission = #curPermission env,
+										curRole       = SOME r ,
+										curConstraint = NONE,
+										extension = #extension env } : environment
+	in 
+		List.map env_from_list_item roles
+	end
+		
 fun foreach_constraint (env : environment) 
-			= let val cons = #constraints (curPermission' env);      
-			      fun env_from_list_item c ={curPermissionSet = #curPermissionSet env,
-						        curPermission = #curPermission env,
-						        curRole       = NONE ,
-						        curConstraint = SOME c,
-						        extension = #extension env 
-						        } : environment
-			  in 
-			       List.map env_from_list_item cons
-			     end
+  = let val cons = #constraints (curPermission' env);      
+			fun env_from_list_item c ={ model = #model env,
+									    curPermissionSet = #curPermissionSet env,
+										curPermission = #curPermission env,
+										curRole       = NONE ,
+										curConstraint = SOME c,
+										extension = #extension env } : environment
+	in 
+		List.map env_from_list_item cons
+	end
 			     		
 			     
 fun foreach "role_list"  env  	  = foreach_role env 

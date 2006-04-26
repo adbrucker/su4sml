@@ -27,7 +27,7 @@ functor CSharp_NET1_Cartridge(SuperCart : CARTRIDGE) : CARTRIDGE =
  
  
 type environment = { extension : SuperCart.environment }
-	
+type Model = SuperCart.Model	
 
 
 fun initEnv model = { extension = SuperCart.initEnv model } : environment
@@ -36,6 +36,7 @@ fun unpack  (env : environment) = #extension env
 
 fun pack superEnv = {extension = superEnv} : environment
 
+fun getModel (env:environment) = SuperCart.getModel (unpack env)
 
  (* internal translation table *)
 fun super2Native "ClassifierScope" = "static"

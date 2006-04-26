@@ -70,6 +70,7 @@ fun type_of  (c:Configuration) = #config_type c
 fun is_empty (c:Configuration) = List.null (#permissions c) andalso 
 				 List.null (#subjects c)
 
+fun getPermissions (c:Configuration) = #permissions c
 
 (* the following functions have yet to be implemented *)
 fun users_of p = nil

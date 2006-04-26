@@ -22,22 +22,27 @@
  ******************************************************************************)
  
 functor CSharp_Cartridge(SuperCart : CARTRIDGE) : CARTRIDGE =
- struct
- open Rep_OclType
- 
- 
+struct
+open Rep_OclType
+	 
+	 
+type Model = SuperCart.Model
+			 
 type environment = { extension : SuperCart.environment }
-	
 
-
+fun getModel (env:environment) = SuperCart.getModel (#extension env)
+			   
+				   
+				   
+				   
 fun initEnv model = { extension = SuperCart.initEnv model } : environment
-
+															  
 fun unpack  (env : environment) = #extension env
-
+								  
 fun pack superEnv = {extension = superEnv} : environment
 
-
- (* internal translation table *)
+											 
+(* internal translation table *)
 fun super2Native "ClassifierScope" = "static"
  |  super2Native "InstanceScope"   = ""
  |  super2Native "package"	   = "public"

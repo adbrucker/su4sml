@@ -65,7 +65,8 @@ sig
     val name_of         :              User -> string		
     
     eqtype Permission	
-	 
+
+	val getPermissions : Configuration -> Permission list
     (* a bit unclear, which of the following we really need *)
     val users_of        :        Permission -> User list	
     (* val permissions_of  :              User -> Permission list	*)

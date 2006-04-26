@@ -26,4 +26,6 @@ structure Rep : REP =
 struct
 
 open Rep_Core Rep_StateMachine Rep_ActivityGraph
+
+type Model = Classifier list
 end

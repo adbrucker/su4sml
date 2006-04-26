@@ -22,17 +22,19 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+
 signature SECUREUML_CARTRIDGE =
 sig
+	include BASE_CARTRIDGE
 
-(* from CARTRIDGE *)
- include BASE_CARTRIDGE
-(* specific for SECUREUML_CARTRIDGE *)
- val curPermissionSet: environment -> Rep_SecureUML_ComponentUML.Security.Permission list option
- val curPermission : environment -> Rep_SecureUML_ComponentUML.Security.Permission option
- val curRole : environment -> string option
- val curConstraint : environment -> Rep_OclTerm.OclTerm option 
+(** the particular secureuml dialect used *)
+structure Security:SECURITY_LANGUAGE
 
-val isInPermission :  Rep_SecureUML_ComponentUML.Security.Design.Action -> Rep_SecureUML_ComponentUML.Security.Permission -> bool
- structure Security:SECURITY_LANGUAGE
+val curPermissionSet: environment -> Security.Permission list option
+val curPermission : environment   -> Security.Permission option
+val curRole : environment -> string option
+val curConstraint : environment -> Rep_OclTerm.OclTerm option 
+								   
+val isInPermission :  Security.Design.Action -> Security.Permission -> bool
+
 end

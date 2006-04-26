@@ -6,8 +6,10 @@ struct
 
 structure Design = ComponentUML
 
+
 (* TODO: fill out *)
-type environment = {extension: SuperCart.environment}
+type environment = { extension: SuperCart.environment}
+type Model = SuperCart.Model
 
 (* unpack : environment -> SuperCart.environment *)
 fun unpack (env : environment) = #extension env
@@ -16,13 +18,14 @@ fun unpack (env : environment) = #extension env
 fun pack (env: environment) (new_env : SuperCart.environment) = {extension = new_env} 
 
 fun initEnv model = {extension = SuperCart.initEnv model}
-fun model (env : environment) = SuperCart.model (unpack env)
+fun getModel (env : environment) = SuperCart.getModel (unpack env)
 fun curClassifier (env : environment) = SuperCart.curClassifier (unpack env)
 fun curAttribute (env : environment) = SuperCart.curAttribute (unpack env)
 fun curOperation (env : environment) = SuperCart.curOperation (unpack env)
 fun curArgument (env : environment) = SuperCart.curArgument (unpack env)
 
 
+(* FIX *)
 fun permissionsForAction env _ = nil
 
 (* computePermissionContext: environment -> permissionContext
@@ -59,7 +62,7 @@ fun computePermissionContext (env : environment)=
 	   destructor_permissions  = permissionsForAction env (getAction "delete")
 	  }
 	else
-	  {permissions = #permissions (#2 (model env)),
+	  {permissions = SuperCart.Security.getPermissions (#2 (getModel env)),
 	   setter_permissions = [],
 	   getter_permissions = [],
 	   constructor_permissions = [],
