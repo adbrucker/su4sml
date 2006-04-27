@@ -22,6 +22,15 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+signature REP = 
+sig
+
+include REP_CORE
+include REP_ACTIVITY_GRAPH 
+
+type Model = Classifier list				 
+end
+
 structure Rep : REP = 
 struct
 

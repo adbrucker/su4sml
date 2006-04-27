@@ -24,8 +24,10 @@
  ******************************************************************************)
 
 
-(* a design language specifies what the protected resources and the *)
-(* possible actions on these resources are                          *)
+(**
+ * a design language specifies what the protected resources and the 
+ * possible actions on these resources are.                          
+ *)
 signature DESIGN_LANGUAGE =
 sig	  
     
@@ -48,9 +50,11 @@ sig
 end 
     
     
-(* A security language speaks about users, and their permissions: *)
-(* at this level, this is completeley independent of the access   *)
-(* control model used in the application                          *)
+(**
+ * A security language speaks about users, and their permissions.
+ * at this level, this is completeley independent of the access   
+ * control model used in the application                          
+ *)
 signature SECURITY_LANGUAGE =
 sig
     structure Design : DESIGN_LANGUAGE 
@@ -58,15 +62,15 @@ sig
     
     type Configuration
     type Config_Type = string
-    val type_of : Configuration -> Config_Type
-    val is_empty: Configuration -> bool				   
+    eqtype Permission	
+
+	val getPermissions : Configuration -> Permission list
+    val type_of        : Configuration -> Config_Type
+    val is_empty       : Configuration -> bool				   
 
     type User	
     val name_of         :              User -> string		
     
-    eqtype Permission	
-
-	val getPermissions : Configuration -> Permission list
     (* a bit unclear, which of the following we really need *)
     val users_of        :        Permission -> User list	
     (* val permissions_of  :              User -> Permission list	*)
@@ -75,7 +79,8 @@ sig
     val actions_of      :        Permission -> Design.Action list
     val permissions_of  :     Design.Action -> Permission list
 
-    val parse: Rep_Core.Classifier list -> (Rep_Core.Classifier list * Configuration)
+    val parse: Rep_Core.Classifier list -> 
+			   (Rep_Core.Classifier list * Configuration)
 end 	
 
 

@@ -21,6 +21,24 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+signature TPL_PARSER = 
+sig
+
+datatype TemplateTree
+  = ElseNode of TemplateTree list
+  | EvalLeaf of TemplateTree list
+  | ForEachNode of string * TemplateTree list
+  | IfNode of string * TemplateTree list
+  | OpenFileLeaf of string
+  | RootNode of TemplateTree list
+  | TextLeaf of string
+
+val printTTree  	: TemplateTree -> unit
+val parse 	  	: string -> TemplateTree
+
+end
+
+
 structure Tpl_Parser :  TPL_PARSER = 
 struct
 open Gcg_Helper

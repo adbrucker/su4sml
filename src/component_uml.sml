@@ -24,8 +24,30 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+signature COMPONENTUML = 
+sig
+	
+	datatype Resource = Entity of Rep.Classifier
+					  | EntityMethod of Rep.operation
+					  | EntityAttribute of Rep.attribute
+
+	val contained_resources : Resource -> Resource list
+										  
+										  
+    datatype Action = SimpleAction of string * Resource
+				    | CompositeAction of string * Resource
+														 
+    (* val action_names: string list *)
+														 
+    val subordinated_actions:   Action -> Action list
+										  
+    val actions_of : Resource -> Action list
+    val resource_of:   Action -> Resource
+								 
+end
+
 (** ComponentUML is a simple language for component-based modeling. *)
-structure ComponentUML (* : DESIGN_LANGUAGE*) =
+structure ComponentUML : COMPONENTUML =
 struct
 
 (** The type of resource, plus a path name specifiying the resource. 

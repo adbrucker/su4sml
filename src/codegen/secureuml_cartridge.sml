@@ -24,6 +24,25 @@
  ******************************************************************************)
 
 
+signature SECUREUML_CARTRIDGE =
+sig
+
+(** the particular secureuml dialect used *)
+structure Security:SECURITY_LANGUAGE
+		
+include BASE_CARTRIDGE where
+type Model = Rep.Classifier list * Security.Configuration
+
+val curPermissionSet: environment -> Security.Permission list option
+val curPermission : environment   -> Security.Permission option
+val curRole : environment -> string option
+val curConstraint : environment -> Rep_OclTerm.OclTerm option 
+								   
+val isInPermission :  Security.Design.Action -> Security.Permission -> bool
+
+end
+
+
 functor SecureUML_Cartridge(structure SuperCart : BASE_CARTRIDGE; 
 						    structure D: DESIGN_LANGUAGE) 
 		: SECUREUML_CARTRIDGE =
@@ -40,7 +59,6 @@ type environment = { model           : Model,
 					 curConstraint   : Rep_OclTerm.OclTerm option,	
 					 extension       : SuperCart.environment }
 				   
-fun getPermissions conf = Security.getPermissions conf
 				   
 (* service functions for other cartridges to have access to the current
  * list items
@@ -56,13 +74,16 @@ fun curPermission'    (env : environment) = Option.valOf (#curPermission env)
 fun curRole'          (env : environment) = Option.valOf (#curRole env)
 fun curConstraint'    (env : environment) = Option.valOf (#curConstraint env)
 											
-fun initEnv model = { model = Security.parse model, 
-					  curPermissionSet = NONE,
-					  curPermission = NONE,
-					  curRole       = NONE,
-					  curConstraint = NONE,
-					  extension = SuperCart.initEnv model } : environment
-															  
+fun initEnv model = let val m = Security.parse model 
+					in
+						{ model = m, 
+						  curPermissionSet = NONE,
+						  curPermission = NONE,
+						  curRole       = NONE,
+						  curConstraint = NONE,
+						  extension = SuperCart.initEnv (#1 m) } : environment
+					end
+						
 (* unpack : environment -> SuperCart.environment *)
 fun unpack (env : environment) = #extension env
 

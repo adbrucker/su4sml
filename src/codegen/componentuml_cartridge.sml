@@ -1,11 +1,7 @@
-
-
-
-functor ComponentUML_Cartridge(SuperCart : SECURITY_LANGUAGE_CARTRIDGE) : DESIGN_LANGUAGE_CARTRIDGE = 
+functor ComponentUML_Cartridge(SuperCart : SECUREUML_CARTRIDGE) : DESIGN_LANGUAGE_CARTRIDGE = 
 struct
 
 structure Design = ComponentUML
-
 
 (* TODO: fill out *)
 type environment = { extension: SuperCart.environment}

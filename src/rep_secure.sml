@@ -25,6 +25,25 @@
  ******************************************************************************)
 
 
+(** a repository for uml models equipped with a security language *)
+signature REP_SECURE =
+sig
+	
+	(** the security language used. *)
+    structure Security : SECURITY_LANGUAGE
+						 
+	(** 
+	 * a "secure repository" model consist of a repository model 
+	 * plus a security configuration.
+	 *)
+    type Model = Rep_Core.Classifier list * Security.Configuration
+				 
+	(** *) 
+    val readXMI: string -> Model
+			 
+end
+
+
 functor Rep_Secure(structure Security : SECURITY_LANGUAGE) : REP_SECURE =
 struct
 structure Security = Security

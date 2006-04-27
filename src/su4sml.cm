@@ -7,20 +7,14 @@ Group is
 #endif
     ../lib/fxp/src/fxlib.cm
     library.sml
-    rep_ocl.sig
     rep_ocl.sml
-    rep_state_machines.sig
     rep_state_machines.sml
-    rep_activity_graphs.sig
     rep_activity_graphs.sml
-    rep_core.sig
     rep_core.sml
     mds.sig
     secure_uml.sml
     component_uml.sml
-    rep_secure.sig
     rep_secure.sml
-    rep.sig
     rep.sml
     xmi_ocl.sml 
     xmi_core.sml 
@@ -38,18 +32,13 @@ Group is
     codegen/compiler/smlnj.sml	
     codegen/gcg_library.sml
     codegen/gcg_helper.sml
-    codegen/tpl_parser.sig
     codegen/tpl_parser.sml
-    codegen/cartridge.sig
-    codegen/security_cartridge.sig	
-    codegen/base_cartridge.sig
+	codegen/cartridge.sig
     codegen/base_cartridge.sml
     codegen/c#_cartridge.sml
     codegen/c#_net1_cartridge.sml
-    codegen/secureuml_cartridge.sig
     codegen/secureuml_cartridge.sml
-    codegen/gcg_core.sig
-    codegen/gcg_core.sml
-    codegen/codegen.sml
+	codegen/design_cartridge.sig
     codegen/componentuml_cartridge.sml
-    codegen/design_cartridge.sig
+	codegen/gcg_core.sml
+    codegen/codegen.sml

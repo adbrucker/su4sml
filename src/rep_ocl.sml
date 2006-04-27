@@ -22,6 +22,67 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+signature REP_OCL_TYPE =
+sig
+	
+    type Path = string list
+
+    datatype OclType    =  Integer | Real | String | Boolean | OclAny 
+		     | Set of OclType | Sequence of OclType
+		     | OrderedSet of OclType | Bag of OclType 
+		     | Collection of OclType
+		     | Classifier of Path | OclVoid | DummyT
+	val string_of_OclType : OclType -> string	
+	val string_of_path    : Path -> string	
+	
+end
+     
+    
+signature REP_OCL_TERM =
+sig
+include REP_OCL_TYPE
+
+datatype OclTerm = 
+	 Literal            of string * OclType    (* Literal with type *)
+       | CollectionLiteral  of CollectionPart list * OclType (* content with type *)
+       | If                 of OclTerm * OclType   (* condition   *)
+			       * OclTerm * OclType (* then        *)
+			       * OclTerm * OclType (* else        *)
+			       * OclType           (* result type *)
+       | AssociationEndCall of OclTerm * OclType (* source      *)
+			       * Path            (* assoc.-enc  *)
+			       * OclType         (* result type *)
+       | AttributeCall      of OclTerm * OclType (* source      *)
+			       * Path            (* attribute   *)
+			       * OclType         (* result type *)
+       | OperationCall      of OclTerm * OclType          (* source      *)
+			       * Path                     (* operation   *)
+			       * (OclTerm * OclType) list (* parameters  *)
+			       * OclType                  (* result tupe *)
+       | OperationWithType  of OclTerm * OclType  (* source         *)
+			       * string * OclType (* type parameter *)
+			       * OclType          (* result type    *)
+       | Variable           of string * OclType    (* name with type *)
+       | Let                of string * OclType    (* variable *)
+			       * OclTerm * OclType (* rhs      *)
+			       * OclTerm * OclType (* in       *)
+       | Iterate            of (string * OclType) list      (* iterator variables *)
+			       * string * OclType * OclTerm (* result variable    *)
+			       * OclTerm * OclType          (* source             *)
+			       * OclTerm * OclType          (* iterator body      *)
+			       * OclType                    (* result type        *)
+       | Iterator           of string                    (* name of iterator   *)
+			       * (string * OclType) list (* iterator variables *)
+			       * OclTerm * OclType       (* source             *)
+			       * OclTerm * OclType       (* iterator-body      *)
+			       * OclType                 (* result type        *)
+and CollectionPart = CollectionItem of OclTerm * OclType
+	           | CollectionRange of OclTerm   (* first *)
+		         		 * OclTerm (* last  *)
+                                         * OclType
+end
+
+
 structure Rep_OclType : REP_OCL_TYPE =
 struct
 open library

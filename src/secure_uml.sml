@@ -23,8 +23,11 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-(** SecureUML is a simple security language, based on RBAC, where permissions *)
-(* can be further constrained using OCL: *)
+(** 
+ * SecureUML is a simple security language based on RBAC.
+ * Permissions relate roles with actions and can be further constrained 
+ * using OCL: 
+ *) 
 functor SecureUML(structure Design: DESIGN_LANGUAGE):SECURITY_LANGUAGE =
 struct
 
@@ -82,12 +85,14 @@ fun stereotypes_of (Rep.Class {stereotypes,...})       = stereotypes
   | stereotypes_of (Rep.Primitive {stereotypes,...})   = stereotypes
   | stereotypes_of (Rep.Interface {stereotypes,...})   = stereotypes
 
+
 fun has_no_stereotype strings c = 
     not (List.exists (fn stereotype =>  List.exists (fn x => x = stereotype) 
 						    strings) (stereotypes_of c))
 
 fun has_stereotype string c = 
     List.exists (fn x => x=string) (stereotypes_of c)
+
 
 fun filter_permission cs = List.filter (has_stereotype "Permission") cs
 (* FIXME: handle groups also *)
