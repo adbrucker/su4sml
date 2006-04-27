@@ -33,23 +33,18 @@ use "gcg_helper.sml";
 (*use "examples/simple.sml"; *)
 (*use "examples/ebank.sml";*)
 
-use "tpl_parser.sig";
 use "tpl_parser.sml";
 
 use "cartridge.sig";
-use "base_cartridge.sig";
 use "base_cartridge.sml";
-use "security_cartridge.sig";
 use "design_cartridge.sig";
 use "c#_cartridge.sml";
 use "c#_net1_cartridge.sml";
-use "secureuml_cartridge.sig";
 use "secureuml_cartridge.sml";
 use "componentuml_cartridge.sml";
 (*
 use "java_cartridge.sml";
 *)
-use "gcg_core.sig";
 use "gcg_core.sml";
 
 use "codegen.sml";

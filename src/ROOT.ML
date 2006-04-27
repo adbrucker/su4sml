@@ -64,17 +64,12 @@ use "xmi.sml";
    - only supported parts were represented
    - structural simplifications whereever needed for
      our applications.  *)
-use "rep_ocl.sig";
 use "rep_ocl.sml";
-use "rep_state_machines.sig";
 use "rep_state_machines.sml";
-use "rep_activity_graphs.sig";
 use "rep_activity_graphs.sml";
-use "rep_core.sig";
 use "rep_core.sml";
 (* use "rep_secureuml.sig"; *)
 (* use "rep_secureuml.sml"; *)
-use "rep.sig";
 use "rep.sml";
 
 
@@ -97,7 +92,6 @@ use "xmi2rep.sml";        (* conversion XMI to Rep *)
 use "mds.sig";
 use "component_uml.sml";
 use "secure_uml.sml";
-use "rep_secure.sig";
 use "rep_secure.sml";
 
 (* ******************************************************** *)
