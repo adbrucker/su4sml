@@ -114,13 +114,18 @@ val operations_of     : Classifier -> operation list
 val invariant_of      : Classifier -> (string option * Rep_OclTerm.OclTerm) list
 val string_of_path    : string list -> string    
 
-val arguments_of_op    : operation -> (string * Rep_OclType.OclType) list
+val arguments_of_op     : operation -> (string * Rep_OclType.OclType) list
 val precondition_of_op  : operation -> (string option * Rep_OclTerm.OclTerm) list
-val result_of_op  : operation -> Rep_OclType.OclType
+val result_of_op        : operation -> Rep_OclType.OclType
 val postcondition_of_op : operation -> (string option * Rep_OclTerm.OclTerm) list
 val name_of_op          : operation -> string
 val mangled_name_of_op          : operation -> string
 
+val class_of            : Rep_OclType.Path -> Classifier list -> Classifier
+val parent_of           : Classifier -> Classifier list -> Classifier
+val parents_of          : Classifier -> Classifier list -> Rep_OclType.Path list
+val operation_of        : Classifier list -> Rep_OclType.Path -> operation option
+val topsort_cl          : Classifier list -> Classifier list
 end
 
 structure Rep_Core :  REP_CORE = 
