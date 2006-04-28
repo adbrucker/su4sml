@@ -548,4 +548,43 @@ fun thy_name_of (C as Class{thyname,...})       =
 		     | NONE => error  ("Primitive "^((string_of_path o name_of) P)^
                                        " has no thyname"))
  
+
+
+
+
+
+
+fun class_of name cl = hd (filter (fn a => if ((name_of a) = name)
+                                           then true else false ) cl )
+		       
+
+fun parent_of  C cl =  (class_of (parent_name_of C) cl)
+
+fun parents_of C cl = case parent_name_of C of
+                          [] => []    
+                        | class => (if( class = (name_of OclAnyC) )
+                                   then [(name_of OclAnyC)]
+                                   else [class]@(parents_of (class_of class cl) cl))
+				  
+fun operation_of cl fq_name = 
+    let 
+	val classname   = (rev o  tl o rev) fq_name
+	val operations  = operations_of (class_of classname cl)
+	val name        = (hd o rev) fq_name	
+    in
+	SOME(hd (filter (fn a => if ((name_of_op a) = name)
+				 then true else false ) operations ))
+    end	
+
+(* topological sort of class lists *)
+fun topsort_cl cl =
+    let val OclAny_subcl = filter (fn a => (parent_name_of a) = (name_of OclAnyC)) cl	      
+        fun subclasses_of cl c = filter (fn a =>   (parent_name_of a = (name_of c))) cl
+        fun sub [] _ = []
+	  | sub cl c =  c :: (foldl (op@) [] (map (fn a => sub cl a) 
+						   (subclasses_of cl c)))  
+    in
+	foldl (op@) [] (map (fn a => sub cl a) (OclAny_subcl))  
+    end
+
 end
