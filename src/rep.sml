@@ -29,6 +29,7 @@ include REP_CORE
 include REP_ACTIVITY_GRAPH 
 
 type Model = Classifier list				 
+
 end
 
 structure Rep : REP = 

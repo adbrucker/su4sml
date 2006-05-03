@@ -187,7 +187,7 @@ fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
      
 
 fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,ordering,
-			    multiplicity,taggedValue,ownerScope,targetScope,initialValue}) =
+			    multiplicity,taggedValue,ownerScope,targetScope,stereotype,initialValue}) =
     let val cls_type = find_classifier_type t type_id 
     in
 	{name= name,
@@ -197,6 +197,7 @@ fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,ordering
 		     else Rep_OclType.Set cls_type,
 	 visibility = visibility,
 	 scope = ownerScope,
+	 stereotypes = map (find_stereotype t) stereotype,
 	 init = Option.map (transform_expression t) initialValue
 	}
     end

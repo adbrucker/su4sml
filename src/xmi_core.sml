@@ -99,7 +99,8 @@ type Attribute = { xmiid : string,
 		   ownerScope : ScopeKind,               
 		   targetScope : ScopeKind,
 		   visibility : VisibilityKind,
-		   taggedValue : TaggedValue list
+		   taggedValue : TaggedValue list,
+		   stereotype : string list
 				}
 
 

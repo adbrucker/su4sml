@@ -41,12 +41,20 @@ sig
     datatype Action = SimpleAction of string * Resource
                     | CompositeAction of string * Resource
 					 
+	val action_stereotypes : string list
     (* val action_names: string list *)
 
     val subordinated_actions:   Action -> Action list
 
     val actions_of : Resource -> Action list
     val resource_of:   Action -> Resource
+
+	(** 
+	 * parse a permission attribute into an action.
+	 * Takes the root resource, the attribute's stereotype, 
+	 * the attribute's name and the attribute's type as argument 
+	 *)
+	val parse_action: Rep.Classifier -> string -> string -> string -> Action
 end 
     
     

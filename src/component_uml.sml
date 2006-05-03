@@ -36,13 +36,21 @@ sig
 										  
     datatype Action = SimpleAction of string * Resource
 				    | CompositeAction of string * Resource
-														 
+
+	val action_stereotypes : string list
     (* val action_names: string list *)
 														 
     val subordinated_actions:   Action -> Action list
 										  
     val actions_of : Resource -> Action list
     val resource_of:   Action -> Resource
+
+	(** 
+	 * parse a permission attribute into an action.
+	 * Takes the root resource, the attribute's stereotype, 
+	 * the attribute's name and the attribute's type as argument 
+	 *)
+	val parse_action: Rep.Classifier -> string -> string -> string -> Action
 								 
 end
 
@@ -60,6 +68,8 @@ datatype Resource = Entity of Rep.Classifier
 			      | EntityAttribute of Rep.attribute
 
 (* val resource_types = ["Entity","EntityMethod","EntityAttribute"] *)
+
+val action_stereotypes = ["EntityAction","EntityMethodAction","EntityAttributeAction"]
 
 (** The resources that are contained in the given resource.
  * does nothing sensible yet, but perhaps you get the idea...
@@ -80,6 +90,12 @@ fun entity_contained_update_methods (Entity c) = nil
 
 datatype Action = SimpleAction of string * Resource
                 | CompositeAction of string * Resource
+
+(* FIX: also parse method and attribute actions. *)
+fun parse_action root "EntityAction" name "read" = CompositeAction ("read", (Entity root)) 
+  | parse_action root "EntityAction" name "update" = CompositeAction ("update", (Entity root)) 
+  | parse_action root "EntityAction" name "create" = SimpleAction ("create", (Entity root)) 
+  | parse_action root "EntityAction" name "delete" = SimpleAction ("delete", (Entity root)) 
 
 fun actionType_of (SimpleAction (t,_)) = t
  |  actionType_of (CompositeAction (t,_)) = t

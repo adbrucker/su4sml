@@ -35,8 +35,6 @@ exception NotYetImplemented
 exception IllFormed of string
 exception OCLIllFormed of string
 
-
-
 fun getStringAtt string atts = valOf (XmlTree.attvalue_of string atts)
     handle Option => raise IllFormed ("in getStringAtt: did not find attribute "^string)
 
@@ -68,14 +66,14 @@ fun getMaybeEmptyName atts = Option.getOpt(XmlTree.attvalue_of "name" atts,"")
 fun getVisibility atts = 
     let val att = XmlTree.attvalue_of "visibility" atts 
     in
-	case att of SOME "public"    => XMI.public
-		  | SOME "private"   => XMI.private
-		  | SOME "protected" => XMI.protected
-		  | SOME "package"   => XMI.package
-		  | NONE             => XMI.public
-		  | SOME string      => raise IllFormed ("in getVisibility: found unexpected attribute value "^string)
+		case att of SOME "public"    => XMI.public
+				  | SOME "private"   => XMI.private
+				  | SOME "protected" => XMI.protected
+				  | SOME "package"   => XMI.package
+				  | NONE             => XMI.public
+				  | SOME string      => raise IllFormed ("in getVisibility: found unexpected attribute value "^string)
     end
-
+		
 fun getOrdering atts = 
     let val att = getStringAtt "ordering" atts 
     in 
@@ -569,6 +567,9 @@ fun mkAttribute tree =
 			   handle _ => [(1,1)],
 	  targetScope   = getTargetScopeMaybe atts,
 	  ownerScope    = getOwnerScopeMaybe atts,
+	  stereotype    = (map (getXmiIdref o XmlTree.attributes_of) 
+							(XmlTree.follow "UML:ModelElement.stereotype" 
+											trees)),
 	  taggedValue   = (map mkTaggedValue 
 				 (XmlTree.follow "UML:ModelElement.taggedValue" trees)) }
     in XmlTree.apply_on "UML:Attribute" f tree

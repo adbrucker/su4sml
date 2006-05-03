@@ -28,22 +28,22 @@ sig
     
 type     StateVertex_Id
 type     Transition_Id
-
+		 
 datatype Procedure = Proc_mk of {proc_id          : string,
-				 language         : string,
-				 body             : string,
-				 expression       : string }
-	 
+								 language         : string,
+								 body             : string,
+								 expression       : string }
+								
 (* perhaps this type has to be changes according to what we can expect *)
 (* from CASE tools                                                     *)
 type Guard        = Rep_OclTerm.OclTerm
 
-type Parameter    = string * Rep_OclType.OclType
+type Parameter    = string * Rep_OclType.OclType 
 	      
 datatype Event  = SignalEvent  of Parameter list
-                | CallEvent    of Rep_OclType.Path * Parameter list
-				 (*   | TimeEvent    of Parameter list  *)
-				 (*   | ChangeEvent  of Parameter list  *)
+				| CallEvent    of Rep_OclType.Path * Parameter list
+(*   | TimeEvent    of Parameter list  *)
+(*   | ChangeEvent  of Parameter list  *)
 				 
 				 
 datatype Transition   = T_mk of  {trans_id: Transition_Id,

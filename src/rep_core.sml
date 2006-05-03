@@ -49,6 +49,7 @@ type attribute = {
      attr_type : Rep_OclType.OclType,
      visibility : Visibility,
      scope: Scope,
+	 stereotypes: string list,
      init : Rep_OclTerm.OclTerm option
 }
 
@@ -112,6 +113,7 @@ val update_thyname    : string -> Classifier -> Classifier
 val attributes_of     : Classifier -> attribute list
 val operations_of     : Classifier -> operation list
 val invariant_of      : Classifier -> (string option * Rep_OclTerm.OclTerm) list
+val stereotypes_of    : Classifier -> string list
 val string_of_path    : string list -> string    
 
 val arguments_of_op     : operation -> (string * Rep_OclType.OclType) list
@@ -158,6 +160,7 @@ type attribute = {
      attr_type : Rep_OclType.OclType,
      visibility : Visibility,
      scope: Scope,
+	 stereotypes: string list,
      init : Rep_OclTerm.OclTerm option
 }
 
@@ -220,6 +223,7 @@ fun assoc_to_attr (assoc:associationend) = {name = #name assoc,
 					    attr_type = assoc_to_attr_type assoc,
 					    visibility = #visibility assoc,
 					    scope = XMI.InstanceScope,
+						stereotypes = nil,
 					    init = #init assoc}
 
 (* convert a multiplicity range into an invariant of the form *)
@@ -326,6 +330,7 @@ fun rm_init_attr (attr:attribute) = {
     attr_type = #attr_type attr,
     visibility = #visibility attr,
     scope = #scope attr,
+	stereotypes = #stereotypes attr,
     init = NONE
 }:attribute
 
@@ -417,6 +422,12 @@ fun short_name_of (Class{name,...})       = (hd o rev) name
   | short_name_of (Interface{name,...})   = (hd o rev) name
   | short_name_of (Enumeration{name,...}) = (hd o rev) name
   | short_name_of (Primitive{name,...})    = (hd o rev) name
+
+fun stereotypes_of (Class{stereotypes,...})       = stereotypes  
+  | stereotypes_of (Interface{stereotypes,...})   = stereotypes
+  | stereotypes_of (Enumeration{stereotypes,...}) = stereotypes
+  | stereotypes_of (Primitive{stereotypes,...})    = stereotypes
+
 
 
 
