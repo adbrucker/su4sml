@@ -24,78 +24,107 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-signature COMPONENTUML = 
-sig
-	
-	datatype Resource = Entity of Rep.Classifier
-					  | EntityMethod of Rep.operation
-					  | EntityAttribute of Rep.attribute
-
-	val contained_resources : Resource -> Resource list
-										  
-										  
-    datatype Action = SimpleAction of string * Resource
-				    | CompositeAction of string * Resource
-
-	val action_stereotypes : string list
-    (* val action_names: string list *)
-														 
-    val subordinated_actions:   Action -> Action list
-										  
-    val actions_of : Resource -> Action list
-    val resource_of:   Action -> Resource
-
-	(** 
-	 * parse a permission attribute into an action.
-	 * Takes the root resource, the attribute's stereotype, 
-	 * the attribute's name and the attribute's type as argument 
-	 *)
-	val parse_action: Rep.Classifier -> string -> string -> string -> Action
-								 
-end
-
-(** ComponentUML is a simple language for component-based modeling. *)
-structure ComponentUML : COMPONENTUML =
-struct
+(** Auxiliary structure to specialize the resource type for ComponentUML. *)
+structure ComponentUMLResource = struct
 
 (** The type of resource, plus a path name specifiying the resource. 
  * Resource types can be entities, methods, and attributes.
  * FIX: using Path for methods is unsafe, there can be severable  
  * methods with the same name, but different signature.           
  *)
-datatype Resource = Entity of Rep.Classifier
-	      		  | EntityMethod of Rep.operation
-			      | EntityAttribute of Rep.attribute
+ datatype Resource = Entity of Rep.Classifier
+					  | EntityMethod of Rep.operation
+					  | EntityAttribute of Rep.attribute
+end
 
+(** The signature for ComponentUML. *)
+signature COMPONENTUML = DESIGN_LANGUAGE where 
+type Resource = ComponentUMLResource.Resource
+
+(** ComponentUML is a simple language for component-based modeling. *)
+structure ComponentUML : COMPONENTUML =
+struct
+
+open ComponentUMLResource
 (* val resource_types = ["Entity","EntityMethod","EntityAttribute"] *)
 
 val action_stereotypes = ["EntityAction","EntityMethodAction","EntityAttributeAction"]
 
-(** The resources that are contained in the given resource.
- * does nothing sensible yet, but perhaps you get the idea...
- * FIXME: do something sensible 
- *)
-fun contained_resources (Entity (Rep.Class c)) = List.concat [map EntityMethod (#operations c),
-												  map EntityAttribute (#attributes c)] 
-(** The list of all attributes of an entity.
- *)
-fun entity_contained_attributes (Entity c)     = nil
 
-(** The list of all side-effect free methods of an entity.
- *)
-fun entity_contained_read_methods (Entity c)   = nil
+(** The list of all attributes of an entity. *)
+fun entity_contained_attributes (Entity c) 
+  = map EntityAttribute (Rep.attributes_of c)
+  | entity_contained_attributes _ = nil
 
+(** the list of all methods of an entity *)
+fun entity_contained_methods (Entity c) = map EntityMethod (Rep.operations_of c)
+  | entity_contained_methods _ = nil
+
+(** The list of all side-effect free methods of an entity. *)
+fun entity_contained_read_methods (Entity c) 
+  = map EntityMethod (List.filter #isQuery (Rep.operations_of c))
+  | entity_contained_read_methods _ = nil
+		
 (** The list of all methods with side-effects of an entity *)
-fun entity_contained_update_methods (Entity c) = nil
+fun entity_contained_update_methods (Entity c) 
+  = map EntityMethod (List.filter (not o #isQuery) (Rep.operations_of c))
+  | entity_contained_update_methods _ = nil
+
+(** The resources that are contained in the given resource. *)
+fun contained_resources x = 
+	List.concat [entity_contained_attributes x, entity_contained_methods x] 
+							
 
 datatype Action = SimpleAction of string * Resource
                 | CompositeAction of string * Resource
 
-(* FIX: also parse method and attribute actions. *)
-fun parse_action root "EntityAction" name "read" = CompositeAction ("read", (Entity root)) 
-  | parse_action root "EntityAction" name "update" = CompositeAction ("update", (Entity root)) 
-  | parse_action root "EntityAction" name "create" = SimpleAction ("create", (Entity root)) 
-  | parse_action root "EntityAction" name "delete" = SimpleAction ("delete", (Entity root)) 
+
+(** parses an entity action permission attribute. *)
+fun parse_entity_action root att_name "create"     = 
+	SimpleAction ("create", (Entity root)) 
+  | parse_entity_action root att_name "read"       = 
+	CompositeAction ("read", (Entity root)) 
+  | parse_entity_action root att_name "update"     =
+	CompositeAction ("update", (Entity root)) 
+  | parse_entity_action root att_name "delete"     =
+	SimpleAction ("delete", (Entity root)) 
+  | parse_entity_action root att_name "fullaccess" =
+	CompositeAction ("fullaccess", (Entity root)) 	
+	
+(** parses an entity attribute action permission attribute. *)
+fun parse_attribute_action root name "read"       =
+	SimpleAction ("read", 
+				  (EntityAttribute ((hd o List.filter (fn x => #name x = name)) 
+										(Rep.attributes_of root))))
+  | parse_attribute_action root name "update"     =
+	SimpleAction ("update", 
+				  (EntityAttribute ((hd o List.filter (fn x => #name x = name)) 
+										(Rep.attributes_of root))))
+  | parse_attribute_action root name "fullaccess" =
+	CompositeAction ("fullaccess", 
+					 (EntityAttribute ((hd o List.filter (fn x => #name x = name)) 
+										   (Rep.attributes_of root))))
+
+(** parses an entity method action permission attribute. *)
+fun parse_method_action root name "execute" 
+  = SimpleAction ("execute", 
+				  (EntityMethod ((hd o List.filter (fn x => #name x = name)) 
+									 (Rep.operations_of root))))
+	
+(**
+ * parses a permission attribute according to the ComponentUML 
+ * dialect for SecureUML. 
+ *)
+fun parse_action root (att:Rep.attribute) =
+	let val att_name = #name att
+		val att_type = #attr_type att
+		val action_name = (hd o rev o (fn Rep_OclType.Classifier x => x)) att_type 
+	in case hd (#stereotypes att) 
+		of "EntityAction" => parse_entity_action root att_name action_name
+		 | "EntityMethodAction" => parse_method_action root att_name action_name
+		 | "EntityAttributeAction" => parse_attribute_action root att_name action_name 
+	end
+
 
 fun actionType_of (SimpleAction (t,_)) = t
  |  actionType_of (CompositeAction (t,_)) = t

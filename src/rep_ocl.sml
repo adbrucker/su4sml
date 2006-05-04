@@ -34,7 +34,8 @@ sig
 		     | Classifier of Path | OclVoid | DummyT
 	val string_of_OclType : OclType -> string	
 	val string_of_path    : Path -> string	
-	
+	val is_Classifier     : OclType -> bool
+    val is_Collection     : OclType -> bool
 end
      
     
@@ -114,6 +115,15 @@ fun string_of_OclType Integer        = "Integer"
   | string_of_OclType (Classifier p) = (string_of_path p)
   | string_of_OclType DummyT         = "DummyT"
 
+fun is_Classifier (Classifier p) = true
+  | is_Classifier _              = false 
+
+fun is_Collection (Set _)        = true
+  | is_Collection (Sequence _)   = true
+  | is_Collection (OrderedSet _) = true
+  | is_Collection (Bag _)        = true
+  | is_Collection (Collection _) = true
+  | is_Collection _              = false
 end
      
     

@@ -29,11 +29,11 @@ fun permissionsForAction env _ = nil
  * FIX: move to ComponentUML cartridge...*)
 fun computePermissionContext (env : environment)=
       let 
-		  fun getAction "set" = ComponentUML.SimpleAction ("update", (ComponentUML.EntityAttribute (Option.valOf(curAttribute env))))
-			|  getAction "get" = ComponentUML.SimpleAction ("read", (ComponentUML.EntityAttribute (Option.valOf(curAttribute env))))
-			|  getAction "execute" = ComponentUML.SimpleAction ("execute", (ComponentUML.EntityMethod (Option.valOf(curOperation env))))
-			|  getAction "create" = ComponentUML.SimpleAction ("create", (ComponentUML.Entity (Option.valOf(curClassifier env))))
-			|  getAction "delete" = ComponentUML.SimpleAction ("delete", (ComponentUML.Entity (Option.valOf (curClassifier env))))
+		  fun getAction "set" = ComponentUML.SimpleAction ("update", (ComponentUMLResource.EntityAttribute (Option.valOf(curAttribute env))))
+			|  getAction "get" = ComponentUML.SimpleAction ("read", (ComponentUMLResource.EntityAttribute (Option.valOf(curAttribute env))))
+			|  getAction "execute" = ComponentUML.SimpleAction ("execute", (ComponentUMLResource.EntityMethod (Option.valOf(curOperation env))))
+			|  getAction "create" = ComponentUML.SimpleAction ("create", (ComponentUMLResource.Entity (Option.valOf(curClassifier env))))
+			|  getAction "delete" = ComponentUML.SimpleAction ("delete", (ComponentUMLResource.Entity (Option.valOf (curClassifier env))))
 			|  getAction s = Gcg_Helper.gcg_error ("invalid action_type \""^s^"\" in secureUML_cartridge.computePermissionContext:getAction.") 
       in
 	if Option.isSome(curAttribute env) then

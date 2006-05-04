@@ -51,10 +51,9 @@ sig
 
 	(** 
 	 * parse a permission attribute into an action.
-	 * Takes the root resource, the attribute's stereotype, 
-	 * the attribute's name and the attribute's type as argument 
+	 * Takes the root resource, and the attribute as argument  
 	 *)
-	val parse_action: Rep.Classifier -> string -> string -> string -> Action
+	val parse_action: Rep.Classifier -> Rep.attribute -> Action
 end 
     
     

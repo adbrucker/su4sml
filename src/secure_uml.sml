@@ -109,39 +109,29 @@ fun classifier_has_stereotype s c = List.exists (fn x => x = s)
 												(Rep.stereotypes_of c)
 fun mkPermission cs (Rep.Class c) =  
 	{ name  = (Rep.string_of_path (#name c)),
-	  (* FIXME: find attributes/aends with a type with stereotype "Role" *) 
 	  roles = (map (Rep.string_of_path o Rep.name_of)
 				   (List.filter (classifier_has_stereotype "Role") 
 								(map (fn (Rep_OclType.Classifier p) => Rep.class_of p cs)
-									 (List.filter (fn (Rep_OclType.Classifier p) => true
-													| _                          => false)
+									 (List.filter Rep_OclType.is_Classifier
 												  (map  #attr_type
 														(Rep.attributes_of (Rep.Class c))))))),  
 	  (* FIXME: find attached constraints *)
 	  constraints = nil, 
-	  (* FIXME: root resource is attribute/aend withh stereotype "Entity" *)
-	  (* resources are given by the name of the attributes *)
-	  (* actiontypes are given by the type of the attributes *)
 	  actions = let 
 		  val atts = Rep.attributes_of (Rep.Class c)
 		  (* val attr_stereotypes = map (hd o #stereotypes) atts *)
-		  val root_resource = hd (List.filter (classifier_has_stereotype "Entity") 
-											  (map (fn (Rep_OclType.Classifier p) => Rep.class_of p cs)
-												   (List.filter (fn (Rep_OclType.Classifier p) => true
-																  | _                          => false)
-																(map  #attr_type
-																	  atts))))
+		  val root_resource = 
+			  hd (List.filter (classifier_has_stereotype "Entity") 
+							  (map (fn (Rep_OclType.Classifier p) => 
+									   Rep.class_of p cs)
+								   (List.filter Rep_OclType.is_Classifier
+												(map  #attr_type
+													  atts))))
 		  val action_attributes = 
 			  List.filter (fn x => List.exists (fn y => y= hd (#stereotypes x)) 
 											   Design.action_stereotypes) atts 
-		  val resource_names  = map #name action_attributes
-		  val action_names    = map (hd o rev) (map (fn Rep_OclType.Classifier x => x) (map #attr_type action_attributes))
-		  val stereos         = map (hd o #stereotypes) action_attributes
-		  fun zipWith3 f (x::xs,y::ys,z::zs) = (f (x, y, z))::(zipWith3 f (xs,ys,zs))
-			| zipWith3 f _ = nil
 	  in 
-		  zipWith3 (fn (x, y, z) => Design.parse_action root_resource x y z) 
-				   (stereos, resource_names, action_names)
+		  map (Design.parse_action root_resource) action_attributes
 	  end }
 	
 (* FIXME *) 
