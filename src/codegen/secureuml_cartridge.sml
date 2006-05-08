@@ -72,7 +72,7 @@ fun curConstraint'    (env : environment) = Option.valOf (#curConstraint env)
 fun initEnv model = let val m = Security.parse model 
 					in
 						{ model = m, 
-						  curPermissionSet = NONE,
+						  curPermissionSet = SOME (#permissions (#2 m)),
 						  curPermission = NONE,
 						  curRole       = NONE,
 						  curConstraint = NONE,
@@ -92,7 +92,7 @@ fun pack (env: environment) (new_env : SuperCart.environment)
 	  extension        = new_env}
 	
 	
-(* Helper functions that get the SuperCartridge's needed environment values *)                    
+(* Helper functions that get the SuperCartridge's needed environment values *) 
 fun getModel (env : environment) = #model env
 fun curClassifier (env : environment) = SuperCart.curClassifier (unpack env)
 fun curAttribute (env : environment) = SuperCart.curAttribute (unpack env)
@@ -107,14 +107,13 @@ fun isInPermission a (p:Security.Permission) = List.exists (is_contained_in a) (
                        
 fun name_of_role  r 	= r
                            
-(********** ADDING/MODIFYING VARIABLE SUBSTITUTIONS *****************************************)
+(********** ADDING/MODIFYING VARIABLE SUBSTITUTIONS *************************)
 (*	lookup  environment -> string -> string			
  * might override some lookup entries of the base cartridge 
  *)
 fun lookup (env : environment) "permission_name" = #name (curPermission' env)
-  | lookup (env : environment) "role_name"	 = name_of_role (curRole' env)
-  | lookup (env : environment) "constraint"	 = Ocl2String.ocl2string false (curConstraint' env)
- (* pass the unknown variables to the Superior Cartridge *)
+  | lookup (env : environment) "role_name"	= name_of_role (curRole' env)
+  | lookup (env : environment) "constraint"	= Ocl2String.ocl2string false (curConstraint' env)
   | lookup (env : environment) s =  SuperCart.lookup (unpack env) s
 
 (********** ADDING IF-CONDITION TYPE *****************************************)
@@ -130,13 +129,10 @@ fun evalCondition (env : environment) "first_permission" =
 	(curRole' env      	= List.last (#roles (curPermission' env)))
   | evalCondition (env : environment) "last_constraint"  = 
 	(curConstraint' env	= List.last (#constraints (curPermission' env)))
- (* pass unknown condition types to Superior Cartridge *)
   | evalCondition (env : environment) s = SuperCart.evalCondition (unpack env) s
 
 
 (********** ADDING FOREACH TYPE **********************************************)
-			     
-
 fun foreach_role (env : environment) 
   = let val roles = #roles (curPermission' env);      
 			fun env_from_list_item r ={ model = #model env,
@@ -160,10 +156,23 @@ fun foreach_constraint (env : environment)
 	in 
 		List.map env_from_list_item cons
 	end
-			     		
+
+fun foreach_permission (env : environment) 
+  = let val perms = curPermissionSet' env
+		fun env_from_list_item p ={ model = #model env,
+									curPermissionSet = #curPermissionSet env,
+									curPermission = SOME p,
+									curRole       = NONE ,
+									curConstraint = NONE ,
+									extension = #extension env } : environment
+	in 
+		List.map env_from_list_item perms
+	end
+ 
 			     
 fun foreach "role_list"       env = foreach_role env 
   | foreach "constraint_list" env = foreach_constraint env
+  | foreach "permission_list" env = foreach_permission env
   | foreach listType          env = map (pack env) 
 										(SuperCart.foreach listType (unpack env))
   

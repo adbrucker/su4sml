@@ -48,7 +48,7 @@ struct
 open ComponentUMLResource
 (* val resource_types = ["Entity","EntityMethod","EntityAttribute"] *)
 
-val action_stereotypes = ["EntityAction","EntityMethodAction","EntityAttributeAction"]
+val action_stereotypes = ["dialect.entityaction","dialect.methodaction","dialect.attributeaction"]
 
 
 (** The list of all attributes of an entity. *)
@@ -120,11 +120,14 @@ fun parse_action root (att:Rep.attribute) =
 		val att_type = #attr_type att
 		val action_name = (hd o rev o (fn Rep_OclType.Classifier x => x)) att_type 
 	in case hd (#stereotypes att) 
-		of "EntityAction" => parse_entity_action root att_name action_name
-		 | "EntityMethodAction" => parse_method_action root att_name action_name
-		 | "EntityAttributeAction" => parse_attribute_action root att_name action_name 
+		of "dialect.entityaction" => parse_entity_action root att_name action_name
+		 | "dialect.methodaction" => parse_method_action root att_name action_name
+		 | "dialect.attributeaction" => parse_attribute_action root att_name action_name 
+		 | s => library.error ("in ComponentUML.parse_action: "^
+							   "found unexpected stereotype "^s^
+							   " for permission attribute")
 	end
-
+		handle _ => library.error "in ComponentUML.parse_action: could not parse attribute"
 
 fun actionType_of (SimpleAction (t,_)) = t
  |  actionType_of (CompositeAction (t,_)) = t

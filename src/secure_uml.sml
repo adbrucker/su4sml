@@ -94,10 +94,10 @@ fun has_stereotype string c =
     List.exists (fn x => x=string) (stereotypes_of c)
 
 
-fun filter_permission cs = List.filter (has_stereotype "Permission") cs
+fun filter_permission cs = List.filter (has_stereotype "secuml.permission") cs
 (* FIXME: handle groups also *)
-fun filter_subject cs = List.filter (has_stereotype "User") cs
-fun filter_role cs = List.filter (has_stereotype "Role") cs
+fun filter_subject cs = List.filter (has_stereotype "secuml.user") cs
+fun filter_role cs = List.filter (has_stereotype "secuml.role") cs
 
 
 fun mkRole (Rep.Class c)  = Rep.string_of_path (#name c)
@@ -110,7 +110,7 @@ fun classifier_has_stereotype s c = List.exists (fn x => x = s)
 fun mkPermission cs (Rep.Class c) =  
 	{ name  = (Rep.string_of_path (#name c)),
 	  roles = (map (Rep.string_of_path o Rep.name_of)
-				   (List.filter (classifier_has_stereotype "Role") 
+				   (List.filter (classifier_has_stereotype "secuml.role") 
 								(map (fn (Rep_OclType.Classifier p) => Rep.class_of p cs)
 									 (List.filter Rep_OclType.is_Classifier
 												  (map  #attr_type
@@ -121,31 +121,38 @@ fun mkPermission cs (Rep.Class c) =
 		  val atts = Rep.attributes_of (Rep.Class c)
 		  (* val attr_stereotypes = map (hd o #stereotypes) atts *)
 		  val root_resource = 
-			  hd (List.filter (classifier_has_stereotype "Entity") 
+			  hd (List.filter (classifier_has_stereotype "compuml.entity") 
 							  (map (fn (Rep_OclType.Classifier p) => 
 									   Rep.class_of p cs)
 								   (List.filter Rep_OclType.is_Classifier
 												(map  #attr_type
 													  atts))))
+			  handle _ => library.error ("could not find root resource "^
+										 "for class "^(Rep.string_of_path (#name c)))
 		  val action_attributes = 
-			  List.filter (fn x => List.exists (fn y => y= hd (#stereotypes x)) 
-											   Design.action_stereotypes) atts 
+			  List.filter (fn x => List.exists 
+									   (fn y => List.exists 
+													(fn z => y= z) 
+													(#stereotypes x)) 
+									   Design.action_stereotypes) atts 
+			  handle _ => library.error "could not parse permission attributes"
 	  in 
 		  map (Design.parse_action root_resource) action_attributes
 	  end }
-	
+	handle _ => library.error "error in mkPermission" 
+
 (* FIXME *) 
 fun mkPartialOrder xs = ListPair.zip (xs,xs)
 
 fun parse (cs:Rep_Core.Classifier list) = 
-	(List.filter (has_no_stereotype ["Permission","Role","Subject"]) cs,
+	(List.filter (has_no_stereotype ["secuml.permission","secuml.role","secuml.subject"]) cs,
 	 { config_type = "SecureUML",
 	   permissions = map (mkPermission cs) (filter_permission cs),
 	   subjects    = map mkSubject (filter_subject cs),
 	   roles       = mkPartialOrder (map mkRole (filter_role cs)),
 	   (* FIXME: find associations between Users and Roles. *)
 	   sa = nil})
-	
+	handle _ => library.error ("Problem during parsing security configuration")
 
 
 end
