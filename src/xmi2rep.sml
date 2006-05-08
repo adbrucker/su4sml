@@ -202,9 +202,16 @@ fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,ordering
 	}
     end
 
+fun lowercase s = let val sl = String.explode s
+				  in
+					  String.implode ((Char.toLower (hd sl))::(tl sl))
+				  end
+					  
 fun transform_aend t ({xmiid,name,ordering,multiplicity,participant_id,
 		       isNavigable,aggregation,changeability,visibility,targetScope})
-  = {name         = valOf name,
+  = {name         = Option.getOpt(name,
+								  (lowercase o XMI.classifier_name_of o
+								   find_classifier t) participant_id),
      aend_type    = find_classifier_type t participant_id,
      multiplicity = multiplicity,
      ordered      = if ordering = XMI.Ordered then true else false,
@@ -309,7 +316,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 			invariant  = map ((transform_constraint t) o 
 					  (find_constraint t)) checked_invariants, 
 			associationends = map (transform_aend t) 
-					      ((filter_named_aends (find_aends t xmiid))), 
+								  (find_aends t xmiid), 
 			stereotypes = map (find_stereotype t) stereotype, 
 			interfaces = nil, (* FIX *)
                         activity_graphs = List.concat [map (transform_activitygraph t) activity_graphs,
@@ -335,7 +342,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 			invariant  = map ((transform_constraint t) o 
 					  (find_constraint t)) checked_invariants, 
 			associationends = map (transform_aend t) 
-					      ((filter_named_aends (find_aends t xmiid))), 
+								  (find_aends t xmiid), 
 			stereotypes = map (find_stereotype t) stereotype, 
 			interfaces = nil, (* FIX *)
                         activity_graphs = nil,
@@ -350,7 +357,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 			parent = NONE,    (* FIX *)
 			operations = map (transform_operation t) operations,
 			associationends = map (transform_aend t) 
-					      (filter_named_aends (find_aends t xmiid)), 
+								  (find_aends t xmiid), 
 			invariant = map ((transform_constraint t) o 
 					 (find_constraint t)) checked_invariants,
 			stereotypes = nil, (*FIX *)
@@ -418,9 +425,9 @@ fun transformXMI ({classifiers,constraints,packages,
 	(* "hd packages" is supposed to be the first model in the xmi-file *)
 	val model = hd packages
     in 
-	insert_model           xmiid_table model; (* fill xmi.id table   *)
-	transform_associations xmiid_table model; (* handle associations *)
-	map Rep.normalize (transform_package xmiid_table model) (* transform classes   *)
+		insert_model           xmiid_table model; (* fill xmi.id table   *)
+		transform_associations xmiid_table model; (* handle associations *)
+		map Rep.normalize (transform_package xmiid_table model) (* transform classes   *)
     end
 	handle Empty => raise Option
 

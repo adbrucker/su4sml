@@ -426,17 +426,19 @@ fun classifier_has_stereotype t st c =
     List.exists (fn x => (find_stereotype t x) = st) 
 		(XMI.classifier_stereotype_of c)
 
-(* split an association into association ends, and put the association ends *)
-(* ends into the xmi.id table under the corresponding (i.e., opposite)      *)
-(* classifier.                                                              *)   
-(* 1. split the association into a list of two (or more) association ends   *)
-(* 2. pair each association end with the participant_id's of all other      *)
-(*    association ends: when a class is a participant in an association,    *)
-(*    this association end is a feature of all _other_ participants in the  *) 
-(*    association                                                           *)
-(* 3. insert the mapping xmi.id of class to association end into the        *)
-(*    hashtable                                                             *)
-(* 4. insert mapping xmi.id of association end to path into the hashtable   *)
+(** 
+ * split an association into association ends, and put the association ends 
+ * ends into the xmi.id table under the corresponding (i.e., opposite)      
+ * classifier.                                                              
+ * 1. split the association into a list of two (or more) association ends   
+ * 2. pair each association end with the participant_id's of all other      
+ *    association ends: when a class is a participant in an association,    
+ *    this association end is a feature of all _other_ participants in the  
+ *    association                                                           
+ * 3. insert the mapping xmi.id of class to association end into the        
+ *    hashtable                                                             
+ * 4. insert mapping xmi.id of association end to path into the hashtable 
+ *)
 fun transform_assocation t (assoc:XMI.Association) =
     let	val aends = #connection assoc
 	fun all_others x xs = List.filter 
@@ -461,9 +463,38 @@ fun transform_assocation t (assoc:XMI.Association) =
 	List.app add_aend_to_type mappings
     end
 
+(** 
+ * insert the association from assocation class to the connected classifiers.
+ * the other direction (from connected classifiers to the association class
+ * is more difficult (and not implemented) because the association class does 
+ * not specify (syntactically) an association end.  
+ *)
+fun transform_associationclass_as_association t (XMI.AssociationClass assoc) = 
+    let	val aends = #connection assoc
+		fun add_aend_to_type (id,ae) = 
+			if not (Option.isSome (HashTable.find t id)) then () else 
+			let val type_of_id  = find_classifier_type t id
+				val cls_of_id   = find_classifier t id
+				val aends_of_id = ae::(find_aends t id)
+				val ags_of_id   = find_activity_graph_of t id
+				val path_of_id  = path_of_classifier type_of_id 
+				val path_of_ae  = path_of_id @ [case #name ae of SOME x => x
+															   | NONE   => ""]
+			in 
+				(HashTable.insert t (id,Type (type_of_id,aends_of_id,cls_of_id,ags_of_id));
+				 HashTable.insert t (#xmiid ae, AssociationEnd path_of_ae))
+			end
+	in 
+		List.app (fn x => add_aend_to_type (#xmiid assoc, x)) aends
+    end
+		
+
 (* recursively transforms all associations in the package p, *)
 fun transform_associations t (XMI.Package p) = 
     (List.app (transform_associations t) (#packages p);
-    List.app (transform_assocation t) (#associations p))
-
+	 List.app (transform_assocation t) (#associations p);
+	 List.app (transform_associationclass_as_association t)
+			  (List.filter (fn (XMI.AssociationClass x) => true
+							 | _                        => false)
+						   (#classifiers p)))
 end
