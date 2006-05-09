@@ -28,7 +28,7 @@ signature SECUREUML_CARTRIDGE =
 sig
 
 (** the particular secureuml dialect used *)
-structure Security:SECURITY_LANGUAGE
+structure Security:SECUREUML
 		
 include BASE_CARTRIDGE where
 type Model = Rep.Classifier list * Security.Configuration
@@ -43,6 +43,11 @@ val isInPermission :  Security.Design.Action -> Security.Permission -> bool
 end
 
 
+(**
+ * A Cartridge that supports the basic SecureUML concepts: 
+ * Permissions, Roles, and Constraints. 
+ * 
+ *)
 functor SecureUML_Cartridge(structure SuperCart : BASE_CARTRIDGE; 
 						    structure D: DESIGN_LANGUAGE) 
 		: SECUREUML_CARTRIDGE =
@@ -107,33 +112,33 @@ fun isInPermission a (p:Security.Permission) = List.exists (is_contained_in a) (
                        
 fun name_of_role  r 	= r
                            
+
+
 (********** ADDING/MODIFYING VARIABLE SUBSTITUTIONS *************************)
 (*	lookup  environment -> string -> string			
  * might override some lookup entries of the base cartridge 
  *)
-fun lookup (env : environment) "permission_name" = #name (curPermission' env)
-  | lookup (env : environment) "role_name"	= name_of_role (curRole' env)
-  | lookup (env : environment) "constraint"	= Ocl2String.ocl2string false (curConstraint' env)
-  | lookup (env : environment) s =  SuperCart.lookup (unpack env) s
+fun lookup env "permission_name" = #name (curPermission' env)
+  | lookup env "role_name"	     = name_of_role (curRole' env)
+  | lookup env "constraint"	     = Ocl2String.ocl2string false (curConstraint' env)
+  | lookup env s                 =  SuperCart.lookup (unpack env) s
 
 (********** ADDING IF-CONDITION TYPE *****************************************)
-fun evalCondition (env : environment) "first_permission" = 
-	(curPermission' env 	= hd (curPermissionSet' env))
-  | evalCondition (env : environment) "first_role"       = 
-	(curRole' env   	= hd (#roles (curPermission' env)))
-  | evalCondition (env : environment) "first_constraint" = 
-	(curConstraint' env 	= hd (#constraints (curPermission' env)))
-  | evalCondition (env : environment) "last_permission"  = 
-	(curPermission' env 	= List.last (curPermissionSet' env))
-  | evalCondition (env : environment) "last_role"        = 
-	(curRole' env      	= List.last (#roles (curPermission' env)))
-  | evalCondition (env : environment) "last_constraint"  = 
-	(curConstraint' env	= List.last (#constraints (curPermission' env)))
-  | evalCondition (env : environment) s = SuperCart.evalCondition (unpack env) s
+fun test env "first_permission" = (curPermission' env = hd (curPermissionSet' env))
+  | test env "first_role"       = (curRole' env = hd (#roles (curPermission' env)))
+  | test env "first_constraint" = (curConstraint' env 
+								   = hd (#constraints (curPermission' env)))
+  | test env "last_permission"  = (curPermission' env 
+								   = List.last (curPermissionSet' env))
+  | test env "last_role"        = (curRole' env 
+								   = List.last (#roles (curPermission' env)))
+  | test env "last_constraint"  = (curConstraint' env
+								   = List.last (#constraints (curPermission' env)))
+  | test env s                  = SuperCart.test (unpack env) s
 
 
 (********** ADDING FOREACH TYPE **********************************************)
-fun foreach_role (env : environment) 
+fun foreach_role env 
   = let val roles = #roles (curPermission' env);      
 			fun env_from_list_item r ={ model = #model env,
 									    curPermissionSet = #curPermissionSet env,
@@ -145,7 +150,7 @@ fun foreach_role (env : environment)
 		List.map env_from_list_item roles
 	end
 		
-fun foreach_constraint (env : environment) 
+fun foreach_constraint env 
   = let val cons = #constraints (curPermission' env);      
 			fun env_from_list_item c ={ model = #model env,
 									    curPermissionSet = #curPermissionSet env,
@@ -157,7 +162,7 @@ fun foreach_constraint (env : environment)
 		List.map env_from_list_item cons
 	end
 
-fun foreach_permission (env : environment) 
+fun foreach_permission env 
   = let val perms = curPermissionSet' env
 		fun env_from_list_item p ={ model = #model env,
 									curPermissionSet = #curPermissionSet env,

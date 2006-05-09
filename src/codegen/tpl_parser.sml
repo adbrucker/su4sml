@@ -44,6 +44,7 @@ struct
 open Gcg_Helper
 
 val tplStream = ref (TextIO.openString "@// dummy template\n");
+
 fun opentFile file = (TextIO.closeIn (!tplStream) ; 
 		      print ("opening "^file^"...\n");
 		      tplStream := (TextIO.openIn file))

@@ -32,8 +32,7 @@ structure Base_Gcg = GCG_Core (Base_Cartridge)
 structure CSharp_Gcg = GCG_Core (CSharp_Cartridge(Base_Cartridge))
 
 structure CSharpSecure_Gcg 
-  = GCG_Core (CSharp_Cartridge(SecureUML_Cartridge(structure SuperCart=Base_Cartridge;
-															 structure D=ComponentUML)))
+  = GCG_Core (CSharp_Cartridge( ComponentUML_Cartridge( SecureUML_Cartridge(structure SuperCart=Base_Cartridge; structure D=ComponentUML))))
 
 structure CSharp_NET1_Gcg = GCG_Core (CSharp_NET1_Cartridge(Base_Cartridge));
 structure CSharpSecure_NET1_Gcg = GCG_Core (CSharp_NET1_Cartridge(SecureUML_Cartridge(structure SuperCart=Base_Cartridge; structure D=ComponentUML)));

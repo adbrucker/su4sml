@@ -93,7 +93,7 @@ fun write env (Tpl_Parser.RootNode(l))  = List.app (write env) l
   		 |  writeThen _ [Tpl_Parser.ElseNode(_)]= ()
   		 |  writeThen e (h::t)	    = (write e h ;writeThen e t) 
   	    in
-  	    	if (C.evalCondition env cond) 
+  	    	if (C.test env cond) 
   		then writeThen env l
   		else (case (List.last l) of nd as (Tpl_Parser.ElseNode(_)) => write env nd
   			  		    |          _        => ()	)

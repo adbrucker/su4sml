@@ -4,131 +4,105 @@ struct
 structure Design = ComponentUML
 
 (* TODO: fill out *)
-type environment = { extension: SuperCart.environment}
+type environment = { curPermissionList: SuperCart.Security.Permission list option, 
+                     curPermission: SuperCart.Security.Permission option,
+                     extension: SuperCart.environment}
 type Model = SuperCart.Model
 
 (* unpack : environment -> SuperCart.environment *)
 fun unpack (env : environment) = #extension env
 
 (* pack : environment -> SuperCart.environment -> environment *)
-fun pack (env: environment) (new_env : SuperCart.environment) = {extension = new_env} 
+fun pack (env: environment) (new_env : SuperCart.environment) = 
+    { curPermissionList = #curPermissionList env,
+      curPermission = #curPermission env,
+      extension = new_env} 
 
-fun initEnv model = {extension = SuperCart.initEnv model}
+fun initEnv model = { curPermissionList = NONE,
+                      curPermission = NONE,
+                      extension = SuperCart.initEnv model}
+
 fun getModel (env : environment) = SuperCart.getModel (unpack env)
 fun curClassifier (env : environment) = SuperCart.curClassifier (unpack env)
 fun curAttribute (env : environment) = SuperCart.curAttribute (unpack env)
 fun curOperation (env : environment) = SuperCart.curOperation (unpack env)
 fun curArgument (env : environment) = SuperCart.curArgument (unpack env)
-
+									  
+(** 
+ * compute the atomic actions that are possible on the currently "active" 
+ * resource.
+ * Maybe sme of this should be moved to component_uml.sml... 
+ *) 
+fun atomic_actions_from_context env =
+	if Option.isSome(curAttribute env) then
+        let fun make_action s = 
+                ComponentUML.SimpleAction (s, 
+                                           ComponentUMLResource.EntityAttribute 
+                                               (Option.valOf (curAttribute env)))
+        in [make_action "read", make_action "update"] end
+	else if Option.isSome(curOperation env) then
+        let fun make_action s = 
+                ComponentUML.SimpleAction (s, 
+                                           ComponentUMLResource.EntityMethod 
+                                               (Option.valOf (curOperation env)))
+        in [make_action "execute"] end
+	else if Option.isSome(curClassifier env) then
+        let fun make_action s =
+                ComponentUML.SimpleAction (s, 
+                                           ComponentUMLResource.Entity 
+                                               (Option.valOf (curClassifier env)))
+        in [make_action "create", make_action "delete"] end
+    else []
 
 (* FIX *)
-fun permissionsForAction env _ = nil
-
-(* computePermissionContext: environment -> permissionContext
- * compute Permissions according to actual environment 
- * FIX: move to ComponentUML cartridge...*)
-fun computePermissionContext (env : environment)=
-      let 
-		  fun getAction "set" = ComponentUML.SimpleAction ("update", (ComponentUMLResource.EntityAttribute (Option.valOf(curAttribute env))))
-			|  getAction "get" = ComponentUML.SimpleAction ("read", (ComponentUMLResource.EntityAttribute (Option.valOf(curAttribute env))))
-			|  getAction "execute" = ComponentUML.SimpleAction ("execute", (ComponentUMLResource.EntityMethod (Option.valOf(curOperation env))))
-			|  getAction "create" = ComponentUML.SimpleAction ("create", (ComponentUMLResource.Entity (Option.valOf(curClassifier env))))
-			|  getAction "delete" = ComponentUML.SimpleAction ("delete", (ComponentUMLResource.Entity (Option.valOf (curClassifier env))))
-			|  getAction s = Gcg_Helper.gcg_error ("invalid action_type \""^s^"\" in secureUML_cartridge.computePermissionContext:getAction.") 
-      in
-	if Option.isSome(curAttribute env) then
-	  {permissions = [],
-	   setter_permissions = (permissionsForAction env (getAction "set")),
-	   getter_permissions = (permissionsForAction env (getAction "get")),
-	   constructor_permissions = [],
-	   destructor_permissions = []
-	  }
-	else if Option.isSome(curOperation env) then
-	  {permissions = permissionsForAction env (getAction "execute"),
-	   setter_permissions = [],
-	   getter_permissions = [],
-	   constructor_permissions = [],
-	   destructor_permissions = []
-	  }
-	else if Option.isSome(curClassifier env) then
-	  {permissions = [],
-	   setter_permissions = [],
-	   getter_permissions = [],
-	   constructor_permissions = permissionsForAction env (getAction "create"),
-	   destructor_permissions  = permissionsForAction env (getAction "delete")
-	  }
-	else
-	  {permissions = SuperCart.Security.getPermissions (#2 (getModel env)),
-	   setter_permissions = [],
-	   getter_permissions = [],
-	   constructor_permissions = [],
-	   destructor_permissions = []
-	  }
-      end 
-
+fun permissions_for_action env act = nil
 
 (********** ADDING/MODIFYING VARIABLE SUBSTITUTIONS *****************************************)
 (*	lookup  environment -> string -> string			
  * might override some lookup entries of the base cartridge 
  *)
-fun lookup (env : environment) s =  SuperCart.lookup (unpack env) s
-									 
+
+fun lookup (env:environment) "permission_name" = 
+    let val p = #curPermission env 
+    in case p of 
+           SOME x => #name x
+         | NONE => SuperCart.lookup (unpack env) "permission_name"
+    end
+  | lookup env s =  SuperCart.lookup (unpack env) s 
 
 (********** ADDING IF-CONDITION TYPE *****************************************)
-fun evalCondition (env : environment) s = SuperCart.evalCondition (unpack env) s
+(** no cartridge specific predicates are defined (yet). *)
+fun test env "first_permission" = let val p = #curPermission env 
+                                  in case p of 
+                                         SOME x => x = hd (Option.valOf (#curPermissionList env)) 
+                                       | NONE => SuperCart.test (unpack env) "first_permission" 
+                                  end
+  | test env "last_permission" = let val p = #curPermission env 
+                                  in case p of 
+                                         SOME x => x = List.last (Option.valOf (#curPermissionList env)) 
+                                       | NONE => SuperCart.test (unpack env) "first_permission" 
+                                  end
+  | test env s = SuperCart.test (unpack env) s
+
 
 (********** ADDING FOREACH TYPE **********************************************)
-(*
-fun foreach_readPermission (env : environment) 
-			= let val plist = #getter_permissions (computePermissionContext env);      
-			      fun env_from_list_item c ={curPermissionSet = SOME plist,
-						        curPermission = SOME c,
-						        curRole       = NONE ,
-						        curConstraint = NONE,
-						        extension = #extension env 
-						        } : environment
-			  in 
-			       List.map env_from_list_item plist
-			     end
 
-fun foreach_updatePermission (env : environment) 
-			= let val plist = #setter_permissions (computePermissionContext env);      
-			      fun env_from_list_item c ={curPermissionSet = SOME plist,
-						        curPermission = SOME c,
-						        curRole       = NONE ,
-						        curConstraint = NONE,
-						        extension = #extension env 
-						        } : environment
-			  in 
-			       List.map env_from_list_item plist
-			     end
-fun foreach_createPermission (env : environment) 
-			= let val plist = #constructor_permissions (computePermissionContext env);      
-			      fun env_from_list_item c ={curPermissionSet = SOME plist,
-						        curPermission = SOME c,
-						        curRole       = NONE ,
-						        curConstraint = NONE,
-						        extension = #extension env 
-						        } : environment
-			  in 
-			       List.map env_from_list_item plist
-			     end
-
-fun foreach_deletePermission (env : environment) 
-			= let val plist = #destructor_permissions (computePermissionContext env);      
-			      fun env_from_list_item c ={curPermissionSet = SOME plist,
-						        curPermission = SOME c,
-						        curRole       = NONE ,
-						        curConstraint = NONE,
-						        extension = #extension env 
-						        } : environment
-			  in 
-			       List.map env_from_list_item plist
-			     end
-*)
-
-
-fun foreach listType env =  map (pack env) (SuperCart.foreach listType (unpack env))
-
-
+fun foreach_permission env name = 
+    let val action = List.find (fn  x => ComponentUML.action_type_of x = name) 
+                               (atomic_actions_from_context env)
+        val permissions = permissions_for_action env action
+        fun env_from_list_item c = { curPermissionList = SOME permissions,
+                                     curPermission = SOME c,
+                                     extension = #extension env} : environment
+    in 
+        List.map env_from_list_item permissions
+    end
+        
+fun foreach "readPermission_list" env = foreach_permission env "read"
+  | foreach "updatePermission_list" env = foreach_permission env "update"
+  | foreach "createPermission_list" env = foreach_permission env "create"
+  | foreach "deletePermission_list" env = foreach_permission env "delete"
+  | foreach "executePermission_list" env = foreach_permission env "execute"
+  | foreach listType env =  map (pack env) (SuperCart.foreach listType (unpack env))
+                            
 end

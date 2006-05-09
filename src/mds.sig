@@ -48,6 +48,7 @@ sig
 
     val actions_of : Resource -> Action list
     val resource_of:   Action -> Resource
+    val action_type_of : Action -> string
 
 	(** 
 	 * parse a permission attribute into an action.

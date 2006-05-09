@@ -23,12 +23,46 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+signature SECUREUML =
+sig
+    structure Design : DESIGN_LANGUAGE 
+
+    
+    type Configuration
+    type Config_Type = string
+
+    type Role = string
+    type Permission	= {name: string,
+                       roles: Role list,
+                       constraints: Rep_OclTerm.OclTerm list,
+                       actions: Design.Action list }
+
+	val getPermissions : Configuration -> Permission list
+    val type_of        : Configuration -> Config_Type
+    val is_empty       : Configuration -> bool				   
+
+    type User	
+    val name_of         :              User -> string		
+    
+    (* a bit unclear, which of the following we really need *)
+    val users_of        :        Permission -> User list	
+    (* val permissions_of  :              User -> Permission list	*)
+    val check_permission: User * Permission -> bool	  
+
+    val actions_of      :        Permission -> Design.Action list
+    val permissions_of  :     Design.Action -> Permission list
+
+    val parse: Rep_Core.Classifier list -> 
+			   (Rep_Core.Classifier list * Configuration)
+
+end
+
 (** 
  * SecureUML is a simple security language based on RBAC.
  * Permissions relate roles with actions and can be further constrained 
  * using OCL: 
  *) 
-functor SecureUML(structure Design: DESIGN_LANGUAGE):SECURITY_LANGUAGE =
+functor SecureUML(structure Design: DESIGN_LANGUAGE):SECUREUML =
 struct
 
 structure Design : DESIGN_LANGUAGE = Design
@@ -119,7 +153,6 @@ fun mkPermission cs (Rep.Class c) =
 	  constraints = nil, 
 	  actions = let 
 		  val atts = Rep.attributes_of (Rep.Class c)
-		  (* val attr_stereotypes = map (hd o #stereotypes) atts *)
 		  val root_resource = 
 			  hd (List.filter (classifier_has_stereotype "compuml.entity") 
 							  (map (fn (Rep_OclType.Classifier p) => 

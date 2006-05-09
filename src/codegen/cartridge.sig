@@ -52,7 +52,7 @@ sig
 	val lookup : environment -> string -> string
 
 	(** evaluate boolean-valued predicates in the environment by name. *)
-	val evalCondition : environment -> string -> bool
+	val test : environment -> string -> bool
 
 	(** 
 	 * return a list of environment, where the "current" element

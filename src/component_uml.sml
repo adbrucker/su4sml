@@ -129,8 +129,8 @@ fun parse_action root (att:Rep.attribute) =
 	end
 		handle _ => library.error "in ComponentUML.parse_action: could not parse attribute"
 
-fun actionType_of (SimpleAction (t,_)) = t
- |  actionType_of (CompositeAction (t,_)) = t
+fun action_type_of (SimpleAction (t,_)) = t
+ |  action_type_of (CompositeAction (t,_)) = t
 
 (* val action_names = ["create","read","update","delete","full_access","execute"] *)
 

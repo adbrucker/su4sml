@@ -92,9 +92,7 @@ fun lookup (env : environment) "attribute_name_small_letter"
 
 
 		 
-fun evalCondition (env : environment)  s = SuperCart.evalCondition (unpack env) s
-
-		 
+fun test (env : environment)  s = SuperCart.test (unpack env) s
 
 (* no further functionality to add
  * just unpack the Supercartridge's environment, 
