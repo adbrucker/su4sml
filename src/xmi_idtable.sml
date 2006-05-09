@@ -39,7 +39,7 @@ datatype HashTableEntry = Package of Rep_OclType.Path
 		        | Variable of XMI.VariableDeclaration 
 			| Attribute of Rep_OclType.Path
 			| Operation of Rep_OclType.Path
-		        | AssociationEnd of Rep_OclType.Path 
+		        | AssociationEnd of string
 			| State of XMI.StateVertex
 			| Transition of XMI.Transition 
 		        | Dependency of XMI.Dependency
@@ -138,7 +138,7 @@ fun find_constraint t xmiid =
 
 fun find_associationend t xmiid  = 
     (case valOf (HashTable.find t xmiid) 
-      of AssociationEnd path => path
+      of AssociationEnd name => name
        | _                   => raise Option) 
     handle Option => raise IllFormed ("expected AssociationEnd "^xmiid^" in table")
 		
@@ -452,15 +452,13 @@ fun transform_assocation t (assoc:XMI.Association) =
 		val cls_of_id   = find_classifier t id
 		val aends_of_id = ae::(find_aends t id)
 		val ags_of_id   = find_activity_graph_of t id
-		val path_of_id  = path_of_classifier type_of_id 
-		val path_of_ae  = path_of_id @ [case #name ae of SOME x => x
-							       | NONE   => ""]
+		val name_of_ae  = Option.getOpt(#name ae,"")
 	    in 
 		(HashTable.insert t (id,Type (type_of_id,aends_of_id,cls_of_id,ags_of_id));
-		 HashTable.insert t (#xmiid ae, AssociationEnd path_of_ae))
+		 HashTable.insert t (#xmiid ae, AssociationEnd name_of_ae))
 	    end
     in 
-	List.app add_aend_to_type mappings
+        List.app add_aend_to_type mappings
     end
 
 (** 
@@ -468,6 +466,10 @@ fun transform_assocation t (assoc:XMI.Association) =
  * the other direction (from connected classifiers to the association class
  * is more difficult (and not implemented) because the association class does 
  * not specify (syntactically) an association end.  
+ * FIX: multiplicity of association ends should be 1..1, regardless of what 
+ * is specified.
+ * FIX: also add associationfrom connected classifiers to the association class
+ * (this would probably mean to "invent" an appropriate association end...)
  *)
 fun transform_associationclass_as_association t (XMI.AssociationClass assoc) = 
     let	val aends = #connection assoc
@@ -477,19 +479,17 @@ fun transform_associationclass_as_association t (XMI.AssociationClass assoc) =
 				val cls_of_id   = find_classifier t id
 				val aends_of_id = ae::(find_aends t id)
 				val ags_of_id   = find_activity_graph_of t id
-				val path_of_id  = path_of_classifier type_of_id 
-				val path_of_ae  = path_of_id @ [case #name ae of SOME x => x
-															   | NONE   => ""]
+				val name_of_ae  = Option.getOpt(#name ae, "")
 			in 
 				(HashTable.insert t (id,Type (type_of_id,aends_of_id,cls_of_id,ags_of_id));
-				 HashTable.insert t (#xmiid ae, AssociationEnd path_of_ae))
+				 HashTable.insert t (#xmiid ae, AssociationEnd name_of_ae))
 			end
 	in 
 		List.app (fn x => add_aend_to_type (#xmiid assoc, x)) aends
     end
 		
 
-(* recursively transforms all associations in the package p, *)
+(* recursively transforms all associations in the package p. *)
 fun transform_associations t (XMI.Package p) = 
     (List.app (transform_associations t) (#packages p);
 	 List.app (transform_assocation t) (#associations p);

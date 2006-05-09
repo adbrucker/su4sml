@@ -91,12 +91,17 @@ fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) =
     in 
 	Rep_OclTerm.Variable (var_name,find_classifier_type t expression_type)
     end
-  | transform_expression t (XMI.AssociationEndCallExp {source, referredAssociationEnd, expression_type}) =
-    Rep_OclTerm.AssociationEndCall (transform_expression t source,
-				 find_classifier_type t (XMI.expression_type_of source),
-				 find_associationend t referredAssociationEnd,
-				 find_classifier_type t expression_type
-				 )
+  | transform_expression t (XMI.AssociationEndCallExp {source, referredAssociationEnd, expression_type}) = 
+    let val classifier_type = find_classifier_type
+                                  t (XMI.expression_type_of source)
+        val path_of_classifier = (fn (Rep_OclType.Classifier p) => p) classifier_type
+        val aend_name = find_associationend t referredAssociationEnd
+    in Rep_OclTerm.AssociationEndCall 
+           (transform_expression t source,
+            classifier_type,
+            path_of_classifier @ [aend_name],
+            find_classifier_type t expression_type)
+    end
   | transform_expression t (XMI.IteratorExp {name,iterators,body,source,expression_type}) = 
     let val _ = map (insert_variable_dec t) iterators 
     in
@@ -432,7 +437,7 @@ fun transformXMI ({classifiers,constraints,packages,
 	handle Empty => raise Option
 
 
-(** read an transform a .xmi file
+(** read and transform a .xmi file
  *  @return a list of rep classifiers, or nil in case of problems
  *) 
 fun readXMI f = (transformXMI o ParseXMI.readFile) f
