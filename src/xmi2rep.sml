@@ -41,6 +41,11 @@ exception NotYetImplemented
 
 val triv_expr = Rep_OclTerm.Literal ("true",Rep_OclType.Boolean)
 
+fun lowercase s = let val sl = String.explode s
+				  in
+					  String.implode ((Char.toLower (hd sl))::(tl sl))
+				  end
+
 (** transform an xmi ocl expression into a rep ocl term *)
 fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) = 
     Rep_OclTerm.Literal (symbol,find_classifier_type t expression_type)
@@ -92,10 +97,20 @@ fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) =
 	Rep_OclTerm.Variable (var_name,find_classifier_type t expression_type)
     end
   | transform_expression t (XMI.AssociationEndCallExp {source, referredAssociationEnd, expression_type}) = 
-    let val classifier_type = find_classifier_type
-                                  t (XMI.expression_type_of source)
-        val path_of_classifier = (fn (Rep_OclType.Classifier p) => p) classifier_type
-        val aend_name = find_associationend t referredAssociationEnd
+    let fun find_type exp = let val cls = find_classifier_type
+                                              t (XMI.expression_type_of exp)
+                            in case cls of
+                                   Rep_OclType.Classifier _ => cls
+                                 | OclAny => find_type (XMI.expression_source_of exp)
+                            end
+        val classifier_type = find_type source
+        val path_of_classifier = (fn (Rep_OclType.Classifier p) => p
+                                   | x => error (Rep_OclType.string_of_OclType x)) classifier_type
+        val aend = find_associationend t referredAssociationEnd
+        val aend_name = Option.getOpt(#name aend,
+                                      (lowercase o XMI.classifier_name_of o
+                                       find_classifier t) 
+                                          (#participant_id aend))
     in Rep_OclTerm.AssociationEndCall 
            (transform_expression t source,
             classifier_type,
@@ -207,10 +222,6 @@ fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,ordering
 	}
     end
 
-fun lowercase s = let val sl = String.explode s
-				  in
-					  String.implode ((Char.toLower (hd sl))::(tl sl))
-				  end
 					  
 fun transform_aend t ({xmiid,name,ordering,multiplicity,participant_id,
 		       isNavigable,aggregation,changeability,visibility,targetScope})

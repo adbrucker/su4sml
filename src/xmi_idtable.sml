@@ -39,7 +39,7 @@ datatype HashTableEntry = Package of Rep_OclType.Path
 		        | Variable of XMI.VariableDeclaration 
 			| Attribute of Rep_OclType.Path
 			| Operation of Rep_OclType.Path
-		        | AssociationEnd of string
+		        | AssociationEnd of XMI.AssociationEnd
 			| State of XMI.StateVertex
 			| Transition of XMI.Transition 
 		        | Dependency of XMI.Dependency
@@ -138,7 +138,7 @@ fun find_constraint t xmiid =
 
 fun find_associationend t xmiid  = 
     (case valOf (HashTable.find t xmiid) 
-      of AssociationEnd name => name
+      of AssociationEnd ae => ae
        | _                   => raise Option) 
     handle Option => raise IllFormed ("expected AssociationEnd "^xmiid^" in table")
 		
@@ -452,10 +452,9 @@ fun transform_assocation t (assoc:XMI.Association) =
 		val cls_of_id   = find_classifier t id
 		val aends_of_id = ae::(find_aends t id)
 		val ags_of_id   = find_activity_graph_of t id
-		val name_of_ae  = Option.getOpt(#name ae,"")
 	    in 
 		(HashTable.insert t (id,Type (type_of_id,aends_of_id,cls_of_id,ags_of_id));
-		 HashTable.insert t (#xmiid ae, AssociationEnd name_of_ae))
+		 HashTable.insert t (#xmiid ae, AssociationEnd ae))
 	    end
     in 
         List.app add_aend_to_type mappings
@@ -479,10 +478,9 @@ fun transform_associationclass_as_association t (XMI.AssociationClass assoc) =
 				val cls_of_id   = find_classifier t id
 				val aends_of_id = ae::(find_aends t id)
 				val ags_of_id   = find_activity_graph_of t id
-				val name_of_ae  = Option.getOpt(#name ae, "")
 			in 
 				(HashTable.insert t (id,Type (type_of_id,aends_of_id,cls_of_id,ags_of_id));
-				 HashTable.insert t (#xmiid ae, AssociationEnd name_of_ae))
+				 HashTable.insert t (#xmiid ae, AssociationEnd ae))
 			end
 	in 
 		List.app (fn x => add_aend_to_type (#xmiid assoc, x)) aends

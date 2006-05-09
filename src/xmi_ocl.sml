@@ -106,6 +106,15 @@ fun expression_type_of (LiteralExp{expression_type,...})           = expression_
   | expression_type_of (IterateExp{expression_type,...})       = expression_type
   | expression_type_of (IteratorExp{expression_type,...})      = expression_type
 
+fun expression_source_of (AssociationEndCallExp{source,...}) = source
+  | expression_source_of (AssociationClassCallExp{source,...}) = source
+  | expression_source_of (AttributeCallExp{source,...}) = source
+  | expression_source_of (OperationCallExp{source,...}) = source
+  | expression_source_of (OperationWithTypeArgExp{source,...}) = source 
+  | expression_source_of (IterateExp{source,...})       = source
+  | expression_source_of (IteratorExp{source,...})      = source
+  | expression_source_of _                              = library.error "expression has no source"
+
 (* from UML 1.5 Core: --------------------------------------------------------
  * A constraint is a semantic condition or restriction expressed in text.
  * not supported: 
