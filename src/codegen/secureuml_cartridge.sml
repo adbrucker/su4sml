@@ -33,12 +33,11 @@ structure Security:SECUREUML
 include BASE_CARTRIDGE where
 type Model = Rep.Classifier list * Security.Configuration
 
-val curPermissionSet: environment -> Security.Permission list option
+val PermissionSet: environment -> Security.Permission list
 val curPermission : environment   -> Security.Permission option
 val curRole : environment -> string option
 val curConstraint : environment -> Rep_OclTerm.OclTerm option 
 								   
-val isInPermission :  Security.Design.Action -> Security.Permission -> bool
 
 end
 
@@ -58,18 +57,17 @@ structure Security = SecureUML(structure Design = D)
 type Model = Rep.Classifier list * Security.Configuration
 					 
 type environment = { model           : Model,
-					 curPermissionSet: Security.Permission list option,
+					 PermissionSet   : Security.Permission list,
 					 curPermission   : Security.Permission option,
 					 curRole         : string option,
 					 curConstraint   : Rep_OclTerm.OclTerm option,	
 					 extension       : SuperCart.environment }
 				   
-fun curPermissionSet (env : environment) =  (#curPermissionSet env)
+fun PermissionSet    (env : environment) =  (#PermissionSet env)
 fun curPermission    (env : environment) =  (#curPermission env)
 fun curRole          (env : environment) =  (#curRole env)
 fun curConstraint    (env : environment) =  (#curConstraint env)
 
-fun curPermissionSet' (env : environment) = Option.valOf (#curPermissionSet env)
 fun curPermission'    (env : environment) = Option.valOf (#curPermission env)
 fun curRole'          (env : environment) = Option.valOf (#curRole env)
 fun curConstraint'    (env : environment) = Option.valOf (#curConstraint env)
@@ -77,7 +75,7 @@ fun curConstraint'    (env : environment) = Option.valOf (#curConstraint env)
 fun initEnv model = let val m = Security.parse model 
 					in
 						{ model = m, 
-						  curPermissionSet = SOME (#permissions (#2 m)),
+						  PermissionSet = (#permissions (#2 m)),
 						  curPermission = NONE,
 						  curRole       = NONE,
 						  curConstraint = NONE,
@@ -90,7 +88,7 @@ fun unpack (env : environment) = #extension env
 (* pack : environment -> SuperCart.environment -> environment *)
 fun pack (env: environment) (new_env : SuperCart.environment) 
   = { model            = #model env,
-	  curPermissionSet = #curPermissionSet env,
+	  PermissionSet    = #PermissionSet env,
 	  curPermission    = #curPermission env,
 	  curRole          = #curRole env,
 	  curConstraint    = #curConstraint env,
@@ -104,11 +102,6 @@ fun curAttribute (env : environment) = SuperCart.curAttribute (unpack env)
 fun curOperation (env : environment) = SuperCart.curOperation (unpack env)
 fun curArgument (env : environment) = SuperCart.curArgument (unpack env)
 									  
-fun is_contained_in a1 a2 = (a1 = a2) orelse 
-							List.exists (fn x=> x=true) ((List.map (is_contained_in a1) (D.subordinated_actions a2))) 
-
-
-fun isInPermission a (p:Security.Permission) = List.exists (is_contained_in a) (#actions p)
                        
 fun name_of_role  r 	= r
                            
@@ -124,12 +117,12 @@ fun lookup env "permission_name" = #name (curPermission' env)
   | lookup env s                 =  SuperCart.lookup (unpack env) s
 
 (********** ADDING IF-CONDITION TYPE *****************************************)
-fun test env "first_permission" = (curPermission' env = hd (curPermissionSet' env))
+fun test env "first_permission" = (curPermission' env = hd (PermissionSet env))
   | test env "first_role"       = (curRole' env = hd (#roles (curPermission' env)))
   | test env "first_constraint" = (curConstraint' env 
 								   = hd (#constraints (curPermission' env)))
   | test env "last_permission"  = (curPermission' env 
-								   = List.last (curPermissionSet' env))
+								   = List.last (PermissionSet env))
   | test env "last_role"        = (curRole' env 
 								   = List.last (#roles (curPermission' env)))
   | test env "last_constraint"  = (curConstraint' env
@@ -141,7 +134,7 @@ fun test env "first_permission" = (curPermission' env = hd (curPermissionSet' en
 fun foreach_role env 
   = let val roles = #roles (curPermission' env);      
 			fun env_from_list_item r ={ model = #model env,
-									    curPermissionSet = #curPermissionSet env,
+									    PermissionSet = #PermissionSet env,
 										curPermission = #curPermission env,
 										curRole       = SOME r ,
 										curConstraint = NONE,
@@ -153,7 +146,7 @@ fun foreach_role env
 fun foreach_constraint env 
   = let val cons = #constraints (curPermission' env);      
 			fun env_from_list_item c ={ model = #model env,
-									    curPermissionSet = #curPermissionSet env,
+									    PermissionSet = #PermissionSet env,
 										curPermission = #curPermission env,
 										curRole       = NONE ,
 										curConstraint = SOME c,
@@ -163,9 +156,9 @@ fun foreach_constraint env
 	end
 
 fun foreach_permission env 
-  = let val perms = curPermissionSet' env
+  = let val perms = PermissionSet env
 		fun env_from_list_item p ={ model = #model env,
-									curPermissionSet = #curPermissionSet env,
+									PermissionSet = #PermissionSet env,
 									curPermission = SOME p,
 									curRole       = NONE ,
 									curConstraint = NONE ,

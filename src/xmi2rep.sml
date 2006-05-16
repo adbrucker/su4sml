@@ -103,6 +103,14 @@ fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) =
                                    Rep_OclType.Classifier _ => cls
                                  | OclAny => find_type (XMI.expression_source_of exp)
                             end
+        (* this is a bit problematic: an associationendcall should always 
+         * have a (user-defined) classifier as source type. However, the 
+         * atPre() operation call returns OclAny, which is not a classifier. 
+         * Therefore, we look (recursively), at the source of the expression 
+         * source until we find a user-defined classifier type and take this type. 
+         * This works for the case of atPre(), but I'm not sure if there are other 
+         * cases where this hack has unwanted consequences.
+         *)
         val classifier_type = find_type source
         val path_of_classifier = (fn (Rep_OclType.Classifier p) => p
                                    | x => error (Rep_OclType.string_of_OclType x)) classifier_type
@@ -448,8 +456,9 @@ fun transformXMI ({classifiers,constraints,packages,
 	handle Empty => raise Option
 
 
-(** read and transform a .xmi file
- *  @return a list of rep classifiers, or nil in case of problems
+(** 
+ * read and transform a .xmi file.
+ * @return a list of rep classifiers, or nil in case of problems
  *) 
 fun readXMI f = (transformXMI o ParseXMI.readFile) f
     handle ParseXMI.IllFormed msg => (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^f^":\n"^msg^"\n"); 

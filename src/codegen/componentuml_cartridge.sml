@@ -1,7 +1,10 @@
-functor ComponentUML_Cartridge(SuperCart : SECUREUML_CARTRIDGE) : DESIGN_LANGUAGE_CARTRIDGE = 
+functor ComponentUML_Cartridge(S : BASE_CARTRIDGE) : DESIGN_LANGUAGE_CARTRIDGE = 
 struct
 
-structure Design = ComponentUML
+structure SuperCart = SecureUML_Cartridge(structure SuperCart=S; structure D=ComponentUML)
+
+structure Design = SuperCart.Security.Design
+open library
 
 (* TODO: fill out *)
 type environment = { curPermissionList: SuperCart.Security.Permission list option, 
@@ -34,62 +37,57 @@ fun curArgument (env : environment) = SuperCart.curArgument (unpack env)
  * Maybe sme of this should be moved to component_uml.sml... 
  *) 
 fun atomic_actions_from_context env =
-	if Option.isSome(curAttribute env) then
+	if Option.isSome (curAttribute env) then
         let fun make_action s = 
-                ComponentUML.SimpleAction (s, 
-                                           ComponentUMLResource.EntityAttribute 
-                                               (Option.valOf (curAttribute env)))
+                ComponentUML.SimpleAction (s, ComponentUMLResource.EntityAttribute 
+                                                  (Option.valOf (curAttribute env)))
         in [make_action "read", make_action "update"] end
-	else if Option.isSome(curOperation env) then
+	else if Option.isSome (curOperation env) then
         let fun make_action s = 
-                ComponentUML.SimpleAction (s, 
-                                           ComponentUMLResource.EntityMethod 
-                                               (Option.valOf (curOperation env)))
+                ComponentUML.SimpleAction (s, ComponentUMLResource.EntityMethod 
+                                                  (Option.valOf (curOperation env)))
         in [make_action "execute"] end
-	else if Option.isSome(curClassifier env) then
+	else if Option.isSome (curClassifier env) then
         let fun make_action s =
-                ComponentUML.SimpleAction (s, 
-                                           ComponentUMLResource.Entity 
-                                               (Option.valOf (curClassifier env)))
+                ComponentUML.SimpleAction (s, ComponentUMLResource.Entity 
+                                                  (Option.valOf (curClassifier env)))
         in [make_action "create", make_action "delete"] end
-    else []
-
+    else error "blubb"
+         
 (* FIX *)
-fun permissions_for_action env act = nil
-
+fun permissions_for_action env act = 
+    List.filter (fn x => SuperCart.Security.permission_includes_action x act)
+                (SuperCart.PermissionSet (unpack env))
+    
 (********** ADDING/MODIFYING VARIABLE SUBSTITUTIONS *****************************************)
 (*	lookup  environment -> string -> string			
  * might override some lookup entries of the base cartridge 
  *)
 
 fun lookup (env:environment) "permission_name" = 
-    let val p = #curPermission env 
-    in case p of 
-           SOME x => #name x
-         | NONE => SuperCart.lookup (unpack env) "permission_name"
-    end
+    (case #curPermission env of 
+         SOME x => #name x
+       | NONE => SuperCart.lookup (unpack env) "permission_name")
   | lookup env s =  SuperCart.lookup (unpack env) s 
 
 (********** ADDING IF-CONDITION TYPE *****************************************)
 (** no cartridge specific predicates are defined (yet). *)
-fun test env "first_permission" = let val p = #curPermission env 
-                                  in case p of 
-                                         SOME x => x = hd (Option.valOf (#curPermissionList env)) 
-                                       | NONE => SuperCart.test (unpack env) "first_permission" 
-                                  end
-  | test env "last_permission" = let val p = #curPermission env 
-                                  in case p of 
-                                         SOME x => x = List.last (Option.valOf (#curPermissionList env)) 
-                                       | NONE => SuperCart.test (unpack env) "first_permission" 
-                                  end
+fun test env "first_permission" = 
+    (case #curPermission env of 
+        SOME x => x = hd (Option.valOf (#curPermissionList env)) 
+      | NONE   => SuperCart.test (unpack env) "first_permission" )
+  | test env "last_permission" = 
+    (case #curPermission env of 
+        SOME x => x = List.last (Option.valOf (#curPermissionList env)) 
+      | NONE   => SuperCart.test (unpack env) "first_permission" )
   | test env s = SuperCart.test (unpack env) s
 
 
 (********** ADDING FOREACH TYPE **********************************************)
 
 fun foreach_permission env name = 
-    let val action = List.find (fn  x => ComponentUML.action_type_of x = name) 
-                               (atomic_actions_from_context env)
+    let val action = Option.valOf (List.find (fn  x => ComponentUML.action_type_of x = name) 
+                                             (atomic_actions_from_context env))
         val permissions = permissions_for_action env action
         fun env_from_list_item c = { curPermissionList = SOME permissions,
                                      curPermission = SOME c,

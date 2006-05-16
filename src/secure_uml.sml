@@ -52,6 +52,7 @@ sig
     val actions_of      :        Permission -> Design.Action list
     val permissions_of  :     Design.Action -> Permission list
 
+    val permission_includes_action : Permission -> Design.Action -> bool
     val parse: Rep_Core.Classifier list -> 
 			   (Rep_Core.Classifier list * Configuration)
 
@@ -86,6 +87,19 @@ type Permission = {name: string,
 
 fun actions_of (p:Permission) = #actions p
 
+fun permission_includes_action (p:Permission) (a:Design.Action) =
+    (List.exists (fn x =>  x=a ) (actions_of p))
+    orelse (List.exists (fn x => x) (map (permission_includes_action p)
+                                         (Design.subordinated_actions a)))
+    
+fun is_contained_in a1 a2 = (a1 = a2) orelse 
+							List.exists (fn x=> x=true) 
+                                        ((List.map (is_contained_in a1) 
+                                                   (Design.subordinated_actions a2))) 
+
+fun isInPermission a (p:Permission) = 
+    List.exists (is_contained_in a) (#actions p)
+
 type Config_Type = string
 
 type 'a partial_order = ('a * 'a) list
@@ -113,6 +127,7 @@ fun getPermissions (c:Configuration) = #permissions c
 fun users_of p = nil
 fun check_permission (u,p) = false
 fun permissions_of u = nil
+
 
 fun stereotypes_of (Rep.Class {stereotypes,...})       = stereotypes
   | stereotypes_of (Rep.Enumeration {stereotypes,...}) = stereotypes
@@ -170,7 +185,10 @@ fun mkPermission cs (Rep.Class c) =
 									   Design.action_stereotypes) atts 
 			  handle _ => library.error "could not parse permission attributes"
 	  in 
-		  map (Design.parse_action root_resource) action_attributes
+          if action_attributes = [] 
+          then library.error ("no action attributes found in permission "^
+                              (Rep.string_of_path (#name c)))
+          else map (Design.parse_action root_resource) action_attributes
 	  end }
 	handle _ => library.error "error in mkPermission" 
 

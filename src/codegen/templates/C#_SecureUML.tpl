@@ -111,7 +111,7 @@
 			     )
 		@nl @tab@tab {
 
-		@foreach permission_list
+		@foreach executePermission_list
 			    @if first_permission	
 				@nl@tab@tab@tab  
 				MdsEngine.Assert(this, new string[] {
