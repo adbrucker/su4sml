@@ -52,6 +52,8 @@ val action_stereotypes = ["dialect.entityaction",
                           "dialect.entitymethodaction",
                           "dialect.entityattributeaction"]
 
+val root_stereotypes = ["compuml.entity"]
+
 (** The list of all attributes of an entity. *)
 fun entity_contained_attributes (Entity c) =
     map EntityAttribute (Rep.attributes_of c)

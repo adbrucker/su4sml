@@ -70,11 +70,9 @@ structure Design : DESIGN_LANGUAGE = Design
 
 type User = string
 fun name_of (u:User) = u
- 
 
 datatype Subject = Group of string * (string list)
                  | User of User
-
 
 type Role = string
 type SubjectAssignment = (Subject * (Role list)) list
@@ -125,24 +123,19 @@ fun check_permission (u,p) = false
 fun permissions_of u = nil
 
 
-fun stereotypes_of (Rep.Class {stereotypes,...})       = stereotypes
-  | stereotypes_of (Rep.Enumeration {stereotypes,...}) = stereotypes
-  | stereotypes_of (Rep.Primitive {stereotypes,...})   = stereotypes
-  | stereotypes_of (Rep.Interface {stereotypes,...})   = stereotypes
+(** checks whether the classifier c has the stereotype s.
+ * (could be moved to rep_core?)
+ *)
+fun classifier_has_stereotype s c = ListEq.includes (Rep.stereotypes_of c) s
 
-
-fun has_no_stereotype strings c = 
-    not (List.exists (fn stereotype =>  List.exists (fn x => x = stereotype) 
-						    strings) (stereotypes_of c))
-
-fun has_stereotype string c = 
-    List.exists (fn x => x=string) (stereotypes_of c)
-
-
-fun filter_permission cs = List.filter (has_stereotype "secuml.permission") cs
+(** checks whether the classifier c has none of the given stereotypes *)
+fun classifier_has_no_stereotype strings c = 
+    ListEq.disjunct strings (Rep.stereotypes_of c)
+    
+fun filter_permission cs = List.filter (classifier_has_stereotype "secuml.permission") cs
 (* FIXME: handle groups also *)
-fun filter_subject cs = List.filter (has_stereotype "secuml.user") cs
-fun filter_role cs = List.filter (has_stereotype "secuml.role") cs 
+fun filter_subject cs = List.filter (classifier_has_stereotype "secuml.user") cs
+fun filter_role cs = List.filter (classifier_has_stereotype "secuml.role") cs 
 
  
 fun mkRole (Rep.Class c)  = Rep.string_of_path (#name c)
@@ -152,50 +145,48 @@ fun mkRole (Rep.Class c)  = Rep.string_of_path (#name c)
 fun mkSubject (Rep.Class c) = User (Rep.string_of_path (#name c))
   | mkSubject _ = library.error "mkSubject called on something that is not a class"
 
-fun classifier_has_stereotype s c = List.exists (fn x => x = s) 
-												(Rep.stereotypes_of c)
-fun mkPermission cs (Rep.Class c) =  (
-	{ name  = (Rep.string_of_path (#name c)),
-	  roles = (map (Rep.string_of_path o Rep.name_of)
-				   (List.filter (classifier_has_stereotype "secuml.role") 
-								(map (fn (Rep_OclType.Classifier p) => Rep.class_of p cs)
-									 (List.filter Rep_OclType.is_Classifier
-												  (map  #attr_type
-														(Rep.attributes_of (Rep.Class c))))))),  
-	  (* FIXME: find attached constraints *)
-	  constraints = nil, 
-	  actions = let 
-		  val atts = Rep.attributes_of (Rep.Class c)
-		  val root_resource = 
-			  hd (List.filter (classifier_has_stereotype "compuml.entity") 
-							  (map (fn (Rep_OclType.Classifier p) => 
-									   Rep.class_of p cs)
-								   (List.filter Rep_OclType.is_Classifier
-												(map  #attr_type
-													  atts))))
-			  handle _ => library.error ("could not find root resource "^
-										 "for class "^(Rep.string_of_path (#name c)))
-		  val action_attributes = 
-			  List.filter (fn x => List.exists 
-									   (fn y => List.exists 
-													(fn z => y= z) 
-													(#stereotypes x)) 
-									   Design.action_stereotypes) atts 
-			  handle _ => library.error "could not parse permission attributes"
-	  in 
-          if action_attributes = [] 
-          then library.error ("no action attributes found in permission "^
-                              (Rep.string_of_path (#name c)))
-          else map (Design.parse_action root_resource) action_attributes
-	  end }
-	handle _ => library.error "error in mkPermission" )
-  | mkPermission _ _ = library.error "mkPermission called on something that is not a class"
 
+                                                
+fun mkPermission cs (Rep.Class c) = 
+    let val atts = Rep.attributes_of (Rep.Class c)
+        val classifiers = List.mapPartial (fn (Rep_OclType.Classifier p) 
+                                              => SOME (Rep.class_of p cs)
+                                            | _ => NONE)
+                                          (map  #attr_type atts)
+        val role_classes = List.filter (classifier_has_stereotype "secuml.role") 
+                                       classifiers
+        val root_classes = List.filter (fn x => ListEq.overlaps (Rep.stereotypes_of x)
+                                                                Design.root_stereotypes)
+                                       classifiers
+        val root_resource = hd root_classes
+            handle Empty => library.error ("no root resource found for permission "^
+                                           Rep.string_of_path (#name c))
+        val action_attributes = 
+            List.filter (fn x => List.exists 
+                                     (fn y => List.exists 
+                                                  (fn z => y= z) 
+                                                  (#stereotypes x)) 
+                                     Design.action_stereotypes) atts 
+            handle _ => library.error "could not parse permission attributes"
+    in 
+        { name  = (Rep.string_of_path (#name c)),
+          roles = (map (Rep.string_of_path o Rep.name_of) role_classes),
+          (* FIXME: find attached constraints *)
+          constraints = nil, 
+          actions = if action_attributes = [] 
+                    then library.error ("no action attributes found in permission "^
+                                        (Rep.string_of_path (#name c)))
+                    else map (Design.parse_action root_resource) action_attributes }
+    end
+  | mkPermission _ _ = library.error ("mkPermission called on something "^
+                                      "that is not a class")
+
+                       
 (* FIXME *) 
 fun mkPartialOrder xs = ListPair.zip (xs,xs)
 
 fun parse (cs:Rep_Core.Classifier list) = 
-	(List.filter (has_no_stereotype ["secuml.permission","secuml.role","secuml.subject"]) cs,
+	(List.filter (classifier_has_no_stereotype ["secuml.permission","secuml.role","secuml.subject"]) cs,
 	 { config_type = "SecureUML",
 	   permissions = map (mkPermission cs) (filter_permission cs),
 	   subjects    = map mkSubject (filter_subject cs),

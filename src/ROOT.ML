@@ -89,6 +89,7 @@ use "xmi_idtable.sml";    (* auxiliary table to store and dereference xmi.id's *
 use "xmi2rep.sml";        (* conversion XMI to Rep *)
 
 
+use "listeq.sml";
 use "mds.sig";
 use "component_uml.sml";
 use "secure_uml.sml";
