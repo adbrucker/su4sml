@@ -87,17 +87,13 @@ type Permission = {name: string,
 
 fun actions_of (p:Permission) = #actions p
 
-fun permission_includes_action (p:Permission) (a:Design.Action) =
-    (List.exists (fn x =>  x=a ) (actions_of p))
-    orelse (List.exists (fn x => x) (map (permission_includes_action p)
-                                         (Design.subordinated_actions a)))
-    
+(** test whether a1 is (transitively) a subordinated_action of a2 *)
 fun is_contained_in a1 a2 = (a1 = a2) orelse 
-							List.exists (fn x=> x=true) 
-                                        ((List.map (is_contained_in a1) 
+							List.exists (is_contained_in a1) 
                                                    (Design.subordinated_actions a2))) 
 
-fun isInPermission a (p:Permission) = 
+(** test whether the permission p covers the action a. *)
+fun permission_includes_action (p:Permission) (a:Design.Action) = 
     List.exists (is_contained_in a) (#actions p)
 
 type Config_Type = string
@@ -146,17 +142,19 @@ fun has_stereotype string c =
 fun filter_permission cs = List.filter (has_stereotype "secuml.permission") cs
 (* FIXME: handle groups also *)
 fun filter_subject cs = List.filter (has_stereotype "secuml.user") cs
-fun filter_role cs = List.filter (has_stereotype "secuml.role") cs
+fun filter_role cs = List.filter (has_stereotype "secuml.role") cs 
 
-
+ 
 fun mkRole (Rep.Class c)  = Rep.string_of_path (#name c)
+  | mkRole _ = library.error "mkRole called on something that is not a class"
 
 (* FIXME: handle groups also *)
 fun mkSubject (Rep.Class c) = User (Rep.string_of_path (#name c))
+  | mkSubject _ = library.error "mkSubject called on something that is not a class"
 
 fun classifier_has_stereotype s c = List.exists (fn x => x = s) 
 												(Rep.stereotypes_of c)
-fun mkPermission cs (Rep.Class c) =  
+fun mkPermission cs (Rep.Class c) =  (
 	{ name  = (Rep.string_of_path (#name c)),
 	  roles = (map (Rep.string_of_path o Rep.name_of)
 				   (List.filter (classifier_has_stereotype "secuml.role") 
@@ -190,7 +188,8 @@ fun mkPermission cs (Rep.Class c) =
                               (Rep.string_of_path (#name c)))
           else map (Design.parse_action root_resource) action_attributes
 	  end }
-	handle _ => library.error "error in mkPermission" 
+	handle _ => library.error "error in mkPermission" )
+  | mkPermission _ _ = library.error "mkPermission called on something that is not a class"
 
 (* FIXME *) 
 fun mkPartialOrder xs = ListPair.zip (xs,xs)

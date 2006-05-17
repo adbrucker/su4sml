@@ -58,7 +58,7 @@ fun atomic_actions_from_context env =
 fun permissions_for_action env act = 
     List.filter (fn x => SuperCart.Security.permission_includes_action x act)
                 (SuperCart.PermissionSet (unpack env))
-    
+                
 (********** ADDING/MODIFYING VARIABLE SUBSTITUTIONS *****************************************)
 (*	lookup  environment -> string -> string			
  * might override some lookup entries of the base cartridge 
