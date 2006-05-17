@@ -90,7 +90,7 @@ fun actions_of (p:Permission) = #actions p
 (** test whether a1 is (transitively) a subordinated_action of a2 *)
 fun is_contained_in a1 a2 = (a1 = a2) orelse 
 							List.exists (is_contained_in a1) 
-                                                   (Design.subordinated_actions a2))) 
+                                        (Design.subordinated_actions a2)
 
 (** test whether the permission p covers the action a. *)
 fun permission_includes_action (p:Permission) (a:Design.Action) = 
