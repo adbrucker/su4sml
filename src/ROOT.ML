@@ -100,3 +100,5 @@ use "rep_secure.sml";
 OS.FileSys.chDir "codegen"; 
 use "ROOT.ML"; 
 OS.FileSys.chDir "..";
+val _ = print "successfully compiled su4sml\n"
+
