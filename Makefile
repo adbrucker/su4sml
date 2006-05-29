@@ -6,3 +6,6 @@ doc:
 apidoc: 
 	smldoc --windowtitle="SU4SML API Documentation" --hidebysig --directory=doc/api --linksource --showsummary --overview=doc/overview.html src/su4sml.cm
 
+su4sml:
+	cd src && echo "val _ = use \"ROOT.ML\"" | sml
+	
