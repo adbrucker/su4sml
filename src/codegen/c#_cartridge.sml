@@ -21,7 +21,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
  
-functor CSharp_Cartridge(SuperCart : CARTRIDGE) : CARTRIDGE =
+functor CSharp_Cartridge(SuperCart : BASE_CARTRIDGE) : BASE_CARTRIDGE =
 struct
 open Rep_OclType
 	 
@@ -30,7 +30,7 @@ type Model = SuperCart.Model
 			 
 type environment = { extension : SuperCart.environment }
 
-fun getModel (env:environment) = SuperCart.getModel (#extension env)
+(* fun getModel (env:environment) = SuperCart.getModel (#extension env)*)
 			   
 				   
 				   
@@ -41,6 +41,10 @@ fun unpack  (env : environment) = #extension env
 								  
 fun pack superEnv = {extension = superEnv} : environment
 
+fun curClassifier env = SuperCart.curClassifier (unpack env)
+fun curArgument env = SuperCart.curArgument (unpack env)
+fun curOperation env = SuperCart.curOperation (unpack env)
+fun curAttribute env = SuperCart.curAttribute (unpack env)
 											 
 (* internal translation table *)
 fun super2Native "ClassifierScope" = "static"

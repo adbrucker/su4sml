@@ -43,7 +43,7 @@ sig
 	 * returns the model information as it is part of the current
 	 * environment. 
 	 *) 
-	val getModel : environment -> Model
+	(* val getModel : environment -> Model *)
 
 	(** initialze the environment by parsing the given classifier list *)
 	val initEnv : Rep.Model ->  environment

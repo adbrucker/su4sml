@@ -36,7 +36,7 @@ fun unpack  (env : environment) = #extension env
 
 fun pack superEnv = {extension = superEnv} : environment
 
-fun getModel (env:environment) = SuperCart.getModel (unpack env)
+(* fun getModel (env:environment) = SuperCart.getModel (unpack env)*)
 
  (* internal translation table *)
 fun super2Native "ClassifierScope" = "static"

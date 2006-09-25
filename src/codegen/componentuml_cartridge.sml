@@ -25,7 +25,7 @@ fun initEnv model = { curPermissionList = NONE,
                       curPermission = NONE,
                       extension = SuperCart.initEnv model}
 
-fun getModel (env : environment) = SuperCart.getModel (unpack env)
+(* fun getModel (env : environment) = SuperCart.getModel (unpack env) *)
 fun curClassifier (env : environment) = SuperCart.curClassifier (unpack env)
 fun curAttribute (env : environment) = SuperCart.curAttribute (unpack env)
 fun curOperation (env : environment) = SuperCart.curOperation (unpack env)

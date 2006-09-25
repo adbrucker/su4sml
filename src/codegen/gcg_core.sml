@@ -109,8 +109,9 @@ fun write env (Tpl_Parser.RootNode(l))  = List.app (write env) l
 
 (** generate code according to the given template file for the given model *)
 fun generate model template 
-  = let val env = C.initEnv  model 
-		val tree = Tpl_Parser.parse template
+  = let 
+      val env = C.initEnv  model 
+	  val tree = Tpl_Parser.parse template
 	in
 		(initOut();
 		 (*printTTree tree;*)
