@@ -41,5 +41,11 @@ Group is
     codegen/secureuml_cartridge.sml
 	codegen/design_cartridge.sig
     codegen/componentuml_cartridge.sml
+    codegen/SM_helper.sml
+    codegen/stateMachineTypes.sml
+    codegen/stringHandling.sml
+    codegen/stateMachine.sml
+    "codegen/c#sm_cartridge.sig"
+    "codegen/c#sm_cartridge.sml"
 	codegen/gcg_core.sml
     codegen/codegen.sml
