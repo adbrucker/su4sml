@@ -35,16 +35,32 @@ use "gcg_helper.sml";
 
 use "tpl_parser.sml";
 
+(* Base *)
 use "cartridge.sig";
 use "base_cartridge.sml";
-use "design_cartridge.sig";
+
+(* C# *)
 use "c#_cartridge.sml";
 use "c#_net1_cartridge.sml";
+
+(* SecureUML *)
+use "design_cartridge.sig";
 use "secureuml_cartridge.sml";
 use "componentuml_cartridge.sml";
+
 (*
 use "java_cartridge.sml";
 *)
+
+(* Statemachines *)
+use "SM_helper.sml";
+use "stateMachineTypes.sml";
+use "stringHandling.sml";
+use "stateMachine.sml";
+use "c#sm_cartridge.sig";
+use "c#sm_cartridge.sml";
+
+use "gcg_core.sig";
 use "gcg_core.sml";
 
 use "codegen.sml";
