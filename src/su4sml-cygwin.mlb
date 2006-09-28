@@ -16,25 +16,19 @@ in
     xmi_activity_graphs.sml 
     xmi_core.sml 
     xmi.sml 
-    rep_ocl.sig
     rep_ocl.sml
-    rep_state_machines.sig
     rep_state_machines.sml
-    rep_activity_graphs.sig
     rep_activity_graphs.sml
-    rep_core.sig
     rep_core.sml
-    rep.sig
     rep.sml
     mds.sig
+    listeq.sml 
     component_uml.sml
     secure_uml.sml
     ocl2string.sml
     xmi_idtable.sml
     xml2xmi.sml 
     xmi2rep.sml  
-    rep_secure.sig
     rep_secure.sml
-	codegen/codegen.mlb
   end
 end

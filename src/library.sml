@@ -29,22 +29,22 @@ infix |>
 
 
 fun filter (pred: 'a->bool) : 'a list -> 'a list =
-  let fun filt [] = []
+    let fun filt [] = []
           | filt (x :: xs) = if pred x then x :: filt xs else filt xs
-	    in filt end;
-
-
-	    fun exists (pred: 'a -> bool) : 'a list -> bool =
-	      let fun boolf [] = false
-	              | boolf (x :: xs) = pred x orelse boolf xs
-		        in boolf end;
-
-
-			fun append xs ys = xs @ ys;
-
-			 fun find _ []        = Option.NONE
-			     | find p (x :: xs) = if p x then Option.SOME x else find p xs;
-
+	in filt end;
+    
+    
+fun exists (pred: 'a -> bool) : 'a list -> bool =
+	let fun boolf [] = false
+	      | boolf (x :: xs) = pred x orelse boolf xs
+	in boolf end;
+    
+    
+fun append xs ys = xs @ ys;
+    
+fun find _ []        = Option.NONE
+  | find p (x :: xs) = if p x then Option.SOME x else find p xs;
+    
 
 
 (* fun getenv var =
@@ -65,7 +65,7 @@ fun foldr1 f l =
     let fun itr [x] = x
           | itr (x::l) = f(x, itr l)
     in  itr l  end;
-    
+
 (* use Option.map instead 
 fun ap_some f (SOME x) = SOME(f x)
   |ap_some f NONE     = NONE
@@ -79,7 +79,7 @@ fun take (n, []) = []
   | take (n, x :: xs) =
     if n > 0 then x :: take (n - 1, xs) else [];
     
-    fun space_implode a bs = implode (separate a bs);
+fun space_implode a bs = implode (separate a bs);
 
 (* use print instead
 fun std_output s = (TextIO.output (TextIO.stdOut, s); TextIO.flushOut TextIO.stdOut);
@@ -92,7 +92,7 @@ exception ERROR;
 fun error s = (print (s^"\n"); raise ERROR);
 
 fun fst (x, y) = x
-
+                 
 fun snd (x, y) = y
 
 end

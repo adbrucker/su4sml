@@ -1,4 +1,4 @@
-(*****************************************************************************
+ (*****************************************************************************
  *          su4sml - a SecureUML repository for SML              
  *                                                                            
  * component_uml.sml - a design language implementing mds.sig for 
@@ -25,53 +25,61 @@
  ******************************************************************************)
 
 (** Auxiliary structure to specialize the resource type for ComponentUML. *)
-structure ComponentUMLResource = struct
+structure ComponentUMLResource = 
+struct
 
 (** The type of resource, plus a path name specifiying the resource. 
  * Resource types can be entities, methods, and attributes.
  * FIX: using Path for methods is unsafe, there can be severable  
  * methods with the same name, but different signature.           
  *)
- datatype Resource = Entity of Rep.Classifier
-					  | EntityMethod of Rep.operation
-					  | EntityAttribute of Rep.attribute
+datatype Resource = Entity          of Rep.Classifier
+                  | EntityMethod    of Rep.operation
+                  | EntityAttribute of Rep.attribute
 end
 
 (** The signature for ComponentUML. *)
 signature COMPONENTUML = DESIGN_LANGUAGE where 
 type Resource = ComponentUMLResource.Resource
-
+                
 (** ComponentUML is a simple language for component-based modeling. *)
 structure ComponentUML : COMPONENTUML =
 struct
 
 open ComponentUMLResource
-(* val resource_types = ["Entity","EntityMethod","EntityAttribute"] *)
 
 val action_stereotypes = ["dialect.entityaction",
                           "dialect.entitymethodaction",
                           "dialect.entityattributeaction"]
-
+                         
 val root_stereotypes = ["compuml.entity"]
-
+                       
 (** The list of all attributes of an entity. *)
-fun entity_contained_attributes (Entity c) =
-    map EntityAttribute (Rep.attributes_of c)
-  | entity_contained_attributes _ = library.error "entity_contained_attributes called on something that is not an entity"
+fun entity_contained_attributes (Entity c) = map EntityAttribute (Rep.attributes_of c)
+  | entity_contained_attributes _ = library.error "entity_contained_attributes \
+                                                  \called on something that is \
+                                                  \not an entity"
 
 (** the list of all methods of an entity *)
 fun entity_contained_methods (Entity c) = map EntityMethod (Rep.operations_of c)
-  | entity_contained_methods _ = library.error "entity_contained_methods called on something that is not an entity"
+  | entity_contained_methods _ = library.error "entity_contained_methods \   
+                                               \called on something that is \
+                                               \not an entity"
 
 (** The list of all side-effect free methods of an entity. *)
 fun entity_contained_read_methods (Entity c) =
     map EntityMethod (List.filter #isQuery (Rep.operations_of c))
-  | entity_contained_read_methods _ = library.error "entity_contained_read_methods called on something that is not an entity"
-		
+  | entity_contained_read_methods _ = library.error "entity_contained_read_methods \
+                                                    \called on something that is \
+                                                    \not an entity"
+		                              
 (** The list of all methods with side-effects of an entity *)
 fun entity_contained_update_methods (Entity c) =
     map EntityMethod (List.filter (not o #isQuery) (Rep.operations_of c))
-  | entity_contained_update_methods _ = library.error "entity_contained_update_methods called on something that is not an entity"
+  | entity_contained_update_methods _ = library.error 
+                                            "entity_contained_update_methods \
+                                            \called on something that is not \
+                                            \an entity"
 
 (** The resources that are contained in the given resource. *)
 fun contained_resources x = 
@@ -100,7 +108,7 @@ fun parse_entity_action root att_name "create"     =
 fun parse_attribute_action root name "read"       =
 	(SimpleAction ("read", 
                    (EntityAttribute ((hd o List.filter (fn x => #name x = name)) 
-										(Rep.attributes_of root))))
+										 (Rep.attributes_of root))))
      handle Empty => library.error "did not find attribute")
   | parse_attribute_action root name "update"     =
     ( SimpleAction ("update", 
@@ -132,7 +140,8 @@ fun parse_action root (att:Rep.attribute) =
 	let val att_name = #name att
 		val att_type = #attr_type att
         val cls_path = case att_type of Rep_OclType.Classifier x => x
-                                      | _ => library.error "permission attribute type is not a classifier"
+                                      | _ => library.error "permission attribute \
+                                                           \type is not a classifier"
 		val action_name = hd (rev cls_path) 
         fun resource_path name = (hd o List.tl) (String.tokens (fn x => x= #".") name)
 	in case hd (#stereotypes att) 
@@ -146,7 +155,8 @@ fun parse_action root (att:Rep.attribute) =
 							   "found unexpected stereotype "^s^
 							   " for permission attribute")
 	end
-		handle _ => library.error "in ComponentUML.parse_action: could not parse attribute"
+	handle _ => library.error "in ComponentUML.parse_action: \
+                              \could not parse attribute"
 
 fun action_type_of (SimpleAction (t,_)) = t
   | action_type_of (CompositeAction (t,_)) = t
@@ -155,14 +165,14 @@ fun action_type_of (SimpleAction (t,_)) = t
 
 (** The actions possible on the given resource. *)
 fun actions_of (e as (Entity c)) = [SimpleAction    ("create",    e),
-				    CompositeAction ("read",      e),
-				    CompositeAction ("update",    e),
-				    SimpleAction    ("delete",    e),
-				    CompositeAction ("full_access",e)]
+				                    CompositeAction ("read",      e),
+				                    CompositeAction ("update",    e),
+				                    SimpleAction    ("delete",    e),
+				                    CompositeAction ("full_access",e)]
   | actions_of (m as (EntityMethod p)) = [SimpleAction ("execute", m)]
   | actions_of (a as (EntityAttribute p)) = [SimpleAction    ("read",       a),
-						SimpleAction    ("update",     a),
-						CompositeAction ("full_access", a)]
+						                     SimpleAction    ("update",     a),
+						                     CompositeAction ("full_access", a)]
 
 (** The resource an action acts on. *)
 fun resource_of (SimpleAction x)    = #2 x
@@ -179,10 +189,10 @@ fun subordinated_actions (SimpleAction _) = nil
         List.concat [read_attributes,read_methods]
     end 
   | subordinated_actions (CompositeAction ("full_access",  e as (Entity c)))
-    = [SimpleAction ("create",e), 
-       CompositeAction ("read",e),
+    = [SimpleAction    ("create",e), 
+       CompositeAction ("read",  e),
        CompositeAction ("update",e),
-       SimpleAction ("delete",e)]
+       SimpleAction    ("delete",e)]
   | subordinated_actions (CompositeAction ("update",       e as (Entity c))) =
     let val update_attributes = List.map (fn x => SimpleAction ("update", x)) 
                                          (entity_contained_attributes e)
@@ -194,5 +204,8 @@ fun subordinated_actions (SimpleAction _) = nil
   | subordinated_actions (CompositeAction ("full_access", a as (EntityAttribute ae)))
     = [SimpleAction ("read", a),
        SimpleAction ("update", a)]
-  | subordinated_actions (CompositeAction _) = library.error "encountered unknown composite action type in subordinated_actions"
+  | subordinated_actions (CompositeAction _) = library.error "encountered unknown \
+                                                             \composite action \
+                                                             \type in \
+                                                             \subordinated_actions"
 end

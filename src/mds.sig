@@ -31,13 +31,18 @@
 signature DESIGN_LANGUAGE =
 sig	  
     
+    (** the concrete resource types of the design modelling language. *)
     eqtype Resource
 
-    (* val resource_types: string list *)
-
+    (** 
+     * the resource hierarchy.
+     * give the list of resources the given resource contains.
+     * only returns the immediatlye contained resources, not the transitive 
+     * closure.
+     *)
     val contained_resources : Resource -> Resource list
-
 					  
+    (** *)
     datatype Action = SimpleAction of string * Resource
                     | CompositeAction of string * Resource
 					 
@@ -47,17 +52,29 @@ sig
     (** list of allowed stereotype names on classifiers to denote root resources. *)
     val root_stereotypes: string list
 
-    (* val action_names: string list *)
-
+    (** 
+     * the action hierarchy. 
+     * give the list of actions the given composite action is composed of.
+     * only returns the immediatly subordinated actions, not the transitive 
+     * closure. If the given action is a simple action, returns an empty list
+     *)
     val subordinated_actions:   Action -> Action list
 
+    (** 
+     * the list of actions that are possible on the given resource.
+     * (actually not really needed currently, but might come in handy)
+     *)
     val actions_of : Resource -> Action list
+    
+    (** the resource the given actions acts on *)
     val resource_of:   Action -> Resource
+
+    (** the action type of the given action *)
     val action_type_of : Action -> string
 
 	(** 
 	 * parse a permission attribute into an action.
-	 * Takes the root resource, and the attribute as argument  
+	 * Takes the root resource, and the attribute as argument.  
 	 *)
 	val parse_action: Rep.Classifier -> Rep.attribute -> Action
 end 
@@ -92,6 +109,13 @@ sig
     val actions_of      :        Permission -> Design.Action list
     val permissions_of  :     Design.Action -> Permission list
 
+    val is_contained_in : Design.Action -> Design.Action -> bool
+    val permission_includes_action : Permission -> Design.Action -> bool
+
+    (** 
+     * parse a UML model and return a (modified) list of classes and the 
+     * recognized security configuration. 
+     *)
     val parse: Rep_Core.Classifier list -> 
 			   (Rep_Core.Classifier list * Configuration)
 end 	

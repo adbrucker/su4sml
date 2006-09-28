@@ -76,7 +76,7 @@ fun generate xmi_file "base" =
 *)
 fun main (_,[xmi_file,lang]) = generate xmi_file lang
   | main _ = print ("usage: codegen <xmi_file> <language>\n"^
-  		    "\tlanguage = \"base\" | \"c#\" | \"c#_secure\" | \"c#_net1\" | \"c#_secure_net1\" | \"maude\" | \"maude_secure\" \n")
+  		    "\tlanguage = \"base\" | \"c#\" | \"c#sm\" | \"c#_secure\" | \"c#_net1\" | \"c#_secure_net1\" | \"maude\" | \"maude_secure\" \n")
 
 end
 

@@ -23,40 +23,14 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-signature SECUREUML =
-sig
-    structure Design : DESIGN_LANGUAGE 
-
-    
-    type Configuration
-    type Config_Type = string
-
-    type Role = string
-    type Permission	= {name: string,
-                       roles: Role list,
-                       constraints: Rep_OclTerm.OclTerm list,
-                       actions: Design.Action list }
-
-	val getPermissions : Configuration -> Permission list
-    val type_of        : Configuration -> Config_Type
-    val is_empty       : Configuration -> bool				   
-
-    type User	
-    val name_of         :              User -> string		
-    
-    (* a bit unclear, which of the following we really need *)
-    val users_of        :        Permission -> User list	
-    (* val permissions_of  :              User -> Permission list	*)
-    val check_permission: User * Permission -> bool	  
-
-    val actions_of      :        Permission -> Design.Action list
-    val permissions_of  :     Design.Action -> Permission list
-
-    val permission_includes_action : Permission -> Design.Action -> bool
-    val parse: Rep_Core.Classifier list -> 
-			   (Rep_Core.Classifier list * Configuration)
-
+signature SECUREUML = 
+sig 
+include    SECURITY_LANGUAGE
+type Role
+val constraints_of : Permission -> Rep_OclTerm.OclTerm list
+val roles_of:        Permission -> Role list 
 end
+
 
 (** 
  * SecureUML is a simple security language based on RBAC.
@@ -83,7 +57,9 @@ type Permission = {name: string,
 				   constraints: Rep_OclTerm.OclTerm list,
 				   actions: Design.Action list }
 
-fun actions_of (p:Permission) = #actions p
+fun constraints_of (x:Permission) = #constraints x
+fun roles_of       (x:Permission) = #roles x
+fun actions_of     (p:Permission) = #actions p
 
 (** test whether a1 is (transitively) a subordinated_action of a2 *)
 fun is_contained_in a1 a2 = (a1 = a2) orelse 
@@ -132,21 +108,21 @@ fun classifier_has_stereotype s c = ListEq.includes (Rep.stereotypes_of c) s
 fun classifier_has_no_stereotype strings c = 
     ListEq.disjunct strings (Rep.stereotypes_of c)
     
-fun filter_permission cs = List.filter (classifier_has_stereotype "secuml.permission") cs
+fun filter_permission cs = List.filter (classifier_has_stereotype 
+                                            "secuml.permission") cs
 (* FIXME: handle groups also *)
 fun filter_subject cs = List.filter (classifier_has_stereotype "secuml.user") cs
 fun filter_role cs = List.filter (classifier_has_stereotype "secuml.role") cs 
 
  
 fun mkRole (Rep.Class c)  = Rep.string_of_path (#name c)
-  | mkRole _ = library.error "mkRole called on something that is not a class"
+  | mkRole _              = library.error "mkRole called on something that is \
+                                          \not a class"
 
 (* FIXME: handle groups also *)
 fun mkSubject (Rep.Class c) = User (Rep.string_of_path (#name c))
   | mkSubject _ = library.error "mkSubject called on something that is not a class"
 
-
-                                                
 fun mkPermission cs (Rep.Class c) = 
     let val atts = Rep.attributes_of (Rep.Class c)
         val classifiers = List.mapPartial (fn (Rep_OclType.Classifier p) 
@@ -155,9 +131,10 @@ fun mkPermission cs (Rep.Class c) =
                                           (map  #attr_type atts)
         val role_classes = List.filter (classifier_has_stereotype "secuml.role") 
                                        classifiers
-        val root_classes = List.filter (fn x => ListEq.overlaps (Rep.stereotypes_of x)
-                                                                Design.root_stereotypes)
-                                       classifiers
+        val root_classes =   List.filter (fn x => ListEq.overlaps 
+                                                      (Rep.stereotypes_of x)
+                                                      Design.root_stereotypes)
+                                         classifiers
         val root_resource = hd root_classes
             handle Empty => library.error ("no root resource found for permission "^
                                            Rep.string_of_path (#name c))
@@ -178,15 +155,21 @@ fun mkPermission cs (Rep.Class c) =
                                         (Rep.string_of_path (#name c)))
                     else map (Design.parse_action root_resource) action_attributes }
     end
-  | mkPermission _ _ = library.error ("mkPermission called on something "^
-                                      "that is not a class")
+  | mkPermission _ _ = library.error "mkPermission called on something \
+                                     \that is not a class"
 
                        
 (* FIXME *) 
 fun mkPartialOrder xs = ListPair.zip (xs,xs)
 
+(** parse a list of classifiers accoriding to the SecureUML profile.
+ * removes the classes with SecureUML stereotypes. 
+ *)
 fun parse (cs:Rep_Core.Classifier list) = 
-	(List.filter (classifier_has_no_stereotype ["secuml.permission","secuml.role","secuml.subject"]) cs,
+	(List.filter (classifier_has_no_stereotype ["secuml.permission",
+                                                "secuml.role",
+                                                "secuml.subject"]) 
+                 cs,
 	 { config_type = "SecureUML",
 	   permissions = map (mkPermission cs) (filter_permission cs),
 	   subjects    = map mkSubject (filter_subject cs),

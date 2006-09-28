@@ -486,6 +486,7 @@ fun transform_associationclass_as_association t (XMI.AssociationClass assoc) =
 		List.app (fn x => add_aend_to_type (#xmiid assoc, x)) aends
     end
 		
+  | transform_associationclass_as_association t _ = library.error "in transform_associationclass_as_association: can only be called on association classes"
 
 (* recursively transforms all associations in the package p. *)
 fun transform_associations t (XMI.Package p) = 

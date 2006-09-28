@@ -248,34 +248,34 @@ val filter_named_aends  = List.filter (fn {name=SOME _,...}:XMI.AssociationEnd =
 
 (* FIX *)
 fun transform_state t (XMI.CompositeState {xmiid,outgoing,incoming,subvertex,
-					   isConcurrent,name,...}) =
-    Rep.State_CompositeState {name     = name,
-			      state_id = xmiid,
-			      outgoing = outgoing,
-			      incoming = incoming,
-			      subvertex = map (transform_state t) subvertex,
-			      isConcurrent = isConcurrent  }
+					                       isConcurrent,name,...}) =
+    Rep.State_CompositeState { name     = name,
+			                   state_id = xmiid,
+			                   outgoing = outgoing,
+			                   incoming = incoming,
+			                   subvertex = map (transform_state t) subvertex,
+			                   isConcurrent = isConcurrent  }
   | transform_state t (XMI.SimpleState {xmiid,outgoing,incoming,name,...}) =
-    Rep.State_SimpleState {state_id = xmiid,
-			   outgoing = outgoing,
-			   incoming = incoming,
-			   name     = name}
+    Rep.State_SimpleState { state_id = xmiid,
+			                outgoing = outgoing,
+			                incoming = incoming,
+			                name     = name}
   | transform_state t (XMI.ActionState {xmiid,outgoing,incoming,isDynamic,
-					name,...}) =
-    Rep.SimpleState_ActionState {state_id = xmiid,
-				 outgoing = outgoing,
-				 incoming = incoming,
-				 isDynamic = isDynamic,
-				 name      = name}
+					                    name,...}) =
+    Rep.SimpleState_ActionState { state_id = xmiid,
+				                  outgoing = outgoing,
+				                  incoming = incoming,
+				                  isDynamic = isDynamic,
+				                  name      = name}
   | transform_state t (XMI.FinalState {xmiid,incoming,...}) =
-    Rep.State_FinalState {state_id = xmiid,
-			  incoming = incoming}
+    Rep.State_FinalState { state_id = xmiid,
+			               incoming = incoming}
   | transform_state t (XMI.PseudoState {xmiid,incoming,outgoing,kind,...}) = 
-    Rep.PseudoState {state_id = xmiid,
-		     outgoing = outgoing,
-		     incoming = incoming,
-		     kind = kind }
-
+    Rep.PseudoState { state_id = xmiid,
+		              outgoing = outgoing,
+		              incoming = incoming,
+		              kind = kind }
+  | transform_state t _ = library.error "in transform_state: Subactivity states, object flow states and sync states are not supported."
 (* a primitive hack: we take the body of the guard g as the name of an *)
 (* operation to be called in order to check whether the guard is true  *)
 fun transform_guard t (XMI.mk_Guard g) =

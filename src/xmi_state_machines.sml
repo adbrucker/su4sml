@@ -92,99 +92,91 @@ datatype PseudoStateVars = initial  | deep   | shallow |
                            join     | fork   | 
                            junction | choice 
 				  
-datatype StateVertex  = 
-         CompositeState 
-	 of {xmiid        : string,
-             name         : string,
-             stereotype   : Stereotype_Id list,
-             isSpecification : bool,
-             isConcurrent : bool,
-             entry        : Procedure option,
-             exit         : Procedure option,
-             doActivity   : Procedure option,
-             outgoing     : Transition_Id list,
-	     incoming     : Transition_Id list, 
-             taggedValue  : TaggedValue list,
-	     subvertex    : StateVertex list}
-       | SubactivityState
-	 of {xmiid        : string,
-             name         : string,
-             stereotype   : Stereotype_Id list,
-             isSpecification : bool,
-             isConcurrent : bool,
-             entry        : Procedure option,
-             exit         : Procedure option,
-             doActivity   : Procedure option,
-             outgoing     : Transition_Id list,
-	     incoming     : Transition_Id list, 
-	     subvertex    : StateVertex list,
-             submachine   : StateMachine,
-             taggedValue  : TaggedValue list,
-             isDynamic    : bool}
-       | SimpleState
-	 of {xmiid        : string,
-             name         : string,
-             stereotype   : Stereotype_Id list,
-             isSpecification : bool,
-             entry        : Procedure option,
-             exit         : Procedure option,
-             doActivity   : Procedure option,
-             taggedValue  : TaggedValue list,
-             outgoing     : Transition_Id list,
-	     incoming     : Transition_Id list}
-       | ActionState (* from ActivityGraphs *)
-         of {xmiid        : string,
-             name         : string,
-             stereotype   : Stereotype_Id list,
-             isSpecification : bool,
-             entry        : Procedure option,
-             outgoing     : Transition_Id list,
-	     incoming     : Transition_Id list, 
-             taggedValue  : TaggedValue list,
-             isDynamic    : bool 
-             (* + dynamicArguments + dynamicMultiplicity *)}
-       | ObjectFlowState (* from ActivityGraphs *)
-         of {xmiid        : string,
-             name         : string,
-             stereotype   : Stereotype_Id list,
-             isSpecification : bool,
-             entry        : Procedure option,
-             exit         : Procedure option, 
-             doActivity   : Procedure option,
-             outgoing     : Transition_Id list,
-	     incoming     : Transition_Id list, 
-             isSynch      : bool,
-             parameter    : Parameter list,
-             taggedValue  : TaggedValue list,
-             type_        : string}
-       | FinalState
-	 of {xmiid        : string,
-             name         : string,
-             stereotype   : Stereotype_Id list,
-             isSpecification : bool,
-             entry        : Procedure option,
-             exit         : Procedure option,
-             doActivity   : Procedure option,
-             taggedValue  : TaggedValue list,
-	     incoming     : Transition_Id list }
-       | PseudoState
-	 of {xmiid        : string,
-             name         : string,
-             stereotype   : Stereotype_Id list,
-             isSpecification : bool,
-             kind         : PseudoStateVars,
-             taggedValue  : TaggedValue list,
-             outgoing     : Transition_Id list,
-	     incoming     : Transition_Id list }
-       | SyncState
-	 of {xmiid        : string,
-             name         : string,
-             stereotype   : Stereotype_Id list,
-             isSpecification : bool,
-             outgoing     : Transition_Id list,
-	     incoming     : Transition_Id list,
-             taggedValue  : TaggedValue list,
-	     bound        : int}
+datatype StateVertex = 
+         CompositeState of { xmiid        : string,
+                             name         : string,
+                             stereotype   : Stereotype_Id list,
+                             isSpecification : bool,
+                             isConcurrent : bool,
+                             entry        : Procedure option,
+                             exit         : Procedure option,
+                             doActivity   : Procedure option,
+                             outgoing     : Transition_Id list,
+	                         incoming     : Transition_Id list, 
+                             taggedValue  : TaggedValue list,
+	                         subvertex    : StateVertex list}
+       | SubactivityState of { xmiid        : string,
+                               name         : string,
+                               stereotype   : Stereotype_Id list,
+                               isSpecification : bool,
+                               isConcurrent : bool,
+                               entry        : Procedure option,
+                               exit         : Procedure option,
+                               doActivity   : Procedure option,
+                               outgoing     : Transition_Id list,
+	                           incoming     : Transition_Id list, 
+	                           subvertex    : StateVertex list,
+                               submachine   : StateMachine,
+                               taggedValue  : TaggedValue list,
+                               isDynamic    : bool}
+       | SimpleState of {xmiid        : string,
+                         name         : string,
+                         stereotype   : Stereotype_Id list,
+                         isSpecification : bool,
+                         entry        : Procedure option,
+                         exit         : Procedure option,
+                         doActivity   : Procedure option,
+                         taggedValue  : TaggedValue list,
+                         outgoing     : Transition_Id list,
+	                     incoming     : Transition_Id list}
+       | ActionState of { xmiid        : string,
+                          name         : string,
+                          stereotype   : Stereotype_Id list,
+                          isSpecification : bool,
+                          entry        : Procedure option,
+                          outgoing     : Transition_Id list,
+	                      incoming     : Transition_Id list, 
+                          taggedValue  : TaggedValue list,
+                          isDynamic    : bool 
+                        (* + dynamicArguments + dynamicMultiplicity *)}
+       | ObjectFlowState of { xmiid        : string,
+                              name         : string,
+                              stereotype   : Stereotype_Id list,
+                              isSpecification : bool,
+                              entry        : Procedure option,
+                              exit         : Procedure option, 
+                              doActivity   : Procedure option,
+                              outgoing     : Transition_Id list,
+	                          incoming     : Transition_Id list, 
+                              isSynch      : bool,
+                              parameter    : Parameter list,
+                              taggedValue  : TaggedValue list,
+                              type_        : string}
+       | FinalState of { xmiid        : string,
+                         name         : string,
+                         stereotype   : Stereotype_Id list,
+                         isSpecification : bool,
+                         entry        : Procedure option,
+                         exit         : Procedure option,
+                         doActivity   : Procedure option,
+                         taggedValue  : TaggedValue list,
+	                     incoming     : Transition_Id list }
+       | PseudoState of { xmiid        : string,
+                          name         : string,
+                          stereotype   : Stereotype_Id list,
+                          isSpecification : bool,
+                          kind         : PseudoStateVars,
+                          taggedValue  : TaggedValue list,
+                          outgoing     : Transition_Id list,
+	                      incoming     : Transition_Id list }
+       | SyncState of { xmiid        : string,
+                        name         : string,
+                        stereotype   : Stereotype_Id list,
+                        isSpecification : bool,
+                        outgoing     : Transition_Id list,
+	                    incoming     : Transition_Id list,
+                        taggedValue  : TaggedValue list,
+	                    bound        : int}
 (*     | StubState  *)	    
 and	StateMachine = mk_StateMachine of 
                            {xmiid            : string,
@@ -233,7 +225,7 @@ fun state_outgoing_trans_of (CompositeState{outgoing,...}) = outgoing
   | state_outgoing_trans_of (ObjectFlowState{outgoing,...}) = outgoing
   | state_outgoing_trans_of (PseudoState{outgoing,...}) = outgoing
   | state_outgoing_trans_of (SyncState{outgoing,...}) = outgoing
-
+  | state_outgoing_trans_of (FinalState _) = library.error "state_outgoing_trans_of called on a final state"
 
 fun state_incoming_trans_of (CompositeState{incoming,...}) = incoming
   | state_incoming_trans_of (SubactivityState{incoming,...}) = incoming
