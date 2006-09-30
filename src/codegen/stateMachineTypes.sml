@@ -34,8 +34,8 @@ open Rep_StateMachine
 open Rep_SecureUML_ComponentUML.Security
 
 type Pair = string * string
-fun VarN((Name,Value):Pair) = Name
-fun VarV((Name,Value):Pair) = Value
+fun VarN((name,Value):Pair) = name
+fun VarV((name,Value):Pair) = Value
 
 (* Event-Guard-Path *)
 datatype GEPath = GELeaf of Guard option * Event option * StateVertex_Id
