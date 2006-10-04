@@ -31,7 +31,7 @@ sig
 		     | Set of OclType | Sequence of OclType
 		     | OrderedSet of OclType | Bag of OclType 
 		     | Collection of OclType
-		     | Classifier of Path | OclVoid | DummyT
+		     | Classifier of Path | OclVoid | DummyT | TemplateParameter of string
 	val string_of_OclType : OclType -> string	
 	val string_of_path    : Path -> string	
 	val is_Classifier     : OclType -> bool
@@ -95,6 +95,7 @@ datatype OclType    =  Integer | Real | String | Boolean | OclAny
 		     | OrderedSet of OclType | Bag of OclType 
 		     | Collection of OclType | OclVoid | DummyT
 		     | Classifier of Path
+		     | TemplateParameter of string
 
 fun string_of_path (path:Path) = case path of
 			      [] => ""

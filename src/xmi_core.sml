@@ -338,6 +338,18 @@ fun classifier_name_of (Primitive{name,...}) = name
   | classifier_name_of (OrderedSet{name,...}) = name
   | classifier_name_of (Void{name,...}) = name
 
+fun classifier_operations_of (Primitive{operations,...}) = operations
+  | classifier_operations_of (Class{operations,...}) = operations
+  | classifier_operations_of (AssociationClass{operations,...}) = operations
+  | classifier_operations_of (Interface{operations,...}) = operations
+  | classifier_operations_of (Enumeration{operations,...}) = operations
+  | classifier_operations_of (Collection{operations,...}) = operations
+  | classifier_operations_of (Sequence{operations,...}) = operations
+  | classifier_operations_of (Set{operations,...}) = operations
+  | classifier_operations_of (Bag{operations,...}) = operations
+  | classifier_operations_of (OrderedSet{operations,...}) = operations
+  | classifier_operations_of (Void{...}) = []
+
 fun classifier_xmiid_of (Primitive{xmiid,...}) = xmiid
   | classifier_xmiid_of (Class{xmiid,...}) = xmiid
   | classifier_xmiid_of (AssociationClass{xmiid,...}) = xmiid

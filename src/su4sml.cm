@@ -16,6 +16,7 @@ Group is
     secure_uml.sml
     component_uml.sml
     rep_secure.sml
+    ocl_library.sml
     rep.sml
     xmi_ocl.sml 
     xmi_core.sml 

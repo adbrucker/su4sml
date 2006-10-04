@@ -68,6 +68,7 @@ use "rep_ocl.sml";
 use "rep_state_machines.sml";
 use "rep_activity_graphs.sml";
 use "rep_core.sml";
+use "ocl_library.sml";
 (* use "rep_secureuml.sig"; *)
 (* use "rep_secureuml.sml"; *)
 use "rep.sml";

@@ -27,6 +27,7 @@ sig
 
 include REP_CORE
 include REP_ACTIVITY_GRAPH 
+include OCL_LIBRARY
 
 type Model = Classifier list				 
 
@@ -36,6 +37,7 @@ structure Rep : REP =
 struct
 
 open Rep_Core Rep_StateMachine Rep_ActivityGraph
+open OclLibrary
 
 type Model = Classifier list
 end

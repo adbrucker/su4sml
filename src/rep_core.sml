@@ -94,6 +94,10 @@ datatype Classifier =
 	   interfaces  : Rep_OclType.Path list,
 	   thyname     : string option
 	  }
+       | Template of 
+	 { parameter   : Rep_OclType.OclType,
+	   classifier  : Classifier
+	 }
 
 val OclAnyC : Classifier
 
@@ -207,8 +211,12 @@ datatype Classifier =
 	   stereotypes : string list,
 	   interfaces  : Rep_OclType.Path list,
 	   thyname     : string option
-	  }
- 
+	  } 
+       | Template of 
+	 { parameter   : Rep_OclType.OclType,
+	   classifier  : Classifier
+	 }
+
 (* convert an association end into the corresponding collection type *)
 fun assoc_to_attr_type {name,aend_type,multiplicity,ordered,visibility,init} =
     case multiplicity of 
