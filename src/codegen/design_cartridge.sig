@@ -3,7 +3,7 @@
 signature DESIGN_LANGUAGE_CARTRIDGE =
 sig	  
     
-	include CARTRIDGE
+	include BASE_CARTRIDGE
 	structure Design: DESIGN_LANGUAGE
 
 

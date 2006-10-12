@@ -31,8 +31,8 @@ structure Codegen = struct
 
  structure CSharp_Gcg = GCG_Core (CSharp_Cartridge(Base_Cartridge))
 
-(* structure CSharpSecure_Gcg 
-  = GCG_Core (CSharp_Cartridge( ComponentUML_Cartridge(Base_Cartridge))) *)
+ structure CSharpSecure_Gcg 
+  = GCG_Core (CSharp_Cartridge( ComponentUML_Cartridge(Base_Cartridge))) 
 
 structure CSharp_NET1_Gcg 
   = GCG_Core (CSharp_NET1_Cartridge(Base_Cartridge))
@@ -54,8 +54,8 @@ fun generate xmi_file "base" =
 	Base_Gcg.generate ( Xmi2Rep.readXMI xmi_file) "templates/base.tpl"
  |  generate xmi_file "c#"   = 
  	CSharp_Gcg.generate ( Xmi2Rep.readXMI xmi_file) "templates/C#.tpl"
-(* |  generate xmi_file "c#_secure" = 
- 	CSharpSecure_Gcg.generate ( Xmi2Rep.readXMI xmi_file) "templates/C#_SecureUML.tpl"*)
+ |  generate xmi_file "c#_secure" = 
+ 	CSharpSecure_Gcg.generate ( Xmi2Rep.readXMI xmi_file) "templates/C#_SecureUML.tpl"
  |  generate xmi_file "c#_net1"   = 
  	CSharp_NET1_Gcg.generate ( Xmi2Rep.readXMI xmi_file) "templates/C#.tpl"
  |  generate xmi_file "c#_secure_net1" = 
@@ -69,11 +69,11 @@ fun generate xmi_file "base" =
 (* | generate xmi_file "maude" = 
    Base_Gcg.generate ( Xmi2Rep.readXMI xmi_file) "templates/maude.tpl"
  | generate xmi_file "maude_secure" = 
-   SecureUML_Base_Gcg.generate ( Rep_SecureUML_ComponentUML.readXMI xmi_file) "templates/maude.tpl"
+   SecureUML_Base_Gcg.generate ( Rep_SecureUML_ComponentUML.readXMI xmi_file) "templates/maude.tpl" *)
  |  generate _ s = print ("target language unknown : "^s^"\n"^
  			"usage: generate <xmi_file> \"base\" | \"c#\" | \"c#_secure\" | \"c#_net1\" | \"c#_secure_net1\"\n")
  			
-*)
+
 fun main (_,[xmi_file,lang]) = generate xmi_file lang
   | main _ = print ("usage: codegen <xmi_file> <language>\n"^
   		    "\tlanguage = \"base\" | \"c#\" | \"c#sm\" | \"c#_secure\" | \"c#_net1\" | \"c#_secure_net1\" | \"maude\" | \"maude_secure\" \n")
