@@ -38,6 +38,9 @@ exception OCLIllFormed of string
 fun getStringAtt string atts = valOf (XmlTree.attvalue_of string atts)
     handle Option => raise IllFormed ("in getStringAtt: did not find attribute "^string)
 
+fun getStringAttWithDefault def string atts = 
+    getOpt(XmlTree.attvalue_of string atts, def)
+
 fun getBoolAtt string atts = 
     let val att = getStringAtt string atts
     in 
@@ -59,7 +62,7 @@ val getLang      = getStringAtt "language"
 val getBody      = getStringAtt "body" 
 val getXmiId     = getStringAtt "xmi.id"    
 val getName      = getStringAtt "name"      
-val getXmiIdref  = getStringAtt "xmi.idref" 
+fun getXmiIdref t = (getStringAtt "xmi.idref") (XmlTree.attributes_of t)
 
 fun getMaybeEmptyName atts = Option.getOpt(XmlTree.attvalue_of "name" atts,"")
 		 
@@ -152,7 +155,7 @@ fun getChangeabilityMaybe atts =
     end 
 			       
 fun getKind atts = 
-    let val att = getStringAtt "kind" atts in
+    let val att = getStringAttWithDefault "inout" "kind" atts in
 	case att of "in"     => XMI.In
 		  | "out"    => XMI.Out
 		  | "inout"  => XMI.Inout
@@ -175,11 +178,14 @@ fun getPseudoStateKindAttr atts =
 	
 fun getRange atts = (getIntAtt "lower" atts, getIntAtt "upper" atts)
 
-fun mkMultiplicity tree = map (getRange o XmlTree.attributes_of) 
-			   (((XmlTree.filter "UML:MultiplicityRange") o 
-			     (XmlTree.skip   "UML:Multiplicity.range") o hd o 
-			     (XmlTree.skip   "UML:Multiplicity")) tree)
-			   handle Empty => raise IllFormed ("Empty in mkMultiplicity")
+fun mkMultiplicity tree = 
+    let fun f atts trees =
+            map (getRange o XmlTree.attributes_of) 
+			    (((XmlTree.filter "UML:MultiplicityRange") o 
+			      (XmlTree.get "UML:Multiplicity.range")) tree)
+    in 
+        XmlTree.apply_on "UML:Multiplicity" f tree
+    end
 
 fun mkAssociationEnd tree = 
     let fun f atts trees =  
@@ -189,20 +195,23 @@ fun mkAssociationEnd tree =
 	      ordering       = getOrderingMaybe atts,
 	      aggregation    = getAggregationMaybe atts,
 	      targetScope    = getTargetScopeMaybe atts,
-	      multiplicity   = if XmlTree.exists "UML:AssociationEnd.multiplicity" trees 
-			       then (mkMultiplicity o hd o (XmlTree.follow "UML:AssociationEnd.multiplicity")) 
-					trees
-			       else [(0,~1)],
+	      multiplicity   = Option.getOpt(Option.map 
+                                             mkMultiplicity
+                                             (XmlTree.get_optional 
+                                                  "UML:AssociationEnd.multiplicity" 
+                                                  tree), 
+                                         [(0,~1)]),
 	      changeability  = getChangeabilityMaybe atts, 
 	      visibility     = getVisibility atts,
-	      participant_id = (getXmiIdref o XmlTree.attributes_of o hd o
-				(XmlTree.follow "UML:AssociationEnd.participant")) trees }
+	      participant_id = getXmiIdref 
+                               (XmlTree.get_one "UML:AssociationEnd.participant"
+                                                tree)
+          handle Empty => raise IllFormed ("in mkAssociationEnd: "^
+                                           "no participant specified\n")
+        }
     in 
-	XmlTree.apply_on "UML:AssociationEnd" f tree
-	handle XmlTree.IllFormed msg => raise IllFormed ("in mkAssociationEnd: "^msg)
-	     | Empty => raise IllFormed ("Empty in mkAssociationEnd")
-	     | _ => raise IllFormed ("Error in mkAssociationEnd")
-
+	    XmlTree.apply_on "UML:AssociationEnd" f tree
+(*	    handle XmlTree.IllFormed msg => raise IllFormed ("in mkAssociationEnd: "^msg)*)
     end
 
 
@@ -214,20 +223,21 @@ fun mkAssociationFromAssociationClass tree =
     let fun f atts trees = { xmiid      = getXmiId atts, 
 			     name       = XmlTree.attvalue_of "name" atts,
 			     connection = (map mkAssociationEnd 
-					       (XmlTree.follow "UML:Association.connection" 
-							       trees)) }
+					               (XmlTree.get_many "UML:Association.connection" 
+							                        tree)) }
     in 
 	XmlTree.apply_on "UML:AssociationClass" f tree
-	handle XmlTree.IllFormed msg => raise IllFormed ("in mkAssociation: "^msg)
+(*	handle XmlTree.IllFormed msg => raise IllFormed ("in mkAssociation: "^msg)*)
     end
 
 
 fun mkAssociation tree = 
     let fun f atts trees = { xmiid      = getXmiId atts, 
-			     name       = XmlTree.attvalue_of "name" atts,
-			     connection = (map mkAssociationEnd 
-					       (XmlTree.follow "UML:Association.connection" 
-								  trees)) }
+			                 name       = XmlTree.attvalue_of "name" atts,
+			                 connection = (map mkAssociationEnd 
+					                           (XmlTree.get_many "UML:Association.connection" 
+								                                tree)) 
+                           }
     in 
 	XmlTree.apply_on "UML:Association" f tree
 	handle XmlTree.IllFormed msg => raise IllFormed ("in mkAssociation: "^msg)
@@ -235,8 +245,7 @@ fun mkAssociation tree =
     end
 
 (* find the xmi.idref attribute of an element pointed to by name *)
-fun findXmiIdRef name trees = (getXmiIdref o XmlTree.attributes_of o hd)
-				  (XmlTree.follow name trees)
+fun findXmiIdRef name trees = getXmiIdref (hd (XmlTree.follow name trees))
 
 (* find the type of an OCl sub-expression *)
 fun findExpressionType trees = findXmiIdRef "OCL.Expressions.OclExpression.type" 
@@ -251,7 +260,7 @@ val triv_expr = XMI.LiteralExp {symbol = "true",
 				    expression_type = "bool" }
 
 (* FIX: this is only a dummy implementation *)
-fun mkCollectionLiteralPart x = (getXmiIdref (XmlTree.attributes_of x))
+fun mkCollectionLiteralPart x = (getXmiIdref x)
 
 fun mkOCLExpression tree = 
     let val elem  = XmlTree.tagname_of tree
@@ -274,15 +283,14 @@ fun mkOCLExpression tree =
 	    XMI.CollectionLiteralExp { parts = nil, (* map mkCollectionLiteralPart (XmlTree.follow "OCL.Expressions.CollectionLiteralExp.parts" trees), *)
 				      expression_type = findExpressionType trees }
 	else if elem = "UML15OCL.Expressions.OperationCallExp" then
-	    let val op_src = hd (XmlTree.follow 
-				      "OCL.Expressions.PropertyCallExp.source"
-				      trees)
+	    let val op_src = XmlTree.get_one 
+				             "OCL.Expressions.PropertyCallExp.source" tree
 		val op_ref = 
 		    findXmiIdRef 
 			"OCL.Expressions.OperationCallExp.referredOperation" trees
-		val op_args = XmlTree.follow 
-				  "OCL.Expressions.OperationCallExp.arguments"
-				  trees 
+		val op_args = XmlTree.followM 
+				          "OCL.Expressions.OperationCallExp.arguments"
+				          trees
 	    in XMI.OperationCallExp 
 		   { source            = mkOCLExpression op_src,
 		     arguments         = map mkOCLExpression op_args,
@@ -290,9 +298,8 @@ fun mkOCLExpression tree =
 		     expression_type   = findExpressionType trees }
 	    end
 	else if elem = "UML15OCL.Expressions.OclOperationWithTypeArgExp" then
-	    let val op_src = hd (XmlTree.follow 
-				      "OCL.Expressions.PropertyCallExp.source"
-				      trees)
+	    let val op_src = XmlTree.get_one 
+				             "OCL.Expressions.PropertyCallExp.source" tree
 	    in XMI.OperationWithTypeArgExp
 	       { source = mkOCLExpression op_src,
 		 name = getName atts,
@@ -303,18 +310,16 @@ fun mkOCLExpression tree =
 	    let val att_ref = 
 		    findXmiIdRef 
 			"OCL.Expressions.AttributeCallExp.referredAttribute" trees
-		val att_src = (hd o XmlTree.follow 
-					"OCL.Expressions.PropertyCallExp.source") 
-				  trees
+		    val att_src = XmlTree.get_one 
+                              "OCL.Expressions.PropertyCallExp.source" tree
 	    in XMI.AttributeCallExp 
 		   { source            = mkOCLExpression att_src,
 		     referredAttribute = att_ref,
 		     expression_type   = findExpressionType trees }
 	    end
 	else if elem = "UML15OCL.Expressions.AssociationEndCallExp" then
-	    let val assoc_src = (hd o XmlTree.follow 
-					  "OCL.Expressions.PropertyCallExp.source") 
-				    trees
+	    let val assoc_src = XmlTree.get_one"OCL.Expressions.PropertyCallExp.source" 
+                                           tree
 		val assoc_ref = 
 		    findXmiIdRef 
 			"OCL.Expressions.AssociationEndCallExp.referredAssociationEnd"
@@ -334,32 +339,25 @@ fun mkOCLExpression tree =
 			     expression_type  = findExpressionType trees }
 	    end
 	else if elem = "UML15OCL.Expressions.IfExp" then
-	    let val cond = (hd o XmlTree.follow 
-				     "OCL.Expressions.IfExp.condition") trees
-		val then_exp = (hd o XmlTree.follow
-					 "OCL.Expressions.IfExp.thenExpression") 
-				   trees
-		val else_exp = (hd o XmlTree.follow 
-					 "OCL.Expressions.IfExp.elseExpression")
-				   trees
+	    let val cond = XmlTree.get_one "OCL.Expressions.IfExp.condition" tree
+		val then_exp = XmlTree.get_one "OCL.Expressions.IfExp.thenExpression" tree
+		val else_exp = XmlTree.get_one "OCL.Expressions.IfExp.elseExpression" tree
 	    in XMI.IfExp { condition      = mkOCLExpression cond,
 		       thenExpression = mkOCLExpression then_exp,
 		       elseExpression = mkOCLExpression else_exp,
 		       expression_type = findExpressionType trees }
 	    end
 	else if elem = "UML15OCL.Expressions.LetExp" then 
-	    let val var_decl = (hd o XmlTree.follow 
-					 "OCL.Expressions.LetExp.variable") trees
+	    let val var_decl = XmlTree.get_one "OCL.Expressions.LetExp.variable" tree
 		val var_xmiid    = getXmiId (XmlTree.attributes_of var_decl)
 		val var_name     = getName (XmlTree.attributes_of var_decl)
 		val var_type_ref = findXmiIdRef 
 				       "OCL.Expressions.VariableDeclaration.type" 
 				       (XmlTree.node_children_of var_decl)
-		val in_exp = (hd o XmlTree.follow "OCL.Expressions.LetExp.in") trees
-		val init_exp = 
-		    (hd o XmlTree.follow 
-			      "OCL.Expressions.VariableDeclaration.initExpression") 
-			(XmlTree.node_children_of var_decl)
+		val in_exp = XmlTree.get_one "OCL.Expressions.LetExp.in" tree
+		val init_exp = XmlTree.get_one
+                           "OCL.Expressions.VariableDeclaration.initExpression"
+			               var_decl
 	    in XMI.LetExp 
 		   { variable        = { xmiid            = var_xmiid,
 					 name             = var_name, 
@@ -369,16 +367,14 @@ fun mkOCLExpression tree =
 		     expression_type = findExpressionType trees }
 	    end
 	else if elem = "UML15OCL.Expressions.IterateExp"  then 
-	    let val iterator_src = (hd o XmlTree.follow 
-					     "OCL.Expressions.PropertyCallExp.source") 
-				       trees
-		val iterator_body = (hd o XmlTree.follow 
-					     "OCL.Expressions.LoopExp.body") 
-				       trees
-		val iterators = XmlTree.follow "OCL.Expressions.LoopExp.iterators" 
-					       trees 
-		val iterate_result = (hd o XmlTree.follow "OCL.Expressions.IterateExp.result") 
-						    trees
+	    let val iterator_src = XmlTree.get_one 
+                                   "OCL.Expressions.PropertyCallExp.source"
+				                   tree
+		val iterator_body = XmlTree.get_one "OCL.Expressions.LoopExp.body" tree
+		val iterators = XmlTree.get_many "OCL.Expressions.LoopExp.iterators" 
+					                    tree
+		val iterate_result = XmlTree.get_one "OCL.Expressions.IterateExp.result"
+						                     tree
 	    in 
 		XMI.IterateExp { result = mkVariableDec iterate_result,
 				  iterators = map mkVariableDec iterators,
@@ -387,14 +383,12 @@ fun mkOCLExpression tree =
 				  expression_type = findExpressionType trees }
 	    end
 	else if elem = "UML15OCL.Expressions.IteratorExp" then 
-	    let val iterator_src = (hd o XmlTree.follow 
-					     "OCL.Expressions.PropertyCallExp.source") 
-				       trees
-		val iterator_body = (hd o XmlTree.follow 
-					     "OCL.Expressions.LoopExp.body") 
-				       trees
-		val iterators = XmlTree.follow "OCL.Expressions.LoopExp.iterators" 
-					       trees 
+	    let val iterator_src = XmlTree.get_one 
+					               "OCL.Expressions.PropertyCallExp.source" tree
+		    val iterator_body = XmlTree.get_one
+					                "OCL.Expressions.LoopExp.body" tree
+		    val iterators = XmlTree.get_many "OCL.Expressions.LoopExp.iterators" 
+					                        tree 
 	    in 
 		XMI.IteratorExp { name      = getName atts,
 				  iterators = map mkVariableDec iterators,
@@ -410,9 +404,9 @@ and mkVariableDec vtree =
 	      name  = getName atts,
 	      init = Option.map (mkOCLExpression o hd o XmlTree.node_children_of)
 				(XmlTree.find_some "OCL.Expressions.VariableDeclaration.initExpression" trees),
-	      declaration_type = (getXmiIdref o XmlTree.attributes_of o hd o 
-				  (XmlTree.follow "OCL.Expressions.VariableDeclaration.type")) trees
-	      }
+	      declaration_type = getXmiIdref 
+				                  (XmlTree.get_one "OCL.Expressions.VariableDeclaration.type" vtree)
+	    }
     in XmlTree.apply_on "UML15OCL.Expressions.VariableDeclaration" f vtree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkVariableDec: "^msg)
     end
@@ -426,10 +420,11 @@ fun getAssociations t = (map mkAssociation (XmlTree.filter "UML:Association" t))
 
  
 fun filterConstraints trees = List.filter 
-								  (fn x => (XmlTree.tagname_of o hd o
-											(XmlTree.follow "UML:Constraint.body") o
-											XmlTree.node_children_of) x 
-										   ="UML15OCL.Expressions.ExpressionInOcl") 
+								  (fn x => (XmlTree.tagname_of o 
+											(XmlTree.get_one "UML:Constraint.body")) 
+                                               x 
+										       =
+                                               "UML15OCL.Expressions.ExpressionInOcl") 
 								  (XmlTree.filter "UML:Constraint" trees)
 
 val filterStereotypes   = XmlTree.filter "UML:Stereotype" 
@@ -465,25 +460,26 @@ fun filterClassifiers trees =
 fun mkDependency tree =
     let fun f atts trees =
 	    { xmiid    = getXmiId atts,
-	      client   = ((getXmiIdref o XmlTree.attributes_of o hd) 
-			      (XmlTree.follow "UML:Dependency.client" trees)),
-	      supplier = ((getXmiIdref o XmlTree.attributes_of o hd) 
-			      (XmlTree.follow "UML:Dependency.supplier" trees)),
-	      stereotype = ((getXmiIdref o XmlTree.attributes_of o hd) 
-				(XmlTree.follow "UML:ModelElement.stereotype" trees))}
+	      client   = (getXmiIdref 
+			      (XmlTree.get_one "UML:Dependency.client" tree)),
+	      supplier = (getXmiIdref 
+			      (XmlTree.get_one "UML:Dependency.supplier" tree)),
+	      stereotype = (getXmiIdref 
+				(XmlTree.get_one "UML:ModelElement.stereotype" tree))}
     in XmlTree.apply_on "UML:Abstraction" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkDependency: "^msg) 
+            | _ => raise IllFormed ("Error in mkDependency\n")
     end
 
 fun mkConstraint tree = 
     let fun f atts trees =  
-	let val expr = (hd o (XmlTree.follow 
-				  "OCL.Expressions.ExpressionInOcl.bodyExpression") o
-			(XmlTree.follow "UML15OCL.Expressions.ExpressionInOcl") o 
-			(XmlTree.follow "UML:Constraint.body"))
-			   trees
-	    val st_type = hd (XmlTree.follow "UML:ModelElement.stereotype" trees)
-	    val st_type_ref  =  getXmiIdref (XmlTree.attributes_of st_type)
+	        let val expr = ((XmlTree.get_one 
+				                 "OCL.Expressions.ExpressionInOcl.bodyExpression") o
+(*			                (XmlTree.get_one "UML15OCL.Expressions.ExpressionInOcl") o *)
+			                (XmlTree.get_one "UML:Constraint.body"))
+			                   tree
+	    val st_type = XmlTree.get_one "UML:ModelElement.stereotype" tree
+	    val st_type_ref  =  getXmiIdref st_type
 	in { xmiid = getXmiId atts,
 	     name  = case XmlTree.attvalue_of "name" atts of SOME s => SOME s | _ => NONE,
 	     constraint_type = st_type_ref, 
@@ -500,11 +496,11 @@ fun mkParameter tree =
 			 name    = getName atts,
 			 kind    = getKind atts,
 			 type_id = (getXmiIdref o 
-				    XmlTree.attributes_of o hd o 
-				    (XmlTree.follow "UML:Parameter.type")) 
-				       trees }
+				        (XmlTree.get_one "UML:Parameter.type")) 
+				           tree }
     in XmlTree.apply_on "UML:Parameter" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkParameter: "^msg)
+            | IllFormed msg         => raise IllFormed ("in mkParameter: "^msg)
 	    | _ => raise IllFormed ("Error in mkParameter")
     end
 
@@ -516,11 +512,11 @@ fun mkOperation tree =
 	  isQuery       = getBoolAtt "isQuery" atts,
 	  ownerScope    = getOwnerScopeMaybe atts,
 	  parameter     = (map mkParameter 
-			       (XmlTree.follow "UML:BehavioralFeature.parameter" 
-					       trees)),
-	  constraints   =  map (getXmiIdref o XmlTree.attributes_of)
-			       (XmlTree.follow "UML:ModelElement.constraint" 
-					       trees)
+			               (XmlTree.get_maybe "UML:BehavioralFeature.parameter" 
+					                        tree)),
+	  constraints   =  map getXmiIdref
+			               (XmlTree.get_maybe "UML:ModelElement.constraint" 
+					                        tree)
 			       }
     in XmlTree.apply_on "UML:Operation" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkOperation: "^msg)
@@ -536,7 +532,7 @@ fun mkTaggedValue tree =
 					   (map XmlTree.text_of 
 						(XmlTree.children_of 
 						     (XmlTree.find "UML:TaggedValue.dataValue" trees)))),
-                           tag_type = (getXmiIdref o XmlTree.attributes_of o 
+                           tag_type = (getXmiIdref o
                                       (XmlTree.find "UML:TagDefinition") o
                                       XmlTree.node_children_of o  
                                       (XmlTree.find "UML:TaggedValue.type")) trees
@@ -552,43 +548,47 @@ fun mkAttribute tree =
 	  visibility    = getVisibility atts,
 	  changeability = getChangeabilityMaybe atts,
 	  ordering      = getOrderingMaybe atts, 
-	  initialValue  = Option.map (mkOCLExpression o hd o		       
-				      (XmlTree.follow 
-					   "OCL.Expressions.ExpressionInOcl.bodyExpression") o
-				      (XmlTree.follow "UML15OCL.Expressions.ExpressionInOcl") o 
-				       XmlTree.node_children_of) 
-				     (XmlTree.find_some "UML:Attribute.initialValue" trees)
-	                   handle _ => NONE,
-	  type_id       = (getXmiIdref o XmlTree.attributes_of o hd o 
-			   (XmlTree.follow "UML:StructuralFeature.type")) trees,
-	  multiplicity   = if XmlTree.exists "UML:StructuralFeature.multiplicity" trees 
-			   then (mkMultiplicity o hd o (XmlTree.follow "UML:StructuralFeature.multiplicity")) trees
-			   else [(1,1)]
-			   handle _ => [(1,1)],
+	  initialValue  = Option.map (mkOCLExpression o		       
+				                  (XmlTree.get_one "OCL.Expressions.ExpressionInOcl.bodyExpression"))
+				                 (XmlTree.get_optional "UML:Attribute.initialValue" tree),
+      
+	  type_id       = (getXmiIdref o (XmlTree.get_one "UML:StructuralFeature.type"))
+                          tree,
+	  multiplicity   = Option.getOpt(Option.map 
+                                         mkMultiplicity
+                                         (XmlTree.get_optional 
+                                              "UML:StructuralFeature.multiplicity" 
+                                              tree), 
+                                     [(1,1)]),
 	  targetScope   = getTargetScopeMaybe atts,
 	  ownerScope    = getOwnerScopeMaybe atts,
-	  stereotype    = (map (getXmiIdref o XmlTree.attributes_of) 
-							(XmlTree.follow "UML:ModelElement.stereotype" 
+	  stereotype    = (map getXmiIdref 
+							(XmlTree.followM "UML:ModelElement.stereotype" 
 											trees)),
 	  taggedValue   = (map mkTaggedValue 
-				 (XmlTree.follow "UML:ModelElement.taggedValue" trees)) }
+				           (XmlTree.get_maybe "UML:ModelElement.taggedValue" tree))
+    }
     in XmlTree.apply_on "UML:Attribute" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkAttribute: "^msg)
-	    | _ => raise IllFormed ("Error in mkAttribute")
+            | IllFormed msg => raise IllFormed ("in mkAttribute: "^msg)
+	        (* | _ => raise IllFormed ("Error in mkAttribute")*)
 
     end
 
 fun mkTagDefinition tree =
     let fun f atts trees = { xmiid = getXmiId atts,
-			     name = getName atts,
-			     multiplicity = (mkMultiplicity o hd o 
-					     (XmlTree.follow "UML:TagDefinition.multiplicity")) trees }
+			                 name = getName atts,
+			                 multiplicity = (mkMultiplicity o
+					                         (XmlTree.get_one 
+                                                  "UML:TagDefinition.multiplicity"))
+                                                tree
+                           }
     in XmlTree.apply_on "UML:TagDefinition" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkTagDefinition: "^msg)
     end
 
 fun mkStereotypeR tree = 
-    let fun f atts trees =   getXmiIdref atts
+    let fun f atts trees =   getXmiIdref tree
     in XmlTree.apply_on "UML:Stereotype" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkStereotype: "^msg)
     end 
@@ -654,7 +654,7 @@ fun mkTransition tree =
 									 (XmlTree.find "UML:Guard") o
 									 XmlTree.node_children_of))  o
 						(XmlTree.find_some "UML:Transition.guard")
-		val getTrigger= (Option.map (getXmiIdref o XmlTree.attributes_of o
+		val getTrigger= (Option.map (getXmiIdref o
 									 hd o XmlTree.node_children_of))  o
 						(XmlTree.find_some "UML:Transition.trigger")
         val getTagVal = List.concat o 
@@ -666,11 +666,11 @@ fun mkTransition tree =
         fun f atts trees = XMI.mk_Transition  
                            {isSpecification = getBoolAtt "isSpecification" atts,
                             xmiid  = getXmiId atts,
-                            source = (getXmiIdref o XmlTree.attributes_of o 
+                            source = (getXmiIdref o 
                                       hd o XmlTree.node_children_of o 
                                       (XmlTree.find "UML:Transition.source"))
                                      (trees),
-                            target = (getXmiIdref o XmlTree.attributes_of o 
+                            target = (getXmiIdref o 
                                       hd o XmlTree.node_children_of o 
                                       (XmlTree.find "UML:Transition.target"))
                                      (trees),
@@ -691,7 +691,7 @@ fun mkState tree =
         val xmiid        = getXmiId atts
         val name         = Option.getOpt(XmlTree.attvalue_of "name" atts,"")
         val isSpecification =  getBoolAtt "isSpecification" atts
-        val getTid       = getXmiIdref o XmlTree.attributes_of
+        val getTid       = getXmiIdref
         fun getTrans str = List.concat o 
                            (map ((map getTid) o XmlTree.node_children_of)) o
                            (XmlTree.filter str)
@@ -808,7 +808,7 @@ and mkStateMachine tree =
     let fun f atts trees = XMI.mk_StateMachine 
                            {isSpecification = getBoolAtt "isSpecification" atts,
                             xmiid        = getXmiId atts, 
-                            contextxmiid = (getXmiIdref o XmlTree.attributes_of o hd o 
+                            contextxmiid = (getXmiIdref o hd o 
                                             XmlTree.node_children_of o 
                                             (XmlTree.find "UML:StateMachine.context"))
                                            (trees), 
@@ -832,7 +832,7 @@ fun mkActivityGraph tree =
     let fun f atts trees = XMI.mk_ActivityGraph 
                            {isSpecification = getBoolAtt "isSpecification" atts,
                             xmiid        = getXmiId atts,
-                            contextxmiid = (getXmiIdref o XmlTree.attributes_of o hd o 
+                            contextxmiid = (getXmiIdref o hd o 
                                             XmlTree.node_children_of o 
                                             (XmlTree.find "UML:StateMachine.context"))
                                            (trees), 
@@ -850,48 +850,48 @@ fun mkActivityGraph tree =
 	    
 fun mkClass atts trees 
   = XMI.Class { xmiid           = getXmiId atts,
-	    name            = getName atts,
-	    isActive        = getBoolAtt "isActive" atts,
-	    visibility      = getVisibility atts,
-	    isLeaf          = getBoolAtt "isLeaf" atts,
-	    generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
-				  (XmlTree.follow_all 
-				       "UML:GeneralizableElement.generalization" 
-				       trees)),
+	            name            = getName atts,
+	            isActive        = getBoolAtt "isActive" atts,
+	            visibility      = getVisibility atts,
+	            isLeaf          = getBoolAtt "isLeaf" atts,
+	            generalizations = (map getXmiIdref
+				                       (XmlTree.followM
+				                            "UML:GeneralizableElement.generalization" 
+				                            trees)),
 	    attributes      = (map mkAttribute 
 				   ((XmlTree.filter "UML:Attribute") 
-					(XmlTree.follow "UML:Classifier.feature"
+					(XmlTree.followM "UML:Classifier.feature"
 							trees))),
 	    operations      = (map mkOperation 
 				   ((XmlTree.filter "UML:Operation") 
-					(XmlTree.follow "UML:Classifier.feature"
+					(XmlTree.followM "UML:Classifier.feature"
 							trees))),
-	    invariant       = (map (getXmiIdref o XmlTree.attributes_of)
-				   (XmlTree.follow "UML:ModelElement.constraint" 
+	    invariant       = (map getXmiIdref
+				   (XmlTree.followM "UML:ModelElement.constraint" 
 						   trees)),
-	    stereotype      = (map (getXmiIdref o XmlTree.attributes_of) 
-				   (XmlTree.follow "UML:ModelElement.stereotype" 
+	    stereotype      = (map getXmiIdref 
+				   (XmlTree.followM "UML:ModelElement.stereotype" 
 						   trees)),
 	    taggedValue   = (map mkTaggedValue 
-				 (XmlTree.follow "UML:ModelElement.taggedValue" 
+				 (XmlTree.followM "UML:ModelElement.taggedValue" 
 						 trees)),
-	    clientDependency = (map (getXmiIdref o XmlTree.attributes_of)
-				    (XmlTree.follow "UML:ModelElement.clientDependency"
+	    clientDependency = (map getXmiIdref
+				    (XmlTree.followM "UML:ModelElement.clientDependency"
 						    trees)),
-	    supplierDependency = (map (getXmiIdref o XmlTree.attributes_of)
-				      (XmlTree.follow "UML:ModelElement.supplierDependency"
+	    supplierDependency = (map getXmiIdref
+				      (XmlTree.followM "UML:ModelElement.supplierDependency"
 						      trees)),
 	    classifierInState = (map (getXmiId o XmlTree.attributes_of)
 				     (XmlTree.filter "UML:ClassifierInState"
-						     (XmlTree.follow "UML:Namespace.ownedElement"
+						     (XmlTree.followM "UML:Namespace.ownedElement"
 								     trees))),
 	    state_machines = (map mkStateMachine (XmlTree.filter "UML:StateMachine"
-				   (XmlTree.follow "UML:Namespace.ownedElement" trees))),
+				   (XmlTree.followM "UML:Namespace.ownedElement" trees))),
 	    activity_graphs = (map mkActivityGraph (XmlTree.filter "UML:ActivityGraph"
-				   (XmlTree.follow "UML:Namespace.ownedElement" trees))) }
+				   (XmlTree.followM "UML:Namespace.ownedElement" trees))) }
     handle IllFormed msg => raise IllFormed ("Error in mkClass "^((getName atts)
 								  ^": "^msg))
-	 | _ => raise IllFormed ("Error in mkClass "^(getName atts))
+(*  | _ => raise IllFormed ("Error in mkClass "^(getName atts)) *)
 
 fun mkAssociationClass atts trees 
   = XMI.AssociationClass { xmiid           = getXmiId atts,
@@ -899,32 +899,32 @@ fun mkAssociationClass atts trees
 			   isActive        = getBoolAtt "isActive" atts,
 			   visibility      = getVisibility atts,
 			   isLeaf          = getBoolAtt "isLeaf" atts,
-	    generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
-				   (XmlTree.follow_all 
+	    generalizations = (map getXmiIdref
+				   (XmlTree.followM 
 					"UML:GeneralizableElement.generalization" 
 					trees)),
 	    attributes      = (map mkAttribute 
 				   ((XmlTree.filter "UML:Attribute") 
-					(XmlTree.follow "UML:Classifier.feature"
+					(XmlTree.followM "UML:Classifier.feature"
 							trees))),
 	    operations      = (map mkOperation 
 				   ((XmlTree.filter "UML:Operation") 
-					(XmlTree.follow "UML:Classifier.feature"
+					(XmlTree.followM "UML:Classifier.feature"
 							trees))),
-	    invariant       = (map (getXmiIdref o XmlTree.attributes_of)
-				   (XmlTree.follow "UML:ModelElement.constraint" 
+	    invariant       = (map getXmiIdref
+				   (XmlTree.followM "UML:ModelElement.constraint" 
 						   trees)),
-	    stereotype      = (map (getXmiIdref o XmlTree.attributes_of) 
-				   (XmlTree.follow "UML:ModelElement.stereotype" 
+	    stereotype      = (map getXmiIdref 
+				   (XmlTree.followM "UML:ModelElement.stereotype" 
 						   trees)),
 	    taggedValue   = (map mkTaggedValue 
-				 (XmlTree.follow "UML:ModelElement.taggedValue" 
+				 (XmlTree.followM "UML:ModelElement.taggedValue" 
 						 trees)),
-	    clientDependency = (map (getXmiIdref o XmlTree.attributes_of)
-				    (XmlTree.follow "UML:ModelElement.clientDependency"
+	    clientDependency = (map getXmiIdref
+				    (XmlTree.followM "UML:ModelElement.clientDependency"
 						    trees)),
-	    supplierDependency = (map (getXmiIdref o XmlTree.attributes_of)
-				      (XmlTree.follow "UML:ModelElement.supplierDependency"
+	    supplierDependency = (map getXmiIdref
+				      (XmlTree.followM "UML:ModelElement.supplierDependency"
 						      trees)),
 	    connection = (map mkAssociationEnd (XmlTree.follow "UML:Association.connection" 
 							       trees))}
@@ -936,14 +936,14 @@ fun mkPrimitive atts trees
 		    name       = getName atts,
 		    operations = (map mkOperation 
 				      ((XmlTree.filter "UML:Operation") 
-					   (XmlTree.follow "UML:Classifier.feature"
+					   (XmlTree.followM "UML:Classifier.feature"
 							   trees))),
-		    generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
-					   (XmlTree.follow_all 
+		    generalizations = (map getXmiIdref
+					   (XmlTree.followM
 						"UML:GeneralizableElement.generalization" 
 						trees)),
-		    invariant = (map (getXmiIdref o XmlTree.attributes_of)
-				     (XmlTree.follow "UML:ModelElement.constraint" 
+		    invariant = (map getXmiIdref
+				     (XmlTree.followM "UML:ModelElement.constraint" 
 						     trees))
 				     }
     handle XmlTree.IllFormed msg => raise IllFormed ("in mkPrimitive: "^msg)
@@ -953,20 +953,20 @@ fun mkInterface atts trees
 		    name       = getName atts,
 		    operations = (map mkOperation 
 				      ((XmlTree.filter "UML:Operation") 
-					   (XmlTree.follow "UML:Classifier.feature"
+					   (XmlTree.followM "UML:Classifier.feature"
 							   trees))),
-		    generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
-					   (XmlTree.follow_all 
+		    generalizations = (map getXmiIdref
+					   (XmlTree.followM
 						"UML:GeneralizableElement.generalization" 
 						trees)),
-		    invariant = (map (getXmiIdref o XmlTree.attributes_of)
-				     (XmlTree.follow "UML:ModelElement.constraint" 
+		    invariant = (map getXmiIdref
+				     (XmlTree.followM "UML:ModelElement.constraint" 
 						     trees)),
-		    clientDependency = (map (getXmiIdref o XmlTree.attributes_of)
-					    (XmlTree.follow "UML:ModelElement.clientDependency"
+		    clientDependency = (map getXmiIdref
+					    (XmlTree.followM "UML:ModelElement.clientDependency"
 							    trees)),
-		    supplierDependency = (map (getXmiIdref o XmlTree.attributes_of)
-					      (XmlTree.follow "UML:ModelElement.supplierDependency"
+		    supplierDependency = (map getXmiIdref
+					      (XmlTree.followM "UML:ModelElement.supplierDependency"
 							      trees))
 		    }
     handle XmlTree.IllFormed msg => raise IllFormed ("in mkPrimitive: "^msg)
@@ -976,15 +976,15 @@ fun mkEnumeration atts trees
 		      name       = getName atts,
 		      operations = (map mkOperation 
 					((XmlTree.filter "UML:Operation") 
-					     (XmlTree.follow "UML:Classifier.feature"
+					     (XmlTree.followM "UML:Classifier.feature"
 							     trees))),
-		      generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
-					     (XmlTree.follow_all 
+		      generalizations = (map getXmiIdref
+					     (XmlTree.followM 
 						  "UML:GeneralizableElement.generalization" 
 						  trees)),
 		      literals = nil, (* FIX *)
-		      invariant = (map (getXmiIdref o XmlTree.attributes_of)
-				       (XmlTree.follow "UML:ModelElement.constraint" 
+		      invariant = (map getXmiIdref
+				       (XmlTree.followM "UML:ModelElement.constraint" 
 						       trees)
 				       )}
 		      handle XmlTree.IllFormed msg => raise IllFormed ("in mkEnumeration: "^msg)
@@ -999,16 +999,16 @@ fun mkGenericCollection atts trees =
       name       = getName atts,
       operations = (map mkOperation 
 			((XmlTree.filter "UML:Operation") 
-			     (XmlTree.follow "UML:Classifier.feature"
+			     (XmlTree.followM "UML:Classifier.feature"
 					     trees))),
-      generalizations = (map (getXmiIdref o XmlTree.attributes_of o hd)
-			     (XmlTree.follow_all 
+      generalizations = (map getXmiIdref
+			     (XmlTree.followM 
 				  "UML:GeneralizableElement.generalization" 
 				  trees)),
-      elementtype = ((getXmiIdref o XmlTree.attributes_of o hd) 
-			 (XmlTree.follow 
-			      "OCL.Types.CollectionType.elementType" 
-			      trees))
+      elementtype = ((getXmiIdref o hd) 
+			             (XmlTree.follow 
+			                  "OCL.Types.CollectionType.elementType" 
+			                  trees))
       }
     handle XmlTree.IllFormed msg => raise IllFormed ("in mkGenericCollection: "^msg)
 
@@ -1055,10 +1055,10 @@ fun mkClassifier tree =
 fun mkGeneralization tree = 
     let fun f atts trees =
 	{ xmiid     = getXmiId atts,
-	  child_id  = (getXmiIdref o XmlTree.attributes_of o hd o
-		       (XmlTree.follow "UML:Generalization.child")) trees, 
-	  parent_id = (getXmiIdref o XmlTree.attributes_of o hd o 
-		       (XmlTree.follow "UML:Generalization.parent")) trees }
+	  child_id  = (getXmiIdref o 
+		       (XmlTree.get_one "UML:Generalization.child")) tree, 
+	  parent_id = (getXmiIdref o 
+		           (XmlTree.get_one "UML:Generalization.parent")) tree }
 	handle Empty => raise IllFormed ("Empty in mkGeneralization: "^getXmiId atts)
     in XmlTree.apply_on "UML:Generalization" f tree
        handle XmlTree.IllFormed msg => raise IllFormed ("in mkGeneralization: "^msg)
@@ -1069,10 +1069,10 @@ fun mkGeneralization tree =
 fun mkCallEvent atts trees =
     XMI.CallEvent {xmiid = getXmiId atts,
 		   name = getMaybeEmptyName atts,
-		   operation = (getXmiIdref o XmlTree.attributes_of o hd o 
+		   operation = (getXmiIdref o hd o 
 		       (XmlTree.follow "UML:CallEvent.operation")) trees,
 		   parameter = (map mkParameter 
-			       (XmlTree.follow "UML:Event.parameter" 
+			       (XmlTree.followM "UML:Event.parameter" 
 					       trees))
 		   }
 
@@ -1096,43 +1096,42 @@ fun mkEvent tree =
 
 fun mkPackage tree = 
     (if XmlTree.tagname_of tree = "UML:Model" orelse
-	XmlTree.tagname_of tree = "UML:Package" then 
-	 let val direct_childs = XmlTree.node_children_of tree
-	     val trees = XmlTree.follow "UML:Namespace.ownedElement" 
-				      (XmlTree.node_children_of tree)
-	     val atts = XmlTree.attributes_of tree in
+	    XmlTree.tagname_of tree = "UML:Package" then 
+	     let val direct_childs = XmlTree.node_children_of tree
+	         val trees = XmlTree.get "UML:Namespace.ownedElement" tree
+	         val atts = XmlTree.attributes_of tree in
 	         XMI.Package { xmiid           = getXmiId atts, 
-			       name            = getName atts,
-			       visibility      = getVisibility atts,
-			       packages        = (map mkPackage 
+			               name            = getName atts,
+			               visibility      = getVisibility atts,
+			               packages        = (map mkPackage 
 						      (filterPackages trees)), 
-			       classifiers     = (map mkClassifier
-						      (filterClassifiers trees)),
-			       associations    = getAssociations trees, 
-			       generalizations = (map mkGeneralization
-						      (XmlTree.filter "UML:Generalization"
-								    trees)),
-			       constraints     = (map mkConstraint 
-						     (filterConstraints trees)),
-			       stereotypes     = (map mkStereotype
+			               classifiers     = (map mkClassifier
+						                          (filterClassifiers trees)),
+			               associations    = getAssociations trees, 
+			               generalizations = (map mkGeneralization
+						                          (XmlTree.filter "UML:Generalization"
+								                                  trees)),
+			               constraints     = (map mkConstraint 
+						                          (filterConstraints trees)),
+			               stereotypes     = (map mkStereotype
 						      (filterStereotypes trees)),
-			       tag_definitions = (map mkTagDefinition
+			               tag_definitions = (map mkTagDefinition
 						      (filterTagDefinitions trees)),
-				   state_machines  = nil,
-				   activity_graphs = map mkActivityGraph(filterActivityGraphs trees),
-			       dependencies    = (map mkDependency (filterDependencies trees)),
-			       stereotype = (map (getXmiIdref o XmlTree.attributes_of) 
-				   (XmlTree.follow "UML:ModelElement.stereotype" 
-						   direct_childs)), 
-			       taggedValue = (map mkTaggedValue 
-						  (XmlTree.follow "UML:ModelElement.taggedValue" 
-								  direct_childs)),
-			       events =  map mkEvent (filterEvents trees)
-                              }
-(*		 handle Empty => raise IllFormed ("Error Empty in mkPackage "^(getName atts))*)
-	 end
+				           state_machines  = nil,
+				           activity_graphs = map mkActivityGraph(filterActivityGraphs trees),
+			               dependencies    = (map mkDependency (filterDependencies trees)),
+			               stereotype = (map getXmiIdref 
+				                             (XmlTree.get "UML:ModelElement.stereotype" 
+						                                    tree)), 
+			               taggedValue = (map mkTaggedValue 
+						                      (XmlTree.get "UML:ModelElement.taggedValue" 
+								                              tree)),
+			               events =  map mkEvent (filterEvents trees)
+                         }
+         (*		 handle Empty => raise IllFormed ("Error Empty in mkPackage "^(getName atts))*)
+	     end
      else raise IllFormed "did not find a UML:Model or UML: Package")
-    handle XmlTree.IllFormed msg => raise IllFormed ("in mkPackage: "^msg)
+(*    handle XmlTree.IllFormed msg => raise IllFormed ("in mkPackage: "^msg) *)
 				 
 
 fun mkXmiContent tree =
@@ -1145,7 +1144,7 @@ fun mkXmiContent tree =
               activity_graphs = map mkActivityGraph(filterActivityGraphs trees),
               state_machines  = map mkStateMachine (filterStateMachines trees)}
     in XmlTree.apply_on "XMI.content" f tree
-       handle XmlTree.IllFormed msg => raise IllFormed ("in mkXmiContent: "^msg)
+(*       handle XmlTree.IllFormed msg => raise IllFormed ("in mkXmiContent: "^msg)*)
     end
 	
 

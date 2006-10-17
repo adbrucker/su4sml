@@ -275,7 +275,7 @@ fun transform_state t (XMI.CompositeState {xmiid,outgoing,incoming,subvertex,
 		              outgoing = outgoing,
 		              incoming = incoming,
 		              kind = kind }
-  | transform_state t _ = library.error "in transform_state: Subactivity states, object flow states and sync states are not supported."
+  | transform_state t _ = library.error "in transform_state: Subactivity states, object flow states and sync states are not supported." 
 (* a primitive hack: we take the body of the guard g as the name of an *)
 (* operation to be called in order to check whether the guard is true  *)
 fun transform_guard t (XMI.mk_Guard g) =
@@ -451,7 +451,7 @@ fun transformXMI ({classifiers,constraints,packages,
     in 
 		insert_model           xmiid_table model; (* fill xmi.id table   *)
 		transform_associations xmiid_table model; (* handle associations *)
-		map Rep.normalize (transform_package xmiid_table model) (* transform classes   *)
+		transform_package xmiid_table model (* transform classes   *)
     end
 	handle Empty => raise Option
 
@@ -460,13 +460,16 @@ fun transformXMI ({classifiers,constraints,packages,
  * read and transform a .xmi file.
  * @return a list of rep classifiers, or nil in case of problems
  *) 
-fun readXMI f = (transformXMI o ParseXMI.readFile) f
-    handle ParseXMI.IllFormed msg => (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^f^":\n"^msg^"\n"); 
-				      nil)
-	 | Option => (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^f^"\n"); 
-				      nil)
-	 | IllFormed msg => (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^f^": "^msg^"\n"); 
-				      nil)
+fun readXMI f = map Rep.normalize ((transformXMI o ParseXMI.readFile) f)
+    handle ParseXMI.IllFormed msg => 
+           (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^
+                   f^":\n"^msg^"\n"); nil)
+	     | Option => 
+           (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^
+                   f^"\n"); nil)
+	     | IllFormed msg => 
+           (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^
+                   f^": "^msg^"\n"); nil)
 end
 
 
