@@ -1,7 +1,7 @@
 (*****************************************************************************
  *          su4sml - a SecureUML repository for SML              
  *                                                                            
- * xmi_parser.sml - an xmi-parser for the import interface for su4sml
+ * rep_parser.sml - an xmi-parser for the import interface for su4sml
  * Copyright (C) 2005  Achim D. Brucker <brucker@inf.ethz.ch>
  *                     Jürgen Doser <doserj@inf.ethz.ch>
  *                                                                            
@@ -23,10 +23,10 @@
  ******************************************************************************)
 
 
-structure Xmi2Rep : 
+structure RepParser : 
 sig
     val transformXMI : XMI.XmiContent -> Rep.Classifier list
-    val readXMI      : string -> Rep.Classifier list
+    val readFile      : string -> Rep.Classifier list
     (* generic exception if something is wrong *)
     exception IllFormed of string
 end  =
@@ -168,7 +168,7 @@ fun transform_constraint t ({xmiid,name,body,...}:XMI.Constraint) =
     		(n_name,transform_expression t body)
 		handle NotYetImplemented => (print "Warning: in Xmi2Mdr.transform_constraint: Something is not yet implemented.\n";(NONE, triv_expr))
 		     | IllFormed msg => (print ("Warning: in Xmi2Mdr.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
-		     | ParseXMI.IllFormed msg => (print ("Warning: in Xmi2Mdr.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
+		     | XmiParser.IllFormed msg => (print ("Warning: in Xmi2Mdr.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
 	end
 
 fun transform_bodyconstraint result_type t ({xmiid,name,body,...}:XMI.Constraint) = 
@@ -183,7 +183,7 @@ fun transform_bodyconstraint result_type t ({xmiid,name,body,...}:XMI.Constraint
     end
 	handle NotYetImplemented => (print "Warning: in Xmi2Mdr.transform_constraint: Something is not yet implemented.\n";(NONE, triv_expr))
 	     | IllFormed msg => (print ("Warning: in Xmi2Mdr.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
-	     | ParseXMI.IllFormed msg => (print ("Warning: in Xmi2Mdr.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
+	     | XmiParser.IllFormed msg => (print ("Warning: in Xmi2Mdr.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
 
 fun transform_parameter t {xmiid,name,kind,type_id} =
     (name, find_classifier_type t type_id)
@@ -460,8 +460,8 @@ fun transformXMI ({classifiers,constraints,packages,
  * read and transform a .xmi file.
  * @return a list of rep classifiers, or nil in case of problems
  *) 
-fun readXMI f = map Rep.normalize ((transformXMI o ParseXMI.readFile) f)
-    handle ParseXMI.IllFormed msg => 
+fun readFile f = map Rep.normalize ((transformXMI o XmiParser.readFile) f)
+    handle XmiParser.IllFormed msg => 
            (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^
                    f^":\n"^msg^"\n"); nil)
 	     | Option => 

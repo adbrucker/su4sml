@@ -51,7 +51,7 @@ structure Security = Security
 type Model = Rep_Core.Classifier list * Security.Configuration
 	     
 
-val readXMI = Security.parse o Xmi2Rep.readXMI
+val readXMI = Security.parse o RepParser.readFile
 end
 
 

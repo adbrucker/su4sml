@@ -25,7 +25,7 @@
 structure library =
 struct
 infix |>
-(* fun (x |> f) = f x;*)
+fun (x |> f) = f x;
 
 
 fun filter (pred: 'a->bool) : 'a list -> 'a list =

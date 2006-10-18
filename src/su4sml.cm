@@ -18,18 +18,22 @@ Group is
     rep_secure.sml
     ocl_library.sml
     rep.sml
+    rep_parser.sml
     xmi_ocl.sml 
     xmi_core.sml 
     xmi_datatypes.sml
     xmi_extension_mechanisms.sml
     xmi_state_machines.sml 
     xmi_activity_graphs.sml 
-    xmi.sml 
+    xmi.sml
+    xmi_parser.sml
+    xmltree.sml
+    xmltree_hooks.sml
+    xmltree_helper.sml
     xmltree_parser.sml
+    xmltree_writer.sml
     xmi_idtable.sml
     ocl2string.sml
-    xml2xmi.sml 
-    xmi2rep.sml  
     codegen/compiler/compiler_ext.sig
     codegen/compiler/smlnj.sml	
     codegen/gcg_library.sml
