@@ -261,8 +261,16 @@ fun mkOCLExpression (tree as Node(("UML15OCL.Expressions.BooleanLiteralExp",atts
           }
   | mkOCLExpression (tree as Node(("UML15OCL.Expressions.OperationCallExp",atts),_))
     = XMI.OperationCallExp 
-		  { source    = tree |> get_one "OCL.Expressions.PropertyCallExp.source"
-                             |> mkOCLExpression,
+		  { source    = (tree |> get_one "OCL.Expressions.PropertyCallExp.source"
+                              |> mkOCLExpression)
+            (* This hack is necessary to support TYPE::allInstances() as parsed *)
+            (* by dresden-ocl. *)
+            handle IllFormed msg => 
+                   XMI.LiteralExp
+                           { symbol = "",
+                             expression_type = tree |> get_one "OCL.Expressions.FeatureCallExp.srcType"
+                                                    |> xmiidref
+                           },
 		    arguments = tree |> get "OCL.Expressions.OperationCallExp.arguments"
                              |> map mkOCLExpression,
 		    referredOperation = tree |> xmiidref_to "OCL.Expressions.OperationCallExp.referredOperation",
