@@ -47,8 +47,10 @@ structure XmlTreeHelper : sig
                                                  
     (*    val apply_on    : string -> (Attribute list -> 'a) -> XmlTree.Tree -> 'a*)
 end =
-struct
+struct 
+open library
 open XmlTree
+infix 1 |>
 fun filter string trees = List.filter (fn x => string = tagname x) 
 				      trees
 
@@ -57,11 +59,26 @@ fun filter_children string tree = filter string (node_children tree)
 fun find_some string trees = (List.find (fn x => string = tagname x) trees)
 
 fun find string trees = valOf (List.find (fn x => string = tagname x) trees) 
-    handle Option => raise IllFormed ("in XmlTree.find: did not find element "
+    handle Option => raise IllFormed ("in XmlTree.find: no element "
                                       ^string)
 
+
+fun some_id tree = let val atts = attributes tree 
+                   in
+                       if tree |> has_attribute "xmi.id" then 
+                           " (xmi.id = "^
+                           (atts |> value_of "xmi.id")^
+                           ")"
+                       else if  tree |> has_attribute "xmi.idref" then 
+                           " (xmi.idref = "^
+                           (atts |> value_of "xmi.idref")^
+                           ")"
+                       else ""
+                   end
+
 fun find_child string tree = find string (node_children tree)
-    handle IllFormed msg => raise IllFormed (msg^" on node "^(tagname tree))
+    handle IllFormed msg => raise IllFormed (msg^" inside node "^
+                                             (tagname tree)^(some_id tree)^"\n")
 			   
 fun dfs string tree = if tagname tree = string 
 		      then SOME tree
@@ -79,7 +96,7 @@ fun is (tree,string) = string = tagname tree
 infix 2 is
 fun assert string tree  = if tree is string then tree
                           else raise IllFormed ("expected "^string^" but found "^
-                                                (tagname tree)^"\n")
+                                                (tagname tree)^(some_id tree)^"\n")
 
 (* navigate to association ends with multiplicity 1..* *)
 fun get_many string tree = skip string tree

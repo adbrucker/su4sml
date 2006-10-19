@@ -37,6 +37,7 @@ structure XmlTree : sig
     val text_children     : Tree -> Tree list
     val optional_value_of : string -> Attribute list -> string option
     val value_of          : string -> Attribute list -> string
+    val has_attribute     : string -> Tree -> bool         
     exception IllFormed of string
 end = struct 
 open library
@@ -77,6 +78,10 @@ fun tagname    (Node ((elem,atts),trees)) = elem
   | tagname    (Text _) = ""
 
 fun optional_value_of string atts = Option.map #2 (List.find (fn (x,_) => x = string) atts)
+
+
+fun has_attribute string tree = Option.isSome (optional_value_of string (attributes tree))
+
 
 fun value_of string atts = valOf (optional_value_of string atts)
     handle Option => raise IllFormed ("in value_of: did not find attribute "^string)
