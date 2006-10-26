@@ -168,7 +168,8 @@ fun mkPartialOrder xs = ListPair.zip (xs,xs)
 fun parse (cs:Rep_Core.Classifier list) = 
 	(List.filter (classifier_has_no_stereotype ["secuml.permission",
                                                 "secuml.role",
-                                                "secuml.subject"]) 
+                                                "secuml.subject",
+                                                "secuml.actiontype"]) 
                  cs,
 	 { config_type = "SecureUML",
 	   permissions = map (mkPermission cs) (filter_permission cs),

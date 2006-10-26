@@ -76,7 +76,6 @@ use "rep.sml";
 
 
 
-
 (* support functions *)
 use "ocl2string.sml";
 
@@ -99,6 +98,7 @@ use "mds.sig";
 use "component_uml.sml";
 use "secure_uml.sml";
 use "rep_secure.sml";
+use "rep_su2holocl.sml";
 
 (* ******************************************************** *)
 (* codegen-module, developed by Raphael Eidenbenz           *)

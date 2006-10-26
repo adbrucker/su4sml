@@ -19,6 +19,7 @@ Group is
     ocl_library.sml
     rep.sml
     rep_parser.sml
+    rep_su2holocl.sml
     xmi_ocl.sml 
     xmi_core.sml 
     xmi_datatypes.sml
