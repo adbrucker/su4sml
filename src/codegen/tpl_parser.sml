@@ -65,8 +65,8 @@ datatype TemplateTree =   RootNode of TemplateTree list
 			
 
 
-(**
- *  replaceSafely (s,v,x) replaces every v in s with x or if v is escaped removes "\" 
+(** 
+ *  replaceSafely (s,v,x) replaces every v in s with x or if v is escaped removes "\"  
  *)
 fun replaceSafely ("",_,_) = ""
   | replaceSafely (s,v,x) = let val v_size = size v and 
@@ -179,7 +179,8 @@ fun buildTree (SOME line) = let fun getNode ("text",c) 	  = (TextLeaf(c))::(buil
   | buildTree NONE  = []
 
 
-fun codegen_env _ = getOpt(OS.Process.getEnv "CODEGEN_HOME",".")
+fun codegen_home _ = getOpt(OS.Process.getEnv "CODEGEN_HOME",
+                            library.su4sml_home()^"src/codegen")
 			
 (** calls the external cpp ( C PreProcessor).
  * writes merged template to a file with extension .tmp instead of .tpl
@@ -188,7 +189,7 @@ fun codegen_env _ = getOpt(OS.Process.getEnv "CODEGEN_HOME",".")
 fun call_cpp file = 
 	let (*val targetFile = String.substring (file,0,size file -4) ^".tmp";*)
 		val targetFile = OS.FileSys.tmpName () 
-		val _ = OS.Process.system ("cpp "^codegen_env()^"/"^file^" "^targetFile^" -P -C")
+		val _ = OS.Process.system ("cpp "^codegen_home()^"/"^file^" "^targetFile^" -P -C")
 	in
 		targetFile
 	end

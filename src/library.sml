@@ -28,6 +28,17 @@ infix |>
 fun (x |> f) = f x;
 
 
+(* HOLOCL_HOME resp. SU4SML_HOME should point to the top-level directory *)
+(* of the corresponding library.  The semantics of UML2CDL_HOME should   *)
+(* probably be fixed                                                     *)
+fun su4sml_home () = case OS.Process.getEnv "HOLOCL_HOME" of
+			             SOME p => p^"/lib/su4sml/src"
+			           | NONE => (case OS.Process.getEnv "SU4SML_HOME" of
+					                  SOME p => p^"/src"
+					                | NONE => getOpt(OS.Process.getEnv "UML2CDL_HOME",".")
+                                 )
+
+
 fun filter (pred: 'a->bool) : 'a list -> 'a list =
     let fun filt [] = []
           | filt (x :: xs) = if pred x then x :: filt xs else filt xs
