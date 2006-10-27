@@ -362,7 +362,7 @@ structure UniRanges =
       val nmsRange = List.concat 
 	 [[(0wx3A,0wx3A),(0wx5F,0wx5F)](* :_ *),
 	(* HACK: added to be able to parse ArgoUML xmi.id's *)
-	[(0wx2E,0wx2E)], (* . *)
+	[(0wx2D,0wx2D),(0wx2E,0wx2E)], (* -. *)
 	  baseRange,
 	  ideoRange]
 	
