@@ -38,6 +38,7 @@ structure XmlTreeHelper : sig
     val dfs         : string -> XmlTree.Tree -> XmlTree.Tree option
     val exists      : string -> XmlTree.Tree list -> bool
     val has_child   : string -> XmlTree.Tree -> bool
+    val value_of    : string -> XmlTree.Attribute list -> string 
     (*     val follow      : string -> XmlTree.Tree list -> XmlTree.Tree list *)
     (*     val followM     : string -> XmlTree.Tree list -> XmlTree.Tree list  *)
     (* val skipM       : string -> XmlTree.Tree -> XmlTree.Tree list *)
@@ -63,19 +64,25 @@ fun find string trees = valOf (List.find (fn x => string = tagname x) trees)
                                       ^string)
 
 
-fun some_id tree = let val atts = attributes tree 
-                   in
-                       if tree |> has_attribute "xmi.id" then 
-                           " (xmi.id = "^
-                           (atts |> value_of "xmi.id")^
-                           ")"
-                       else if  tree |> has_attribute "xmi.idref" then 
-                           " (xmi.idref = "^
-                           (atts |> value_of "xmi.idref")^
-                           ")"
-                       else ""
-                   end
+fun some_id' atts = let val xmiid = atts |> optional_value_of "xmi.id" 
+                        val xmiidref = atts |> optional_value_of "xmiidref" 
+                    in 
+                        if Option.isSome xmiid then 
+                            " (xmi.id = "^
+                            (Option.valOf xmiid)^
+                            ")"
+                        else if Option.isSome xmiidref then 
+                            " (xmi.idref = "^
+                            (Option.valOf xmiidref)^
+                            ")"
+                        else ""
+                    end
 
+fun some_id tree = some_id' (attributes tree)
+
+fun value_of string atts = XmlTree.value_of string atts
+    handle IllFormed msg => raise IllFormed (msg^(some_id' atts))
+ 
 fun find_child string tree = find string (node_children tree)
     handle IllFormed msg => raise IllFormed (msg^" inside node "^
                                              (tagname tree)^(some_id tree)^"\n")
