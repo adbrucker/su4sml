@@ -321,7 +321,7 @@ fun mkOCLExpression (tree as Node(("UML15OCL.Expressions.BooleanLiteralExp",atts
 	= XMI.LetExp 
 		  { variable =  let val vard = tree |> get_one 
                                            "OCL.Expressions.LetExp.variable"
-                            val atts = tree |> attributes
+                            val atts = vard |> attributes
                         in 
                             { xmiid            = atts |> xmiid,
 					          name             = atts |> name, 
