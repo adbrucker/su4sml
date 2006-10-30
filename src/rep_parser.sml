@@ -150,6 +150,18 @@ fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) =
 			      find_classifier_type t expression_type
 			      )
     end
+  | transform_expression t (XMI.LetExp {variable, inExpression, expression_type}) = 
+    let val _ = insert_variable_dec t variable
+    in 
+        Rep_OclTerm.Let (#name variable, 
+                         find_classifier_type t (#declaration_type variable),
+                         transform_expression t (Option.valOf (#init variable)),
+                         find_classifier_type t (XMI.expression_type_of 
+                                                     (Option.valOf (#init variable))),
+                         transform_expression t inExpression,
+                         find_classifier_type t expression_type
+                        )
+    end
   | transform_expression t _ = raise NotYetImplemented
 and transform_collection_part t (XMI.CollectionItem {item,expression_type}) =
     Rep_OclTerm.CollectionItem (transform_expression t item,
@@ -166,9 +178,9 @@ fun transform_constraint t ({xmiid,name,body,...}:XMI.Constraint) =
 	       |NONE     => NONE
 	in	
     		(n_name,transform_expression t body)
-		handle NotYetImplemented => (print "Warning: in Xmi2Mdr.transform_constraint: Something is not yet implemented.\n";(NONE, triv_expr))
-		     | IllFormed msg => (print ("Warning: in Xmi2Mdr.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
-		     | XmiParser.IllFormed msg => (print ("Warning: in Xmi2Mdr.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
+		handle NotYetImplemented => (print "Warning: in RepParser.transform_constraint: Something is not yet implemented.\n";(NONE, triv_expr))
+		     | IllFormed msg => (print ("Warning: in RepParser.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
+		     | XmiParser.IllFormed msg => (print ("Warning: in RepParser.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
 	end
 
 fun transform_bodyconstraint result_type t ({xmiid,name,body,...}:XMI.Constraint) = 
@@ -181,9 +193,9 @@ fun transform_bodyconstraint result_type t ({xmiid,name,body,...}:XMI.Constraint
 						equal,[(body,body_type)],
 						Rep_OclType.Boolean))
     end
-	handle NotYetImplemented => (print "Warning: in Xmi2Mdr.transform_constraint: Something is not yet implemented.\n";(NONE, triv_expr))
-	     | IllFormed msg => (print ("Warning: in Xmi2Mdr.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
-	     | XmiParser.IllFormed msg => (print ("Warning: in Xmi2Mdr.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
+	handle NotYetImplemented => (print "Warning: in RepParser.transform_constraint: Something is not yet implemented.\n";(NONE, triv_expr))
+	     | IllFormed msg => (print ("Warning: in RepParser.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
+	     | XmiParser.IllFormed msg => (print ("Warning: in RepParser.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
 
 fun transform_parameter t {xmiid,name,kind,type_id} =
     (name, find_classifier_type t type_id)
@@ -462,13 +474,13 @@ fun transformXMI ({classifiers,constraints,packages,
  *) 
 fun readFile f = map Rep.normalize ((transformXMI o XmiParser.readFile) f)
     handle XmiParser.IllFormed msg => 
-           (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^
+           (print ("Warning: in RepParser.readXMI: could not parse file "^
                    f^":\n"^msg^"\n"); nil)
 	     | Option => 
-           (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^
+           (print ("Warning: in RepParser.readXMI: could not parse file "^
                    f^"\n"); nil)
 	     | IllFormed msg => 
-           (print ("Warning: in Xmi2Mdr.readXMI: could not parse file "^
+           (print ("Warning: in RepParser.readXMI: could not parse file "^
                    f^": "^msg^"\n"); nil)
 end
 
