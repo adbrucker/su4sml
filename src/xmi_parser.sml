@@ -506,7 +506,8 @@ fun mkAttribute tree =
 	      changeability = atts |> changeability,
 	      ordering      = atts |> ordering, 
 	      initialValue  = tree |> get_optional "UML:Attribute.initialValue"
-                               |> map_optional (get_one "OCL.Expressions.ExpressionInOcl.bodyExpression")
+                               |> map_optional (get_optional "OCL.Expressions.ExpressionInOcl.bodyExpression")
+                               |> Option.join
                                |> map_optional mkOCLExpression,
 	      type_id       = tree |> get_one "UML:StructuralFeature.type"
                                |> xmiidref,
