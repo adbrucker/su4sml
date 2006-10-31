@@ -30,7 +30,6 @@ open Rep_Core
 open XMI_DataTypes
 open Rep_OclTerm
 
-
 (** capitalize the string s.
  * Returns the given string with the first letter changed to upper case
  * Should be moved to a helper library?
@@ -39,7 +38,10 @@ fun capitalize s = let val slist = String.explode s
                    in 
                        String.implode (Char.toUpper (List.hd slist)::List.tl slist)
                    end
-(* gives the type of an OCL expression *)
+
+(** gives the type of an OCL expression.
+ * Should be moved to Rep_Ocl? 
+ *)
 fun type_of (Literal (_,t))                = t
   | type_of (CollectionLiteral (_,t))      = t
   | type_of (If(_,_,_,_,_,_,t))            = t
@@ -52,10 +54,26 @@ fun type_of (Literal (_,t))                = t
   | type_of (Iterate(_,_,_,_,_,_,_,_,t))   = t
   | type_of (Iterator(_,_,_,_,_,_,t))      = t
 
-fun atpre exp = OperationCall (exp, type_of exp,
-                               ["oclLib","OclAny","atPre"],
-                               nil,
-                               type_of exp)
+fun self t = Variable ("self",t)
+fun result t = Variable ("result", t)
+
+fun ocl_opcall source f args t = OperationCall (source, type_of source, f,
+                                                map (fn x => (x,type_of x)) args,
+                                                t)
+fun ocl_attcall source att t = AttributeCall (source, type_of source, att, t)
+fun ocl_aendcall source aend t = AssociationEndCall (source, type_of source, aend, t)
+
+fun ocl_if  cond t e = If (cond, type_of cond, t, type_of t, e, type_of e,
+                           (* FIXME: use the least common supertype of t and e *)
+                           (* or even DummyT?                                  *)
+                           type_of t)
+
+fun ocl_eq a b = ocl_opcall a ["oclLib", "OclAny", "="] [b] Boolean
+fun ocl_and a b = ocl_opcall a ["oclLib", "Boolean", "and"] [b] Boolean
+fun ocl_isnew a = ocl_opcall a ["oclLib", "OclAny", "oclIsNew"] nil Boolean
+fun ocl_isundefined a = ocl_opcall a ["oclLib", "OclAny", "oclIsUndefined"] nil Boolean
+
+fun atpre exp = ocl_opcall exp ["oclLib","OclAny","atPre"] nil (type_of exp)
 
 fun deep_atpre (t as Literal _) = t
   | deep_atpre (t as CollectionLiteral _) = t
@@ -81,7 +99,9 @@ fun deep_atpre (t as Literal _) = t
     (* FIXME: do we have to wrap it with atPre? *)
     = OperationWithType (deep_atpre source, source_type, param, param_type,
                          result_type)
-  | deep_atpre (t as Variable _) = t
+  | deep_atpre (t as Variable _) 
+    (* FIXME: we probably want to wrap this, to get self@pre? *)
+    = t
   | deep_atpre (t as Let (var,var_type,rhs,rhs_type,in_term,in_type)) 
     = Let (var,var_type,
            deep_atpre rhs, rhs_type,
@@ -99,15 +119,12 @@ fun deep_atpre (t as Literal _) = t
 
 
 
-(* FIXME: substitute operation, attribute, *)
-(* and associationend calls with @pre variants *)
-fun transform_postcond sc (s,t) = (s,deep_atpre t)
-  
-fun transform_postconds sc {name, precondition, postcondition, arguments, result,
-                             isQuery, scope, visibility} = 
+(* FIX: find appropriate name for this function *)  
+fun transform_postconds {name, precondition, postcondition, arguments, result,
+                         isQuery, scope, visibility} = 
     { name=name,
       precondition=precondition,
-      postcondition=map (transform_postcond sc) postcondition,
+      postcondition=map (fn (s,t) => (s,deep_atpre t)) postcondition,
       arguments=arguments,
       result=result,
       isQuery=isQuery,
@@ -226,12 +243,10 @@ fun create_getter c {name,attr_type,visibility,scope,stereotypes,init} =
       precondition=nil,
       (* post: result=self.att *)
       postcondition=[(SOME ("generated_getter_for_"^name),
-                      OperationCall ( Variable ("result",attr_type), attr_type,
-                                      ["oclLib","OclAny","="],
-                                      [(AttributeCall ((Variable ("self", Classifier (name_of c))), Classifier (name_of c),
-                                                       (name_of c)@[name],
-                                                       attr_type),attr_type)],
-                                      Boolean ))], 
+                      ocl_eq (result attr_type) 
+                             (ocl_attcall (self (Classifier (name_of c)))
+                                          ((name_of c)@[name])
+                                          attr_type))], 
       arguments=nil,
       result=attr_type,
       isQuery=true,
@@ -250,12 +265,10 @@ fun create_setter c {name,attr_type,visibility,scope,stereotypes,init} =
       (* post: self.att=arg *)
       (* FIX: and self.att->modifiedOnly() *)
       postcondition=[(SOME ("generated_setter_for_"^name),
-                      OperationCall (AttributeCall ((Variable ("self", Classifier (name_of c))), Classifier (name_of c),
-                                                    (name_of c)@[name],
-                                                    attr_type), attr_type,
-                                     ["oclLib","OclAny","="],
-                                     [(Variable ("arg",attr_type),attr_type)],
-                                     Boolean))], 
+                      ocl_eq (ocl_attcall (self (Classifier (name_of c))) 
+                                          ((name_of c)@[name])
+                                          attr_type)
+                             (Variable ("arg", attr_type)))],
       arguments=[("arg",attr_type)],
       result=OclVoid,
       isQuery=false,
@@ -264,7 +277,7 @@ fun create_setter c {name,attr_type,visibility,scope,stereotypes,init} =
     }
 
 (** creates a "secured" version of the given operation.
- * The main change: in the postcondition, attribute calls are replaces with 
+ * The main change: in the postcondition, attribute calls are replaced with 
  * calls to appropriate getter functions, and operation calls with calls 
  * to corresponding "secured" operations.
  *)
@@ -315,11 +328,16 @@ fun add_operation_to_classifier oper (Class {name, parent, attributes,
                  classifier=add_operation_to_classifier oper classifier
                }
 
-fun add_operations sc c = 
+(** The design model transformation for a single class. 
+ * generates constructors, destructors, setters, getters, and "secured" operations. 
+ *)
+fun add_operations c = 
     let val constructor = {name="new",
                            precondition=nil,
-                           (* FIX: result.oclIsNew() and result->modiefiedOnly() *)
-                           postcondition=nil,
+                           (* post: result.oclIsNew()          *)
+                           (* FIX: and result->modiefiedOnly() *)
+                           postcondition=[(SOME "generated_constructor",
+                                         ocl_isnew (result (Classifier (name_of c))))],
                            arguments=nil,
                            result=Classifier (name_of c),
                            isQuery=false,
@@ -327,8 +345,10 @@ fun add_operations sc c =
                            visibility=public}
         val destructor  = {name="delete",
                            precondition=nil,
-                           (* FIX: self.oclIsUndefined() and self@pre->modifiedOnly()*)
-                           postcondition=nil,
+                           (* post: self.oclIsUndefined()       *)
+                           (* FIX: and self@pre->modifiedOnly() *)
+                           postcondition=[(SOME "generated_destructor",
+                                          ocl_isundefined (self (Classifier (name_of c))))],
                            arguments=nil,
                            result=OclVoid,
                            isQuery=false,
@@ -336,18 +356,13 @@ fun add_operations sc c =
                            visibility=public}
         val getters = map (create_getter c) (attributes_of c)
         val setters = map (create_setter c) (attributes_of c)
-        val secured_ops = map create_secured (operations_of c)
-        val generated_ops = constructor::destructor::getters @ setters @ secured_ops  
-        val access_controlled_ops = map (transform_postconds sc) generated_ops
+        val sec_ops = map create_secured (operations_of c)
+        val generated_ops = [constructor,destructor]@getters@setters@sec_ops  
     in 
         List.foldl (fn (oper,x) => add_operation_to_classifier oper x) c
-                   access_controlled_ops 
+                   generated_ops 
     end
                        
-(* transforming the model consists of generating new oeprations with appropriate *)
-(* postconditions. *)
-fun transform_model sc cl = map (add_operations sc) cl
-                                
                                 
 val static_auth_env = [
    Class
@@ -457,10 +472,15 @@ val static_auth_env = [
 (* FIXME: self.roles.name->includes(r1) implies *)
 (*        self.roles.name->includes(r2) *)
 fun add_role_hierarchy sc cl = cl 
+                               
+(** transform the postconditions to also include the authorization constraints. *)
+(* FIX: implement this *)
+fun create_sec_postconds sc c = c
 
 fun transform (cl,sc) =
     let
-        val transformed_model = transform_model sc cl
+        val transformed_design_model = map add_operations cl
+        val transformed_model = map (create_sec_postconds sc) cl 
         val auth_env          = add_role_hierarchy sc (map normalize static_auth_env)
     in
          transformed_model @ auth_env
