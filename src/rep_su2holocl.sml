@@ -63,6 +63,7 @@ fun ocl_opcall source f args t = OperationCall (source, type_of source, f,
 fun ocl_attcall source att t = AttributeCall (source, type_of source, att, t)
 fun ocl_aendcall source aend t = AssociationEndCall (source, type_of source, aend, t)
 
+
 fun ocl_if  cond t e = If (cond, type_of cond, t, type_of t, e, type_of e,
                            (* FIXME: use the least common supertype of t and e *)
                            (* or even DummyT?                                  *)
@@ -70,8 +71,19 @@ fun ocl_if  cond t e = If (cond, type_of cond, t, type_of t, e, type_of e,
 
 fun ocl_eq a b = ocl_opcall a ["oclLib", "OclAny", "="] [b] Boolean
 fun ocl_and a b = ocl_opcall a ["oclLib", "Boolean", "and"] [b] Boolean
-fun ocl_isnew a = ocl_opcall a ["oclLib", "OclAny", "oclIsNew"] nil Boolean
-fun ocl_isundefined a = ocl_opcall a ["oclLib", "OclAny", "oclIsUndefined"] nil Boolean
+fun ocl_isNew a = ocl_opcall a ["oclLib", "OclAny", "oclIsNew"] nil Boolean
+fun ocl_isUndefined a = ocl_opcall a ["oclLib", "OclAny", "oclIsUndefined"] nil Boolean
+
+fun ocl_allInstances s = ocl_opcall s ["oclLib", "OclAny", "allInstances"] nil 
+                                    (Set (type_of s)) 
+
+(* FIX: automatically take a "fresh" variable that is free in s? *)
+(* But then you need this information in body... *) 
+fun ocl_collect source var body = Iterator ("collect", [(var,type_of source)],
+                                            source, type_of source,
+                                            body, type_of body,
+                                            Bag (type_of body))
+                                  
 
 fun atpre exp = ocl_opcall exp ["oclLib","OclAny","atPre"] nil (type_of exp)
 
@@ -293,6 +305,39 @@ fun create_secured {name, precondition, postcondition, arguments, result,
       scope=scope,
       visibility=public
     }
+
+(** adds an invariant to a classifier.
+ * Should be moved to Rep_Core?
+ *)
+fun add_invariant_to_classifier inv (Class {name, parent, attributes, 
+                                             operations, associationends, 
+                                             invariant, stereotypes, 
+                                             interfaces, thyname, activity_graphs})
+  = Class {name=name, parent=parent, attributes=attributes, 
+           operations=operations, 
+           associationends=associationends, invariant=inv::invariant, 
+           stereotypes=stereotypes, interfaces=interfaces, 
+           thyname=thyname, activity_graphs=activity_graphs}
+  | add_invariant_to_classifier inv (Interface {name, parents, operations,  
+                                                 invariant, stereotypes,  thyname})
+    = Interface {name=name, parents=parents, operations=operations,
+                 invariant=inv::invariant, stereotypes=stereotypes, thyname=thyname}
+  | add_invariant_to_classifier inv (Enumeration {name, parent, operations,
+                                                   literals, invariant, stereotypes,
+                                                   interfaces, thyname})
+    = Enumeration{name=name, parent=parent, operations=operations,literals=literals,
+                  invariant=inv::invariant, stereotypes=stereotypes,
+                  interfaces=interfaces, thyname=thyname}
+  | add_invariant_to_classifier inv (Primitive {name, parent, operations, 
+                                                 associationends, invariant, 
+                                                 stereotypes, interfaces, thyname})
+    = Primitive{name=name, parent=parent, operations=operations, 
+                associationends=associationends, invariant=inv::invariant, 
+                stereotypes=stereotypes, interfaces=interfaces, thyname=thyname}
+  | add_invariant_to_classifier inv (Template {parameter, classifier}) 
+    = Template { parameter=parameter, 
+                 classifier=add_invariant_to_classifier inv classifier
+               }
       
 
 (** adds an operation to a classifier.
@@ -337,7 +382,7 @@ fun add_operations c =
                            (* post: result.oclIsNew()          *)
                            (* FIX: and result->modiefiedOnly() *)
                            postcondition=[(SOME "generated_constructor",
-                                         ocl_isnew (result (Classifier (name_of c))))],
+                                         ocl_isNew (result (Classifier (name_of c))))],
                            arguments=nil,
                            result=Classifier (name_of c),
                            isQuery=false,
@@ -348,7 +393,7 @@ fun add_operations c =
                            (* post: self.oclIsUndefined()       *)
                            (* FIX: and self@pre->modifiedOnly() *)
                            postcondition=[(SOME "generated_destructor",
-                                          ocl_isundefined (self (Classifier (name_of c))))],
+                                          ocl_isUndefined (self (Classifier (name_of c))))],
                            arguments=nil,
                            result=OclVoid,
                            isQuery=false,
@@ -363,115 +408,137 @@ fun add_operations c =
                    generated_ops 
     end
                        
-                                
-val static_auth_env = [
-   Class
-     {activity_graphs=[],
-      associationends=[{aend_type=Classifier
-                                    ["AuthorizationEnvironment","Principal"],
-                        init=NONE,
-                        multiplicity=[(1,1)],
-                        name="principal",
-                        ordered=false,
-                        visibility=public}],
-      attributes=[],
-      interfaces=[],
-      invariant=[],
-      name=["AuthorizationEnvironment","Context"],
-      operations=[],
-      parent=NONE,
-      stereotypes=[],
-      thyname=NONE},
-   Class
-     {activity_graphs=[],
-      associationends=[{aend_type=Classifier
-                                      ["AuthorizationEnvironment","Role"],
-                        init=NONE,multiplicity=[(0,~1)],
-                        name="roles",
-                        ordered=false,
-                        visibility=public},
-                       {aend_type=Classifier
-                                      ["AuthorizationEnvironment","Principal"],
-                        init=NONE,
-                        multiplicity=[(0,~1)],
-                        name="principal",
-                        ordered=false,
-                        visibility=public}],
-      attributes=[{attr_type=String,
-                   init=NONE,name="name",
-                   scope=InstanceScope,
-                   stereotypes=[],
-                   visibility=public}],
-      interfaces=[],
-      invariant=[],
-      name=["AuthorizationEnvironment","Identity"],
-      operations=[],
-      parent=NONE,
-      stereotypes=[],
-      thyname=NONE},
-   Class
-       {activity_graphs=[],
-        associationends=[{aend_type=Classifier
-                                        ["AuthorizationEnvironment","Identity"],
-                          init=NONE,multiplicity=[(0,~1)],
-                          name="identity",
-                          ordered=false,
-                          visibility=public}],
-        attributes=[{attr_type=String,
-                     init=NONE,name="name",
-                     scope=InstanceScope,
-                     stereotypes=[],
-                     visibility=public}],
-        interfaces=[],
-        invariant=[],
-        name=["AuthorizationEnvironment","Role"],
-        operations=[{arguments=[("s",String)],
-                     isQuery=false,
-                     name="getRoleByName",
-                     postcondition=[],
-                     precondition=[],
-                     result=Classifier ["AuthorizationEnvironment","Role"],
-                     scope=ClassifierScope,
-                     visibility=public}],
-        parent=NONE,
-        stereotypes=[],
-        thyname=NONE},
-   Class
-       {activity_graphs=[],
-        associationends=[{aend_type=Classifier
-                                    ["AuthorizationEnvironment","Identity"],
-                          init=NONE,
-                          multiplicity=[(1,1)],
-                          name="identity",
-                          ordered=false,
-                          visibility=public},
-                         {aend_type=Classifier
-                                        ["AuthorizationEnvironment","Context"],
-                          init=NONE,
-                          multiplicity=[(0,~1)],
-                          name="context",
-                          ordered=false,
-                          visibility=public}],
-        attributes=[],
-        interfaces=[],
-        invariant=[],
-        name=["AuthorizationEnvironment","Principal"],
-        operations=[{arguments=[("s",String)],
-                     isQuery=false,
-                     name="isInRole",
-                     postcondition=[],
-                     precondition=[],
-                     result=Boolean,
-                     scope=InstanceScope,
-                     visibility=public}],
-        parent=NONE,
-        stereotypes=[],
-        thyname=NONE}]
 
-(* FIXME: Role.allInstances().name = Bag{...} *)
-(* FIXME: self.roles.name->includes(r1) implies *)
+val role =    
+    Class {activity_graphs=[],
+           associationends=[{aend_type=Classifier
+                                           ["AuthorizationEnvironment","Identity"],
+                             init=NONE,multiplicity=[(0,~1)],
+                             name="identity",
+                             ordered=false,
+                             visibility=public}],
+           attributes=[{attr_type=String,
+                        init=NONE,name="name",
+                        scope=InstanceScope,
+                        stereotypes=[],
+                        visibility=public}],
+           interfaces=[],
+           invariant=[],
+           name=["AuthorizationEnvironment","Role"],
+           operations=[{arguments=[("s",String)],
+                        isQuery=false,
+                        name="getRoleByName",
+                        postcondition=[],
+                        precondition=[],
+                        result=Classifier ["AuthorizationEnvironment","Role"],
+                        scope=ClassifierScope,
+                        visibility=public}],
+           parent=NONE,
+           stereotypes=[],
+           thyname=NONE}
+    
+val identity =  
+    Class { activity_graphs=[],
+            associationends=[{aend_type=Classifier
+                                            ["AuthorizationEnvironment","Role"],
+                              init=NONE,multiplicity=[(0,~1)],
+                              name="roles",
+                              ordered=false,
+                              visibility=public},
+                             {aend_type=Classifier
+                                            ["AuthorizationEnvironment","Principal"],
+                              init=NONE,
+                              multiplicity=[(0,~1)],
+                              name="principal",
+                              ordered=false,
+                              visibility=public}],
+            attributes=[{attr_type=String,
+                         init=NONE,name="name",
+                         scope=InstanceScope,
+                         stereotypes=[],
+                         visibility=public}],
+            interfaces=[],
+            invariant=[],
+            name=["AuthorizationEnvironment","Identity"],
+            operations=[],
+            parent=NONE,
+            stereotypes=[],
+            thyname=NONE
+          }
+    
+    
+val static_auth_env = [
+    Class { activity_graphs=[],
+            associationends=[{aend_type=Classifier
+                                            ["AuthorizationEnvironment","Principal"],
+                              init=NONE,
+                              multiplicity=[(1,1)],
+                              name="principal",
+                              ordered=false,
+                              visibility=public}],
+            attributes=[],
+            interfaces=[],
+            invariant=[],
+            name=["AuthorizationEnvironment","Context"],
+            operations=[],
+            parent=NONE,
+            stereotypes=[],
+            thyname=NONE},
+    Class
+        { activity_graphs=[],
+          associationends=[{aend_type=Classifier
+                                          ["AuthorizationEnvironment","Identity"],
+                            init=NONE,
+                            multiplicity=[(1,1)],
+                            name="identity",
+                            ordered=false,
+                            visibility=public},
+                           {aend_type=Classifier
+                                          ["AuthorizationEnvironment","Context"],
+                            init=NONE,
+                            multiplicity=[(0,~1)],
+                            name="context",
+                            ordered=false,
+                            visibility=public}],
+          attributes=[],
+          interfaces=[],
+          invariant=[],
+          name=["AuthorizationEnvironment","Principal"],
+          operations=[{arguments=[("s",String)],
+                       isQuery=false,
+                       name="isInRole",
+                       postcondition=[],
+                       precondition=[],
+                     result=Boolean,
+                       scope=InstanceScope,
+                       visibility=public}],
+          parent=NONE,
+          stereotypes=[],
+          thyname=NONE}]
+                      
+
+(** defines the role hierarchy. *)
+(* FIXME: context Identity inv: self.roles.name->includes(r1) implies *)
 (*        self.roles.name->includes(r2) *)
-fun add_role_hierarchy sc cl = cl 
+fun define_role_hierarchy sc = identity
+                               
+(** defines the list or roles in the model. 
+ * context Role inv: Role.allInstances().name = Bag{...}
+ *)
+fun define_roles sc = 
+    let val roles = ["r1","r2","r3"] (* FIX: get roles from sc *)
+        val role_collection = map (fn x =>CollectionItem(Literal (x,String),String)) 
+                                  roles 
+        val role_type = Classifier ["AuthorizationEnvironment", "Role"] 
+        val inv = ocl_eq (ocl_collect (ocl_allInstances (self role_type))
+                                      "anonIterVar_0"
+                                      (ocl_attcall (Variable ("anonIterVar_0",role_type))
+                                                   ["AuthorizationEnvironment","Role","name"]
+                                                   String))
+                         (CollectionLiteral (role_collection, Bag String))
+    in 
+        add_invariant_to_classifier (SOME "list_of_roles",inv) role
+    end
                                
 (** transform the postconditions to also include the authorization constraints. *)
 (* FIX: implement this *)
@@ -481,7 +548,7 @@ fun transform (cl,sc) =
     let
         val transformed_design_model = map add_operations cl
         val transformed_model = map (create_sec_postconds sc) cl 
-        val auth_env          = add_role_hierarchy sc (map normalize static_auth_env)
+        val auth_env          = map normalize (define_roles sc::define_role_hierarchy sc::static_auth_env) 
     in
          transformed_model @ auth_env
     end
