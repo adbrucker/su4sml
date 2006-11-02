@@ -65,13 +65,16 @@ fun ocl2string show_types oclterm =
 		 ^"->"^opname^"("^(string_of_OclType arg)^")"
 	fun cs_list []  = ""
 	  | cs_list [a] = a
-	  | cs_list l   = foldl (fn (x,y) => (x^", "^y)) (hd l) (tl l)
+	  | cs_list l   = foldl (fn (x,y) => (y^", "^x)) (hd l) (tl l)
 	fun arglist show_types args = cs_list 
 					  (map (fn (arg,atyp) 
 						   => if show_types 
 						      then "("^(ocl2string show_types arg)^"):"^(string_of_OclType atyp)
 						      else (ocl2string show_types arg)) args)
-				      
+	fun collection_part_list show_types args = cs_list (map (fn x => case x
+                                                                      of CollectionItem (term,typ) => ocl2string show_types term
+                                                                       | CollectionRange (t1,t2,typ) => (ocl2string show_types t1)^".."^(ocl2string show_types t2))
+                                                            args)
     in
     case oclterm of 
 	(**************************************)
@@ -81,6 +84,11 @@ fun ocl2string show_types oclterm =
 	Literal (lit, typ)          => if show_types 
 					then "("^lit^":"^(string_of_OclType typ)^")" 
 					else lit
+  | CollectionLiteral (parts, typ as Bag x) => "Bag{"^(collection_part_list show_types parts)^"}" 
+  | CollectionLiteral (parts, typ as Set x) => "Set{"^(collection_part_list show_types parts)^"}" 
+  | CollectionLiteral (parts, typ as OrderedSet x) => "OrderedSet{"^(collection_part_list show_types parts)^"}" 
+  | CollectionLiteral (parts, typ as Sequence x) => "Sequence{"^(collection_part_list show_types parts)^"}" 
+
       | If (cterm,ctyp, tterm,ttyp,eterm,etyp,iftyp) =>  if show_types 
 							     then "(if ("^(ocl2string show_types cterm)^":"^(string_of_OclType ctyp)
 								  ^") then ("^(ocl2string show_types tterm)^":"^(string_of_OclType ttyp)
