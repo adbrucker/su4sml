@@ -96,7 +96,7 @@ fun ocl_implies a b = ocl_opcall a ["oclLib", "Boolean", "implies"]  [b] Boolean
 (* String : size, concat, substring, toInteger, toReal  *)
 
 (* OclAny *)
-fun (a ocl_eq b)  = ocl_opcall a ["oclLib", "OclAny", "="] [b] Boolean
+fun ocl_eq a b  = ocl_opcall a ["oclLib", "OclAny", "="] [b] Boolean
 fun ocl_neq a b = ocl_opcall a ["oclLib", "OclAny", "<>"] [b] Boolean
 fun ocl_isNew a = ocl_opcall a ["oclLib", "OclAny", "oclIsNew"] nil Boolean
 fun ocl_isUndefined  a = ocl_opcall a ["oclLib", "OclAny", "oclIsUndefined"] nil Boolean
