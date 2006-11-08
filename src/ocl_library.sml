@@ -25,6 +25,7 @@
 signature OCL_LIBRARY=
 sig
   val oclLib : Rep_Core.Classifier list
+  val OclLibPackage : string
 end
 
 structure OclLibrary : OCL_LIBRARY=
