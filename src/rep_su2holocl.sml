@@ -29,7 +29,7 @@ end = struct
 open Rep_Core
 open XMI_DataTypes
 open Rep_OclTerm
-
+open Rep_SecureUML_ComponentUML
      
 (** capitalize the string s.
  * Returns the given string with the first letter changed to upper case
@@ -124,14 +124,13 @@ fun ocl_asType   a t = ocl_opwithtype a "oclAsType"   t t
 (* Iterators(Bag)       : select,reject,collectNested,sortedBy               *)
 (* Iterators(Sequence)  : select,reject,collectnested,sortedBy               *)
 
-(* FIX: automatically take a "fresh" variable that is free in s? *)
+(* FIXME: automatically take a "fresh" variable that is free in s? *)
 (* But then you need this information in body... *) 
 fun ocl_collect source var body = Iterator ("collect", [(var,type_of source)],
                                             source, type_of source,
                                             body, type_of body,
                                             Bag (type_of body))
                                   
-
 fun atpre exp = ocl_opcall exp ["oclLib","OclAny","atPre"] nil (type_of exp)
 
 fun deep_atpre (t as Literal _) = t
@@ -178,7 +177,7 @@ fun deep_atpre (t as Literal _) = t
 
 
 
-(* FIX: find appropriate name for this function *)  
+(* FIXME: find appropriate name for this function *)  
 fun transform_postconds {name, precondition, postcondition, arguments, result,
                          isQuery, scope, visibility} = 
     { name=name,
@@ -322,7 +321,7 @@ fun create_setter c {name,attr_type,visibility,scope,stereotypes,init} =
     { name="set"^(capitalize name),
       precondition=nil,
       (* post: self.att=arg *)
-      (* FIX: and self.att->modifiedOnly() *)
+      (* FIXME: and self.att->modifiedOnly() *)
       postcondition=[(SOME ("generated_setter_for_"^name),
                       ocl_eq (ocl_attcall (self (Classifier (name_of c))) 
                                           ((name_of c)@[name])
@@ -426,8 +425,8 @@ fun add_operation_to_classifier oper (Class {name, parent, attributes,
 fun add_operations c = 
     let val constructor = {name="new",
                            precondition=nil,
-                           (* post: result.oclIsNew()          *)
-                           (* FIX: and result->modiefiedOnly() *)
+                           (* post: result.oclIsNew()            *)
+                           (* FIXME: and result->modiefiedOnly() *)
                            postcondition=[(SOME "generated_constructor",
                                          ocl_isNew (result (Classifier (name_of c))))],
                            arguments=nil,
@@ -437,8 +436,8 @@ fun add_operations c =
                            visibility=public}
         val destructor  = {name="delete",
                            precondition=nil,
-                           (* post: self.oclIsUndefined()       *)
-                           (* FIX: and self@pre->modifiedOnly() *)
+                           (* post: self.oclIsUndefined()         *)
+                           (* FIXME: and self@pre->modifiedOnly() *)
                            postcondition=[(SOME "generated_destructor",
                                           ocl_isUndefined (self (Classifier (name_of c))))],
                            arguments=nil,
@@ -573,7 +572,7 @@ fun define_role_hierarchy sc = identity
  * context Role inv: Role.allInstances().name = Bag{...}
  *)
 fun define_roles sc = 
-    let val roles = ["r1","r2","r3"] (* FIX: get roles from sc *)
+    let val roles = Security.all_roles sc
         val role_collection = map (fn x =>CollectionItem(Literal (x,String),String)) 
                                   roles 
         val role_type = Classifier ["AuthorizationEnvironment", "Role"] 
@@ -588,7 +587,7 @@ fun define_roles sc =
     end
                                
 (** transform the postconditions to also include the authorization constraints. *)
-(* FIX: implement this *)
+(* FIXME: implement this *)
 fun create_sec_postconds sc c = c
 
 fun transform (cl,sc) =
