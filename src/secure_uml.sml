@@ -27,6 +27,7 @@ signature SECUREUML =
 sig 
 include    SECURITY_LANGUAGE
 type Role
+val all_roles :      Configuration -> Role list 
 val constraints_of : Permission -> Rep_OclTerm.OclTerm list
 val roles_of:        Permission -> Role list 
 end
@@ -49,6 +50,7 @@ datatype Subject = Group of string * (string list)
                  | User of User
 
 type Role = string
+
 type SubjectAssignment = (Subject * (Role list)) list
 
 				 
@@ -57,9 +59,23 @@ type Permission = {name: string,
 				   constraints: Rep_OclTerm.OclTerm list,
 				   actions: Design.Action list }
 
+type Config_Type = string
+
+type 'a partial_order = ('a * 'a) list
+
+type Configuration = { config_type: Config_Type,
+					   permissions: Permission list,
+					   subjects: Subject list,
+					   (* groups: Group partial_order,*)
+					   roles: Role list,
+                       rh: Role partial_order,
+					   sa: SubjectAssignment }
+
+
 fun constraints_of (x:Permission) = #constraints x
 fun roles_of       (x:Permission) = #roles x
 fun actions_of     (p:Permission) = #actions p
+fun all_roles   (c:Configuration) = #roles c
 
 (** test whether a1 is (transitively) a subordinated_action of a2 *)
 fun is_contained_in a1 a2 = (a1 = a2) orelse 
@@ -70,21 +86,11 @@ fun is_contained_in a1 a2 = (a1 = a2) orelse
 fun permission_includes_action (p:Permission) (a:Design.Action) = 
     List.exists (is_contained_in a) (#actions p)
 
-type Config_Type = string
-
-type 'a partial_order = ('a * 'a) list
 
 (* unclear yet how this will look like: 
 fun domain_of (x:'a partial_order) = ...
 fun closure_of (x:'a partial_order) = ...
 *) 
-
-type Configuration = { config_type: Config_Type,
-					   permissions: Permission list,
-					   subjects: Subject list,
-					   (* groups: Group partial_order,*)
-					   roles: Role partial_order,
-					   sa: SubjectAssignment }
 
 fun type_of  (c:Configuration) = #config_type c
 
@@ -108,6 +114,16 @@ fun classifier_has_stereotype s c = ListEq.includes (Rep.stereotypes_of c) s
 fun classifier_has_no_stereotype strings c = 
     ListEq.disjunct strings (Rep.stereotypes_of c)
     
+
+(** checks whether the classifier c has a parent.
+ * (could be moved to rep_core?)
+*)
+fun classifier_has_parent (Rep.Class c)       = Option.isSome (#parent c)
+  | classifier_has_parent (Rep.Interface c)   = not (List.null (#parents c))
+  | classifier_has_parent (Rep.Enumeration c) = Option.isSome (#parent c)
+  | classifier_has_parent (Rep.Primitive c)   = Option.isSome (#parent c)
+  | classifier_has_parent (Rep.Template c)    = classifier_has_parent (#classifier c)
+
 fun filter_permission cs = List.filter (classifier_has_stereotype 
                                             "secuml.permission") cs
 (* FIXME: handle groups also *)
@@ -159,9 +175,6 @@ fun mkPermission cs (Rep.Class c) =
                                      \that is not a class"
 
                        
-(* FIXME *) 
-fun mkPartialOrder xs = ListPair.zip (xs,xs)
-
 (** parse a list of classifiers accoriding to the SecureUML profile.
  * removes the classes with SecureUML stereotypes. 
  *)
@@ -174,7 +187,10 @@ fun parse (cs:Rep_Core.Classifier list) =
 	 { config_type = "SecureUML",
 	   permissions = map (mkPermission cs) (filter_permission cs),
 	   subjects    = map mkSubject (filter_subject cs),
-	   roles       = mkPartialOrder (map mkRole (filter_role cs)),
+       roles       = map mkRole (filter_role cs),
+	   rh          = map (fn x => (Rep.string_of_path (Rep.name_of x),
+                                   Rep.string_of_path (Rep.parent_name_of x)))
+                         (List.filter classifier_has_parent (filter_role cs)),
 	   (* FIXME: find associations between Users and Roles. *)
 	   sa = nil})
 	handle _ => library.error ("Problem during parsing security configuration")

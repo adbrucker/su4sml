@@ -26,11 +26,11 @@
 
 
 (** a repository for uml models equipped with a security language *)
-signature REP_SECURE =
+signature REP_SECUREUML =
 sig
 	
 	(** the security language used. *)
-    structure Security : SECURITY_LANGUAGE
+    structure Security : SECUREUML
 						 
 	(** 
 	 * a "secure repository" model consist of a repository model 
@@ -43,20 +43,19 @@ sig
 			 
 end
 
-
-functor Rep_Secure(structure Security : SECURITY_LANGUAGE) : REP_SECURE =
+functor Rep_SecureUML(structure Security : SECUREUML) : REP_SECUREUML  =
 struct
-structure Security = Security
 
-type Model = Rep_Core.Classifier list * Security.Configuration
-	     
+    structure Security = Security
 
-val readXMI = Security.parse o RepParser.readFile
+    type Model = Rep_Core.Classifier list * Security.Configuration
+
+    val readXMI = Security.parse o RepParser.readFile
+
 end
 
-
 structure Rep_SecureUML_ComponentUML 
-  = Rep_Secure(structure Security = SecureUML(structure Design=ComponentUML))
+  = Rep_SecureUML(structure Security = SecureUML(structure Design=ComponentUML))
 			
 
 (* structure Rep_SecureUML_ControllerUML
