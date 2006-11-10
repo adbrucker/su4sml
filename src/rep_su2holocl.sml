@@ -119,6 +119,9 @@ fun ocl_asType   a t = ocl_opwithtype a "oclAsType"   t t
 (*             at,indexOf,first,last,including,excluding,asBag,asSequence,   *)
 (*             asSet,asOrderedSet                                            *)
 
+fun ocl_includes a b = ocl_opcall a ["oclLib", "Collection", "includes"] [b] Boolean
+fun ocl_excludes a b = ocl_opcall a ["oclLib", "Collection", "excludes"] [b] Boolean
+
 (* Iterators(Collection): exists,forAll,isUnique,any,one,collect             *)
 (* Iterators(Set)       : select,reject,collectNested,sortedBy               *)
 (* Iterators(Bag)       : select,reject,collectNested,sortedBy               *)
@@ -566,7 +569,31 @@ val static_auth_env = [
 (** defines the role hierarchy. *)
 (* FIXME: context Identity inv: self.roles.name->includes(r1) implies *)
 (*        self.roles.name->includes(r2) *)
-fun define_role_hierarchy sc = identity
+fun define_role_hierarchy (sc:Security.Configuration) = 
+    let val identity_name = ["AuthorizationEnvironment","Identity"] 
+        val identity_type = Classifier identity_name
+        val role_name     = ["AuthorizationEnvironment","Role"]
+        val role_type     = Classifier role_name
+        val self_roles    = 
+            ocl_aendcall (self identity_type) 
+                         ["AuthorizationEnvironment" , "Identity", "roles"] 
+                         (Bag (Classifier ["AuthorizationEnvironment","Role"])) 
+        val self_roles_name = ocl_collect self_roles "anonIterVar_0" 
+                                          (ocl_attcall (Variable ("anonIterVar_0", 
+                                                                  role_type))
+                                                       ["AuthorizationEnvironment","Role","name"]
+                                                       String)
+        fun is_in_role x =  ocl_includes self_roles_name x
+        fun invariant_for_role_inheritance (sub,super) = 
+            ocl_implies (is_in_role (Literal (sub,String)))
+                        (is_in_role (Literal (super,String)))
+    in
+        List.foldl (fn (rh,ident) => add_invariant_to_classifier 
+                                         (SOME "role_hierarchy", 
+                                          invariant_for_role_inheritance rh) ident)
+                   identity
+                   (#rh sc)
+    end
                                
 (** defines the list or roles in the model. 
  * context Role inv: Role.allInstances().name = Bag{...}
@@ -590,10 +617,11 @@ fun define_roles sc =
 (* FIXME: implement this *)
 fun create_sec_postconds sc c = c
 
+
 fun transform (cl,sc) =
     let
         val transformed_design_model = map add_operations cl
-        val transformed_model = map (create_sec_postconds sc) cl 
+        val transformed_model = map (create_sec_postconds sc) transformed_design_model 
         val auth_env          = map normalize (define_roles sc::define_role_hierarchy sc::static_auth_env) 
     in
          transformed_model @ auth_env
