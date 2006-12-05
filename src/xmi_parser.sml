@@ -622,11 +622,11 @@ fun mkTransition tree =
 
 fun mkState tree =
     let val elem              = tagname    tree
-	    val atts              = attributes tree
+	val atts              = attributes tree
         val xmiid             = atts |> xmiid
         val name              = atts |> optional_name_or_empty
         val isSpecification   = atts |> bool_value_of "isSpecification"
-        val idref             = tree |> xmiidref
+        fun idref tree        = tree |> xmiidref
         val stereotypes       = tree |> get "UML:ModelElement.stereotype"
                                      |> map mkStereotypeR
         val incoming          = tree |> get "UML:StateVertex.incoming"
@@ -643,7 +643,7 @@ fun mkState tree =
                                      |> map_optional mkProcedure
         val tagval            = tree |> get "UML:ModelElement.taggedValue"
                                      |> map mkTaggedValue
-	    fun getType tree      = tree |> get_one "UML:ObjectFlowState.type"
+	fun getType tree      = tree |> get_one "UML:ObjectFlowState.type"
                                      |> xmiidref
     in case elem of 
            "UML:CompositeState" => 
