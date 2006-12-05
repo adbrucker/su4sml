@@ -425,6 +425,7 @@ fun name_of (Class{name,...})       = name
   | name_of (Interface{name,...})   = name
   | name_of (Enumeration{name,...}) = name
   | name_of (Primitive{name,...})    = name
+  | name_of (Template{classifier,...}) = name_of classifier
 
 fun short_name_of (Class{name,...})       = (hd o rev) name  
   | short_name_of (Interface{name,...})   = (hd o rev) name
@@ -451,6 +452,7 @@ fun package_of (Class{name,...})       = if (length name) > 1
   | package_of (Primitive{name,...})   = if (length name) > 1 
                                          then take (((length name) -1),name) 
                                          else []
+  | package_of (Template{classifier,...}) = package_of classifier
 
 fun parent_name_of (C as Class{parent,...}) = 
     (case parent  of NONE   => name_of OclAnyC
@@ -508,15 +510,15 @@ fun attributes_of (Class{attributes,...}) = attributes
          error "attributes_of <Enumeration> not supported"  
   | attributes_of (Primitive{...})         = []  
          (* error "attributes_of <Primitive> not supported" *)  
+  | attributes_of (Template{parameter,classifier}) = attributes_of classifier
 
 fun operations_of (Class{operations,...}) = operations
   | operations_of (Interface{...})        = 
          error "operations_of <Interface> not supported" 
   | operations_of (Enumeration{...})      = 
          error "operations_of <Enumeration> not supported"  
-  | operations_of (Primitive{...})         = []  
-         (* error "operations_of <Primitive> not supported" *)  
-
+  | operations_of (Primitive{operations,...})         = operations  
+  | operations_of (Template{parameter,classifier}) = operations_of classifier
 
 fun p_invariant_of (Class{invariant,...})       = invariant 
   | p_invariant_of (Interface{invariant,...})   = invariant
