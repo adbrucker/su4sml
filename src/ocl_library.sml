@@ -58,6 +58,21 @@ val oclLib =
 			     visibility=XMI.public
 			    },
 			    {
+			      arguments=[],isQuery=true,name="notEmpty",postcondition=[],
+			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+			      scope=XMI.InstanceScope,visibility=XMI.public
+			     },
+			    {
+			      arguments=[],isQuery=true,name="size",postcondition=[],
+			      precondition=[],result=Classifier [OclLibPackage,"Integer"],
+			      scope=XMI.InstanceScope,visibility=XMI.public
+			     },
+			    {
+			      arguments=[],isQuery=true,name="isEmpty",postcondition=[],
+			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+			      scope=XMI.InstanceScope,visibility=XMI.public
+			     },
+			    {
 			     arguments=[("s",Classifier [OclLibPackage,"Sequence(T)"])],
 			     isQuery=true,
 			     name="=",
@@ -289,6 +304,21 @@ val oclLib =
 			     visibility=XMI.public
 			    },
 			    {
+			      arguments=[],isQuery=true,name="size",postcondition=[],
+			      precondition=[],result=Classifier [OclLibPackage,"Integer"],
+			      scope=XMI.InstanceScope,visibility=XMI.public
+			     },
+			    {
+			      arguments=[],isQuery=true,name="notEmpty",postcondition=[],
+			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+			      scope=XMI.InstanceScope,visibility=XMI.public
+			     },
+			    {
+			      arguments=[],isQuery=true,name="isEmpty",postcondition=[],
+			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+			      scope=XMI.InstanceScope,visibility=XMI.public
+			     },
+			    {
 			     arguments=[("bag",Classifier [OclLibPackage,"Bag(T)"])],
 			     isQuery=true,name="==",postcondition=[],precondition=[],
 			     result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
@@ -394,6 +424,16 @@ val oclLib =
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
+			      arguments=[],isQuery=true,name="notEmpty",postcondition=[],
+			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+			      scope=XMI.InstanceScope,visibility=XMI.public
+			     },
+			     {
+			      arguments=[],isQuery=true,name="size",postcondition=[],
+			      precondition=[],result=Classifier [OclLibPackage,"Integer"],
+			      scope=XMI.InstanceScope,visibility=XMI.public
+			     },
+			     {
 			      arguments=[("bag",Classifier [OclLibPackage,"Bag(T)"])],
 			      isQuery=true,name="union",postcondition=[],precondition=[],
 			      result=Classifier [OclLibPackage,"Bag(T)"],
@@ -410,6 +450,11 @@ val oclLib =
 			      isQuery=true,name="==",postcondition=[],precondition=[],
 			      result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
 			      visibility=XMI.public
+			     },
+{
+			      arguments=[],isQuery=true,name="isEmpty",postcondition=[],
+			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
 			      arguments=[("s",Classifier [OclLibPackage,"Set(T)"])],
