@@ -9,7 +9,11 @@ in
     contrib/HashTable.sml
     library.sml
     xmi_ocl.sml 
+    xmltree.sml
+    xmltree_hooks.sml
+    xmltree_helper.sml
     xmltree_parser.sml
+    xmltree_writer.sml
     xmi_datatypes.sml
     xmi_extension_mechanisms.sml
     xmi_state_machines.sml 
@@ -20,6 +24,7 @@ in
     rep_state_machines.sml
     rep_activity_graphs.sml
     rep_core.sml
+    ocl_library.sml
     rep.sml
     mds.sig
     listeq.sml 
@@ -27,8 +32,8 @@ in
     secure_uml.sml
     ocl2string.sml
     xmi_idtable.sml
-    xml2xmi.sml 
-    xmi2rep.sml  
+    xmi_parser.sml 
+    rep_parser.sml
     rep_secure.sml
   end
 end
