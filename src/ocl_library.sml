@@ -33,7 +33,7 @@ struct
 open Rep_Core
 open Rep_OclType
 
-val OclLibPackage="UML_OCL"
+val OclLibPackage="oclLib"
 		  
 val oclLib =
     [Template
