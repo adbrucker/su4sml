@@ -45,8 +45,11 @@ structure SecureUML_Base_Gcg
 
 structure CSharpSM_Gcg = GCG_Core (CSSM_Cartridge(CSharp_Cartridge(Base_Cartridge)))
 
+structure Java_Gcg = GCG_Core (Java_Cartridge(Base_Cartridge))
+
+structure Junit_Gcg = GCG_Core (Junit_Cartridge(Java_Cartridge(Base_Cartridge)))
+
 (*
-structure Java_Gcg = GCG_Core (Java_Cartridge(Base_Cartridge));
 structure JavaSecure_Gcg = GCG_Core (Java_Cartridge(SecureUML_Cartridge(Base_Cartridge)));
 *)
 
@@ -62,8 +65,12 @@ fun generate xmi_file "base" =
  	CSharpSecure_NET1_Gcg.generate ( RepParser.readFile xmi_file) "templates/C#_SecureUML.tpl"
  |  generate xmi_file "c#sm" = 
     CSharpSM_Gcg.generate (RepParser.readFile xmi_file) "templates/C#_SM.tpl"
+ |  generate xmi_file "java" = 
+    Java_Gcg.generate (RepParser.readFile xmi_file) "templates/java.tpl"
+ |  generate xmi_file "junit" = 
+    Junit_Gcg.generate (RepParser.readFile xmi_file) "templates/junit.tpl"
+    
  (*
- |  generate "java" = Java_Gcg.generate model "templates/java.tpl"
  |  generate "java_secure" = JavaSecure_Gcg.generate model "templates/java_SecureUML.tpl"
  *)
 (* | generate xmi_file "maude" = 
@@ -71,12 +78,12 @@ fun generate xmi_file "base" =
  | generate xmi_file "maude_secure" = 
    SecureUML_Base_Gcg.generate ( Rep_SecureUML_ComponentUML.readXMI xmi_file) "templates/maude.tpl" *)
  |  generate _ s = print ("target language unknown : "^s^"\n"^
- 			"usage: generate <xmi_file> \"base\" | \"c#\" | \"c#_secure\" | \"c#_net1\" | \"c#_secure_net1\"\n")
+ 			"usage: generate <xmi_file> \"base\" | \"c#\" | \"c#_secure\" | \"c#_net1\" | \"c#_secure_net1\" | \"java\" | \"junit\"\n")
  			
 
 fun main (_,[xmi_file,lang]) = generate xmi_file lang
   | main _ = print ("usage: codegen <xmi_file> <language>\n"^
-  		    "\tlanguage = \"base\" | \"c#\" | \"c#sm\" | \"c#_secure\" | \"c#_net1\" | \"c#_secure_net1\" | \"maude\" | \"maude_secure\" \n")
+  		    "\tlanguage = \"base\" | \"c#\" | \"c#sm\" | \"c#_secure\" | \"c#_net1\" | \"c#_secure_net1\" | \"java\" | \"junit\" | \"maude\" | \"maude_secure\" \n")
 
 end
 
