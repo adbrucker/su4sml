@@ -23,7 +23,10 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-
+(**
+ * A Cartridge that supports the basic SecureUML concepts: 
+ * Permissions, Roles, and Constraints. 
+ *)
 signature SECUREUML_CARTRIDGE =
 sig
 
@@ -45,7 +48,6 @@ end
 (**
  * A Cartridge that supports the basic SecureUML concepts: 
  * Permissions, Roles, and Constraints. 
- * 
  *)
 functor SecureUML_Cartridge(structure SuperCart : BASE_CARTRIDGE; 
 						    structure D: DESIGN_LANGUAGE) 

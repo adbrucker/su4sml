@@ -21,6 +21,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+(** Compiler extenstions, like "eval" *)
 signature COMPILER_EXT = 
 sig
     exception EvalNotSupported

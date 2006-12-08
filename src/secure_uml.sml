@@ -23,6 +23,11 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+(** 
+ * SecureUML is a simple security language based on RBAC.
+ * Permissions relate roles with actions and can be further constrained 
+ * using OCL: 
+ *) 
 signature SECUREUML = 
 sig 
 include    SECURITY_LANGUAGE

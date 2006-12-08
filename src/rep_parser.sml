@@ -353,11 +353,11 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 					  (find_constraint t)) checked_invariants, 
 			associationends = map (transform_aend t) 
 								  (find_aends t xmiid), 
-			stereotypes = map (find_stereotype t) stereotype, 
+			   stereotypes = map (find_stereotype t) stereotype, 
 			interfaces = nil, (* FIX *)
-                        activity_graphs = List.concat [map (transform_activitygraph t) activity_graphs,
-						       map (transform_statemachine t) state_machines], 
-			thyname = NONE}
+               activity_graphs = List.concat [map (transform_activitygraph t) activity_graphs,
+						                      map (transform_statemachine t) state_machines], 
+			   thyname = NONE}
     end
   | transform_classifier t (XMI.AssociationClass {xmiid,name,isActive,visibility,
 						  isLeaf,generalizations,attributes,
@@ -451,7 +451,15 @@ fun transformXMI ({classifiers,constraints,packages,
     let val (xmiid_table: (string,HashTableEntry) HashTable.hash_table) =
 	    HashTable.mkTable (HashString.hashString, (op =)) (101, Option)
 	(* hack: insert a dummy type into the table *)
-	val _ = HashTable.insert xmiid_table ("DummyT",Type (Rep_OclType.DummyT,nil,XMI.Primitive{name="DummyT",xmiid="DummyT",operations=[],generalizations=[],invariant=[]},nil))
+	val _ = HashTable.insert xmiid_table ("DummyT",
+                                          Type (Rep_OclType.DummyT,
+                                                nil,
+                                                XMI.Primitive{name="DummyT",
+                                                              xmiid="DummyT",
+                                                              operations=[],
+                                                              generalizations=[],
+                                                              invariant=[]},
+                                                nil))
 	(* for some reasons, there are model elements outside of the top-level *) 
 	(* model the xmi-file. So we have to handle them here seperately:      *)
 	val _ = map (insert_classifier xmiid_table nil) classifiers

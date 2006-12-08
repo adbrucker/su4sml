@@ -21,6 +21,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+(** A parser for template files. *)
 signature TPL_PARSER = 
 sig
 

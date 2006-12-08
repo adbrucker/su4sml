@@ -22,6 +22,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+(** A Package consisting of the OCL Library. *)
 signature OCL_LIBRARY=
 sig
   val oclLib : Rep_Core.Classifier list

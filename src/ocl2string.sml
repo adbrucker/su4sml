@@ -22,6 +22,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+(** "pretty printing" for OCL expressions. *)
 structure Ocl2String = 
 struct
 open library
@@ -209,6 +210,7 @@ fun ocl2string show_types oclterm =
 end
 end
 
+(** "pretty printing" of Repository models *)
 structure Rep2String = 
 struct
 

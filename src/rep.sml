@@ -22,6 +22,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+(** Repository for UML models. *)
 signature REP = 
 sig
 

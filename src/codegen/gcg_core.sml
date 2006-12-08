@@ -23,6 +23,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+(** A Code generator *)
 signature GCG = 
 sig
 
@@ -31,6 +32,7 @@ val generate  : Rep.Model -> string -> unit
 
 end
 
+(** builds a code generator from a cartridge chain. *)
 functor GCG_Core (C: CARTRIDGE): GCG  = 
 struct
 

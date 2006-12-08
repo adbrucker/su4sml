@@ -22,6 +22,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+(** Repository datatypes and helper functions for UML/OCL types. *)
 signature REP_OCL_TYPE =
 sig
 	
@@ -39,6 +40,7 @@ sig
 end
      
     
+(** Repository datatypes and helper functions for OCL expressions. *)
 signature REP_OCL_TERM =
 sig
 include REP_OCL_TYPE
@@ -170,5 +172,8 @@ and CollectionPart = CollectionItem of OclTerm * OclType
 	           | CollectionRange of OclTerm   (* first *)
 		         		 * OclTerm (* last  *)
                                          * OclType
+
+
+     
 end
 

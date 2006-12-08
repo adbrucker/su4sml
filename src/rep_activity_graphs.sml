@@ -23,6 +23,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+(** Repository datatypes and helper functions for activity graphs. *)
 signature REP_ACTIVITY_GRAPH = 
 sig
 include  REP_STATE_MACHINE  

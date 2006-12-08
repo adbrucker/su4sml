@@ -23,6 +23,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+(** repository datatypes and helper functions for UML statemachines *)
 signature REP_STATE_MACHINE = 
 sig
     

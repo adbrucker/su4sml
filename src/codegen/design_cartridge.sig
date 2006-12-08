@@ -1,10 +1,8 @@
-(* a design language specifies what the protected resources and the *)
-(* possible actions on these resources are                          *)
+(** A Cartridge that contains a DESIGN_LANGUAGE. *)
 signature DESIGN_LANGUAGE_CARTRIDGE =
 sig	  
     
 	include BASE_CARTRIDGE
 	structure Design: DESIGN_LANGUAGE
-
 
 end 

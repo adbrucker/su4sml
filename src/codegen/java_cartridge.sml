@@ -45,9 +45,9 @@ fun unpack  (env : environment) = #extension env
 fun pack superEnv = {extension = superEnv} : environment
 
 fun curClassifier env = SuperCart.curClassifier (unpack env)
-fun curArgument env = SuperCart.curArgument (unpack env)
-fun curOperation env = SuperCart.curOperation (unpack env)
-fun curAttribute env = SuperCart.curAttribute (unpack env)
+fun curArgument   env = SuperCart.curArgument   (unpack env)
+fun curOperation  env = SuperCart.curOperation  (unpack env)
+fun curAttribute  env = SuperCart.curAttribute  (unpack env)
 											 
 (* internal translation table, blindly copied from C# *)
 fun super2Native "ClassifierScope" = "static"
@@ -63,14 +63,8 @@ fun super2Native "ClassifierScope" = "static"
  			else if ((String.extract (s,0,SOME 3)) = "Set")
  	 		then "System.Collections.Generic.List<"
  				^(super2Native (String.substring(s,4,size s - 5)))^">"
-   			(*else (gcg_warning ("Couldn't lookup \""^s^
- 				"\" in c#_cartridge.super2Native !"); s)
- 			*)
- 			else s
- 		       )
- 		       handle Subscript => 
- 			 (*(gcg_warning ("Couldn't lookup \""^s^"\" in c#_cartridge.super2Native !");s)*)
- 			 s
+ 			else s )
+ 	handle Subscript => s
  
 (*	lookup  environment -> string -> string			
  * overrides some lookup entries of the base cartridge 

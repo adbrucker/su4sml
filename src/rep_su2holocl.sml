@@ -43,17 +43,17 @@ fun capitalize s = let val slist = String.explode s
 (** gives the type of an OCL expression.
  * Should be moved to Rep_Ocl? 
  *)
-fun type_of (Literal (_,t))                = t
-  | type_of (CollectionLiteral (_,t))      = t
-  | type_of (If(_,_,_,_,_,_,t))            = t
-  | type_of (AssociationEndCall(_,_,_,t))  = t
-  | type_of (AttributeCall(_,_,_,t))       = t
-  | type_of (OperationCall(_,_,_,_,t))     = t
+fun type_of (Literal                (_,t)) = t
+  | type_of (CollectionLiteral      (_,t)) = t
+  | type_of (If           (_,_,_,_,_,_,t)) = t
+  | type_of (AssociationEndCall (_,_,_,t)) = t
+  | type_of (AttributeCall      (_,_,_,t)) = t
+  | type_of (OperationCall    (_,_,_,_,t)) = t
   | type_of (OperationWithType(_,_,_,_,t)) = t
-  | type_of (Variable(_,t))                = t
-  | type_of (Let(_,_,_,_,_,t))             = t
-  | type_of (Iterate(_,_,_,_,_,_,_,_,t))   = t
-  | type_of (Iterator(_,_,_,_,_,_,t))      = t
+  | type_of (Variable               (_,t)) = t
+  | type_of (Let            (_,_,_,_,_,t)) = t
+  | type_of (Iterate  (_,_,_,_,_,_,_,_,t)) = t
+  | type_of (Iterator     (_,_,_,_,_,_,t)) = t
 
 fun self t = Variable ("self",t)
 fun result t = Variable ("result", t)

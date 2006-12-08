@@ -44,6 +44,8 @@ Group is
     codegen/base_cartridge.sml
     codegen/c#_cartridge.sml
     codegen/c#_net1_cartridge.sml
+    codegen/java_cartridge.sml
+    codegen/junit_cartridge.sml
     codegen/secureuml_cartridge.sml
 	codegen/design_cartridge.sig
     codegen/componentuml_cartridge.sml
