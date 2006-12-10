@@ -46,9 +46,9 @@ structure SecureUML_Base_Gcg
 structure CSharpSM_Gcg = GCG_Core (CSSM_Cartridge(CSharp_Cartridge(Base_Cartridge)))
 
 structure Java_Gcg = GCG_Core (Java_Cartridge(Base_Cartridge))
-
+(*
 structure Junit_Gcg = GCG_Core (Junit_Cartridge(Java_Cartridge(Base_Cartridge)))
-
+*)
 (*
 structure JavaSecure_Gcg = GCG_Core (Java_Cartridge(SecureUML_Cartridge(Base_Cartridge)));
 *)
@@ -67,9 +67,9 @@ fun generate xmi_file "base" =
     CSharpSM_Gcg.generate (RepParser.readFile xmi_file) "templates/C#_SM.tpl"
  |  generate xmi_file "java" = 
     Java_Gcg.generate (RepParser.readFile xmi_file) "templates/java.tpl"
- |  generate xmi_file "junit" = 
+(* |  generate xmi_file "junit" = 
     Junit_Gcg.generate (RepParser.readFile xmi_file) "templates/junit.tpl"
-    
+  *)  
  (*
  |  generate "java_secure" = JavaSecure_Gcg.generate model "templates/java_SecureUML.tpl"
  *)
