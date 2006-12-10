@@ -30,6 +30,7 @@ OS.FileSys.chDir "..";
 
 use "gcg_library.sml";
 use "gcg_helper.sml";
+use "stringHandling.sml";
 (*use "examples/simple.sml"; *)
 (*use "examples/ebank.sml";*)
 
@@ -48,14 +49,13 @@ use "design_cartridge.sig";
 use "secureuml_cartridge.sml";
 use "componentuml_cartridge.sml";
 
-(*
+
 use "java_cartridge.sml";
-*)
+
 
 (* Statemachines *)
 use "SM_helper.sml";
 use "stateMachineTypes.sml";
-use "stringHandling.sml";
 use "stateMachine.sml";
 use "c#sm_cartridge.sig";
 use "c#sm_cartridge.sml";
