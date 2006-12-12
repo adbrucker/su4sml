@@ -24,7 +24,13 @@
 OS.FileSys.chDir "compiler";
 
 use "compiler_ext.sig";
-use "smlnj.sml"; (* or "polyml.sml" or "mlton.sml" *) 
+
+val use_wrapper = if (String.isSubstring "polyml" ml_system)
+		  then "polyml.sml"
+                  else "smlnj.sml";
+
+
+use use_wrapper; (* or "smlnj.sml", "polyml.sml" or "mlton.sml" *) 
 
 OS.FileSys.chDir ".."; 
 
