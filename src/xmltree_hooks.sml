@@ -34,7 +34,7 @@ type AppFinal = Tree
 fun attspec2name dtd nil = nil 
   | attspec2name dtd ((i,AP_PRESENT (s,v,_),_)::atts) =
     let val attName = UniChar.Data2String (Dtd.Index2AttNot dtd i) 
-	val attValue = UniChar.Vector2String v
+	val attValue = UniChar.Data2String (UniChar.Vector2Data  v)
     in 
 	(attName,attValue)::(attspec2name dtd atts)
     end
