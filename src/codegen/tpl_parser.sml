@@ -190,7 +190,7 @@ fun codegen_home _ = getOpt(OS.Process.getEnv "CODEGEN_HOME",
 fun call_cpp file = 
 	let (*val targetFile = String.substring (file,0,size file -4) ^".tmp";*)
 		val targetFile = OS.FileSys.tmpName () 
-		val _ = OS.Process.system ("cpp "^codegen_home()^"/"^file^" "^targetFile^" -P -C")
+		val _ = OS.Process.system ("cpp -P -C "^codegen_home()^"/"^file^" "^targetFile)
 	in
 		targetFile
 	end
