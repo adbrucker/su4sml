@@ -239,8 +239,8 @@ fun ActGraph_of_classif_from_list(C:Classifier list) = let fun isFull l = (fn x 
 						end
 
 
-fun name_of_classif(Class{name=[a,b,c],...}) = c
-  | name_of_classif(Primitive{name=[a,b],...}) = "PRIMITIVE"
+fun name_of_classif(C as  Class c) = Rep.short_name_of C
+  | name_of_classif(Primitive p) = "PRIMITIVE"
   | name_of_classif(_) = "XXX"
 
 (*return list of subertices ot the given Classifier (Class, Primitive,...)*)

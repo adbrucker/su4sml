@@ -136,15 +136,15 @@ fun filter_subject cs = List.filter (classifier_has_stereotype "secuml.user") cs
 fun filter_role cs = List.filter (classifier_has_stereotype "secuml.role") cs 
 
  
-fun mkRole (Rep.Class c)  = Rep.string_of_path (#name c)
+fun mkRole (C as Rep.Class c)  = Rep.string_of_path (Rep.name_of C)
   | mkRole _              = library.error "mkRole called on something that is \
                                           \not a class"
 
 (* FIXME: handle groups also *)
-fun mkSubject (Rep.Class c) = User (Rep.string_of_path (#name c))
+fun mkSubject (C as Rep.Class c) = User (Rep.string_of_path (Rep.name_of C))
   | mkSubject _ = library.error "mkSubject called on something that is not a class"
 
-fun mkPermission cs (Rep.Class c) = 
+fun mkPermission cs (C as Rep.Class c) = 
     let val atts = Rep.attributes_of (Rep.Class c)
         val classifiers = List.mapPartial (fn (Rep_OclType.Classifier p) 
                                               => SOME (Rep.class_of p cs)
@@ -158,7 +158,7 @@ fun mkPermission cs (Rep.Class c) =
                                          classifiers
         val root_resource = hd root_classes
             handle Empty => library.error ("no root resource found for permission "^
-                                           Rep.string_of_path (#name c))
+                                           Rep.string_of_path (Rep.name_of C))
         val action_attributes = 
             List.filter (fn x => List.exists 
                                      (fn y => List.exists 
@@ -167,13 +167,13 @@ fun mkPermission cs (Rep.Class c) =
                                      Design.action_stereotypes) atts 
             handle _ => library.error "could not parse permission attributes"
     in 
-        { name  = (Rep.string_of_path (#name c)),
+        { name  = (Rep.string_of_path (Rep.name_of C)),
           roles = (map (Rep.string_of_path o Rep.name_of) role_classes),
           (* FIXME: find attached constraints *)
           constraints = nil, 
           actions = if action_attributes = [] 
                     then library.error ("no action attributes found in permission "^
-                                        (Rep.string_of_path (#name c)))
+                                        (Rep.string_of_path (Rep.name_of C)))
                     else map (Design.parse_action root_resource) action_attributes }
     end
   | mkPermission _ _ = library.error "mkPermission called on something \

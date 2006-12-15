@@ -46,10 +46,10 @@ val oclLib =
 			    associationends=[],
 			    activity_graphs=[],
 			    invariant=[],
-			    name=["Sequence(T)"],
+			    name=Sequence (TemplateParameter "T"),
 			    operations=[
 			    {
-			     arguments=[("object",Classifier [OclLibPackage,"T"])],
+			     arguments=[("object",TemplateParameter "T")],
 			     isQuery=true,
 			     name="count",
 			     postcondition=[],
@@ -154,7 +154,7 @@ val oclLib =
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[("object", Classifier [OclLibPackage,"T"])],
+			     arguments=[("object", TemplateParameter "T")],
 			     isQuery=true,
 			     name="append",
 			     postcondition=[],
@@ -164,7 +164,7 @@ val oclLib =
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[("object",Classifier [OclLibPackage,"T"])],
+			     arguments=[("object",TemplateParameter "T")],
 			     isQuery=true,
 			     name="prepend",
 			     postcondition=[],
@@ -175,7 +175,7 @@ val oclLib =
 			    },
 			    {
 			     arguments=[("index",Classifier [OclLibPackage,"Integer"]),
-					("object",Classifier [OclLibPackage,"T"])],
+					("object",TemplateParameter "T")],
 			     isQuery=true,name="insertAt",
 			     postcondition=[],
 			     precondition=[],
@@ -199,12 +199,12 @@ val oclLib =
 			     name="at",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"T"],
+			     result=TemplateParameter "T",
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[("obj",Classifier [OclLibPackage,"T"])],
+			     arguments=[("obj",TemplateParameter "T")],
 			     isQuery=true,
 			     name="indexOf",
 			     postcondition=[],
@@ -219,7 +219,7 @@ val oclLib =
 			     name="first",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"T"],
+			     result=TemplateParameter "T",
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
@@ -229,11 +229,11 @@ val oclLib =
 			     name="last",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"T"],
+			     result=TemplateParameter "T",
 			     scope=XMI.InstanceScope,visibility=XMI.public
 			    },
 			    {
-			     arguments=[("object",Classifier [OclLibPackage,"T"])],
+			     arguments=[("object",TemplateParameter "T")],
 			     isQuery=true,
 			     name="including",
 			     postcondition=[],
@@ -243,7 +243,7 @@ val oclLib =
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[("object",Classifier [OclLibPackage,"T"])],
+			     arguments=[("object",TemplateParameter "T")],
 			     isQuery=true,
 			     name="excluding",
 			     postcondition=[],
@@ -296,7 +296,7 @@ val oclLib =
 			    activity_graphs=[],
 			    interfaces=[],
 			    invariant=[],
-			    name=["Bag(T)"],
+			    name=Bag (TemplateParameter "T"),
 			    operations=[
 			    {
 			     arguments=[("bag",Classifier [OclLibPackage,"Bag(T)"])],
@@ -368,19 +368,19 @@ val oclLib =
 			     scope=XMI.InstanceScope,visibility=XMI.public
 			    },
 			    {
-			     arguments=[("object",Classifier [OclLibPackage,"T"])],
+			     arguments=[("object",TemplateParameter "T")],
 			     isQuery=true,name="including",postcondition=[],
 			     precondition=[],result=Classifier [OclLibPackage,"Bag(T)"],
 			     scope=XMI.InstanceScope,visibility=XMI.public
 			    },
 			    {
-			     arguments=[("object",Classifier [OclLibPackage,"T"])],
+			     arguments=[("object",TemplateParameter "T")],
 			     isQuery=true,name="excluding",postcondition=[],
 			     precondition=[],result=Classifier [OclLibPackage,"Bag(T)"],
 			     scope=XMI.InstanceScope,visibility=XMI.public
 			    },
 			    {
-			     arguments=[("object",Classifier [OclLibPackage,"T"])],
+			     arguments=[("object",TemplateParameter "T")],
 			     isQuery=true,name="count",postcondition=[],precondition=[],
 			     result=Classifier [OclLibPackage,"Integer"],scope=XMI.InstanceScope,
 			     visibility=XMI.public
@@ -416,7 +416,8 @@ val oclLib =
 			     attributes=[],
 			     associationends=[],
 			     activity_graphs=[],
-			     interfaces=[],invariant=[],name=["Set(T)"],
+			     interfaces=[],invariant=[],
+			     name=Set (TemplateParameter "T"),
 			     operations=[
 			     {
 			      arguments=[("s",Classifier [OclLibPackage,"Set(T)"])],
@@ -501,13 +502,13 @@ val oclLib =
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
-			      arguments=[("object",Classifier [OclLibPackage,"T"])],
+			      arguments=[("object",TemplateParameter "T")],
 			      isQuery=true,name="including",postcondition=[],
 			      precondition=[],result=Classifier [OclLibPackage,"Set(T)"],
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
-			      arguments=[("object",Classifier [OclLibPackage,"T"])],
+			      arguments=[("object",TemplateParameter "T")],
 			      isQuery=true,name="excluding",postcondition=[],
 			      precondition=[],result=Classifier [OclLibPackage,"Set(T)"],
 			      scope=XMI.InstanceScope,visibility=XMI.public
@@ -519,7 +520,7 @@ val oclLib =
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
-			      arguments=[("object",Classifier [OclLibPackage,"T"])],
+			      arguments=[("object",TemplateParameter "T")],
 			      isQuery=true,name="count",postcondition=[],precondition=[],
 			      result=Classifier [OclLibPackage,"Integer"],scope=XMI.InstanceScope,
 			      visibility=XMI.public
@@ -563,7 +564,7 @@ val oclLib =
 			     attributes=[],
 			     associationends=[],
 			     activity_graphs=[],	  
-			     interfaces=[],invariant=[],name=["Collection(T)"],
+			     interfaces=[],invariant=[],name=Collection (TemplateParameter "T"),
 			     operations=[
 			     {
 			      arguments=[],isQuery=true,name="size",postcondition=[],
@@ -577,19 +578,19 @@ val oclLib =
 			      visibility=XMI.public
 			     },
 			     {
-			      arguments=[("object",Classifier [OclLibPackage,"T"])],
+			      arguments=[("object",TemplateParameter "T")],
 			      isQuery=true,name="includes",postcondition=[],
 			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
-			      arguments=[("object",Classifier [OclLibPackage,"T"])],
+			      arguments=[("object",TemplateParameter "T")],
 			      isQuery=true,name="excludes",postcondition=[],
 			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
-			      arguments=[("object",Classifier [OclLibPackage,"T"])],
+			      arguments=[("object",TemplateParameter "T")],
 			      isQuery=true,name="count",postcondition=[],precondition=[],
 			      result=Classifier [OclLibPackage,"Integer"],scope=XMI.InstanceScope,
 			      visibility=XMI.public
@@ -618,7 +619,7 @@ val oclLib =
 			     },
 			     {
 			      arguments=[],isQuery=true,name="sum",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"T"],
+			      precondition=[],result=TemplateParameter "T",
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
@@ -635,13 +636,13 @@ val oclLib =
 	  attributes=[],
 	  associationends=[],
 	  activity_graphs=[],	  
-	  interfaces=[],invariant=[],name=["OclVoid"],operations=[],
+	  interfaces=[],invariant=[],name=OclVoid,operations=[],
 	  parent=NONE,stereotypes=[],thyname=NONE
 	 },
 
      Primitive
 	 {
-	  associationends=[],interfaces=[],invariant=[],name=[OclLibPackage,"OclAny"],
+	  associationends=[],interfaces=[],invariant=[],name=OclAny,
 	  operations=[
 	  {
 	   arguments=[("object",Classifier [OclLibPackage,"OclAny"])],
@@ -698,7 +699,7 @@ val oclLib =
 	  },
           {
 	   arguments=[],isQuery=true,name="asSet",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"Set(OclAny)"],
+           precondition=[],result=Classifier [OclLibPackage,"Set(T)"],
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
@@ -721,7 +722,7 @@ val oclLib =
 	 },
      Primitive
 	 {
-	  associationends=[],interfaces=[],invariant=[],name=[OclLibPackage,"String"],
+	  associationends=[],interfaces=[],invariant=[],name=String,
 	  operations=[
 	  {
 	   arguments=[],isQuery=true,name="size",postcondition=[],
@@ -765,7 +766,7 @@ val oclLib =
 	 },
      Primitive
 	 {
-	  associationends=[],interfaces=[],invariant=[],name=[OclLibPackage,"Boolean"],
+	  associationends=[],interfaces=[],invariant=[],name=Boolean,
 	  operations=[
 	  {
 	   arguments=[("b",Classifier [OclLibPackage,"Boolean"])],
@@ -835,7 +836,7 @@ val oclLib =
 	 },
      Primitive
 	 {
-	  associationends=[],interfaces=[],invariant=[],name=[OclLibPackage,"Integer"],
+	  associationends=[],interfaces=[],invariant=[],name=Integer,
 	  operations=[
 	  {
 	   arguments=[("i",Classifier [OclLibPackage,"Integer"])],
@@ -898,7 +899,7 @@ val oclLib =
 	 },
      Primitive
 	 {
-	  associationends=[],interfaces=[],invariant=[],name=[OclLibPackage,"Real"],
+	  associationends=[],interfaces=[],invariant=[],name=Real,
 	  operations=[
 	  {
 	   arguments=[("r",Classifier [OclLibPackage,"Real"])],

@@ -343,10 +343,10 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 		val filtered_parents = filter (fn x => x <> Rep_OclType.OclAny) parents
  		val checked_invariants = filter_exists t invariant
     in
-	Rep.Class {name = path_of_classifier (find_classifier_type t xmiid), 
+	Rep.Class {name = (* path_of_classifier *) (find_classifier_type t xmiid), 
 			parent = case filtered_parents 
 				  of [] => NONE
-				   | xs => SOME (path_of_classifier (hd xs)),
+				   | xs => SOME ((* path_of_classifier *) (hd xs)),
 			attributes = map (transform_attribute t) attributes,
 			operations = map (transform_operation t) operations,
 			invariant  = map ((transform_constraint t) o 
@@ -369,10 +369,10 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 		val filtered_parents = filter (fn x => x <> Rep_OclType.OclAny) parents
 		val checked_invariants = filter_exists t invariant
     in
-	Rep.Class {name = path_of_classifier (find_classifier_type t xmiid), 
+	Rep.Class {name = (* path_of_classifier *) (find_classifier_type t xmiid), 
 			parent = case filtered_parents 
 				  of [] => NONE
-				   | xs => SOME (path_of_classifier (hd xs)),
+				   | xs => SOME ((*path_of_classifier *) (hd xs)),
 			attributes = map (transform_attribute t) attributes,
 			operations = map (transform_operation t) operations,
 			invariant  = map ((transform_constraint t) o 
@@ -388,8 +388,8 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 										   operations,invariant}) =
 	let val checked_invariants = filter_exists t invariant
 	in
-    Rep.Primitive {name = case find_classifier_type t xmiid of Rep_OclType.Classifier x => x
-								  | _ => raise Option, 
+    Rep.Primitive {name = (* case *) find_classifier_type t xmiid (*of Rep_OclType.Classifier x => x
+								  | _ => raise Option*) , 
 			parent = NONE,    (* FIX *)
 			operations = map (transform_operation t) operations,
 			associationends = map (transform_aend t) 
@@ -404,8 +404,8 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 						 operations,literals,invariant}) =
 	let val checked_invariants = filter_exists t invariant
 	in
-    Rep.Enumeration {name = case find_classifier_type t xmiid of Rep_OclType.Classifier x => x
-								    | _ => raise Option, 
+    Rep.Enumeration {name = (* case *) find_classifier_type t xmiid (* of Rep_OclType.Classifier x => x
+								    | _ => raise Option *), 
 			  parent = NONE,    (* FIX *)
 			  literals = literals,
 			  operations = map (transform_operation t) operations,

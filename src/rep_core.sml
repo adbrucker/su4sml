@@ -56,43 +56,43 @@ type attribute = {
 
 datatype Classifier =  
 	 Class of 
-	 { name        : Rep_OclType.Path, 
-	   parent      : Rep_OclType.Path option,
+	 { name        : Rep_OclType.OclType, 
+	   parent      : Rep_OclType.OclType option,
 	   attributes  : attribute list,
 	   operations  : operation list,
 	   associationends : associationend list,
 	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   stereotypes : string list,
-	   interfaces  : Rep_OclType.Path list,
+	   interfaces  : Rep_OclType.OclType list,
 	   thyname     : string option,
            activity_graphs : Rep_ActivityGraph.ActivityGraph list
 	  }
        | Interface of               (* not supported yet *)
-	 { name        : Rep_OclType.Path,
-	   parents     : Rep_OclType.Path list, 
+	 { name        : Rep_OclType.OclType,
+	   parents     : Rep_OclType.OclType list, 
 	   operations  : operation list,
 	   stereotypes : string list,
 	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   thyname     : string option
 	  }
        | Enumeration of (* not really supported yet? *)
-	 { name        : Rep_OclType.Path,
-	   parent      : Rep_OclType.Path option,
+	 { name        : Rep_OclType.OclType,
+	   parent      : Rep_OclType.OclType option,
 	   operations  : operation list,
 	   literals    : string list,
 	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   stereotypes : string list,
-	   interfaces  : Rep_OclType.Path list,
+	   interfaces  : Rep_OclType.OclType list,
 	   thyname     : string option
 	  }
        | Primitive of (* not really supported yet *)
-	 { name        : Rep_OclType.Path,
-	   parent      : Rep_OclType.Path option,
+	 { name        : Rep_OclType.OclType,
+	   parent      : Rep_OclType.OclType option,
 	   operations  : operation list,
 	   associationends : associationend list,
 	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   stereotypes : string list,
-	   interfaces  : Rep_OclType.Path list,
+	   interfaces  : Rep_OclType.OclType list,
 	   thyname     : string option
 	  }
        | Template of 
@@ -106,6 +106,7 @@ val normalize : Classifier -> Classifier
 val normalize_init : Classifier -> Classifier
 
 val name_of       : Classifier -> Rep_OclType.Path 
+val type_of       : Classifier -> Rep_OclType.OclType 
 val package_of    : Classifier -> Rep_OclType.Path
 val short_name_of : Classifier -> string 
 
@@ -174,43 +175,43 @@ type attribute = {
 
 datatype Classifier =  
 	 Class of 
-	 { name        : Rep_OclType.Path, 
-	   parent      : Rep_OclType.Path option,
+	 { name        : Rep_OclType.OclType, 
+	   parent      : Rep_OclType.OclType option,
 	   attributes  : attribute list,
 	   operations  : operation list,
 	   associationends : associationend list,
 	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   stereotypes : string list,
-	   interfaces  : Rep_OclType.Path list,
+	   interfaces  : Rep_OclType.OclType list,
 	   thyname     : string option,
            activity_graphs : Rep_ActivityGraph.ActivityGraph list
 	  }
        | Interface of               (* not supported yet *)
-	 { name        : Rep_OclType.Path,
-	   parents     : Rep_OclType.Path list, 
+	 { name        : Rep_OclType.OclType,
+	   parents     : Rep_OclType.OclType list, 
 	   operations  : operation list,
 	   stereotypes : string list,
 	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   thyname     : string option
 	  }
        | Enumeration of (* not really supported yet? *)
-	 { name        : Rep_OclType.Path,
-	   parent      : Rep_OclType.Path option,
+	 { name        : Rep_OclType.OclType,
+	   parent      : Rep_OclType.OclType option,
 	   operations  : operation list,
 	   literals    : string list,
 	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   stereotypes : string list,
-	   interfaces  : Rep_OclType.Path list,
+	   interfaces  : Rep_OclType.OclType list,
 	   thyname     : string option
 	  }
        | Primitive of (* not really supported yet *)
-	 { name        : Rep_OclType.Path,
-	   parent      : Rep_OclType.Path option,
+	 { name        : Rep_OclType.OclType,
+	   parent      : Rep_OclType.OclType option,
 	   operations  : operation list,
 	   associationends : associationend list,
 	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   stereotypes : string list,
-	   interfaces  : Rep_OclType.Path list,
+	   interfaces  : Rep_OclType.OclType list,
 	   thyname     : string option
 	  } 
        | Template of 
@@ -303,7 +304,19 @@ fun assoc_to_inv cls_name (aend:associationend) =
        then (SOME inv_name, Rep_OclTerm.Literal ("true",Rep_OclType.Boolean)) 
        else (SOME inv_name, foldr1 ocl_or range_constraints)
     end
-	     
+
+
+fun path_of_OclType (Rep_OclType.Classifier p) = p
+  | path_of_OclType Rep_OclType.Integer        = ["oclLib","Integer"] 
+  | path_of_OclType Rep_OclType.Real           = ["oclLib","Real"]
+  | path_of_OclType Rep_OclType.String         = ["oclLib","String"]
+  | path_of_OclType Rep_OclType.Boolean        = ["oclLib","Boolean"]
+  | path_of_OclType Rep_OclType.OclAny         = ["oclLib","OclAny"]
+  | path_of_OclType Rep_OclType.OclVoid        = ["oclLib","OclVoid"]
+  | path_of_OclType Rep_OclType.DummyT       = ["oclLib","OclDummy"]
+	
+
+     
 (* convert association ends into attributes + invariants *)
 fun normalize (Class {name,parent,attributes,operations,associationends,invariant,
 		      stereotypes,interfaces,thyname,activity_graphs}) =
@@ -313,7 +326,7 @@ fun normalize (Class {name,parent,attributes,operations,associationends,invarian
 					   attributes),
 		      operations = operations,
 		      associationends = nil,
-		      invariant = append (map (assoc_to_inv name) associationends)  
+		      invariant = append (map (assoc_to_inv (path_of_OclType name)) associationends)  
 					  invariant,
 		      stereotypes = stereotypes,
                       interfaces = interfaces,
@@ -377,7 +390,7 @@ fun normalize_init (Class {name,parent,attributes,operations,associationends,inv
 		      attributes = (map rm_init_attr attributes),
 		      operations = operations,
 		      associationends = nil,
-		      invariant = append (map (init_to_inv  name) attributes)  
+		      invariant = append (map (init_to_inv  (path_of_OclType name)) attributes)  
 					  invariant,
 		      stereotypes = stereotypes,
                       interfaces = interfaces,
@@ -389,7 +402,7 @@ fun normalize_init (Class {name,parent,attributes,operations,associationends,inv
 
 
 
-val OclAnyC = Class{name=["OclAny"],parent=NONE,attributes=[],
+val OclAnyC = Class{name=Rep_OclType.OclAny,parent=NONE,attributes=[],
 			  operations=[], interfaces=[],
 			  invariant=[],stereotypes=[], associationends=[],
 			  thyname=NONE,
@@ -422,86 +435,89 @@ fun update_thyname tname (Class{name,parent,attributes,operations,invariant,
                 stereotypes=stereotypes,interfaces=interfaces,thyname=(SOME tname)} 
 
 
-fun name_of (Class{name,...})       = name  
-  | name_of (Interface{name,...})   = name
-  | name_of (Enumeration{name,...}) = name
-  | name_of (Primitive{name,...})    = name
-  | name_of (Template{classifier,...}) = name_of classifier
 
-fun short_name_of (Class{name,...})       = (hd o rev) name  
-  | short_name_of (Interface{name,...})   = (hd o rev) name
-  | short_name_of (Enumeration{name,...}) = (hd o rev) name
-  | short_name_of (Primitive{name,...})    = (hd o rev) name
+
+fun type_of (Class{name,...})       = name  
+  | type_of (Interface{name,...})   = name
+  | type_of (Enumeration{name,...}) = name
+  | type_of (Primitive{name,...})    = name
+  | type_of (Template{classifier,...}) = type_of classifier 
+
+
+fun name_of (Class{name,...})       = path_of_OclType name  
+  | name_of (Interface{name,...})   = path_of_OclType name
+  | name_of (Enumeration{name,...}) = path_of_OclType name
+  | name_of (Primitive{name,...})    = path_of_OclType name
+  | name_of _                        = error "no name represenation for this classifier"
+
+fun short_name_of C =  case (name_of C)  of
+	[] => error "empty type in short name"
+	| p => (hd o rev)  p
 
 fun stereotypes_of (Class{stereotypes,...})       = stereotypes  
   | stereotypes_of (Interface{stereotypes,...})   = stereotypes
   | stereotypes_of (Enumeration{stereotypes,...}) = stereotypes
   | stereotypes_of (Primitive{stereotypes,...})    = stereotypes
+  
 
 
 
-
-fun package_of (Class{name,...})       = if (length name) > 1 
-                                         then take (((length name) -1),name)  
+fun package_of (Class{name,...})       = if (length (path_of_OclType name)) > 1 
+                                         then take (((length (path_of_OclType name)) -1),(path_of_OclType name))  
                                          else []
-  | package_of (Interface{name,...})   = if (length name) > 1 
-                                         then take (((length name) -1),name) 
+  | package_of (Interface{name,...})   = if (length (path_of_OclType name)) > 1 
+                                         then take (((length (path_of_OclType name)) -1),(path_of_OclType name)) 
                                          else []
-  | package_of (Enumeration{name,...}) = if (length name) > 1 
-                                         then take (((length name) -1),name) 
+  | package_of (Enumeration{name,...}) = if (length (path_of_OclType name)) > 1 
+                                         then take (((length (path_of_OclType name)) -1),(path_of_OclType name))
                                          else []
-  | package_of (Primitive{name,...})   = if (length name) > 1 
-                                         then take (((length name) -1),name) 
+  | package_of (Primitive{name,...})   = if (length (path_of_OclType name)) > 1 
+                                         then take (((length (path_of_OclType name)) -1),(path_of_OclType name)) 
                                          else []
   | package_of (Template{classifier,...}) = package_of classifier
 
 fun parent_name_of (C as Class{parent,...}) = 
     (case parent  of NONE   => name_of OclAnyC
-		    |SOME p => p ) 
+		    |SOME p => path_of_OclType p ) 
   | parent_name_of (Interface{...})         = 
                     error "parent_name_of <Interface> not supported"
   | parent_name_of (E as Enumeration{parent,...}) = 
     (case parent  of NONE => error ("Enumeration "^((string_of_path o name_of) E)
                                     ^" has no parent")
-		   | SOME p  => p )  
+		   | SOME p  => path_of_OclType p )  
   | parent_name_of (D as Primitive{parent,...})    = 
     (case parent  of NONE => name_of OclAnyC
 	(* error ("Primitive "^((string_of_path o name_of) D)^" has no parent") *)
-		   | SOME p  => p )
+		   | SOME p  => path_of_OclType p )
  
-fun short_parent_name_of (C as Class{parent,...})       = 
-    (case parent  of NONE => short_name_of OclAnyC
-		   | SOME p  => (hd o rev) p ) 
-  | short_parent_name_of (Interface{...})        = 
-    error "parent_name_of <Interface> not supported"
-  | short_parent_name_of (E as Enumeration{parent,...}) = 
-    (case parent  of  NONE => error ("Enumeration "^((string_of_path o name_of) E)^
-                                     " has no parent")
-		   |  SOME p  => (hd o rev) p )  
-  | short_parent_name_of (D as Primitive{parent,...})    = 
-    (case parent  of  NONE =>  short_name_of OclAnyC 
-          (* error ("Primitive "^((string_of_path o name_of) D)^" has no parent") *)
-		   | SOME p  => (hd o rev) p ) 
-					     					     
+fun short_parent_name_of C =  case (parent_name_of C) of
+	[] => error "empty type in short parent name"
+       | p => (hd o rev)  p
 							 
 fun parent_package_of (Class{parent,...})       = 
     (case parent of  NONE => package_of OclAnyC
-		   | SOME p   =>if (length p) > 1 
-                                then  (take (((length p) -1),p))  
-                                else [])
+		   | SOME q   => let val p = path_of_OclType q in 
+				    if (length p) > 1 
+                                    then  (take (((length p) -1),p))  
+                                    else []
+				end)
   | parent_package_of (Interface{...})        = 
                    error "parent_package_of <Interface> not supported"
   | parent_package_of (Enumeration{parent,...}) = 
     (case parent of  NONE => error "Enumeration has no parent"
-		   | SOME p  => if (length p) > 1 
-                                then (take (((length p) -1),p))  
-                                else [])
+		   | SOME q   => let val p = path_of_OclType q in 
+				    if (length p) > 1 
+                                    then (take (((length p) -1),p))  
+                                    else []
+				end )
   | parent_package_of (Primitive{parent,...})    = 
     (case parent of NONE => package_of OclAnyC
 	  (* NONE => error "Primitive has no parent" *)
-		 |  SOME p   => if (length p) > 1 
-                                then (take (((length p) -1),p))  
-                                else [])
+		 |  SOME q   => let val p = path_of_OclType q in
+				   if (length p) > 1 
+                                   then (take (((length p) -1),p))  
+                                   else []
+			       end)
 						
 
 fun attributes_of (Class{attributes,...}) = attributes

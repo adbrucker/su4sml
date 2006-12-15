@@ -239,31 +239,31 @@ fun operation2string ({name,arguments,result,precondition,postcondition,...}:Rep
 fun attribute2string ({name,attr_type,...}:Rep.attribute) = 
     "  "^name^" : "^(Rep_OclType.string_of_OclType attr_type)^"\n"
 
-fun parent2string (SOME p) = " extends "^Rep.string_of_path p
-  |parent2string NONE = ""
+fun parent2string (SOME (p)) = " extends "^Rep_OclType.string_of_OclType p
+  | parent2string _ = ""
 
-fun classifier2string (Rep.Class x) =
+fun classifier2string (C as Rep.Class x) =
     String.concat (map stereotype2string (#stereotypes x))^
-    "class "^Rep.string_of_path (#name x)^
+    "class "^Rep.string_of_path (Rep.name_of C)^
     parent2string (#parent x)^
     " {\n"^
     String.concat (map inv2string (#invariant x))^
     String.concat (map attribute2string (#attributes x))^
     String.concat (map operation2string (#operations x))^
     "}\n"
-  | classifier2string (Rep.Interface x) =
+  | classifier2string (C as Rep.Interface x) =
     String.concat (map stereotype2string (#stereotypes x))^
-    "interface "^Rep.string_of_path (#name x)^"{\n"^
+    "interface "^Rep.string_of_path (Rep.name_of C)^"{\n"^
     String.concat (map operation2string (#operations x))^
     "}\n"
-  | classifier2string (Rep.Primitive x) =
+  | classifier2string (C as Rep.Primitive x) =
     String.concat (map stereotype2string (#stereotypes x))^
-    "primitive "^Rep.string_of_path (#name x)^"{\n"^
+    "primitive "^Rep.string_of_path (Rep.name_of C)^"{\n"^
     String.concat (map operation2string (#operations x))^
     "}\n"
-  | classifier2string (Rep.Enumeration x) =
+  | classifier2string (C as Rep.Enumeration x) =
     String.concat (map stereotype2string (#stereotypes x))^
-    "enum "^Rep.string_of_path (#name x)^"{\n"^
+    "enum "^Rep.string_of_path (Rep.name_of C)^"{\n"^
     String.concat (map operation2string (#operations x))^
     "}\n"
 
