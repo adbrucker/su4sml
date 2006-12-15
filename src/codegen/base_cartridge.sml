@@ -155,7 +155,7 @@ fun test env "isClass"       = (case (#curClassifier env)  of
                                    Rep_OclType.string_of_path 
                                        (Rep.parent_name_of (curClassifier' env))
                            in
-                               (parentName <> "OclAny")
+                               (parentName <> "oclLib.OclAny")
                            end
   | test env "first_classifier" = (curClassifier' env = hd  (#model env))
   | test env "first_attribute" = (curAttribute'  env 
