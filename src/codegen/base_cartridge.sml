@@ -90,6 +90,13 @@ fun initEnv model = { model = model,
 					  curAttribute = NONE,
 					  curArgument  = NONE } : environment
 
+fun curClassifierPackageToString env p2sfun = (case (#curClassifier env) of 
+                                               NONE  =>  p2sfun
+                                                             (Rep.package_of 
+                                                                  (hd (#model env)))
+                                             | SOME c => p2sfun
+                                                             (Rep.package_of 
+                                                                  (curClassifier' env)))
 
 (* FIX: check for NONEs in arguments environment *)
 (** 
@@ -101,13 +108,8 @@ fun initEnv model = { model = model,
  * operation_visibility, operation_scope, argument_name, argument_type  
  *)
 fun lookup env "classifier_name"  	  = Rep_Core.short_name_of (curClassifier' env)
-  | lookup env "classifier_package"   = (case (#curClassifier env) of 
-                                               NONE  =>  Rep_OclType.string_of_path 
-                                                             (Rep.package_of 
-                                                                  (hd (#model env)))
-                                             | SOME c => Rep_OclType.string_of_path 
-                                                             (Rep.package_of 
-                                                                  (curClassifier' env)))
+  | lookup env "classifier_package"   = curClassifierPackageToString env Rep_OclType.string_of_path 
+  | lookup env "classifier_package_path" = curClassifierPackageToString env Rep_OclType.pathstring_of_path 
   | lookup env "classifier_parent"     = Rep_Core.short_parent_name_of 
                                              (curClassifier' env)
   | lookup env "attribute_name"        = #name (curAttribute' env)
@@ -157,6 +159,7 @@ fun test env "isClass"       = (case (#curClassifier env)  of
                            in
                                (parentName <> "oclLib.OclAny")
                            end
+  | test env "hasOperations" = (length (Rep_Core.operations_of (curClassifier' env))) > 0
   | test env "first_classifier" = (curClassifier' env = hd  (#model env))
   | test env "first_attribute" = (curAttribute'  env 
                                   = hd (Rep_Core.attributes_of (curClassifier' env)))

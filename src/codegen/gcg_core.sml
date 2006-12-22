@@ -54,7 +54,14 @@ fun openFile file = (closeFile ();
 					 out := (TextIO.openOut file);
 					 curFile := file
 					 )
-		     
+
+fun openFileIfNotExists file = (closeFile ();
+				(if ((OS.FileSys.fileSize file) > 0) then
+				     openFile "/dev/null"
+				 else
+				     openFile file
+				     ) handle SysErr => ( openFile file ))
+			       
 fun initOut () =  (out := TextIO.stdOut;
 				   curFile := "")
 		  
@@ -79,6 +86,7 @@ fun substituteVars e s = let val tkl = (Gcg_Helper.joinEscapeSplitted "$") (Gcg_
 (** traverses a templateParseTree and executes the given instructions *)
 fun write env (Tpl_Parser.RootNode(l))  = List.app (write env) l
   | write env (Tpl_Parser.OpenFileLeaf(file)) = openFile (substituteVars env file)
+  | write env (Tpl_Parser.OpenFileIfNotExistsLeaf(file)) = openFileIfNotExists (substituteVars env file)
   | write env (Tpl_Parser.EvalLeaf(l)) = let fun collectEval 		[] 	    = ""
   				| collectEval ((Tpl_Parser.TextLeaf(expr))::t) = expr^"\n"^(collectEval t)
   				| collectEval 		_	    = 

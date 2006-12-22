@@ -31,6 +31,7 @@ datatype TemplateTree
   | ForEachNode of string * TemplateTree list
   | IfNode of string * TemplateTree list
   | OpenFileLeaf of string
+  | OpenFileIfNotExistsLeaf of string
   | RootNode of TemplateTree list
   | TextLeaf of string
 
@@ -57,6 +58,7 @@ fun readNextLine () = TextIO.inputLine (!tplStream)
  
 datatype TemplateTree =   RootNode of TemplateTree list
 			| OpenFileLeaf of string
+			| OpenFileIfNotExistsLeaf of string
 			| EvalLeaf of TemplateTree list
 			| TextLeaf of string
 			| IfNode of string * TemplateTree list
@@ -100,6 +102,7 @@ fun cleanLine s = let fun removeWspace s =
  *)
 fun printTplTree prefix (RootNode(l))	= (print (prefix^"root"^"\n"); List.app (printTplTree (prefix))l)
   | printTplTree prefix (OpenFileLeaf(s))= print (prefix^"openfile:"^s^"\n") 
+  | printTplTree prefix (OpenFileIfNotExistsLeaf(s))= print (prefix^"openfileifnotexists:"^s^"\n") 
   | printTplTree prefix (EvalLeaf(l)) 	= (print (prefix^"eval:\n"); List.app (printTplTree (prefix^"\t"))l)
   | printTplTree prefix (TextLeaf(s))	= print (prefix^"text:"^s^"\n")
   | printTplTree prefix (IfNode(s,l))	= (print (prefix^"if:"^s^"\n");List.app (printTplTree (prefix^"\t")) l)
@@ -168,6 +171,7 @@ fun buildTree (SOME line) = let fun getNode ("text",c) 	  = (TextLeaf(c))::(buil
 			 	  | getNode ("else",_) 	  = [ElseNode(buildTree (readNextLine()))]
 			 	  | getNode ("elsif",c)	  = [ElseNode([IfNode(c,buildTree (readNextLine()))])]
 			 	  | getNode ("openfile",c)= (OpenFileLeaf(c))::(buildTree (readNextLine()))
+			 	  | getNode ("openfileifnotexists",c)= (OpenFileIfNotExistsLeaf(c))::(buildTree (readNextLine()))
 			 	  | getNode ("eval","")   = 
 			 	  	(EvalLeaf(buildTree(readNextLine())))::(buildTree (readNextLine()))
 			 	  | getNode ("eval",expr) = (EvalLeaf([TextLeaf(expr)]))::(buildTree (readNextLine()))

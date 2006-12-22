@@ -35,6 +35,7 @@ sig
 		     | Classifier of Path | OclVoid | DummyT | TemplateParameter of string
 	val string_of_OclType : OclType -> string	
 	val string_of_path    : Path -> string	
+    val pathstring_of_path: Path -> string
 	val is_Classifier     : OclType -> bool
     val is_Collection     : OclType -> bool
 end
@@ -99,10 +100,16 @@ datatype OclType    =  Integer | Real | String | Boolean | OclAny
 		     | Classifier of Path
 		     | TemplateParameter of string
 
-fun string_of_path (path:Path) = case path of
+(** Convert Path to a string using given separator *)
+fun path_to_string (path:Path) separator = case path of
 			      [] => ""
-			    | p  => foldr1 (fn (a,b) => a^"."^b) p
+			    | p  => foldr1 (fn (a,b) => a^separator^b) p
 
+(** Convert Path to a string using ., creating a Java package name like string *)
+fun string_of_path (path:Path) = path_to_string path "."
+
+(** Convert Path to a string using /, creating a Unix directory like string *)
+fun pathstring_of_path (path:Path) = path_to_string path "/"
 
 fun string_of_OclType Integer        = "Integer" 
   | string_of_OclType Real           = "Real"

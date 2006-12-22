@@ -2,7 +2,7 @@
  *          su4sml - a SecureUML repository for SML              
  *                                                                            
  * junit_cartridge.sml - a junit cartridge for gcg
- * Copyright (C) 2006
+ * Copyright (C) 2006 Manfred Stock
  *                                                                            
  * This file is part of su4sml.                                              
  *                                                                            
@@ -51,7 +51,10 @@ fun curAttribute env = SuperCart.curAttribute (unpack env)
 fun lookup (env : environment) s =  SuperCart.lookup (unpack env) s
 
 (* any special predicates?*) 
-fun test (env : environment)  s = SuperCart.test (unpack env) s
+fun test (env : environment ) "operation_isNotPrivate" = not (test env "operation_isPrivate")
+  | test (env : environment ) "not_last_argument" = not (test env "last_argument")
+  | test (env : environment) "isTestable" = (test env "hasOperations") andalso (not (test env "isInterface"))
+  | test (env : environment)  s = SuperCart.test (unpack env) s
 
 (* any special lists? *)
 fun foreach listType (env : environment) 

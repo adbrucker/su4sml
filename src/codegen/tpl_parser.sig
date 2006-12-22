@@ -30,6 +30,7 @@ datatype TemplateTree
   | ForEachNode of string * TemplateTree list
   | IfNode of string * TemplateTree list
   | OpenFileLeaf of string
+  | OpenFileIfNotExistsLeaf of string
   | RootNode of TemplateTree list
   | TextLeaf of string
 

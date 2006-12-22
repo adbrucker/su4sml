@@ -57,6 +57,7 @@ use "componentuml_cartridge.sml";
 
 
 use "java_cartridge.sml";
+use "junit.sml";
 
 
 (* Statemachines *)
