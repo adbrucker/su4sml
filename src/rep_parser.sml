@@ -415,6 +415,21 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 			  interfaces = nil, (* FIX *)
 		   thyname = NONE}
 	end
+  | transform_classifier t (XMI.Interface { xmiid, name, generalizations, operations, invariant,
+		                                    ...}) =
+    let 
+        val checked_invariants = filter_exists t invariant
+    in 
+        Rep.Interface { name        = find_classifier_type t xmiid,
+	                    parents     = map ((find_classifier_type t) o (find_parent t)) 
+			                              generalizations,
+	                    operations  = map (transform_operation t) operations,
+	                    stereotypes = [], (* map (find_stereotype t) stereotype,*)
+	                    invariant   = map ((transform_constraint t) o 
+					                       (find_constraint t)) checked_invariants,
+	                    thyname     = NONE 
+                      }
+    end
   | transform_classifier t (_) = raise IllFormed "Not supported Classifier type found."
 			   
 
@@ -482,13 +497,13 @@ fun transformXMI ({classifiers,constraints,packages,
  *) 
 fun readFile f = map Rep.normalize ((transformXMI o XmiParser.readFile) f)
     handle XmiParser.IllFormed msg => 
-           (print ("Warning: in RepParser.readXMI: could not parse file "^
+           (print ("Warning: in RepParser.readFile: could not parse file "^
                    f^":\n"^msg^"\n"); nil)
 	     | Option => 
-           (print ("Warning: in RepParser.readXMI: could not parse file "^
+           (print ("Warning: in RepParser.readFile: could not parse file "^
                    f^"\n"); nil)
 	     | IllFormed msg => 
-           (print ("Warning: in RepParser.readXMI: could not parse file "^
+           (print ("Warning: in RepParser.readFile: could not parse file "^
                    f^": "^msg^"\n"); nil)
 end
 
