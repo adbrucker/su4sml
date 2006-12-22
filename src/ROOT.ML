@@ -23,11 +23,6 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-use "library.sml";
-
-
-(* library should be opend locally for MLton compatibility... *)
-(* open library; *)
 
 
 (* ****************************************************** *)
@@ -37,6 +32,7 @@ OS.FileSys.chDir "../lib/fxp/src";
 use "ROOT.ML"; 
 OS.FileSys.chDir "../../../src";
 
+use "library.sml";
 
 (* ****************************************************** *)
 (* Abstract Representation of an XMI File of a UML Model.
