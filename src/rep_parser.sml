@@ -306,7 +306,7 @@ fun transform_event t (XMI.CallEvent ev) =
     Rep.CallEvent (find_operation t (#operation ev),
 		   map (transform_parameter t) (#parameter ev))
   | transform_event t (XMI.SignalEvent ev) =
-    Rep.SignalEvent []
+    Rep.SignalEvent (map (transform_parameter t) (#parameter ev))
 
 fun transform_proc t (XMI.mk_Procedure proc) = 
     Rep.Proc_mk { proc_id    = #xmiid proc,
@@ -366,7 +366,8 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 						  supplierDependency,taggedValue}) =
     let val parents = map ((find_classifier_type t) o (find_parent t)) 
 			  generalizations 
-		val filtered_parents = filter (fn x => x <> Rep_OclType.OclAny) parents
+        (* FIXME: filter for classes vs. interfaces *)  
+		val filtered_parents = filter (fn x => x <> Rep_OclType.OclAny) parents 
 		val checked_invariants = filter_exists t invariant
     in
 	Rep.Class {name = (* path_of_classifier *) (find_classifier_type t xmiid), 
