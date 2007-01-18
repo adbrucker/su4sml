@@ -122,6 +122,13 @@ fun ocl_asType   a t = ocl_opwithtype a "oclAsType"   t t
 fun ocl_includes a b = ocl_opcall a ["oclLib", "Collection", "includes"] [b] Boolean
 fun ocl_excludes a b = ocl_opcall a ["oclLib", "Collection", "excludes"] [b] Boolean
 
+fun ocl_modifiedOnly a = ocl_opcall a ["oclLib", "Set", "modifiedOnly"] [] Boolean
+
+(* Collection constructors *)
+
+fun ocl_set xs t = CollectionLiteral (map (fn x => CollectionItem (x, type_of x)) xs, Set t)
+
+
 (* Iterators(Collection): exists,forAll,isUnique,any,one,collect             *)
 (* Iterators(Set)       : select,reject,collectNested,sortedBy               *)
 (* Iterators(Bag)       : select,reject,collectNested,sortedBy               *)
@@ -321,22 +328,25 @@ fun create_getter c {name,attr_type,visibility,scope,stereotypes,init} =
  * Should be moved to rep_core?
  *)
 fun create_setter c {name,attr_type,visibility,scope,stereotypes,init} =
-    { name="set"^(capitalize name),
-      precondition=nil,
-      (* post: self.att=arg *)
-      (* FIXME: and self.att->modifiedOnly() *)
-      postcondition=[(SOME ("generated_setter_for_"^name),
-                      ocl_eq (ocl_attcall (self (Classifier (name_of c))) 
-                                          ((name_of c)@[name])
-                                          attr_type)
-                             (Variable ("arg", attr_type)))],
-      arguments=[("arg",attr_type)],
-      result=OclVoid,
-      isQuery=false,
-      scope=scope,
-      visibility=public
-    }
-
+    let val self_att = ocl_attcall (self (Classifier (name_of c))) 
+                                   ((name_of c)@[name])
+                                   attr_type
+    in 
+        { name="set"^(capitalize name),
+          precondition=nil,
+          postcondition=[(SOME ("generated_setter_for_"^name),
+                          ocl_and (ocl_eq self_att
+                                          (Variable ("arg", attr_type)))
+                                  (ocl_modifiedOnly (ocl_set [self_att] attr_type)))
+                        ],
+          arguments=[("arg",attr_type)],
+          result=OclVoid,
+          isQuery=false,
+          scope=scope,
+          visibility=public
+        }
+    end
+    
 (** creates a "secured" version of the given operation.
  * The main change: in the postcondition, attribute calls are replaced with 
  * calls to appropriate getter functions, and operation calls with calls 
@@ -426,12 +436,15 @@ fun add_operation_to_classifier oper (Class {name, parent, attributes,
  * generates constructors, destructors, setters, getters, and "secured" operations. 
  *)
 fun add_operations c = 
-    let val constructor = {name="new",
+    let val self_type = Classifier (name_of c) 
+        val res = result (Classifier (name_of c))
+        val constructor = {name="new",
                            precondition=nil,
-                           (* post: result.oclIsNew()            *)
-                           (* FIXME: and result->modiefiedOnly() *)
+                           (* post: result.oclIsNew() and result->modiefiedOnly() *)
                            postcondition=[(SOME "generated_constructor",
-                                         ocl_isNew (result (Classifier (name_of c))))],
+                                           ocl_and (ocl_isNew (result self_type))
+                                                   (ocl_modifiedOnly (ocl_set [res] (self_type))))
+                                          ],
                            arguments=nil,
                            result=Classifier (name_of c),
                            isQuery=false,
@@ -442,7 +455,11 @@ fun add_operations c =
                            (* post: self.oclIsUndefined()         *)
                            (* FIXME: and self@pre->modifiedOnly() *)
                            postcondition=[(SOME "generated_destructor",
-                                          ocl_isUndefined (self (Classifier (name_of c))))],
+                                           ocl_and (ocl_isUndefined (self self_type))
+                                                   (ocl_modifiedOnly 
+                                                        (ocl_set [atpre (self self_type)] 
+                                                                 self_type)))
+                                          ],
                            arguments=nil,
                            result=OclVoid,
                            isQuery=false,
