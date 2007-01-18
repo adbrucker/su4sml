@@ -554,7 +554,7 @@ fun mkAction tree =
 		      isAsynchronous  = atts |> bool_value_of "isAsynchronous" ,
 		      language        = expr_atts |> language,
 		      body            = expr_atts |> body ,
-		      expression      = "" (* FIXME *)}
+		      expression      = "" (* FIXME: is this even useful? *)}
 	end
 	handle IllFormed msg => raise IllFormed ("in mkAction: "^msg)
 
@@ -585,10 +585,15 @@ fun mkGuard tree =
               visibility      = atts |> visibility,
               language        = if expr is "UML15OCL:Expressions.ExpressionInOcl" 
 								then expr_atts |> language 
-								else "blubb"(* language(getBoolExpr trees)*),
+								else if expr is "UML:BooleanExpression" then 
+                                    expr_atts |> language
+                                else
+                                    raise IllFormed ("unknown expression type:"^(tagname expr)),
               body            = if expr is "UML15OCL:Expressions.ExpressionInOCL" 
 								then NONE 
-								else SOME "blah"(*(body (getBoolExpr trees))*) ,
+								else if expr is "UML:BooleanExpression" then
+                                    SOME (expr_atts |> body)
+                                else raise IllFormed ("unknown expression type:"^(tagname expr)),
               expression      = if expr is "UML15OCL:Expressions.ExpressionInOcl" 
 								then SOME (mkOCLExpression expr)
 								else NONE}
@@ -861,7 +866,13 @@ fun mkInterface atts tree
 						            |> map xmiidref
 		}
     handle IllFormed msg => raise IllFormed ("in mkInterface: "^msg)
-					  
+
+fun mkEnumerationLiteral tree =
+	tree |> assert "UML:EnumerationLiteral" 
+         |> attributes |> name
+    handle IllFormed msg =>  raise IllFormed ("in mkOperation: "^msg)
+
+
 fun mkEnumeration atts tree
   = XMI.Enumeration 
         { xmiid              = atts |> xmiid,
@@ -873,7 +884,8 @@ fun mkEnumeration atts tree
                                     |> map xmiidref,
 	      invariant          = tree |> get "UML:ModelElement.constraint" 
 						            |> map xmiidref,
-		  literals = nil (* FIX *)
+		  literals           = tree |> get "UML:Enumeration.literal"
+                                    |> map mkEnumerationLiteral
         }
 	handle IllFormed msg => raise IllFormed ("in mkEnumeration: "^msg)
 							    
@@ -908,8 +920,10 @@ fun mkStereotype tree =
     in
         { xmiid                = atts |> xmiid,
 		  name                 = atts |> name,
-		  baseClass            = NONE, (* FIXME *)
-		  stereotypeConstraint = NONE  (* FIXME *)
+		  baseClass            = Option.map (text o hd o text_children) 
+                                            (find_some "UML:Stereotype.baseClass" 
+                                                       (node_children tree)),
+		  stereotypeConstraint = NONE  (* FIXME, not supported by ArgoUML 0.22 *)
 		}
     end 
     handle IllFormed msg => raise IllFormed ("in mkStereotype: "^msg)
@@ -961,10 +975,12 @@ fun mkCallEvent atts tree =
 		}
 
 fun mkSignalEvent atts tree = XMI.SignalEvent { xmiid     = atts |> xmiid,
-                                                parameter = [] (* FIXME *)
+                                                name      = atts |> optional_name_or_empty,
+                                                parameter = tree |> get "UML:Event.parameter"
+                                                                 |> map mkParameter
                                               }
 
-(* TODO: mkSignalEvent, etc ? *)
+(* FIXME: other events ? *)
 fun mkEvent tree = 
     let val elem  = tagname    tree
 	    val atts  = attributes tree
