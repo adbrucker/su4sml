@@ -6,20 +6,30 @@ ann
 in
   local
     $(MLTON_ROOT)/basis/basis.mlb
+    ../su4sml.mlb
   in
      compiler/compiler_ext.sig
      compiler/mlton.sml	
+     stringHandling.sml
      gcg_library.sml
      gcg_helper.sml
      tpl_parser.sig
      tpl_parser.sml
+     SM_helper.sml
+     stateMachineTypes.sml
+     stateMachine.sml
      cartridge.sig
      base_cartridge.sig
      base_cartridge.sml
      "c#_cartridge.sml"
      "c#_net1_cartridge.sml"
+     "c#sm_cartridge.sml"
+     java_cartridge.sml
+     junit_cartridge.sml
      secureuml_cartridge.sig
      secureuml_cartridge.sml
+     design_cartridge.sig
+     componentuml_cartridge.sml
      gcg_core.sig
      gcg_core.sml
      codegen.sml
