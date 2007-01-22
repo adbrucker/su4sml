@@ -35,25 +35,3 @@ Group is
     xmltree_writer.sml
     xmi_idtable.sml
     ocl2string.sml
-    codegen/compiler/compiler_ext.sig
-    codegen/compiler/smlnj.sml	
-    codegen/gcg_library.sml
-    codegen/gcg_helper.sml
-    codegen/tpl_parser.sml
-	codegen/cartridge.sig
-    codegen/base_cartridge.sml
-    codegen/c#_cartridge.sml
-    codegen/c#_net1_cartridge.sml
-    codegen/java_cartridge.sml
-    codegen/junit_cartridge.sml
-    codegen/secureuml_cartridge.sml
-	codegen/design_cartridge.sig
-    codegen/componentuml_cartridge.sml
-    codegen/SM_helper.sml
-    codegen/stateMachineTypes.sml
-    codegen/stringHandling.sml
-    codegen/stateMachine.sml
-    "codegen/c#sm_cartridge.sig"
-    "codegen/c#sm_cartridge.sml"
-	codegen/gcg_core.sml
-    codegen/codegen.sml

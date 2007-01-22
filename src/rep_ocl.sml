@@ -25,18 +25,18 @@
 (** Repository datatypes and helper functions for UML/OCL types. *)
 signature REP_OCL_TYPE =
 sig
-	
+    
     type Path = string list
 
     datatype OclType    =  Integer | Real | String | Boolean | OclAny 
-		     | Set of OclType | Sequence of OclType
-		     | OrderedSet of OclType | Bag of OclType 
-		     | Collection of OclType
-		     | Classifier of Path | OclVoid | DummyT | TemplateParameter of string
-	val string_of_OclType : OclType -> string	
-	val string_of_path    : Path -> string	
+		         | Set of OclType | Sequence of OclType
+		         | OrderedSet of OclType | Bag of OclType 
+		         | Collection of OclType
+		         | Classifier of Path | OclVoid | DummyT | TemplateParameter of string
+    val string_of_OclType : OclType -> string	
+    val string_of_path    : Path -> string	
     val pathstring_of_path: Path -> string
-	val is_Classifier     : OclType -> bool
+    val is_Classifier     : OclType -> bool
     val is_Collection     : OclType -> bool
 end
      

@@ -344,19 +344,19 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
  		val checked_invariants = filter_exists t invariant
     in
 	Rep.Class {name = (* path_of_classifier *) (find_classifier_type t xmiid), 
-			parent = case filtered_parents 
-				  of [] => NONE
-				   | xs => SOME ((* path_of_classifier *) (hd xs)),
-			attributes = map (transform_attribute t) attributes,
-			operations = map (transform_operation t) operations,
-			invariant  = map ((transform_constraint t) o 
-					  (find_constraint t)) checked_invariants, 
-			associationends = map (transform_aend t) 
-								  (find_aends t xmiid), 
-			   stereotypes = map (find_stereotype t) stereotype, 
-			interfaces = nil, (* FIX *)
-               activity_graphs = List.concat [map (transform_activitygraph t) activity_graphs,
-						                      map (transform_statemachine t) state_machines], 
+		   parent = case filtered_parents 
+			     of [] => NONE
+			      | xs => SOME ((* path_of_classifier *) (hd xs)),
+		   attributes = map (transform_attribute t) attributes,
+		   operations = map (transform_operation t) operations,
+		   invariant  = map ((transform_constraint t) o 
+				     (find_constraint t)) checked_invariants, 
+		   associationends = map (transform_aend t) 
+					 (find_aends t xmiid), 
+		   stereotypes = map (find_stereotype t) stereotype, 
+		   interfaces = nil, (* FIX *)
+                   activity_graphs = List.concat [map (transform_activitygraph t) activity_graphs,
+						  map (transform_statemachine t) state_machines], 
 			   thyname = NONE}
     end
   | transform_classifier t (XMI.AssociationClass {xmiid,name,isActive,visibility,

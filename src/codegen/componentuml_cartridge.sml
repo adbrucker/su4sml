@@ -9,9 +9,10 @@ open library
 (* TODO: fill out *)
 type environment = { curPermissionList: SuperCart.Security.Permission list option, 
                      curPermission: SuperCart.Security.Permission option,
+                     curEntity: Rep.Classifier option,
                      extension: SuperCart.environment}
 type Model = SuperCart.Model
-
+             
 (* unpack : environment -> SuperCart.environment *)
 fun unpack (env : environment) = #extension env
 
@@ -19,12 +20,14 @@ fun unpack (env : environment) = #extension env
 fun pack (env: environment) (new_env : SuperCart.environment) = 
     { curPermissionList = #curPermissionList env,
       curPermission = #curPermission env,
+      curEntity = #curEntity env,
       extension = new_env} 
-
+    
 fun initEnv model = { curPermissionList = NONE,
                       curPermission = NONE,
+                      curEntity = NONE,
                       extension = SuperCart.initEnv model}
-
+                    
 (* fun getModel (env : environment) = SuperCart.getModel (unpack env) *)
 fun curClassifier (env : environment) = SuperCart.curClassifier (unpack env)
 fun curAttribute (env : environment) = SuperCart.curAttribute (unpack env)
@@ -37,17 +40,17 @@ fun curArgument (env : environment) = SuperCart.curArgument (unpack env)
  * Maybe sme of this should be moved to component_uml.sml... 
  *) 
 fun atomic_actions_from_context env =
-	if Option.isSome (curAttribute env) then
+    if Option.isSome (curAttribute env) then
         let fun make_action s = 
                 ComponentUML.SimpleAction (s, ComponentUMLResource.EntityAttribute 
                                                   (Option.valOf (curAttribute env)))
         in [make_action "read", make_action "update"] end
-	else if Option.isSome (curOperation env) then
+    else if Option.isSome (curOperation env) then
         let fun make_action s = 
                 ComponentUML.SimpleAction (s, ComponentUMLResource.EntityMethod 
                                                   (Option.valOf (curOperation env)))
         in [make_action "execute"] end
-	else if Option.isSome (curClassifier env) then
+    else if Option.isSome (curClassifier env) then
         let fun make_action s =
                 ComponentUML.SimpleAction (s, ComponentUMLResource.Entity 
                                                   (Option.valOf (curClassifier env)))
@@ -68,6 +71,10 @@ fun lookup (env:environment) "permission_name" =
     (case #curPermission env of 
          SOME x => #name x
        | NONE => SuperCart.lookup (unpack env) "permission_name")
+  | lookup env "entity_name" =
+    (case #curEntity env
+      of SOME s => Rep.short_name_of s
+       | NONE => SuperCart.lookup (unpack env) "entity_name") 
   | lookup env s =  SuperCart.lookup (unpack env) s 
 
 (********** ADDING IF-CONDITION TYPE *****************************************)
@@ -91,16 +98,29 @@ fun foreach_permission env name =
         val permissions = permissions_for_action env action
         fun env_from_list_item c = { curPermissionList = SOME permissions,
                                      curPermission = SOME c,
+                                     curEntity = #curEntity env,
                                      extension = #extension env} : environment
     in 
         List.map env_from_list_item permissions
     end
         
+fun foreach_entity (env:environment)  =
+    let val entities = List.filter (fn x => ListEq.includes (Rep.stereotypes_of x) "compuml.entity" )
+                                        (#1 (#model (#extension env)))
+        fun env_from_list_item c = { curPermissionList = #curPermissionList env,
+                                     curPermission = #curPermission env,
+                                     curEntity = SOME c,
+                                     extension = #extension env}:environment
+    in 
+        List.map env_from_list_item entities
+    end
+
 fun foreach "readPermission_list" env = foreach_permission env "read"
   | foreach "updatePermission_list" env = foreach_permission env "update"
   | foreach "createPermission_list" env = foreach_permission env "create"
   | foreach "deletePermission_list" env = foreach_permission env "delete"
   | foreach "executePermission_list" env = foreach_permission env "execute"
+  | foreach "entity_list" env = foreach_entity env
   | foreach listType env =  map (pack env) (SuperCart.foreach listType (unpack env))
                             
 end

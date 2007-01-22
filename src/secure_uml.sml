@@ -33,6 +33,7 @@ sig
 include    SECURITY_LANGUAGE
 type Role
 val all_roles :      Configuration -> Role list 
+val all_constraints: Configuration -> Rep_OclTerm.OclTerm list
 val constraints_of : Permission -> Rep_OclTerm.OclTerm list
 val roles_of:        Permission -> Role list 
 end
@@ -81,6 +82,8 @@ fun constraints_of (x:Permission) = #constraints x
 fun roles_of       (x:Permission) = #roles x
 fun actions_of     (p:Permission) = #actions p
 fun all_roles   (c:Configuration) = #roles c
+
+fun all_constraints (c:Configuration) = List.concat (List.map constraints_of (#permissions c))
 
 (** test whether a1 is (transitively) a subordinated_action of a2 *)
 fun is_contained_in a1 a2 = (a1 = a2) orelse 

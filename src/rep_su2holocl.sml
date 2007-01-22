@@ -452,14 +452,13 @@ fun add_operations c =
                            visibility=public}
         val destructor  = {name="delete",
                            precondition=nil,
-                           (* post: self.oclIsUndefined()         *)
-                           (* FIXME: and self@pre->modifiedOnly() *)
+                           (* post: self.oclIsUndefined() and self@pre->modifiedOnly() *)
                            postcondition=[(SOME "generated_destructor",
                                            ocl_and (ocl_isUndefined (self self_type))
                                                    (ocl_modifiedOnly 
                                                         (ocl_set [atpre (self self_type)] 
                                                                  self_type)))
-                                          ],
+                                         ],
                            arguments=nil,
                            result=OclVoid,
                            isQuery=false,

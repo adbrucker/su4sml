@@ -50,21 +50,20 @@ end
  * Permissions, Roles, and Constraints. 
  *)
 functor SecureUML_Cartridge(structure SuperCart : BASE_CARTRIDGE; 
-						    structure D: DESIGN_LANGUAGE) 
-		: SECUREUML_CARTRIDGE =
+                            structure D: DESIGN_LANGUAGE) : SECUREUML_CARTRIDGE =
 struct
 
 structure Security = SecureUML(structure Design = D)
 
 type Model = Rep.Classifier list * Security.Configuration
-					 
+	     
 type environment = { model           : Model,
-					 PermissionSet   : Security.Permission list,
-					 curPermission   : Security.Permission option,
-					 curRole         : string option,
-					 curConstraint   : Rep_OclTerm.OclTerm option,	
-					 extension       : SuperCart.environment }
-				   
+		     PermissionSet   : Security.Permission list,
+		     curPermission   : Security.Permission option,
+		     curRole         : string option,
+		     curConstraint   : Rep_OclTerm.OclTerm option,	
+		     extension       : SuperCart.environment }
+		   
 fun PermissionSet    (env : environment) =  (#PermissionSet env)
 fun curPermission    (env : environment) =  (#curPermission env)
 fun curRole          (env : environment) =  (#curRole env)
@@ -75,14 +74,14 @@ fun curRole'          (env : environment) = Option.valOf (#curRole env)
 fun curConstraint'    (env : environment) = Option.valOf (#curConstraint env)
 											
 fun initEnv model = let val m = Security.parse model 
-					in
-						{ model = m, 
-						  PermissionSet = (#permissions (#2 m)),
-						  curPermission = NONE,
-						  curRole       = NONE,
-						  curConstraint = NONE,
-						  extension = SuperCart.initEnv (#1 m) } : environment
-					end
+		    in
+			{ model = m, 
+			  PermissionSet = (#permissions (#2 m)),
+			  curPermission = NONE,
+			  curRole       = NONE,
+			  curConstraint = NONE,
+			  extension = SuperCart.initEnv (#1 m) } : environment
+		    end
 						
 (* unpack : environment -> SuperCart.environment *)
 fun unpack (env : environment) = #extension env
@@ -90,19 +89,19 @@ fun unpack (env : environment) = #extension env
 (* pack : environment -> SuperCart.environment -> environment *)
 fun pack (env: environment) (new_env : SuperCart.environment) 
   = { model            = #model env,
-	  PermissionSet    = #PermissionSet env,
-	  curPermission    = #curPermission env,
-	  curRole          = #curRole env,
-	  curConstraint    = #curConstraint env,
-	  extension        = new_env}
-	
+      PermissionSet    = #PermissionSet env,
+      curPermission    = #curPermission env,
+      curRole          = #curRole env,
+      curConstraint    = #curConstraint env,
+      extension        = new_env}
+    
 	
 (* Helper functions that get the SuperCartridge's needed environment values *) 
-fun getModel (env : environment) = #model env
+fun getModel (env : environment)      = #model env
 fun curClassifier (env : environment) = SuperCart.curClassifier (unpack env)
-fun curAttribute (env : environment) = SuperCart.curAttribute (unpack env)
-fun curOperation (env : environment) = SuperCart.curOperation (unpack env)
-fun curArgument (env : environment) = SuperCart.curArgument (unpack env)
+fun curAttribute (env : environment)  = SuperCart.curAttribute (unpack env)
+fun curOperation (env : environment)  = SuperCart.curOperation (unpack env)
+fun curArgument (env : environment)   = SuperCart.curArgument (unpack env)
 									  
                        
 fun name_of_role  r 	= r
@@ -114,67 +113,74 @@ fun name_of_role  r 	= r
  * might override some lookup entries of the base cartridge 
  *)
 fun lookup env "permission_name" = #name (curPermission' env)
-  | lookup env "role_name"	     = name_of_role (curRole' env)
-  | lookup env "constraint"	     = Ocl2String.ocl2string false (curConstraint' env)
+  | lookup env "role_name"	 = name_of_role (curRole' env)
+  | lookup env "constraint"	 = Ocl2String.ocl2string false (curConstraint' env)
   | lookup env s                 =  SuperCart.lookup (unpack env) s
 
 (********** ADDING IF-CONDITION TYPE *****************************************)
 fun test env "first_permission" = (curPermission' env = hd (PermissionSet env))
   | test env "first_role"       = (curRole' env = hd (#roles (curPermission' env)))
-  | test env "first_constraint" = (curConstraint' env 
-								   = hd (#constraints (curPermission' env)))
-  | test env "last_permission"  = (curPermission' env 
-								   = List.last (PermissionSet env))
-  | test env "last_role"        = (curRole' env 
-								   = List.last (#roles (curPermission' env)))
-  | test env "last_constraint"  = (curConstraint' env
-								   = List.last (#constraints (curPermission' env)))
+  | test env "first_constraint" = (curConstraint' env = hd (#constraints (curPermission' env)))
+  | test env "last_permission"  = (curPermission' env = List.last (PermissionSet env))
+  | test env "last_role"        = (curRole' env = List.last (#roles (curPermission' env)))
+  | test env "last_constraint"  = (curConstraint' env 
+                                   = List.last (#constraints (curPermission' env)))
   | test env s                  = SuperCart.test (unpack env) s
 
 
 (********** ADDING FOREACH TYPE **********************************************)
-fun foreach_role env 
-  = let val roles = #roles (curPermission' env);      
-			fun env_from_list_item r ={ model = #model env,
-									    PermissionSet = #PermissionSet env,
-										curPermission = #curPermission env,
-										curRole       = SOME r ,
-										curConstraint = NONE,
-										extension = #extension env } : environment
-	in 
-		List.map env_from_list_item roles
-	end
+(* FIXME: in the context of a permission, return the roles of this permission.
+ * outside of such a context, return all roles. *)
+fun foreach_role (env:environment) 
+  = let val roles = case #curPermission env
+                     of SOME p => #roles p
+                      | NONE   => Security.all_roles (#2 (#model env))
+	fun env_from_list_item r ={ model = #model env,
+				    PermissionSet = #PermissionSet env,
+				    curPermission = #curPermission env,
+				    curRole       = SOME r ,
+				    curConstraint = NONE,
+				    extension = #extension env } : environment
+    in 
+	List.map env_from_list_item roles
+    end
 		
-fun foreach_constraint env 
-  = let val cons = #constraints (curPermission' env);      
-			fun env_from_list_item c ={ model = #model env,
-									    PermissionSet = #PermissionSet env,
-										curPermission = #curPermission env,
-										curRole       = NONE ,
-										curConstraint = SOME c,
-										extension = #extension env } : environment
-	in 
-		List.map env_from_list_item cons
-	end
-
+(* FIXME: in the context of a permission, return the constraints of this permission. 
+ * outside of such a context, return all constraints. *)
+fun foreach_constraint (env:environment) 
+  = let val cons = case #curPermission env
+                    of SOME p => #constraints p
+                      | NONE   => Security.all_constraints (#2 (#model env))     
+	fun env_from_list_item c ={ model = #model env,
+				    PermissionSet = #PermissionSet env,
+				    curPermission = #curPermission env,
+				    curRole       = #curRole env ,
+				    curConstraint = SOME c,
+				    extension = #extension env } : environment
+    in 
+	List.map env_from_list_item cons
+    end
+    
+(* FIXME (when possible): in the context of a role, return the permissions of this role.
+ * outside of such a context, return all permissions.*)
+ 
 fun foreach_permission env 
   = let val perms = PermissionSet env
-		fun env_from_list_item p ={ model = #model env,
-									PermissionSet = #PermissionSet env,
-									curPermission = SOME p,
-									curRole       = NONE ,
-									curConstraint = NONE ,
-									extension = #extension env } : environment
-	in 
-		List.map env_from_list_item perms
-	end
- 
-			     
+	fun env_from_list_item p ={ model = #model env,
+				    PermissionSet = #PermissionSet env,
+				    curPermission = SOME p,
+				    curRole       = NONE ,
+				    curConstraint = NONE ,
+				    extension = #extension env } : environment
+    in 
+	List.map env_from_list_item perms
+    end
+    
+    
 fun foreach "role_list"       env = foreach_role env 
   | foreach "constraint_list" env = foreach_constraint env
   | foreach "permission_list" env = foreach_permission env
-  | foreach listType          env = map (pack env) 
-										(SuperCart.foreach listType (unpack env))
-  
+  | foreach listType          env = map (pack env) (SuperCart.foreach listType (unpack env))
+                                    
   
 end

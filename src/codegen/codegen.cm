@@ -1,24 +1,30 @@
 Group is
 #if(defined(SMLNJ_VERSION))
   $/basis.cm 
-  $smlnj/compiler/compiler.cm
+  $smlnj/compiler/current.cm
   $/smlnj-lib.cm
 #else
 #endif
+     ../su4sml.cm
      compiler/compiler_ext.sig
      compiler/smlnj.sml	
-	 security_cartridge.sig
+     cartridge.sig
+     security_cartridge.sig
      gcg_library.sml
      gcg_helper.sml
-     tpl_parser.sig
      tpl_parser.sml
-     cartridge.sig
-     base_cartridge.sig
+     SM_helper.sml
+     stateMachine.sml
+     stateMachineTypes.sml
      base_cartridge.sml
+     stringHandling.sml
      c#_cartridge.sml
      c#_net1_cartridge.sml
-     secureuml_cartridge.sig
      secureuml_cartridge.sml
-     gcg_core.sig
+     design_cartridge.sig
+     componentuml_cartridge.sml
+     c#sm_cartridge.sml
+     java_cartridge.sml
+     junit_cartridge.sml
      gcg_core.sml
      codegen.sml

@@ -49,6 +49,8 @@ structure Java_Gcg = GCG_Core (Java_Cartridge(Base_Cartridge))
 
 structure Junit_Gcg = GCG_Core (Junit_Cartridge(Java_Cartridge(Base_Cartridge)))
 
+structure SecureMova_Gcg = GCG_Core (ComponentUML_Cartridge(Base_Cartridge))
+
 (*
 structure JavaSecure_Gcg = GCG_Core (Java_Cartridge(SecureUML_Cartridge(Base_Cartridge)));
 *)
@@ -76,6 +78,8 @@ fun generate xmi_file "base" =
    Base_Gcg.generate ( RepParser.readFile xmi_file) "templates/maude.tpl"
  | generate xmi_file "maude_secure" = 
    SecureUML_Base_Gcg.generate ( Rep_SecureUML_ComponentUML.readXMI xmi_file) "templates/maude.tpl" *)
+ | generate xmi_file "securemova" = 
+   SecureMova_Gcg.generate (RepParser.readFile xmi_file) "templates/securemova.tpl"
  |  generate _ s = print ("target language unknown : "^s^"\n"^
  			"usage: generate <xmi_file> \"base\" | \"c#\" | \"c#_secure\" | \"c#_net1\" | \"c#_secure_net1\" | \"java\" | \"junit\"\n")
  			
