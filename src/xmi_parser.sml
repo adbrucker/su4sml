@@ -584,21 +584,21 @@ fun mkGuard tree =
               isSpecification = atts |> bool_value_of "isSpecification",
               visibility      = atts |> visibility,
               language        = if expr is "UML15OCL:Expressions.ExpressionInOcl" 
-								then expr_atts |> language 
-								else if expr is "UML:BooleanExpression" then 
+				then expr_atts |> language 
+				else if expr is "UML:BooleanExpression" then 
                                     expr_atts |> language
                                 else
-                                    raise IllFormed ("unknown expression type:"^(tagname expr)),
-              body            = if expr is "UML15OCL:Expressions.ExpressionInOCL" 
-								then NONE 
-								else if expr is "UML:BooleanExpression" then
+                                    raise IllFormed ("unknown expression type: "^(tagname expr)),
+              body            = if expr is "UML15OCL:Expressions.ExpressionInOcl" 
+				then NONE 
+				else if expr is "UML:BooleanExpression" then
                                     SOME (expr_atts |> body)
-                                else raise IllFormed ("unknown expression type:"^(tagname expr)),
+                                else raise IllFormed ("unknown expression type: "^(tagname expr)),
               expression      = if expr is "UML15OCL:Expressions.ExpressionInOcl" 
-								then SOME (mkOCLExpression expr)
-								else NONE}
+				then SOME (mkOCLExpression expr)
+				else NONE}
     end
-	handle IllFormed msg => raise IllFormed ("in mkGuard: "^msg)
+    handle IllFormed msg => raise IllFormed ("in mkGuard: "^msg)
 
 
 fun mkTransition tree = 
