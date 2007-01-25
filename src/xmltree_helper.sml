@@ -47,6 +47,8 @@ structure XmlTreeHelper : sig
     (*    val follow_all  : string -> XmlTree.Tree list -> XmlTree.Tree list list *)
                                                  
     (*    val apply_on    : string -> (Attribute list -> 'a) -> XmlTree.Tree -> 'a*)
+    val some_id : XmlTree.Tree -> string
+    val some_id': XmlTree.Attribute list -> string 
 end =
 struct 
 open library

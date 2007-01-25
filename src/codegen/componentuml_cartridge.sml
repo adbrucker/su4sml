@@ -55,7 +55,7 @@ fun atomic_actions_from_context env =
                 ComponentUML.SimpleAction (s, ComponentUMLResource.Entity 
                                                   (Option.valOf (curClassifier env)))
         in [make_action "create", make_action "delete"] end
-    else error "blubb"
+    else raise Fail "no current resource"
          
 (* FIX *)
 fun permissions_for_action env act = 

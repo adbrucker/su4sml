@@ -12,7 +12,7 @@ struct
 open Rep
 open Rep_OclType
 open Rep_OclTerm
-open Rep_SecureUML_ComponentUML.Security
+(* open Rep_SecureUML_ComponentUML.Security*)
 open ComponentUML
 open XMI_DataTypes
 

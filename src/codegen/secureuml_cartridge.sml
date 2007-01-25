@@ -150,7 +150,7 @@ fun foreach_role (env:environment)
 fun foreach_constraint (env:environment) 
   = let val cons = case #curPermission env
                     of SOME p => #constraints p
-                      | NONE   => Security.all_constraints (#2 (#model env))     
+                     | NONE   => Security.all_constraints (#2 (#model env))     
 	fun env_from_list_item c ={ model = #model env,
 				    PermissionSet = #PermissionSet env,
 				    curPermission = #curPermission env,

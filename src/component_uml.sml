@@ -56,27 +56,27 @@ val root_stereotypes = ["compuml.entity"]
                        
 (** The list of all attributes of an entity. *)
 fun entity_contained_attributes (Entity c) = map EntityAttribute (Rep.attributes_of c)
-  | entity_contained_attributes _ = library.error "entity_contained_attributes \
+  | entity_contained_attributes _ = library.error' "entity_contained_attributes \
                                                   \called on something that is \
                                                   \not an entity"
 
 (** the list of all methods of an entity *)
 fun entity_contained_methods (Entity c) = map EntityMethod (Rep.operations_of c)
-  | entity_contained_methods _ = library.error "entity_contained_methods \   
+  | entity_contained_methods _ = library.error' "entity_contained_methods \   
                                                \called on something that is \
                                                \not an entity"
 
 (** The list of all side-effect free methods of an entity. *)
 fun entity_contained_read_methods (Entity c) =
     map EntityMethod (List.filter #isQuery (Rep.operations_of c))
-  | entity_contained_read_methods _ = library.error "entity_contained_read_methods \
+  | entity_contained_read_methods _ = library.error' "entity_contained_read_methods \
                                                     \called on something that is \
                                                     \not an entity"
 		                              
 (** The list of all methods with side-effects of an entity *)
 fun entity_contained_update_methods (Entity c) =
     map EntityMethod (List.filter (not o #isQuery) (Rep.operations_of c))
-  | entity_contained_update_methods _ = library.error 
+  | entity_contained_update_methods _ = library.error' 
                                             "entity_contained_update_methods \
                                             \called on something that is not \
                                             \an entity"
@@ -101,7 +101,7 @@ fun parse_entity_action root att_name "create"     =
 	SimpleAction ("delete", (Entity root)) 
   | parse_entity_action root att_name "fullaccess" =
 	CompositeAction ("fullaccess", (Entity root)) 	
-  | parse_entity_action root att_name s = library.error ("unknown action type "^s^
+  | parse_entity_action root att_name s = library.error' ("unknown action type "^s^
                                                          " for entity action")
 	
 (** parses an entity attribute action permission attribute. *)
@@ -109,18 +109,18 @@ fun parse_attribute_action root name "read"       =
 	(SimpleAction ("read", 
                    (EntityAttribute ((hd o List.filter (fn x => #name x = name)) 
 										 (Rep.attributes_of root))))
-     handle Empty => library.error "did not find attribute")
+     handle Empty => library.error' "did not find attribute")
   | parse_attribute_action root name "update"     =
     ( SimpleAction ("update", 
                     (EntityAttribute ((hd o List.filter (fn x => #name x = name)) 
                                           (Rep.attributes_of root))))
-      handle Empty => library.error "did not find attribute")
+      handle Empty => library.error' "did not find attribute")
   | parse_attribute_action root name "fullaccess" =
     ( CompositeAction ("fullaccess", 
                        (EntityAttribute ((hd o List.filter (fn x => #name x = name)) 
                                              (Rep.attributes_of root))))
-      handle Empty => library.error "did not find attribute")
-  | parse_attribute_action root name s = library.error ("unknown action type "^s^
+      handle Empty => library.error' "did not find attribute")
+  | parse_attribute_action root name s = library.error' ("unknown action type "^s^
                                                         "for attribute action")
 
 (** parses an entity method action permission attribute. *)
@@ -128,8 +128,8 @@ fun parse_method_action root name "execute"
   = (SimpleAction ("execute", 
                    (EntityMethod ((hd o List.filter (fn x => #name x = name)) 
                                       (Rep.operations_of root))))
-     handle Empty => library.error "did not find method")
-  | parse_method_action roor name s = library.error ("unknown action type "^s^
+     handle Empty => library.error' "did not find method")
+  | parse_method_action roor name s = library.error' ("unknown action type "^s^
                                                      "for method action")
 
 (**
@@ -140,7 +140,7 @@ fun parse_action root (att:Rep.attribute) =
 	let val att_name = #name att
 		val att_type = #attr_type att
         val cls_path = case att_type of Rep_OclType.Classifier x => x
-                                      | _ => library.error "permission attribute \
+                                      | _ => library.error' "permission attribute \
                                                            \type is not a classifier"
 		val action_name = hd (rev cls_path) 
         fun resource_path name = (hd o List.tl) (String.tokens (fn x => x= #".") name)
@@ -151,11 +151,11 @@ fun parse_action root (att:Rep.attribute) =
            parse_method_action root (resource_path att_name) action_name
 		 | "dialect.entityattributeaction" => 
            parse_attribute_action root (resource_path att_name) action_name 
-		 | s => library.error ("in ComponentUML.parse_action: "^
+		 | s => library.error' ("in ComponentUML.parse_action: "^
 							   "found unexpected stereotype "^s^
 							   " for permission attribute")
 	end
-	handle _ => library.error "in ComponentUML.parse_action: \
+	handle _ => library.error' "in ComponentUML.parse_action: \
                               \could not parse attribute"
 
 fun action_type_of (SimpleAction (t,_)) = t
@@ -204,7 +204,7 @@ fun subordinated_actions (SimpleAction _) = nil
   | subordinated_actions (CompositeAction ("full_access", a as (EntityAttribute ae)))
     = [SimpleAction ("read", a),
        SimpleAction ("update", a)]
-  | subordinated_actions (CompositeAction _) = library.error "encountered unknown \
+  | subordinated_actions (CompositeAction _) = library.error' "encountered unknown \
                                                              \composite action \
                                                              \type in \
                                                              \subordinated_actions"

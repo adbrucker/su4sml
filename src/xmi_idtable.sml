@@ -472,28 +472,28 @@ fun transform_assocation t (assoc:XMI.Association) =
  *)
 fun transform_associationclass_as_association t (XMI.AssociationClass assoc) = 
     let	val aends = #connection assoc
-		fun add_aend_to_type (id,ae) = 
-			if not (Option.isSome (HashTable.find t id)) then () else 
-			let val type_of_id  = find_classifier_type t id
-				val cls_of_id   = find_classifier t id
-				val aends_of_id = ae::(find_aends t id)
-				val ags_of_id   = find_activity_graph_of t id
-			in 
-				(HashTable.insert t (id,Type (type_of_id,aends_of_id,cls_of_id,ags_of_id));
-				 HashTable.insert t (#xmiid ae, AssociationEnd ae))
-			end
-	in 
-		List.app (fn x => add_aend_to_type (#xmiid assoc, x)) aends
+	fun add_aend_to_type (id,ae) = 
+	    if not (Option.isSome (HashTable.find t id)) then () else 
+	    let val type_of_id  = find_classifier_type t id
+		val cls_of_id   = find_classifier t id
+		val aends_of_id = ae::(find_aends t id)
+		val ags_of_id   = find_activity_graph_of t id
+	    in 
+		(HashTable.insert t (id,Type (type_of_id,aends_of_id,cls_of_id,ags_of_id));
+		 HashTable.insert t (#xmiid ae, AssociationEnd ae))
+	    end
+    in 
+	List.app (fn x => add_aend_to_type (#xmiid assoc, x)) aends
     end
 		
-  | transform_associationclass_as_association t _ = library.error "in transform_associationclass_as_association: can only be called on association classes"
+  | transform_associationclass_as_association t _ = library.error_ ("in transform_associationclass_as_association: can only be called on association classes",library.ERROR)
 
 (* recursively transforms all associations in the package p. *)
 fun transform_associations t (XMI.Package p) = 
     (List.app (transform_associations t) (#packages p);
-	 List.app (transform_assocation t) (#associations p);
-	 List.app (transform_associationclass_as_association t)
-			  (List.filter (fn (XMI.AssociationClass x) => true
-							 | _                        => false)
-						   (#classifiers p)))
+     List.app (transform_assocation t) (#associations p);
+     List.app (transform_associationclass_as_association t)
+	      (List.filter (fn (XMI.AssociationClass x) => true
+			     | _                        => false)
+			   (#classifiers p)))
 end

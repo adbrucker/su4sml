@@ -84,9 +84,9 @@ fun generate xmi_file "base" =
  			"usage: generate <xmi_file> \"base\" | \"c#\" | \"c#_secure\" | \"c#_net1\" | \"c#_secure_net1\" | \"java\" | \"junit\"\n")
  			
 
-fun main (_,[xmi_file,lang]) = generate xmi_file lang
-  | main _ = print ("usage: codegen <xmi_file> <language>\n"^
-  		    "\tlanguage = \"base\" | \"c#\" | \"c#sm\" | \"c#_secure\" | \"c#_net1\" | \"c#_secure_net1\" | \"java\" | \"junit\" | \"maude\" | \"maude_secure\" \n")
+fun main (_,[xmi_file,lang]) = (generate xmi_file lang ; OS.Process.success)
+  | main _ = (print ("usage: codegen <xmi_file> <language>\n"^ 
+  		    "\tlanguage = \"base\" | \"c#\" | \"c#sm\" | \"c#_secure\" | \"c#_net1\" | \"c#_secure_net1\" | \"java\" | \"junit\" | \"maude\" | \"maude_secure\" \n"); OS.Process.success)
 
 end
 

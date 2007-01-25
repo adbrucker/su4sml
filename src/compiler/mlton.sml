@@ -1,7 +1,7 @@
 (*****************************************************************************
  *          su4sml - a SecureUML repository for SML              
  *                                                                            
- * compiler_ext.sig - interactive eval stub 
+ * mlton.sml - interactive eval stub (not supported by MLton)
  * Copyright (C) 2005 Achim D. Brucker <brucker@inf.ethz.ch>
  *                                                                            
  * This file is part of su4sml.                                              
@@ -21,9 +21,10 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-(** Compiler extenstions, like "eval" *)
-signature COMPILER_EXT = 
-sig
-    exception EvalNotSupported
-    val eval : bool -> string -> unit
+structure CompilerExt : COMPILER_EXT = 
+struct
+exception EvalNotSupported
+fun eval verbose txt = raise EvalNotSupported
+
+fun exnHistory e = MLton.Exn.history e
 end

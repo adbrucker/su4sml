@@ -168,7 +168,10 @@ fun ocl2string show_types oclterm =
       (* Let                                *)
       (**************************************) 
       (* Error                              *)
-      | Let (s,_,_,_,_,_) => error ("error: unknown Let '"^(s)^"'  in ocl2string") 
+      | Let (var,vart,rhs,rhst,i,it) => "let "^var^":"^(string_of_OclType vart)^
+                                        " = "^(ocl2string show_types rhs)^
+                                        "in\n"^(ocl2string show_types i)
+                                        
       (**************************************)
       (* OperationWithType                  *)
       (**************************************)
@@ -178,7 +181,7 @@ fun ocl2string show_types oclterm =
       (* Iterate                            *)
       (**************************************)
       (* Error                              *)
-      | Iterate (_,s,_,_,src,_,c,_,_) =>  error ("error: unknown Iterate '"^(s)^"' in in ocl2string") 
+      | Iterate (_,s,_,_,src,_,c,_,_) =>  error' ("error: unknown Iterate '"^(s)^"' in in ocl2string") 
       (**************************************)
       (* Iterator                           *)
       (**************************************)
@@ -206,8 +209,8 @@ fun ocl2string show_types oclterm =
       (* Catch out                          *)
       (**************************************)
       (* Error                              *)
-      | _ => error ("error: unknown OCL-term in in ocl2string") 
-end
+      | _ => error' "error: unknown OCL-term in in ocl2string"
+    end
 end
 
 (** "pretty printing" of Repository models *)

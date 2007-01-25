@@ -40,7 +40,9 @@ sig
 				 
 	(** *) 
     val readXMI: string -> Model
-			 
+
+    val test: (string * string list) -> OS.Process.status
+			   
 end
 
 functor Rep_SecureUML(structure Security : SECUREUML) : REP_SECUREUML  =
@@ -52,6 +54,7 @@ struct
 
     val readXMI = Security.parse o RepParser.readFile
 
+    fun test (_,filename::_) = (Rep2String.printList (#1 (readXMI filename)); OS.Process.success)
 end
 
 structure Rep_SecureUML_ComponentUML 

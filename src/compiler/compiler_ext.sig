@@ -1,7 +1,7 @@
 (*****************************************************************************
  *          su4sml - a SecureUML repository for SML              
  *                                                                            
- * smlnj.sml - interactive eval stub (not supported by MLton)
+ * compiler_ext.sig - interactive eval stub 
  * Copyright (C) 2005 Achim D. Brucker <brucker@inf.ethz.ch>
  *                                                                            
  * This file is part of su4sml.                                              
@@ -21,31 +21,10 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-structure CompilerExt : COMPILER_EXT = 
-struct
-exception EvalNotSupported
-
-fun eval verbose txt =
-    let 
-	fun eval_fh (print, err) verbose txt =
-	    let
-		val ref out_orig = Control.Print.out;
-		    
-		val out_buffer = ref ([]: string list);
-		val out = {say = (fn s => out_buffer := s :: ! out_buffer), 
-			   flush = (fn () => ())};
-		fun output () =
-		    let val str = SML90.implode (rev (! out_buffer))
-	    in String.substring (str, 0, Int.max (0, size str - 1)) end;
-	    in
-		Control.Print.out := out;
-		Backend.Interact.useStream (TextIO.openString txt) 
-		handle exn =>
-		       (Control.Print.out := out_orig; err (output ()); raise exn);
-		Control.Print.out := out_orig;
-		if verbose then print (output ()) else ()
-	    end
-    in	
-	eval_fh (fn s => print (s^"\n"), fn s => library.error (s^"\n")) verbose txt
-    end
+(** Compiler extenstions, like "eval" *)
+signature COMPILER_EXT = 
+sig
+    exception EvalNotSupported
+    val eval : bool -> string -> unit
+    val exnHistory : exn -> string list  
 end

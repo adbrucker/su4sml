@@ -34,7 +34,7 @@ functor CSSM_Cartridge(SuperCart : BASE_CARTRIDGE) : CARTRIDGE =
  open Rep_OclType
  open Rep_StateMachine
  open Gcg_Helper
- open Rep_SecureUML_ComponentUML.Security
+ (* open Rep_SecureUML_ComponentUML.Security*)
  open ComponentUML
  open SM_Helper
  open StateMachineTypes

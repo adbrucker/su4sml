@@ -21,18 +21,6 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
-OS.FileSys.chDir "compiler";
-
-use "compiler_ext.sig";
-
-val use_wrapper = if (String.isSubstring "polyml" ml_system)
-		  then "polyml.sml"
-                  else "smlnj.sml";
-
-
-use use_wrapper; (* or "smlnj.sml", "polyml.sml" or "mlton.sml" *) 
-
-OS.FileSys.chDir ".."; 
 
 use "gcg_library.sml";
 use "gcg_helper.sml";

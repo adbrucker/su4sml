@@ -31,7 +31,6 @@ open Rep
 open Rep_OclType
 open Rep_OclTerm
 open Rep_StateMachine
-open Rep_SecureUML_ComponentUML.Security
 
 type Pair = string * string
 fun VarN((name,Value):Pair) = name

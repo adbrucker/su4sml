@@ -23,6 +23,8 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+use "library.sml";
+val ml_system = "polyml";
 
 
 (* ****************************************************** *)
@@ -32,7 +34,19 @@ OS.FileSys.chDir "../lib/fxp/src";
 use "ROOT.ML"; 
 OS.FileSys.chDir "../../../src";
 
-use "library.sml";
+OS.FileSys.chDir "compiler";
+
+use "compiler_ext.sig";
+
+val use_wrapper = if (String.isSubstring "polyml" ml_system)
+		  then (use "../contrib/HashTable.sml"; "polyml.sml")
+                  else "smlnj.sml";
+
+
+use use_wrapper; (* or "smlnj.sml", "polyml.sml" or "mlton.sml" *) 
+
+OS.FileSys.chDir ".."; 
+
 
 (* ****************************************************** *)
 (* Abstract Representation of an XMI File of a UML Model.

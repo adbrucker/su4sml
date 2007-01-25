@@ -1,7 +1,7 @@
 (*****************************************************************************
  *          su4sml - a SecureUML repository for SML              
  *                                                                            
- * mlton.sml - interactive eval stub (not supported by MLton)
+ * polyml.sml - interactive eval 
  * Copyright (C) 2005 Achim D. Brucker <brucker@inf.ethz.ch>
  *                                                                            
  * This file is part of su4sml.                                              
@@ -23,6 +23,38 @@
 
 structure CompilerExt : COMPILER_EXT = 
 struct
+
 exception EvalNotSupported
-fun eval verbose txt = raise EvalNotSupported
+fun drop_last [] = []
+  | drop_last [x] = []
+  | drop_last (x :: xs) = x :: drop_last xs;
+
+fun eval verbose txt =
+    let 
+	fun eval_fh (print, err) verbose txt =
+	    let
+		val in_buffer = ref (SML90.explode txt);
+		val out_buffer = ref ([]: string list);
+		fun output () = SML90.implode (drop_last (rev (! out_buffer)));
+		    
+		fun get () =
+		    (case ! in_buffer of
+			 [] => ""
+		       | c :: cs => (in_buffer := cs; c));
+		fun put s = out_buffer := s :: ! out_buffer;
+		    
+		fun exec () =
+		    (case ! in_buffer of
+			 [] => ()
+		       | _ => (PolyML.compiler (get, put) (); exec ()));
+	    in
+		exec () handle exn => (err (output ()); raise exn);
+		if verbose then print (output ()) else ()
+	    end
+    in	
+	eval_fh (fn s => print (s^"\n"), fn s => library.error (s^"\n")) verbose txt
+    end
+
+fun exnHistory _ = []
+
 end

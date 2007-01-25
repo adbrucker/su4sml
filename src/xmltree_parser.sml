@@ -33,42 +33,41 @@ exception FileNotFound of string
 
 structure Parser = Parse (structure Dtd = Dtd
                           structure Hooks = XmlTreeHooks
-			              structure ParserOptions = ParserOptions ()
-			              structure Resolve = ResolveNull)
+                          structure ParserOptions = ParserOptions ()
+			  structure Resolve = ResolveNull)
 		   
 fun readFile filename = 
     let val currentDir = OS.FileSys.getDir()
 
 	(* how to do the following in a clean/portable way? *)
 	fun read_dtd dtd = 
-	    let val _ = OS.FileSys.chDir (su4sml_home())
-		(* dummy check to see if the file exists...*)	     
-		val _ = OS.FileSys.fileSize "UML15OCL.xmi" 
-		val _ = Parser.parseDocument 
-			    (SOME (Uri.String2Uri ("file:UML15OCL.xmi")))
-			    (SOME dtd) (dtd,nil,nil) 
-		val _ = OS.FileSys.chDir currentDir 
-	    in ()
-	    end
-		handle SysErr => (print ("Warning: in readFile: "^ 
-					 "did not find file UML15OCL.xmi\n");
-				  OS.FileSys.chDir currentDir )
+	    (OS.FileSys.chDir (su4sml_home());
+	     (* dummy check to see if the file exists...*)	     
+	     OS.FileSys.fileSize "UML15OCL.xmi" ;
+	     (Parser.parseDocument 
+		  (SOME (Uri.String2Uri ("file:UML15OCL.xmi")))
+		  (SOME dtd) (dtd,nil,nil)
+	      handle ex => (error ("Error while reading file UML15OCL.xmi: "^
+                                  General.exnMessage ex);
+                            raise ex));
+	     OS.FileSys.chDir currentDir )
+
 	fun read_file dtd filename = 
-	    if filename = "-" then 
-		Parser.parseDocument
-		    (NONE)
-		    (SOME dtd) (dtd,nil,nil)
-	    else 
-	    let (* dummy check to see if the file exists...*)
-		val _ = OS.FileSys.fileSize filename 
-	    in 
-		Parser.parseDocument
-		    (SOME (Uri.String2Uri filename))
-		    (SOME dtd) (dtd,nil,nil)
-	    end
-		handle SysErr => (print ("Warning: in readFile: did not find file "
-					 ^filename^"\n"); 
-				  Node (("",nil),nil)) 
+	    if filename = "-" 
+            then Parser.parseDocument
+		     (NONE)
+		     (SOME dtd) (dtd,nil,nil)
+	    else let (* dummy check to see if the file exists...*)
+		    val _ = OS.FileSys.fileSize filename 
+	        in 
+		    Parser.parseDocument
+		        (SOME (Uri.String2Uri filename))
+		        (SOME dtd) (dtd,nil,nil)
+	        end
+                 handle ex => (error ("Error while reading file " ^filename^": "^
+                                      General.exnMessage ex);
+                               raise ex) 
+                              
 	val dtd = Dtd.initDtdTables()
     in  ( read_dtd dtd; 
 	  read_file dtd filename )

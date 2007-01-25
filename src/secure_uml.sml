@@ -140,12 +140,12 @@ fun filter_role cs = List.filter (classifier_has_stereotype "secuml.role") cs
 
  
 fun mkRole (C as Rep.Class c)  = Rep.string_of_path (Rep.name_of C)
-  | mkRole _              = library.error "mkRole called on something that is \
-                                          \not a class"
+  | mkRole _              = library.error_ ("mkRole called on something that is \
+                                           \not a class",library.ERROR)
 
 (* FIXME: handle groups also *)
 fun mkSubject (C as Rep.Class c) = User (Rep.string_of_path (Rep.name_of C))
-  | mkSubject _ = library.error "mkSubject called on something that is not a class"
+  | mkSubject _ = library.error_ ("mkSubject called on something that is not a class",library.ERROR)
 
 fun mkPermission cs (C as Rep.Class c) = 
     let val atts = Rep.attributes_of (Rep.Class c)
@@ -160,34 +160,34 @@ fun mkPermission cs (C as Rep.Class c) =
                                                       Design.root_stereotypes)
                                          classifiers
         val root_resource = hd root_classes
-            handle Empty => library.error ("no root resource found for permission "^
-                                           Rep.string_of_path (Rep.name_of C))
+            handle Empty => library.error_ (("no root resource found for permission "^
+                                            Rep.string_of_path (Rep.name_of C)),library.ERROR)
         val action_attributes = 
             List.filter (fn x => List.exists 
                                      (fn y => List.exists 
                                                   (fn z => y= z) 
                                                   (#stereotypes x)) 
                                      Design.action_stereotypes) atts 
-            handle _ => library.error "could not parse permission attributes"
+            handle _ => library.error_ ("could not parse permission attributes",library.ERROR)
     in 
         { name  = (Rep.string_of_path (Rep.name_of C)),
           roles = (map (Rep.string_of_path o Rep.name_of) role_classes),
           (* FIXME: find attached constraints *)
           constraints = nil, 
           actions = if action_attributes = [] 
-                    then library.error ("no action attributes found in permission "^
-                                        (Rep.string_of_path (Rep.name_of C)))
+                    then library.error_ (("no action attributes found in permission "^
+                                         (Rep.string_of_path (Rep.name_of C))),library.ERROR)
                     else map (Design.parse_action root_resource) action_attributes }
     end
-  | mkPermission _ _ = library.error "mkPermission called on something \
-                                     \that is not a class"
-
+  | mkPermission _ _ = library.error_ ("mkPermission called on something \
+                                      \that is not a class",library.ERROR)
+                       
                        
 (** parse a list of classifiers accoriding to the SecureUML profile.
  * removes the classes with SecureUML stereotypes. 
  *)
 fun parse (cs:Rep_Core.Classifier list) = 
-	(List.filter (classifier_has_no_stereotype ["secuml.permission",
+    (List.filter (classifier_has_no_stereotype ["secuml.permission",
                                                 "secuml.role",
                                                 "secuml.subject",
                                                 "secuml.actiontype"]) 
@@ -201,7 +201,7 @@ fun parse (cs:Rep_Core.Classifier list) =
                          (List.filter classifier_has_parent (filter_role cs)),
 	   (* FIXME: find associations between Users and Roles. *)
 	   sa = nil})
-	handle _ => library.error ("Problem during parsing security configuration")
+	handle _ => library.error_ ("Problem during parsing security configuration",library.ERROR)
 
 
 end

@@ -6,8 +6,6 @@ Group is
 #else
 #endif
      ../su4sml.cm
-     compiler/compiler_ext.sig
-     compiler/smlnj.sml	
      cartridge.sig
      security_cartridge.sig
      gcg_library.sml

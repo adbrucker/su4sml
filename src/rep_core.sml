@@ -443,6 +443,7 @@ fun type_of (Class{name,...})       = name
   | type_of (Primitive{name,...})    = name
   | type_of (Template{classifier,...}) = type_of classifier 
 
+fun error s = library.error' s
 
 fun name_of (Class{name,...})       = path_of_OclType name  
   | name_of (Interface{name,...})   = path_of_OclType name

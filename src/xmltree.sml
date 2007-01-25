@@ -42,7 +42,7 @@ structure XmlTree : sig
 end = struct 
 open library
 infix 1 |>
-exception IllFormed of string
+exception IllFormed = Fail
                        
 (** A name-value pair. *)
 type Attribute = (string * string) 

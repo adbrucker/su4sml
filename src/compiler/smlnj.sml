@@ -1,7 +1,7 @@
 (*****************************************************************************
  *          su4sml - a SecureUML repository for SML              
  *                                                                            
- * polyml.sml - interactive eval 
+ * smlnj.sml - interactive eval stub (not supported by MLton)
  * Copyright (C) 2005 Achim D. Brucker <brucker@inf.ethz.ch>
  *                                                                            
  * This file is part of su4sml.                                              
@@ -23,35 +23,32 @@
 
 structure CompilerExt : COMPILER_EXT = 
 struct
-
 exception EvalNotSupported
-fun drop_last [] = []
-  | drop_last [x] = []
-  | drop_last (x :: xs) = x :: drop_last xs;
 
 fun eval verbose txt =
     let 
 	fun eval_fh (print, err) verbose txt =
 	    let
-		val in_buffer = ref (SML90.explode txt);
+		val ref out_orig = Control.Print.out;
+		    
 		val out_buffer = ref ([]: string list);
-		fun output () = SML90.implode (drop_last (rev (! out_buffer)));
-		    
-		fun get () =
-		    (case ! in_buffer of
-			 [] => ""
-		       | c :: cs => (in_buffer := cs; c));
-		fun put s = out_buffer := s :: ! out_buffer;
-		    
-		fun exec () =
-		    (case ! in_buffer of
-			 [] => ()
-		       | _ => (PolyML.compiler (get, put) (); exec ()));
+		val out = {say = (fn s => out_buffer := s :: ! out_buffer), 
+			   flush = (fn () => ())};
+		fun output () =
+		    let val str = SML90.implode (rev (! out_buffer))
+	    in String.substring (str, 0, Int.max (0, size str - 1)) end;
 	    in
-		exec () handle exn => (err (output ()); raise exn);
+		Control.Print.out := out;
+		Backend.Interact.useStream (TextIO.openString txt) 
+		handle exn =>
+		       (Control.Print.out := out_orig; err (output ()); raise exn);
+		Control.Print.out := out_orig;
 		if verbose then print (output ()) else ()
 	    end
     in	
-	eval_fh (fn s => print (s^"\n"), fn s => library.error (s^"\n")) verbose txt
+	eval_fh (fn s => print (s^"\n"), fn s => library.error_ ((s^"\n"),library.ERROR)) verbose txt
     end
+
+fun exnHistory e = SMLofNJ.exnHistory e
+ 
 end

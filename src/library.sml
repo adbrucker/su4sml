@@ -32,11 +32,11 @@ fun (x |> f) = f x;
 (* of the corresponding library.  The semantics of UML2CDL_HOME should   *)
 (* probably be fixed                                                     *)
 fun su4sml_home () = case OS.Process.getEnv "HOLOCL_HOME" of
-			             SOME p => p^"/lib/su4sml/src"
-			           | NONE => (case OS.Process.getEnv "SU4SML_HOME" of
-					                  SOME p => p^"/src"
-					                | NONE => getOpt(OS.Process.getEnv "UML2CDL_HOME",".")
-                                 )
+			 SOME p => p^"/lib/su4sml/src"
+		       | NONE   => (case OS.Process.getEnv "SU4SML_HOME" of
+				        SOME p => p^"/src"
+				      | NONE => getOpt(OS.Process.getEnv "UML2CDL_HOME",".")
+                                   )
 
 
 fun filter (pred: 'a->bool) : 'a list -> 'a list =
@@ -92,15 +92,18 @@ fun take (n, []) = []
     
 fun space_implode a bs = implode (separate a bs);
 
-(* use print instead
-fun std_output s = (TextIO.output (TextIO.stdOut, s); TextIO.flushOut TextIO.stdOut);
-*)
+fun print_stderr s = (TextIO.output (TextIO.stdErr, s); TextIO.flushOut TextIO.stdErr);
 
 exception ERROR;
    
 (* val writeln = std_output o suffix "\n";*)
 (* fun error_msg s = writeln(s) *)
-fun error s = (print (s^"\n"); raise ERROR);
+fun info s  = print (s^"\n")
+fun warn s  = print (s^"\n")
+fun error_ (s,ex) = (print (s^"\n"); raise ex)
+fun error' s = error_ (s,Fail s)
+fun error s = print (s^"\n")
+
 
 fun fst (x, y) = x
                  

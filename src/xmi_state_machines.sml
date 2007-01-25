@@ -225,7 +225,7 @@ fun state_outgoing_trans_of (CompositeState{outgoing,...}) = outgoing
   | state_outgoing_trans_of (ObjectFlowState{outgoing,...}) = outgoing
   | state_outgoing_trans_of (PseudoState{outgoing,...}) = outgoing
   | state_outgoing_trans_of (SyncState{outgoing,...}) = outgoing
-  | state_outgoing_trans_of (FinalState _) = library.error "state_outgoing_trans_of called on a final state"
+  | state_outgoing_trans_of (FinalState _) = library.error' "state_outgoing_trans_of called on a final state"
 
 fun state_incoming_trans_of (CompositeState{incoming,...}) = incoming
   | state_incoming_trans_of (SubactivityState{incoming,...}) = incoming
