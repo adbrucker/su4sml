@@ -380,7 +380,8 @@ fun classifier_elementtype_of (Collection{elementtype,...}) = elementtype
   | classifier_elementtype_of (Set{elementtype,...}) = elementtype
   | classifier_elementtype_of (Bag{elementtype,...}) = elementtype
   | classifier_elementtype_of (OrderedSet{elementtype,...}) = elementtype
-  | classifier_elementtype_of _ = raise IllFormed "classifier_elementtype_of called on a non-collection value"
+  | classifier_elementtype_of _ = library.error "in classifier_elementtype_of: \
+                                                \argument is not a collection value"
 
 end
 

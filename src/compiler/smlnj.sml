@@ -46,7 +46,7 @@ fun eval verbose txt =
 		if verbose then print (output ()) else ()
 	    end
     in	
-	eval_fh (fn s => print (s^"\n"), fn s => library.error_ ((s^"\n"),library.ERROR)) verbose txt
+	eval_fh (fn s => print (s^"\n"), fn s => library.error s) verbose txt
     end
 
 fun exnHistory e = SMLofNJ.exnHistory e

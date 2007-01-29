@@ -113,8 +113,7 @@ fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) =
          * cases where this hack has unwanted consequences.
          *)
         val classifier_type = find_type source
-        val path_of_classifier = (fn (Rep_OclType.Classifier p) => p
-                                   | x => error' (Rep_OclType.string_of_OclType x)) classifier_type
+        val path_of_classifier = Rep_OclType.path_of_OclType classifier_type
         val aend = find_associationend t referredAssociationEnd
         val aend_name = Option.getOpt(#name aend,
                                       (lowercase o XMI.classifier_name_of o
@@ -288,7 +287,7 @@ fun transform_state t (XMI.CompositeState {xmiid,outgoing,incoming,subvertex,
 		      outgoing = outgoing,
 		      incoming = incoming,
 		      kind = kind }
-  | transform_state t _ = library.error_ ("in transform_state: Subactivity states, object flow states and sync states are not supported.",library.ERROR)
+  | transform_state t _ = raise Fail ("in transform_state: unsupported StateVertex type (Subactivity states, object flow states and sync states are not supported).") 
 (* a primitive hack: we take the body of the guard g as the name of an *)
 (* operation to be called in order to check whether the guard is true  *)
 fun transform_guard t (XMI.mk_Guard g) =
@@ -432,7 +431,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 	                thyname     = NONE 
                       }
     end
-  | transform_classifier t (_) = raise IllFormed "Not supported Classifier type found."
+  | transform_classifier t (_) = raise Fail "Not supported Classifier type found."
 			               
 
 (** recursively transform all classes in the package. *)
@@ -511,5 +510,6 @@ fun printStackTrace e =
  *)
 fun test (_,filename::_) = (Rep2String.printList (readFile filename); OS.Process.success)
     handle ex => (printStackTrace ex; OS.Process.failure)
+
 end
 

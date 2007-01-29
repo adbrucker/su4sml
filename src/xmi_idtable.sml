@@ -374,7 +374,8 @@ fun class_taggedvalues_of table (XMI.Class c) =
   | class_taggedvalues_of table (XMI.AssociationClass c) = 
     map (fn x => (find_tagdefinition table (#tag_type x),#dataValue x)) 
 	(#taggedValue c)
-  | class_taggedvalues_of table _ = raise IllFormed "class_taggedvalues_of called on an argument that doesn't support tagged values yet..."
+  | class_taggedvalues_of table _ = raise IllFormed "in class_taggedvalues_of: \
+                                                    \argument doesn't support tagged values"
 	
 
 (* returns the value of the given tag *)
@@ -384,7 +385,8 @@ fun class_taggedvalue_of table tag (XMI.Class c) =
   | class_taggedvalue_of table tag (XMI.AssociationClass c) =
     Option.map #2 ((List.find (fn (x,y) => x=tag)) 
 		       (class_taggedvalues_of table (XMI.AssociationClass c)))
-  | class_taggedvalue_of table tag _ = raise IllFormed "class_taggedvalues_of called on an argument that doesn't support tagged values yet..."
+  | class_taggedvalue_of table tag _ = raise IllFormed "in class_taggedvalues_of: \
+                                                       \argument doesn't support tagged values"
 	
 
 (* returns a list of tag-value pairs *)
@@ -486,7 +488,9 @@ fun transform_associationclass_as_association t (XMI.AssociationClass assoc) =
 	List.app (fn x => add_aend_to_type (#xmiid assoc, x)) aends
     end
 		
-  | transform_associationclass_as_association t _ = library.error_ ("in transform_associationclass_as_association: can only be called on association classes",library.ERROR)
+  | transform_associationclass_as_association t _ = 
+    library.error ("in transform_associationclass_as_association: "^
+                   "argument is not an association classes")
 
 (* recursively transforms all associations in the package p. *)
 fun transform_associations t (XMI.Package p) = 

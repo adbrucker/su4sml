@@ -60,19 +60,19 @@ val filter_text  = List.filter (fn Text x => true
 								 | _      => false)
 		   
 fun text (Text s) = s
-  | text _        = raise IllFormed "text called on Node element"
+  | text _        = raise IllFormed "in XmlTree.text: argument is a Node element"
 			    
 fun attributes (Node ((elem,atts),trees)) = atts
-  | attributes _ = raise IllFormed "attributes_of called on a Text-Node"
+  | attributes _ = raise IllFormed "in attributes_of: argument is a Text-Node"
 
 fun children   (Node ((elem,atts),trees)) = trees
-  | children   _ = raise IllFormed "children called on a Text-Node"
+  | children   _ = raise IllFormed "in XmlTree.children: argument is a Text-Node"
 
 fun node_children (Node ((elem,atts),trees)) = filter_nodes trees
-  | node_children   _ = raise IllFormed "node_children called on a Text-Node"
+  | node_children   _ = raise IllFormed "in XmlTree.node_children: argument is a Text-Node"
 
 fun text_children (Node ((elem,atts),trees)) = filter_text trees
-  | text_children _ = raise IllFormed "node_children called on a Text-Node"
+  | text_children _ = raise IllFormed "in XmlTree.text_children: argument is a Text-Node"
 
 fun tagname    (Node ((elem,atts),trees)) = elem
   | tagname    (Text _) = ""

@@ -47,8 +47,8 @@ fun readFile filename =
 	     (Parser.parseDocument 
 		  (SOME (Uri.String2Uri ("file:UML15OCL.xmi")))
 		  (SOME dtd) (dtd,nil,nil)
-	      handle ex => (error ("Error while reading file UML15OCL.xmi: "^
-                                  General.exnMessage ex);
+	      handle ex => (error_msg ("Error while reading file UML15OCL.xmi: "^
+                                       General.exnMessage ex);
                             raise ex));
 	     OS.FileSys.chDir currentDir )
 
@@ -64,8 +64,8 @@ fun readFile filename =
 		        (SOME (Uri.String2Uri filename))
 		        (SOME dtd) (dtd,nil,nil)
 	        end
-                 handle ex => (error ("Error while reading file " ^filename^": "^
-                                      General.exnMessage ex);
+                 handle ex => (error_msg ("Error while reading file " ^filename^": "^
+                                          General.exnMessage ex);
                                raise ex) 
                               
 	val dtd = Dtd.initDtdTables()

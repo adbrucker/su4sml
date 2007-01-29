@@ -33,6 +33,8 @@ sig
 		         | OrderedSet of OclType | Bag of OclType 
 		         | Collection of OclType
 		         | Classifier of Path | OclVoid | DummyT | TemplateParameter of string
+
+    val path_of_OclType   : OclType -> Path
     val string_of_OclType : OclType -> string	
     val string_of_path    : Path -> string	
     val pathstring_of_path: Path -> string
@@ -100,6 +102,7 @@ datatype OclType    =  Integer | Real | String | Boolean | OclAny
 		     | Classifier of Path
 		     | TemplateParameter of string
 
+
 (** Convert Path to a string using given separator *)
 fun path_to_string (path:Path) separator = case path of
 			      [] => ""
@@ -124,6 +127,11 @@ fun string_of_OclType Integer        = "Integer"
   | string_of_OclType OclVoid        = "OclVoid"
   | string_of_OclType (Classifier p) = (string_of_path p)
   | string_of_OclType DummyT         = "DummyT"
+
+fun path_of_OclType (Classifier p) = p
+  | path_of_OclType (TemplateParameter p) = [] (* FIXME *)
+  | path_of_OclType x = ["oclLib",string_of_OclType x]
+
 
 fun is_Classifier (Classifier p) = true
   | is_Classifier _              = false 

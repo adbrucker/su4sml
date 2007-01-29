@@ -98,11 +98,19 @@ exception ERROR;
    
 (* val writeln = std_output o suffix "\n";*)
 (* fun error_msg s = writeln(s) *)
+
+(** output an informational message about what is going on. *)
 fun info s  = print (s^"\n")
+
+(** output a warning that something is wrong, 
+ * but it is dealt with somehow.  *)
 fun warn s  = print (s^"\n")
-fun error_ (s,ex) = (print (s^"\n"); raise ex)
-fun error' s = error_ (s,Fail s)
-fun error s = print (s^"\n")
+
+(** output an error message *)
+fun error_msg s = print (s^"\n")
+
+(** output an error message and Fail *)
+fun error s = (print (s^"\n"); raise Fail s)
 
 
 fun fst (x, y) = x

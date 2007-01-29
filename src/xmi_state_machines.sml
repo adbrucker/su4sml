@@ -186,7 +186,7 @@ and	StateMachine = mk_StateMachine of
                             transitions      : Transition list}
 
 fun state_type_of  (ObjectFlowState{type_,...}) = type_
-  | state_type_of  _ = raise IllFormed "state_type_of called on a non-ObjectFlow state"
+  | state_type_of  _ = library.error "in state_type_of: argument is not an ObjectFlow state"
 
 fun state_entry_of (CompositeState{entry,...}) = entry
   | state_entry_of (SubactivityState{entry,...}) = entry
@@ -194,7 +194,7 @@ fun state_entry_of (CompositeState{entry,...}) = entry
   | state_entry_of (ActionState{entry,...}) = entry
   | state_entry_of (ObjectFlowState{entry,...}) = entry
   | state_entry_of (FinalState{entry,...}) = entry
-  | state_entry_of _ = raise IllFormed "state_entry_of called on a state that does not have entry actions"
+  | state_entry_of _ = library.error "in state_entry_of: argument does not have entry actions"
 
 fun state_xmiid_of (CompositeState{xmiid,...}) = xmiid
   | state_xmiid_of (SubactivityState{xmiid,...}) = xmiid
@@ -216,7 +216,8 @@ fun state_name_of (CompositeState{name,...}) = name
 
 fun state_subvertices_of (CompositeState{subvertex,...}) = subvertex
   | state_subvertices_of (SubactivityState{subvertex,...}) = subvertex
-  | state_subvertices_of _ = raise IllFormed "state_subvertices_of called on a non-composite state"
+  | state_subvertices_of _ = library.error "in state_subvertices_of: argument is \
+                                           \not a composite state" 
 
 fun state_outgoing_trans_of (CompositeState{outgoing,...}) = outgoing
   | state_outgoing_trans_of (SubactivityState{outgoing,...}) = outgoing
@@ -225,7 +226,8 @@ fun state_outgoing_trans_of (CompositeState{outgoing,...}) = outgoing
   | state_outgoing_trans_of (ObjectFlowState{outgoing,...}) = outgoing
   | state_outgoing_trans_of (PseudoState{outgoing,...}) = outgoing
   | state_outgoing_trans_of (SyncState{outgoing,...}) = outgoing
-  | state_outgoing_trans_of (FinalState _) = library.error' "state_outgoing_trans_of called on a final state"
+  | state_outgoing_trans_of (FinalState _) = library.error "in state_outgoing_trans_of: \
+                                                           \argument is a final state"
 
 fun state_incoming_trans_of (CompositeState{incoming,...}) = incoming
   | state_incoming_trans_of (SubactivityState{incoming,...}) = incoming

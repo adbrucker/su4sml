@@ -139,6 +139,7 @@ end
 structure Rep_Core :  REP_CORE = 
 struct
 open library
+open Rep_OclType
 
 type Visibility = XMI_DataTypes.VisibilityKind
 type Scope      = XMI_DataTypes.ScopeKind
@@ -306,14 +307,6 @@ fun assoc_to_inv cls_name (aend:associationend) =
     end
 
 
-fun path_of_OclType (Rep_OclType.Classifier p) = p
-  | path_of_OclType Rep_OclType.Integer        = ["oclLib","Integer"] 
-  | path_of_OclType Rep_OclType.Real           = ["oclLib","Real"]
-  | path_of_OclType Rep_OclType.String         = ["oclLib","String"]
-  | path_of_OclType Rep_OclType.Boolean        = ["oclLib","Boolean"]
-  | path_of_OclType Rep_OclType.OclAny         = ["oclLib","OclAny"]
-  | path_of_OclType Rep_OclType.OclVoid        = ["oclLib","OclVoid"]
-  | path_of_OclType Rep_OclType.DummyT       = ["oclLib","OclDummy"]
 	
 
      
@@ -443,7 +436,6 @@ fun type_of (Class{name,...})       = name
   | type_of (Primitive{name,...})    = name
   | type_of (Template{classifier,...}) = type_of classifier 
 
-fun error s = library.error' s
 
 fun name_of (Class{name,...})       = path_of_OclType name  
   | name_of (Interface{name,...})   = path_of_OclType name

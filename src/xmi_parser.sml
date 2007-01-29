@@ -1045,7 +1045,7 @@ fun findXmiContent tree = valOf (dfs "XMI.content" tree)
     handle Option => raise IllFormed "no XMI.content found"
 			       
 fun readFile f = (mkXmiContent o findXmiContent o XmlTreeParser.readFile) f
-    handle ex => (error ("Error during parsing of "^f^": \n\t"^General.exnMessage ex); 
+    handle ex => (error_msg ("Error during parsing of "^f^": \n\t"^General.exnMessage ex); 
                   raise ex)
 end
 
