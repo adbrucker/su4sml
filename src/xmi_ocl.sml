@@ -32,54 +32,54 @@
 
 structure XMI_OCL = 
 struct
-			   
+
 (* FIX: LiteralExp should probably be renamed to PrimitiveLiteralExp *)
 (* FIX: there should be also EnumLiteralExp and TupleLiteralExp *)
-datatype OCLExpression = LiteralExp of { symbol          : string,
-					 expression_type : string }
-                       | CollectionLiteralExp of { parts: CollectionLiteralPart list,
-						   expression_type : string}
-		       | IfExp    of { condition       : OCLExpression,
-				      thenExpression  : OCLExpression,
-				      elseExpression  : OCLExpression,
-				      expression_type : string }
-       | AssociationEndCallExp   of { source                   : OCLExpression,
-				       referredAssociationEnd   : string,
-				       expression_type          : string }
-       | AssociationClassCallExp of { source                   : OCLExpression, 
-				       referredAssociationClass : string,
-				       expression_type          : string }
-       | AttributeCallExp        of { source            : OCLExpression,
-				       referredAttribute : string,
-				       expression_type   : string }
-       | OperationCallExp        of { source            : OCLExpression,
-				       arguments         : OCLExpression list,
-				       referredOperation : string,
-				       expression_type   : string }
-       | OperationWithTypeArgExp of { source :OCLExpression,
-				      name : string,
-				      typeArgument: string,
-				      expression_type: string} 
-       | VariableExp             of { referredVariable: string,
-				       expression_type : string }
-       | LetExp                  of { variable        : VariableDeclaration,
-				       inExpression    : OCLExpression,
-				       expression_type : string }
-       | IterateExp              of { iterators       : VariableDeclaration list, 
-				       result          : VariableDeclaration ,
-				       body            : OCLExpression,
-				       source          : OCLExpression,
-				       expression_type : string}
-       | IteratorExp             of { name            : string, 
-				       iterators       : VariableDeclaration list,
-				       body            : OCLExpression,
-				       source          : OCLExpression,
-				       expression_type : string}
-and CollectionLiteralPart = CollectionItem of { item : OCLExpression,
-						expression_type: string }
-                          | CollectionRange of { first: OCLExpression,
-						 last: OCLExpression,
-						 expression_type: string}
+datatype OCLExpression = LiteralExp              of { symbol          : string,
+					              expression_type : string }
+                       | CollectionLiteralExp    of { parts: CollectionLiteralPart list,
+						      expression_type : string}
+		       | IfExp                   of { condition       : OCLExpression,
+				                      thenExpression  : OCLExpression,
+				                      elseExpression  : OCLExpression,
+				                      expression_type : string }
+                       | AssociationEndCallExp   of { source                   : OCLExpression,
+				                      referredAssociationEnd   : string,
+				                      expression_type          : string }
+                       | AssociationClassCallExp of { source                   : OCLExpression, 
+				                      referredAssociationClass : string,
+				                      expression_type          : string }
+                       | AttributeCallExp        of { source            : OCLExpression,
+				                      referredAttribute : string,
+				                      expression_type   : string }
+                       | OperationCallExp        of { source            : OCLExpression,
+				                      arguments         : OCLExpression list,
+				                      referredOperation : string,
+				                      expression_type   : string }
+                       | OperationWithTypeArgExp of { source :OCLExpression,
+				                      name : string,
+				                      typeArgument: string,
+				                      expression_type: string} 
+                       | VariableExp             of { referredVariable: string,
+				                      expression_type : string }
+                       | LetExp                  of { variable        : VariableDeclaration,
+				                      inExpression    : OCLExpression,
+				                      expression_type : string }
+                       | IterateExp              of { iterators       : VariableDeclaration list, 
+				                      result          : VariableDeclaration ,
+				                      body            : OCLExpression,
+				                      source          : OCLExpression,
+				                      expression_type : string}
+                       | IteratorExp             of { name            : string, 
+				                      iterators       : VariableDeclaration list,
+				                      body            : OCLExpression,
+				                      source          : OCLExpression,
+				                      expression_type : string}
+     and CollectionLiteralPart = CollectionItem  of { item : OCLExpression,
+						      expression_type: string }
+                               | CollectionRange of { first: OCLExpression,
+						      last: OCLExpression,
+						      expression_type: string}
 (* from OCL 2.0 Expressions: -------------------------------------------------
  * A VariableDeclaration declares a variable name and binds it to a type. The 
  * variable can be used in expressions where the variable is in scope. This 

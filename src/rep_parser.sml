@@ -29,11 +29,9 @@ structure RepParser :
               val readFile      : string -> Rep.Classifier list
               val test: (string * string list) -> OS.Process.status
               (* generic exception if something is wrong *)
-              exception IllFormed of string
           end  =
 struct
 open library
-exception IllFormed of string
 
 open Xmi_IDTable
 
@@ -162,7 +160,7 @@ fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) =
                          find_classifier_type t expression_type
                         )
     end
-  | transform_expression t _ = raise Fail "unsupported OCL expression type"
+  | transform_expression t _ = error "unsupported OCL expression type"
 and transform_collection_part t (XMI.CollectionItem {item,expression_type}) =
     Rep_OclTerm.CollectionItem (transform_expression t item,
 				find_classifier_type t expression_type)
@@ -175,12 +173,12 @@ and transform_collection_part t (XMI.CollectionItem {item,expression_type}) =
 fun transform_constraint t ({xmiid,name,body,...}:XMI.Constraint) = 
     let val n_name = case name of 
 		         (SOME s) => if (s = "") then NONE else (SOME(s))
-	               |NONE     => NONE
+	               | NONE     => NONE
     in	
     	(n_name,transform_expression t body)
-	handle NotYetImplemented => (print "Warning: in RepParser.transform_constraint: Something is not yet implemented.\n";(NONE, triv_expr))
-	     | IllFormed msg => (print ("Warning: in RepParser.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
-	     | XmiParser.IllFormed msg => (print ("Warning: in RepParser.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
+	handle ex => (print ("Warning: in RepParser.transform_constraint: \
+                             \Could not parse Constraint: "^General.exnMessage ex^"\n");
+                      (NONE, triv_expr))
     end
 
 fun transform_bodyconstraint result_type t ({xmiid,name,body,...}:XMI.Constraint) = 
@@ -193,9 +191,9 @@ fun transform_bodyconstraint result_type t ({xmiid,name,body,...}:XMI.Constraint
 						equal,[(body,body_type)],
 						Rep_OclType.Boolean))
     end
-    handle NotYetImplemented => (print "Warning: in RepParser.transform_constraint: Something is not yet implemented.\n";(NONE, triv_expr))
-	 | IllFormed msg => (print ("Warning: in RepParser.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
-	 | XmiParser.IllFormed msg => (print ("Warning: in RepParser.transform_constraint: Could not parse Constraint: "^msg^"\n");(NONE, triv_expr))
+    handle ex => (print ("Warning: in RepParser.transform_bodyconstraint: \
+                         \Could not parse Constraint: "^General.exnMessage ex^"\n");
+                  (NONE, triv_expr))
 
 fun transform_parameter t {xmiid,name,kind,type_id} =
     (name, find_classifier_type t type_id)
@@ -287,7 +285,9 @@ fun transform_state t (XMI.CompositeState {xmiid,outgoing,incoming,subvertex,
 		      outgoing = outgoing,
 		      incoming = incoming,
 		      kind = kind }
-  | transform_state t _ = raise Fail ("in transform_state: unsupported StateVertex type (Subactivity states, object flow states and sync states are not supported).") 
+  | transform_state t _ = error ("in transform_state: unsupported StateVertex type \
+                                 \(Subactivity states, object flow states and \
+                                 \sync states are not supported).") 
 (* a primitive hack: we take the body of the guard g as the name of an *)
 (* operation to be called in order to check whether the guard is true  *)
 fun transform_guard t (XMI.mk_Guard g) =
@@ -431,7 +431,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 	                thyname     = NONE 
                       }
     end
-  | transform_classifier t (_) = raise Fail "Not supported Classifier type found."
+  | transform_classifier t (_) = error "Not supported Classifier type found."
 			               
 
 (** recursively transform all classes in the package. *)

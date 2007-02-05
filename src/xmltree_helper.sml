@@ -62,8 +62,7 @@ fun filter_children string tree = filter string (node_children tree)
 fun find_some string trees = (List.find (fn x => string = tagname x) trees)
 
 fun find string trees = valOf (List.find (fn x => string = tagname x) trees) 
-    handle Option => raise IllFormed ("in XmlTree.find: no element "
-                                      ^string)
+    handle Option => error ("in XmlTree.find: no element "^string)
 
 
 fun some_id' atts = let val xmiid = atts |> optional_value_of "xmi.id" 
@@ -83,28 +82,33 @@ fun some_id' atts = let val xmiid = atts |> optional_value_of "xmi.id"
 fun some_id tree = some_id' (attributes tree)
 
 fun value_of string atts = XmlTree.value_of string atts
-    handle IllFormed msg => raise IllFormed (msg^(some_id' atts))
+    handle ex => error ((General.exnMessage ex)^(some_id' atts))
  
 fun find_child string tree = find string (node_children tree)
-    handle IllFormed msg => raise IllFormed (msg^" inside node "^
-                                             (tagname tree)^(some_id tree)^"\n")
+    handle ex => error ((General.exnMessage ex)^" inside node "^(tagname tree)^(some_id tree)^"\n")
 			   
 fun dfs string tree = if tagname tree = string 
 		      then SOME tree
-		      else Option.join (List.find Option.isSome (List.map (dfs string) (node_children tree)))
+		      else Option.join (List.find Option.isSome (List.map (dfs string) (node_children tree))) 
 
 fun exists string trees = List.exists (fn x => string = tagname x) trees 
 fun has_child string tree = exists string (node_children tree) 
 			  
 fun follow  string trees = node_children (find string trees)
+fun followM string trees  = if   exists string trees
+                            then follow string trees  
+                            else nil
+
 fun skip    string tree  = node_children (find_child string tree)
-fun followM string trees  = follow string trees   handle IllFormed msg => nil
-fun skipM   string tree   = skip string tree      handle IllFormed msg => nil
+fun skipM   string tree   = if  has_child string tree 
+                            then skip string tree     
+                            else nil
+                            
 
 fun is (tree,string) = string = tagname tree
 infix 2 is
 fun assert string tree  = if tree is string then tree
-                          else raise IllFormed ("expected "^string^" but found "^
+                          else error ("expected "^string^" but found "^
                                                 (tagname tree)^(some_id tree)^"\n")
 
 (* navigate to association ends with multiplicity 1..* *)

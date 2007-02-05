@@ -26,7 +26,6 @@
 structure Xmi_IDTable = 
 struct
 open library
-exception IllFormed of string
 
 datatype HashTableEntry = Package of Rep_OclType.Path
 		        | Type of (Rep_OclType.OclType * 
@@ -51,73 +50,73 @@ fun find_tagdefinition t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of TagDefinition x => x
        | _                => raise Option) 
-    handle Option => raise IllFormed ("expected TagDefinition "^xmiid^" in table")
+    handle Option => error ("expected TagDefinition "^xmiid^" in table")
 
 fun find_state t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of State x => x
        | _                => raise Option) 
-    handle Option => raise IllFormed ("expected State "^xmiid^" in table")
+    handle Option => error ("expected State "^xmiid^" in table")
 
 fun find_event t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of Event x => x
        | _                => raise Option) 
-    handle Option => raise IllFormed ("expected Event "^xmiid^" in table")
+    handle Option => error ("expected Event "^xmiid^" in table")
 
 fun find_transition t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of Transition x => x
        | _                => raise Option) 
-    handle Option => raise IllFormed ("expected Transition "^xmiid^" in table")
+    handle Option => error ("expected Transition "^xmiid^" in table")
 
 fun find_dependency t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of Dependency x => x
        | _                => raise Option) 
-    handle Option => raise IllFormed ("expected Dependency "^xmiid^" in table")
+    handle Option => error ("expected Dependency "^xmiid^" in table")
 
 fun find_generalization t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of Generalization x => x
        | _                => raise Option) 
-    handle Option => raise IllFormed ("expected Generalization "^xmiid^" in table")
+    handle Option => error ("expected Generalization "^xmiid^" in table")
 
 fun find_stereotype t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Stereotype x => x
        | _                => raise Option) 
-    handle Option => raise IllFormed ("expected Stereotype "^xmiid^" in table")
+    handle Option => error ("expected Stereotype "^xmiid^" in table")
 
 fun find_attribute t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Attribute x => x
        | _                => raise Option) 
-    handle Option => raise IllFormed ("expected Attribute "^xmiid^" in table")
+    handle Option => error ("expected Attribute "^xmiid^" in table")
 
 fun find_operation t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Operation x => x
        | _                => raise Option) 
-    handle Option => raise IllFormed ("expected Operation "^xmiid^" in table")
+    handle Option => error ("expected Operation "^xmiid^" in table")
 
 fun find_type t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of Type x  => x
        | _                => raise Option) 
-    handle Option => raise IllFormed ("expected Type "^xmiid^" in table (find_type)")
+    handle Option => error ("expected Type "^xmiid^" in table (find_type)")
 
 fun find_aends t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of (Type (c,xs,_,_))  => xs
        | _                => raise Option) 
-    handle Option => raise IllFormed ("expected Type "^xmiid^" in table (find_aends)")
+    handle Option => error ("expected Type "^xmiid^" in table (find_aends)")
 
 fun find_variable_dec t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Variable x => x
        | _                => raise Option) 
-    handle Option => raise IllFormed ("expected VariableDeclaration "^xmiid^" in table")
+    handle Option => error ("expected VariableDeclaration "^xmiid^" in table")
 
 fun find_parent t xmiid = #2 (find_generalization t xmiid)
 
@@ -125,22 +124,22 @@ fun find_package t xmiid  =
     (case valOf (HashTable.find t xmiid) 
       of Package path => path
        | _                => raise Option) 
-    handle Option => raise IllFormed ("expected Path "^xmiid^" in table")
+    handle Option => error ("expected Path "^xmiid^" in table")
 					
 fun path_of_classifier (Rep_OclType.Classifier x) = x
-  | path_of_classifier _ = raise IllFormed ("path_of_classifier called on non-Classifier argument")
+  | path_of_classifier _ = error ("path_of_classifier called on non-Classifier argument")
 
 fun find_constraint t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Constraint c => c
        | _                => raise Option) 
-    handle Option => raise IllFormed ("expected Constraint "^xmiid^" in table")
+    handle Option => error ("expected Constraint "^xmiid^" in table")
 
 fun find_associationend t xmiid  = 
     (case valOf (HashTable.find t xmiid) 
       of AssociationEnd ae => ae
        | _                   => raise Option) 
-    handle Option => raise IllFormed ("expected AssociationEnd "^xmiid^" in table")
+    handle Option => error ("expected AssociationEnd "^xmiid^" in table")
 		
 
 fun filter_exists t cs = 
@@ -178,21 +177,21 @@ fun find_classifier t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Type (_,_,c,_) => c
        | _                => raise Option) 
-    handle Option => raise IllFormed ("expected Classifier "^xmiid^" in table (in find_classifer)")
+    handle Option => error ("expected Classifier "^xmiid^" in table (in find_classifer)")
 
 fun find_classifierInState_classifier t cis_id =
     (case valOf (HashTable.find t cis_id)
       of ClassifierInState c => find_classifier t c
        | Type (_,_,c,_)      => c
 	   | _                   => raise Option)
-    handle Option =>  raise IllFormed ("expected ClassifierInState "
+    handle Option =>  error ("expected ClassifierInState "
 				       ^cis_id^" in table")
 
 fun find_activity_graph_of t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of Type (_,_,_,ag) => ag
        | _                => raise Option) 
-    handle Option => raise IllFormed ("expected Classifier "^xmiid^" in table (in find_activity_graph_of)")
+    handle Option => error ("expected Classifier "^xmiid^" in table (in find_activity_graph_of)")
 
 			
 fun find_classifier_type t xmiid
@@ -212,9 +211,9 @@ fun find_classifier_type t xmiid
 		      | Rep_OclType.Set        (Rep_OclType.Classifier [x]) => Rep_OclType.Set (find_classifier_type t x)
 		      | Rep_OclType.Bag        (Rep_OclType.Classifier [x]) => Rep_OclType.Bag (find_classifier_type t x)
 		      | Rep_OclType.OrderedSet (Rep_OclType.Classifier [x]) => Rep_OclType.OrderedSet (find_classifier_type t x)
-		      | _ => raise IllFormed ("unexpected Classifier-Type "^xmiid^" in table")
+		      | _ => error ("unexpected Classifier-Type "^xmiid^" in table")
 	 end
-	handle Option => raise IllFormed ("expected Classifier "^xmiid^" in table (in find_classifier_type)")
+	handle Option => error ("expected Classifier "^xmiid^" in table (in find_classifier_type)")
 		    
 
 fun insert_constraint table (c:XMI.Constraint) =
@@ -262,7 +261,7 @@ fun insert_activity_graph table (XMI.mk_ActivityGraph ag) =
 					   table (context, Type (c,xs,aes,
 XMI.mk_ActivityGraph ag::ags))
 	   | _                => raise Option) 
-	      handle Option => raise IllFormed ("expected Type "^context^" in table (insert_activity_graph)");
+	      handle Option => error ("expected Type "^context^" in table (insert_activity_graph)");
 	List.app (insert_transition table) (#transitions ag);
 	insert_state table (#top ag)
     end
@@ -296,7 +295,7 @@ fun insert_classifier table package_prefix class =
 			   else if String.isPrefix "Set("        name then Rep_OclType.Set        (Rep_OclType.Classifier [XMI.classifier_elementtype_of class])
 			   else if String.isPrefix "Bag("        name then Rep_OclType.Bag        (Rep_OclType.Classifier [XMI.classifier_elementtype_of class])
 			   else if String.isPrefix "OrderedSet(" name then Rep_OclType.OrderedSet (Rep_OclType.Classifier [XMI.classifier_elementtype_of class])
-			   else raise IllFormed ("didn't recognize ocltype "^name) 
+			   else error ("didn't recognize ocltype "^name) 
 		      else Rep_OclType.Classifier path
 	(* This function is called before the associations are handled, *)
 	(* so we do not have to take care of them now...                *)
@@ -374,8 +373,8 @@ fun class_taggedvalues_of table (XMI.Class c) =
   | class_taggedvalues_of table (XMI.AssociationClass c) = 
     map (fn x => (find_tagdefinition table (#tag_type x),#dataValue x)) 
 	(#taggedValue c)
-  | class_taggedvalues_of table _ = raise IllFormed "in class_taggedvalues_of: \
-                                                    \argument doesn't support tagged values"
+  | class_taggedvalues_of table _ = error "in class_taggedvalues_of: \
+                                          \argument doesn't support tagged values"
 	
 
 (* returns the value of the given tag *)
@@ -385,8 +384,8 @@ fun class_taggedvalue_of table tag (XMI.Class c) =
   | class_taggedvalue_of table tag (XMI.AssociationClass c) =
     Option.map #2 ((List.find (fn (x,y) => x=tag)) 
 		       (class_taggedvalues_of table (XMI.AssociationClass c)))
-  | class_taggedvalue_of table tag _ = raise IllFormed "in class_taggedvalues_of: \
-                                                       \argument doesn't support tagged values"
+  | class_taggedvalue_of table tag _ = error "in class_taggedvalues_of: \
+                                             \argument doesn't support tagged values"
 	
 
 (* returns a list of tag-value pairs *)

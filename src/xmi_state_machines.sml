@@ -1,7 +1,7 @@
 (*****************************************************************************
  *          su4sml - a SecureUML repository for SML              
  *                                                                            
- * xmi_umlcore.sig - XMI-UML-Core datatypes for the import interface for su4sml
+ * xmi_state_machines.sml - XMI-UML-StateMachine datatypes for the import interface for su4sml
  * Copyright (C) 2005  Achim D. Brucker <brucker@inf.ethz.ch>
  *                     Jürgen Doser <doserj@inf.ethz.ch>
  *                     Burkhart Wolff
@@ -38,7 +38,6 @@ end
 structure XMI_StateMachines =
 struct
 open XMI_ExtensionMechanisms XMI_CommonBehavior
-exception IllFormed of string
 
 type     StateVertex_Id = string
 type     Transition_Id  = string
@@ -160,7 +159,7 @@ datatype StateVertex =
                          exit         : Procedure option,
                          doActivity   : Procedure option,
                          taggedValue  : TaggedValue list,
-	                     incoming     : Transition_Id list }
+	                 incoming     : Transition_Id list }
        | PseudoState of { xmiid        : string,
                           name         : string,
                           stereotype   : Stereotype_Id list,
@@ -168,15 +167,15 @@ datatype StateVertex =
                           kind         : PseudoStateVars,
                           taggedValue  : TaggedValue list,
                           outgoing     : Transition_Id list,
-	                      incoming     : Transition_Id list }
+	                  incoming     : Transition_Id list }
        | SyncState of { xmiid        : string,
                         name         : string,
                         stereotype   : Stereotype_Id list,
                         isSpecification : bool,
                         outgoing     : Transition_Id list,
-	                    incoming     : Transition_Id list,
+	                incoming     : Transition_Id list,
                         taggedValue  : TaggedValue list,
-	                    bound        : int}
+	                bound        : int}
 (*     | StubState  *)	    
 and	StateMachine = mk_StateMachine of 
                            {xmiid            : string,

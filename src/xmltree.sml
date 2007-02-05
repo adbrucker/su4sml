@@ -22,6 +22,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
 
+(** datatypes and functions for XML trees. *)
 structure XmlTree : sig
     type Attribute
     type Tag = string * Attribute list
@@ -38,11 +39,9 @@ structure XmlTree : sig
     val optional_value_of : string -> Attribute list -> string option
     val value_of          : string -> Attribute list -> string
     val has_attribute     : string -> Tree -> bool         
-    exception IllFormed of string
 end = struct 
 open library
 infix 1 |>
-exception IllFormed = Fail
                        
 (** A name-value pair. *)
 type Attribute = (string * string) 
@@ -50,32 +49,33 @@ type Attribute = (string * string)
 (** Tags consist of element names, and a list of attribute name-value pairs. *)
 type Tag = string * Attribute list
 
+(** A Node in an XML tree is either a tag with substrees, or plain text. *)
 datatype Tree = Node of Tag * Tree list
               | Text of string
 
 val filter_nodes = List.filter (fn Node x => true
-								 | _      => false)
-
+				 | _      => false)
+                   
 val filter_text  = List.filter (fn Text x => true
-								 | _      => false)
-		   
-fun text (Text s) = s
-  | text _        = raise IllFormed "in XmlTree.text: argument is a Node element"
-			    
-fun attributes (Node ((elem,atts),trees)) = atts
-  | attributes _ = raise IllFormed "in attributes_of: argument is a Text-Node"
-
-fun children   (Node ((elem,atts),trees)) = trees
-  | children   _ = raise IllFormed "in XmlTree.children: argument is a Text-Node"
-
-fun node_children (Node ((elem,atts),trees)) = filter_nodes trees
-  | node_children   _ = raise IllFormed "in XmlTree.node_children: argument is a Text-Node"
-
-fun text_children (Node ((elem,atts),trees)) = filter_text trees
-  | text_children _ = raise IllFormed "in XmlTree.text_children: argument is a Text-Node"
+				 | _      => false)
 
 fun tagname    (Node ((elem,atts),trees)) = elem
   | tagname    (Text _) = ""
+
+fun text (Text s) = s
+  | text x        = error ("in XmlTree.text: argument is a Node element (<"^tagname x^">).")
+			  
+fun attributes (Node ((elem,atts),trees)) = atts
+  | attributes _ = error "in attributes_of: argument is a Text-Node"
+
+fun children   (Node ((elem,atts),trees)) = trees
+  | children   _ = error "in XmlTree.children: argument is a Text-Node"
+
+fun node_children (Node ((elem,atts),trees)) = filter_nodes trees
+  | node_children   _ = error "in XmlTree.node_children: argument is a Text-Node"
+
+fun text_children (Node ((elem,atts),trees)) = filter_text trees
+  | text_children _ = error "in XmlTree.text_children: argument is a Text-Node"
 
 fun optional_value_of string atts = Option.map #2 (List.find (fn (x,_) => x = string) atts)
 
@@ -84,6 +84,6 @@ fun has_attribute string tree = Option.isSome (optional_value_of string (attribu
 
 
 fun value_of string atts = valOf (optional_value_of string atts)
-    handle Option => raise IllFormed ("in value_of: did not find attribute "^string)
-
+    handle Option => error ("in XmlTree.value_of: argument has no attribute "^string)
+                     
 end

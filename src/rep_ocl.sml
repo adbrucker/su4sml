@@ -183,12 +183,10 @@ datatype OclTerm =
 			       * OclTerm * OclType       (* source             *)
 			       * OclTerm * OclType       (* iterator-body      *)
 			       * OclType                 (* result type        *)
-and CollectionPart = CollectionItem of OclTerm * OclType
-	           | CollectionRange of OclTerm   (* first *)
-		         		 * OclTerm (* last  *)
-                                         * OclType
+     and CollectionPart = CollectionItem of OclTerm * OclType
+	                | CollectionRange of OclTerm   (* first *)
+		         		     * OclTerm (* last  *)
+                                             * OclType
 
-
-     
 end
 

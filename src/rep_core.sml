@@ -1,7 +1,7 @@
 (*****************************************************************************
  *          su4sml - a SecureUML repository for SML              
  *                                                                            
- * mdr_core.sig - generic meta data repository import signature for su4sml
+ * rep_core.sml - core repository datastructures for su4sml
  * Copyright (C) 2001-2005  Achim D. Brucker <brucker@inf.ethz.ch>   
  *                          Burkhart Wolff   <bwolff@inf.ethz.ch>    
  *                                                                            
@@ -410,9 +410,9 @@ fun string_of_path (path:Rep_OclType.Path) = case path of
 
 fun update_thyname tname (Class{name,parent,attributes,operations,invariant,
                                 stereotypes,interfaces,associationends,activity_graphs,...})
-    = Class{name=name,parent=parent,attributes=attributes,operations=operations,
-            associationends=associationends,invariant=invariant,stereotypes=stereotypes,
-            interfaces=interfaces,thyname=(SOME tname),activity_graphs=activity_graphs }
+  = Class{name=name,parent=parent,attributes=attributes,operations=operations,
+          associationends=associationends,invariant=invariant,stereotypes=stereotypes,
+          interfaces=interfaces,thyname=(SOME tname),activity_graphs=activity_graphs }
   | update_thyname tname (Interface{name,parents,operations,stereotypes,invariant,...}) 
     = Interface{name=name,parents=parents,operations=operations,stereotypes=stereotypes,
                 invariant=invariant,thyname=(SOME tname)} 
@@ -426,78 +426,88 @@ fun update_thyname tname (Class{name,parent,attributes,operations,invariant,
     = Primitive{name=name,parent=parent,operations=operations,
                 associationends=associationends,invariant=invariant,
                 stereotypes=stereotypes,interfaces=interfaces,thyname=(SOME tname)} 
-
-
-
-
+      
+      
+      
+      
 fun type_of (Class{name,...})       = name  
   | type_of (Interface{name,...})   = name
   | type_of (Enumeration{name,...}) = name
-  | type_of (Primitive{name,...})    = name
+  | type_of (Primitive{name,...})   = name
   | type_of (Template{classifier,...}) = type_of classifier 
 
 
 fun name_of (Class{name,...})       = path_of_OclType name  
   | name_of (Interface{name,...})   = path_of_OclType name
   | name_of (Enumeration{name,...}) = path_of_OclType name
-  | name_of (Primitive{name,...})    = path_of_OclType name
-  | name_of _                        = error "no name represenation for this classifier"
+  | name_of (Primitive{name,...})   = path_of_OclType name
+  | name_of _                       = error "in Rep.name_of: Classifier has no name represenation"
 
 fun short_name_of C =  case (name_of C)  of
-	[] => error "empty type in short name"
+	[] => error "in Rep.short_name_of: empty type"
 	| p => (hd o rev)  p
 
 fun stereotypes_of (Class{stereotypes,...})       = stereotypes  
   | stereotypes_of (Interface{stereotypes,...})   = stereotypes
   | stereotypes_of (Enumeration{stereotypes,...}) = stereotypes
   | stereotypes_of (Primitive{stereotypes,...})    = stereotypes
-  
+  | stereotypes_of (Template _) = error "in Rep.stereotypes_of: \
+                                        \unsupported argument type Template"
 
 
 
 fun package_of (Class{name,...})       = if (length (path_of_OclType name)) > 1 
-                                         then take (((length (path_of_OclType name)) -1),(path_of_OclType name))  
+                                         then take (((length (path_of_OclType name)) -1),
+                                                    (path_of_OclType name))  
                                          else []
   | package_of (Interface{name,...})   = if (length (path_of_OclType name)) > 1 
-                                         then take (((length (path_of_OclType name)) -1),(path_of_OclType name)) 
+                                         then take (((length (path_of_OclType name)) -1),
+                                                    (path_of_OclType name)) 
                                          else []
   | package_of (Enumeration{name,...}) = if (length (path_of_OclType name)) > 1 
-                                         then take (((length (path_of_OclType name)) -1),(path_of_OclType name))
+                                         then take (((length (path_of_OclType name)) -1),
+                                                    (path_of_OclType name))
                                          else []
   | package_of (Primitive{name,...})   = if (length (path_of_OclType name)) > 1 
-                                         then take (((length (path_of_OclType name)) -1),(path_of_OclType name)) 
+                                         then take (((length (path_of_OclType name)) -1),
+                                                    (path_of_OclType name)) 
                                          else []
   | package_of (Template{classifier,...}) = package_of classifier
 
 fun parent_name_of (C as Class{parent,...}) = 
     (case parent  of NONE   => name_of OclAnyC
-		    |SOME p => path_of_OclType p ) 
-  | parent_name_of (Interface{...})         = 
-                    error "parent_name_of <Interface> not supported"
+		   | SOME p => path_of_OclType p ) 
+  | parent_name_of (Interface{...})         =  error "in Rep.parent_name_of: \
+                                                     \unsupported argument type Interface"
   | parent_name_of (E as Enumeration{parent,...}) = 
-    (case parent  of NONE => error ("Enumeration "^((string_of_path o name_of) E)
+    (case parent  of NONE => error ("in Rep.parent_name_of: Enumeration "^
+                                    ((string_of_path o name_of) E)
                                     ^" has no parent")
 		   | SOME p  => path_of_OclType p )  
   | parent_name_of (D as Primitive{parent,...})    = 
     (case parent  of NONE => name_of OclAnyC
-	(* error ("Primitive "^((string_of_path o name_of) D)^" has no parent") *)
+	           (* error ("Primitive "^((string_of_path o name_of) D)^" has no parent") *)
 		   | SOME p  => path_of_OclType p )
- 
+  | parent_name_of (Template _) = error "in Rep.parent_name_of: \
+                                        \unsupported argument type Template"
+
 fun short_parent_name_of C =  case (parent_name_of C) of
-	[] => error "empty type in short parent name"
-       | p => (hd o rev)  p
-							 
+	                          [] => error "in Rep.short_parent_name_of: empty type"
+                                | p => (hd o rev)  p
+				       
 fun parent_package_of (Class{parent,...})       = 
     (case parent of  NONE => package_of OclAnyC
 		   | SOME q   => let val p = path_of_OclType q in 
-				    if (length p) > 1 
-                                    then  (take (((length p) -1),p))  
-                                    else []
-				end)
+				     if (length p) > 1 
+                                     then  (take (((length p) -1),p))  
+                                     else []
+				 end)
   | parent_package_of (Interface{...})        = 
-                   error "parent_package_of <Interface> not supported"
-  | parent_package_of (Enumeration{parent,...}) = 
-    (case parent of  NONE => error "Enumeration has no parent"
+    error "in Rep.parent_package_of: unsupported argument type Interface"
+  | parent_package_of (E as Enumeration{parent,...}) = 
+    (case parent of  NONE => error ("in Rep.parent_package_of: Enumeration "^
+                                    (string_of_path o name_of) E^
+                                    " has no parent")
 		   | SOME q   => let val p = path_of_OclType q in 
 				    if (length p) > 1 
                                     then (take (((length p) -1),p))  
@@ -511,29 +521,31 @@ fun parent_package_of (Class{parent,...})       =
                                    then (take (((length p) -1),p))  
                                    else []
 			       end)
+  | parent_package_of (Template{...})        = 
+    error "in Rep.parent_package_of: unsupported argument type Template"
 						
 
 fun attributes_of (Class{attributes,...}) = attributes
   | attributes_of (Interface{...})        = 
-         error "attributes_of <Interface> not supported" 
+         error "in Rep.attributes_of: argument is Interface"
   | attributes_of (Enumeration{...})      = 
-         error "attributes_of <Enumeration> not supported"  
+         error "in Rep.attributes_of: argument is Enumeration"  
   | attributes_of (Primitive{...})         = []  
          (* error "attributes_of <Primitive> not supported" *)  
   | attributes_of (Template{parameter,classifier}) = attributes_of classifier
 
-fun operations_of (Class{operations,...}) = operations
-  | operations_of (Interface{...})        = 
-         error "operations_of <Interface> not supported" 
-  | operations_of (Enumeration{...})      = 
-         error "operations_of <Enumeration> not supported"  
-  | operations_of (Primitive{operations,...})         = operations  
+fun operations_of (Class{operations,...})          = operations
+  | operations_of (Interface{operations,...})      = operations
+  | operations_of (Enumeration{operations,...})    = operations
+  | operations_of (Primitive{operations,...})      = operations  
   | operations_of (Template{parameter,classifier}) = operations_of classifier
 
 fun p_invariant_of (Class{invariant,...})       = invariant 
   | p_invariant_of (Interface{invariant,...})   = invariant
   | p_invariant_of (Enumeration{invariant,...}) = invariant
-  | p_invariant_of (Primitive{invariant,...})    = invariant
+  | p_invariant_of (Primitive{invariant,...})   = invariant
+  | p_invariant_of (Template _) = error "in Rep.p_invariant_of: \
+                                        \unsupported argument type Template"
 
 fun invariant_of C = case p_invariant_of C of  
 			 [] => [(NONE, Rep_OclTerm.Literal ("true",Rep_OclType.Boolean))]
@@ -583,7 +595,9 @@ fun thy_name_of (C as Class{thyname,...})       =
       (case thyname of SOME tname =>  tname
 		     | NONE => error  ("Primitive "^((string_of_path o name_of) P)^
                                        " has no thyname"))
- 
+  | thy_name_of (Template _) = error "in Rep.thy_name_of: \
+                                     \unsupported argument type Template"
+     
 
 
 

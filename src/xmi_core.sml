@@ -319,7 +319,6 @@ datatype Classifier = Primitive   of Primitive
                     | OrderedSet  of OrderedSet
 		    | Void        of Void
 
-exception IllFormed of string
 
 fun classifier_stereotype_of (Class{stereotype,...}) = stereotype
   | classifier_stereotype_of (AssociationClass{stereotype,...}) = stereotype
