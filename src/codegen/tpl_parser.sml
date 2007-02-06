@@ -25,88 +25,90 @@
 signature TPL_PARSER = 
 sig
 
-datatype TemplateTree
-  = ElseNode of TemplateTree list
-  | EvalLeaf of TemplateTree list
-  | ForEachNode of string * TemplateTree list
-  | IfNode of string * TemplateTree list
-  | OpenFileLeaf of string
-  | OpenFileIfNotExistsLeaf of string
-  | RootNode of TemplateTree list
-  | TextLeaf of string
+    datatype TemplateTree
+      = ElseNode of TemplateTree list
+      | EvalLeaf of TemplateTree list
+      | ForEachNode of string * TemplateTree list
+      | IfNode of string * TemplateTree list
+      | OpenFileLeaf of string
+      | OpenFileIfNotExistsLeaf of string
+      | RootNode of TemplateTree list
+      | TextLeaf of string
 
-val printTTree  	: TemplateTree -> unit
-val parse 	  	: string -> TemplateTree
+    val printTTree          : TemplateTree -> unit
+    val parse               : string -> TemplateTree
 
 end
 
 
 structure Tpl_Parser :  TPL_PARSER = 
 struct
+open library
 open Gcg_Helper
 
 val tplStream = ref (TextIO.openString "@// dummy template\n");
 
 fun opentFile file = (TextIO.closeIn (!tplStream) ; 
-		      print ("opening "^file^"...\n");
-		      tplStream := (TextIO.openIn file))
-
+                      tplStream := (TextIO.openIn file))
+                     
 fun cleanUp tplFile = (TextIO.closeIn (!tplStream);
-			  OS.FileSys.remove tplFile)
+                       OS.FileSys.remove tplFile)
 
 fun readNextLine () = TextIO.inputLine (!tplStream)
- 
-datatype TemplateTree =   RootNode of TemplateTree list
-			| OpenFileLeaf of string
-			| OpenFileIfNotExistsLeaf of string
-			| EvalLeaf of TemplateTree list
-			| TextLeaf of string
-			| IfNode of string * TemplateTree list
-			| ElseNode of TemplateTree list
-			| ForEachNode of string * TemplateTree list
-			
-			
+                      
+datatype TemplateTree =   RootNode                of TemplateTree list
+                        | OpenFileLeaf            of string
+                        | OpenFileIfNotExistsLeaf of string
+                        | EvalLeaf                of TemplateTree list
+                        | TextLeaf                of string
+                        | IfNode                  of string * TemplateTree list
+                        (* FIXME: why a seperate ElseNode? should be part of IfNode *)
+                        | ElseNode                of TemplateTree list
+                        | ForEachNode             of string * TemplateTree list
+                                                     
 
 
 (** 
  *  replaceSafely (s,v,x) replaces every v in s with x or if v is escaped removes "\"  
  *)
 fun replaceSafely ("",_,_) = ""
-  | replaceSafely (s,v,x) = let val v_size = size v and 
-		  	    s_size = size s
-		      in
-			if String.isPrefix ((str #"\\")^v) s 
-				then (v^(replaceSafely(String.extract(s,v_size +1,NONE),v,x)))
-		    	else if String.isPrefix v s 
-		    		then x^(replaceSafely(String.extract(s,v_size,NONE),v,x))
-		    	else str(String.sub(s,0))^(replaceSafely(String.extract(s,1,NONE),v,x))
-		      end
-		      
+  | replaceSafely (s,v,x)  = 
+    let val v_size = size v and 
+                     s_size = size s
+    in
+        if String.isPrefix ((str #"\\")^v) s 
+        then (v^(replaceSafely(String.extract(s,v_size +1,NONE),v,x)))
+        else if String.isPrefix v s 
+        then x^(replaceSafely(String.extract(s,v_size,NONE),v,x))
+        else str(String.sub(s,0))^(replaceSafely(String.extract(s,1,NONE),v,x))
+    end
+                            
 
 (** 
  * splits string into tokens and
  * removes space- and tab-characters  
  *)
-fun cleanLine s = let fun removeWspace s = 
-			String.implode (List.filter (fn c => not (Char.isSpace c)) (String.explode s)) 
-		   fun concatWith [] d = ""
-			   | concatWith [s] d = s^" "
-  			   | concatWith (h::t) d = h^d^(concatWith t d)
-  	           val myToken = (String.tokens (fn c => c = #" "))
-			in
-			  concatWith ( List.filter (fn s => s <>"")(((List.map removeWspace) o myToken) s )) " "
-			end
-
+fun cleanLine s = 
+    let fun removeWspace s = 
+            String.implode (List.filter (fn c => not (Char.isSpace c)) (String.explode s)) 
+        fun concatWith [] d = ""
+          | concatWith [s] d = s^" "
+          | concatWith (h::t) d = h^d^(concatWith t d)
+        val myToken = (String.tokens (fn c => c = #" "))
+    in
+        concatWith ( List.filter (fn s => s <>"")(((List.map removeWspace) o myToken) s )) " "
+    end
+                  
 (* debugging function
  * prints ParseTree to stdOut
  *)
-fun printTplTree prefix (RootNode(l))	= (print (prefix^"root"^"\n"); List.app (printTplTree (prefix))l)
+fun printTplTree prefix (RootNode(l))   = (print (prefix^"root"^"\n"); List.app (printTplTree (prefix))l)
   | printTplTree prefix (OpenFileLeaf(s))= print (prefix^"openfile:"^s^"\n") 
   | printTplTree prefix (OpenFileIfNotExistsLeaf(s))= print (prefix^"openfileifnotexists:"^s^"\n") 
-  | printTplTree prefix (EvalLeaf(l)) 	= (print (prefix^"eval:\n"); List.app (printTplTree (prefix^"\t"))l)
-  | printTplTree prefix (TextLeaf(s))	= print (prefix^"text:"^s^"\n")
-  | printTplTree prefix (IfNode(s,l))	= (print (prefix^"if:"^s^"\n");List.app (printTplTree (prefix^"\t")) l)
-  | printTplTree prefix (ElseNode(l))	= (print (prefix^"else:"^"\n"); List.app (printTplTree (prefix^"\t")) l)
+  | printTplTree prefix (EvalLeaf(l))   = (print (prefix^"eval:\n"); List.app (printTplTree (prefix^"\t"))l)
+  | printTplTree prefix (TextLeaf(s))   = print (prefix^"text:"^s^"\n")
+  | printTplTree prefix (IfNode(s,l))   = (print (prefix^"if:"^s^"\n");List.app (printTplTree (prefix^"\t")) l)
+  | printTplTree prefix (ElseNode(l))   = (print (prefix^"else:"^"\n"); List.app (printTplTree (prefix^"\t")) l)
   | printTplTree prefix (ForEachNode(s,l))=(print (prefix^"foreach:"^s^"\n");List.app (printTplTree (prefix^"\t")) l) 
 
 val printTTree = printTplTree ""
@@ -117,14 +119,14 @@ fun isComment s = (String.isPrefix "//" s)
  *)
 fun itemsUntil f [] = []
   | itemsUntil f (h::t) = if (f h) then []
-  			  else h::(itemsUntil f t)
-		   
-  				   
+                          else h::(itemsUntil f t)
+                               
+                               
 (** splits line into tokens considering handling escaped @ *)
 fun tokenize line = let val l =   joinEscapeSplitted "@" (fieldSplit line #"@");
-		    in
-		      (hd l)::(itemsUntil isComment (tl l))
-		    end
+                    in
+                        (hd l)::(itemsUntil isComment (tl l))
+                    end
 
 (** 
  * extracts the type of line.
@@ -132,95 +134,100 @@ fun tokenize line = let val l =   joinEscapeSplitted "@" (fieldSplit line #"@");
  * if no control tag in line -> "text" returned
  *)
 fun getType l = let val sl = tokenize l
-		in
-		  if (length sl  = 1)
-		  then "text"
-		  else hd(fieldSplit (String.concat(tl(sl))) #" ")
-		end
+                in
+                    if (length sl  = 1)
+                    then "text"
+                    else hd(fieldSplit (String.concat(tl(sl))) #" ")
+                end
 
 
 (** 
  * getContent line 
  * @return the content of a line
- *)		
+ *)             
 fun getContent l = let val sl = tokenize l 
-		   in 
-		     if (length sl = 1)
-		     then hd(sl)
-		     else String.concat(tl(fieldSplit (String.concat(tl(sl))) #" "))
-		   end
+                   in 
+                       if (length sl = 1)
+                       then hd(sl)
+                       else String.concat(tl(fieldSplit (String.concat(tl(sl))) #" "))
+                   end
 
 (**
  * cleans line, replaces nl and tabs
  * so that no space char is left out
- *)			  
-		   
+ *)                       
+                   
 fun preprocess s = let val rl = replaceSafely(replaceSafely(cleanLine s,"@nl ","\n"),"@tab ","\t")
-		   in
-		     replaceSafely(replaceSafely(rl,"@nl","\n"),"@tab","\t")
-		   end
+                   in
+                       replaceSafely(replaceSafely(rl,"@nl","\n"),"@tab","\t")
+                   end
 
 
 (**
  * builds the TemplateTree.
  * @return a TemplateTree list
  *)
-fun buildTree (SOME line) = let fun getNode ("text",c) 	  = (TextLeaf(c))::(buildTree (readNextLine()))
-			 	  | getNode ("foreach",c) = ForEachNode(c,(buildTree (readNextLine())))::(buildTree (readNextLine()))
-			 	  | getNode ("if",c) 	  = IfNode(c,buildTree (readNextLine()))::(buildTree (readNextLine()))
-			 	  | getNode ("else",_) 	  = [ElseNode(buildTree (readNextLine()))]
-			 	  | getNode ("elsif",c)	  = [ElseNode([IfNode(c,buildTree (readNextLine()))])]
-			 	  | getNode ("openfile",c)= (OpenFileLeaf(c))::(buildTree (readNextLine()))
-			 	  | getNode ("openfileifnotexists",c)= (OpenFileIfNotExistsLeaf(c))::(buildTree (readNextLine()))
-			 	  | getNode ("eval","")   = 
-			 	  	(EvalLeaf(buildTree(readNextLine())))::(buildTree (readNextLine()))
-			 	  | getNode ("eval",expr) = (EvalLeaf([TextLeaf(expr)]))::(buildTree (readNextLine()))
-			 	  | getNode ("end",_) 	  = []
-			 	  | getNode (t,c) 	  = gcg_error ("Couldn't parse the node \""^t^"\" with content\""^c^"\" in tpl_parser.buildTree.")
-			 	val prLine = preprocess line  
-		     	  in
-		     	    getNode ((getType prLine),(getContent prLine))
-		     	  end
+fun buildTree (SOME line) = 
+    let fun getNode ("text", c)     = TextLeaf c :: buildTree (readNextLine())
+          | getNode ("foreach", c)  = ForEachNode (c, buildTree (readNextLine()))
+                                      :: buildTree (readNextLine())
+          | getNode ("if", c)       = IfNode (c, buildTree (readNextLine()))
+                                      :: buildTree (readNextLine())
+          | getNode ("else", _)     = [ ElseNode (buildTree (readNextLine())) ]
+          | getNode ("elsif", c)    = [ ElseNode [ IfNode (c, buildTree (readNextLine())) ]]
+          | getNode ("openfile", c) = OpenFileLeaf c :: buildTree (readNextLine())
+          | getNode ("openfileifnotexists", c) = OpenFileIfNotExistsLeaf c 
+                                                 :: buildTree (readNextLine())
+          | getNode ("eval", "")   = EvalLeaf (buildTree (readNextLine()))
+                                     :: buildTree (readNextLine())
+          | getNode ("eval", expr) = EvalLeaf [ TextLeaf expr ]:: buildTree (readNextLine())
+          | getNode ("end",_)      = []
+          | getNode (t,c)          = error ("in Tpl_Parser.buildTree: error while parsing \
+                                            \node \""^t^"\" with content\""^c^"\".")
+        val prLine = preprocess line  
+    in
+        getNode ((getType prLine),(getContent prLine))
+    end
   | buildTree NONE  = []
 
 
-fun codegen_home _ = getOpt(OS.Process.getEnv "CODEGEN_HOME",
-                            library.su4sml_home()^"src/codegen")
-			
+fun codegen_home _ = getOpt (OS.Process.getEnv "CODEGEN_HOME", su4sml_home()^"src/codegen")
+                     
 (** calls the external cpp ( C PreProcessor).
  * writes merged template to a file with extension .tmp instead of .tpl
  * and returns this file 
  *)
 fun call_cpp file = 
-	let (*val targetFile = String.substring (file,0,size file -4) ^".tmp";*)
-		val targetFile = OS.FileSys.tmpName () 
-		val _ = OS.Process.system ("cpp -P -C "^codegen_home()^"/"^file^" "^targetFile)
-	in
-		targetFile
-	end
+    let (*val targetFile = String.substring (file,0,size file -4) ^".tmp";*)
+        val targetFile = OS.FileSys.tmpName () 
+        val _ = OS.Process.system ("cpp -P -C "^codegen_home()^"/"^file^" "^targetFile)
+    in
+        targetFile
+    end
 
 
-		    
+    
 (**  parse template-file
- *  @return the parsed template tree		     
+ *  @return the parsed template tree                 
  *)
-fun parse file = let val mergedTpl = call_cpp file;
-		     val u = opentFile mergedTpl;
- 		     val pt = RootNode(buildTree (readNextLine()));
-		     val u2 = cleanUp mergedTpl; 
-		in 
-		  (print "...template parsed.\n"; pt) 
-		end
-
-(*			
-val testline = "@foreach \\@public @// commkejbk";
-val textline1 = "\t\tpublic $class_name$ ";
-val textline2 = "";
-val endline = "\t@end";
-*)
+fun parse file = let val _         = info ("parsing template "^file)
+                     val mergedTpl = call_cpp file;
+                     val u         = opentFile mergedTpl;
+                     val pt        = RootNode(buildTree (readNextLine()));
+                     val u2        = cleanUp mergedTpl; 
+                 in 
+                     pt
+                 end
+                 
+(*                      
+ val testline = "@foreach \\@public @// commkejbk";
+ val textline1 = "\t\tpublic $class_name$ ";
+ val textline2 = "";
+ val endline = "\t@end";
+ *)
 (*
-val ParseTree = parse "examples/C#.tpl";
+ val ParseTree = parse "examples/C#.tpl";
 
-printTplTree ParseTree;
-*)
+     printTplTree ParseTree;
+ *)
 end

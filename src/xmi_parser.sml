@@ -110,7 +110,7 @@ fun ordering atts =
 fun aggregation atts = 
     let val att = optional_value_of "aggregation" atts 
     in
-	case att of SOME "none" => XMI.NoAggregation
+	case att of SOME "none"      => XMI.NoAggregation
 		  | SOME "aggregate" => XMI.Aggregate
 		  | SOME "composite" => XMI.Composite
 		  | NONE             => XMI.NoAggregation
@@ -228,26 +228,19 @@ val triv_expr = XMI.LiteralExp {symbol = "true",
 (* FIX: this is only a dummy implementation *)
 fun mkCollectionLiteralPart x = (xmiidref x)
                                 
-fun mkOCLExpression (tree as Node(("UML15OCL.Expressions.BooleanLiteralExp",atts),_))
-  = XMI.LiteralExp 
-        { symbol          = atts |> value_of "booleanSymbol",
-	  expression_type = tree |> expression_type 
-        }
-  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.IntegerLiteralExp",atts),_))
-    = XMI.LiteralExp 
-          { symbol          = atts |> value_of "integerSymbol",
-	    expression_type = tree |> expression_type 
-          }
-  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.StringLiteralExp",atts),_))
-    = XMI.LiteralExp 
-          { symbol          = atts |> value_of "stringSymbol",
-	    expression_type = tree |> expression_type 
-          }
-  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.RealLiteralExp",atts),_))
-    = XMI.LiteralExp 
-          { symbol          = atts |> value_of "realSymbol",
-	    expression_type = tree |> expression_type 
-          }
+fun mkLiteralExp string tree = XMI.LiteralExp 
+                                   { symbol          = tree |> attributes |> value_of string,
+	                             expression_type = tree |> expression_type 
+                                   }
+
+fun mkOCLExpression (tree as Node(("UML15OCL.Expressions.BooleanLiteralExp",atts),_)) =
+    mkLiteralExp "booleanSymbol" tree
+  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.IntegerLiteralExp",atts),_)) =
+    mkLiteralExp "integerSymbol" tree
+  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.StringLiteralExp",atts),_)) = 
+    mkLiteralExp  "stringSymbol" tree
+  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.RealLiteralExp",atts),_)) = 
+    mkLiteralExp "realSymbol" tree
   | mkOCLExpression (tree as Node(("UML15OCL.Expressions.CollectionLiteralExp",atts),_))
     = XMI.CollectionLiteralExp 
           { parts = nil, 
@@ -314,8 +307,7 @@ fun mkOCLExpression (tree as Node(("UML15OCL.Expressions.BooleanLiteralExp",atts
 	    expression_type = tree |> expression_type }
   | mkOCLExpression (tree as Node(("UML15OCL.Expressions.LetExp",atts),_)) 
     = XMI.LetExp 
-	  { variable =  let val vard = tree |> get_one 
-                                            "OCL.Expressions.LetExp.variable"
+	  { variable =  let val vard = tree |> get_one "OCL.Expressions.LetExp.variable"
                             val atts = vard |> attributes
                         in 
                             { xmiid            = atts |> xmiid,

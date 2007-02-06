@@ -79,7 +79,8 @@ fun generate xmi_file "base" =
  | generate xmi_file "maude_secure" = 
    SecureUML_Base_Gcg.generate ( Rep_SecureUML_ComponentUML.readXMI xmi_file) "templates/maude.tpl" *)
  | generate xmi_file "securemova" = 
-   SecureMova_Gcg.generate (RepParser.readFile xmi_file) "templates/securemova.tpl"
+   SecureMova_Gcg.generate (RepParser.transformXMI (XmiParser.readFile xmi_file)) 
+                           "templates/securemova.tpl"
  |  generate _ s = print ("target language unknown : "^s^"\n"^
  			"usage: generate <xmi_file> \"base\" | \"c#\" | \"c#_secure\" | \"c#_net1\" | \"c#_secure_net1\" | \"java\" | \"junit\"\n")
  			

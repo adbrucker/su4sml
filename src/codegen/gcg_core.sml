@@ -36,40 +36,39 @@ end
 functor GCG_Core (C: CARTRIDGE): GCG  = 
 struct
 
+open library
+
 val curFile = ref ""
 
 
 val out = ref TextIO.stdOut
 
-fun closeFile ()= if (!curFile = "") 
-				  then ()
-				  else (TextIO.closeOut (!out); 
-						print ((!curFile)^" ... done\n");
-						curFile := "") 
-		  
-
+fun closeFile () = if (!curFile = "") 
+		   then ()
+		   else (TextIO.closeOut (!out); 
+			 info ("closing "^(!curFile));
+			 curFile := "") 
+		        
+                        
 fun openFile file = (closeFile ();
-					 print ("opening "^file^"...\n");
-					 Gcg_Helper.assureDir file;
-					 out := (TextIO.openOut file);
-					 curFile := file
-					 )
-
+		     info ("opening "^file^"...");
+		     Gcg_Helper.assureDir file;
+		     out := (TextIO.openOut file);
+		     curFile := file
+		    )
+                    
 fun openFileIfNotExists file = (closeFile ();
-				(if ((OS.FileSys.fileSize file) > 0) then
-				     openFile "/dev/null"
-				 else
-				     openFile file
-				     ) handle SysErr => ( openFile file ))
+				(if ((OS.FileSys.fileSize file) > 0) 
+                                 then openFile "/dev/null"
+				 else openFile file
+				) handle SysErr => ( openFile file ))
 			       
 fun initOut () =  (out := TextIO.stdOut;
-				   curFile := "")
+		   curFile := "")
 		  
 fun writeLine s = TextIO.output (!out,s)
-
-fun eval s = (print ("<eval>\n");
-			  CompilerExt.eval true s;
-			  print "<>\n")
+                  
+fun eval s = (info "<eval>"; CompilerExt.eval true s)
 
 (** applies f to every other element in l starting with the second
  *)
@@ -77,58 +76,57 @@ fun map2EveryOther f [] = []
   | map2EveryOther f [a] = [a]
   | map2EveryOther f (a::b::z) = a::(f b)::(map2EveryOther f z)  
 
-fun substituteVars e s = let val tkl = (Gcg_Helper.joinEscapeSplitted "$") (Gcg_Helper.fieldSplit s #"$")
-			in
-			  String.concat (map2EveryOther (C.lookup e) tkl)
-			end
-			
+fun substituteVars e s = 
+    let val tkl = Gcg_Helper.joinEscapeSplitted "$" (Gcg_Helper.fieldSplit s #"$")
+    in
+	String.concat (map2EveryOther (C.lookup e) tkl)
+    end
+			 
 
 (** traverses a templateParseTree and executes the given instructions *)
-fun write env (Tpl_Parser.RootNode(l))  = List.app (write env) l
-  | write env (Tpl_Parser.OpenFileLeaf(file)) = openFile (substituteVars env file)
-  | write env (Tpl_Parser.OpenFileIfNotExistsLeaf(file)) = openFileIfNotExists (substituteVars env file)
-  | write env (Tpl_Parser.EvalLeaf(l)) = let fun collectEval 		[] 	    = ""
-  				| collectEval ((Tpl_Parser.TextLeaf(expr))::t) = expr^"\n"^(collectEval t)
-  				| collectEval 		_	    = 
-  				     Gcg_Helper.gcg_error "eval failed: TextLeaf expected in gcg_core.write." 
-  			  in
-  			    eval (substituteVars env (collectEval l))
-  			  end
-  | write env (Tpl_Parser.TextLeaf(s)) =  writeLine (substituteVars env s)
-  | write env (Tpl_Parser.IfNode(cond,l)) 
-  	=   let (*val list_of_environments = C.foreach listType env
-		fun write_children e = List.app (fn tree => write e tree) children
-		*)
-		fun writeThen _ []           = ()
-  		 |  writeThen _ [Tpl_Parser.ElseNode(_)]= ()
-  		 |  writeThen e (h::t)	    = (write e h ;writeThen e t) 
-  	    in
-  	    	if (C.test env cond) 
-  		then writeThen env l
-  		else (case (List.last l) of nd as (Tpl_Parser.ElseNode(_)) => write env nd
-  			  		    |          _        => ()	)
-  	    end
-  | write env (Tpl_Parser.ElseNode(l)) = List.app (write env) l
-  | write env (Tpl_Parser.ForEachNode(listType,children)) 
-  	=	let val list_of_environments = C.foreach listType env
-		    fun write_children e = List.app (fn tree => write e tree) children
-		in 
-		    List.app (fn e => write_children e) list_of_environments
-     		end
-     				
+fun write env (Tpl_Parser.RootNode(l))                   = List.app (write env) l
+  | write env (Tpl_Parser.OpenFileLeaf(file))            = openFile (substituteVars env file)
+  | write env (Tpl_Parser.OpenFileIfNotExistsLeaf(file)) = 
+    openFileIfNotExists (substituteVars env file)
+  | write env (Tpl_Parser.EvalLeaf(l))                   = 
+    let fun collectEval [] 	                         = ""
+  	  | collectEval ((Tpl_Parser.TextLeaf(expr))::t) = expr^"\n"^(collectEval t)
+  	  | collectEval _	                         = 
+  	    error "in GCG_Core.write: No TextLeaf in EvalLeaf" 
+    in
+  	eval (substituteVars env (collectEval l))
+    end
+  | write env (Tpl_Parser.TextLeaf(s))                   = writeLine (substituteVars env s)
+  | write env (Tpl_Parser.IfNode(cond,l))                =
+    let	fun writeThen _ []                               = ()
+  	  | writeThen _ [Tpl_Parser.ElseNode(_)]         = ()
+  	  | writeThen e (h::t)	                         = (write e h ;writeThen e t) 
+    in
+  	(if (C.test env cond) 
+  	 then writeThen env l
+  	 else case (List.last l) of nd as (Tpl_Parser.ElseNode(_)) => write env nd
+  			  	  | _                              => ())
+        handle ex => () (* ignore failed/unknown predicates *)
+    end
+  | write env (Tpl_Parser.ElseNode(l))                   = List.app (write env) l
+  | write env (Tpl_Parser.ForEachNode(listType,children))=
+    let val list_of_environments = C.foreach listType env
+	fun write_children e     = List.app (fn tree => write e tree) children
+    in 
+	List.app (fn e => write_children e) list_of_environments
+    end
+    
 
 (** generate code according to the given template file for the given model *)
 fun generate model template 
-  = let 
-      val env = C.initEnv  model 
-	  val tree = Tpl_Parser.parse template
-	in
-		(initOut();
-		 (*printTTree tree;*)
-		 write env tree;
-		 closeFile () ) 
-		handle GCG_Error => (closeFile(); raise GCG_Error)
-	end
-		
-		
+  = let val env = C.initEnv  model 
+	val tree = Tpl_Parser.parse template
+    in
+	(initOut();
+	 (*printTTree tree;*)
+	 write env tree;
+	 closeFile () ) 
+	handle ex => (closeFile(); raise ex)
+    end
+	
 end

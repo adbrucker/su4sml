@@ -102,6 +102,8 @@ fun curClassifier (env : environment) = SuperCart.curClassifier (unpack env)
 fun curAttribute (env : environment)  = SuperCart.curAttribute (unpack env)
 fun curOperation (env : environment)  = SuperCart.curOperation (unpack env)
 fun curArgument (env : environment)   = SuperCart.curArgument (unpack env)
+fun curAssociationEnd env = SuperCart.curAssociationEnd (unpack env)
+
 									  
                        
 fun name_of_role  r 	= r

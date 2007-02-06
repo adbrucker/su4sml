@@ -48,6 +48,7 @@ fun curClassifier env = SuperCart.curClassifier (unpack env)
 fun curArgument   env = SuperCart.curArgument   (unpack env)
 fun curOperation  env = SuperCart.curOperation  (unpack env)
 fun curAttribute  env = SuperCart.curAttribute  (unpack env)
+fun curAssociationEnd env = SuperCart.curAssociationEnd (unpack env)
 											 
 (* internal translation table, blindly copied from C# *)
 fun super2Native "ClassifierScope" = "static"

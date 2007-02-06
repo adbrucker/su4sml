@@ -117,6 +117,7 @@ val short_parent_name_of : Classifier -> string
 val thy_name_of       : Classifier -> string
 val update_thyname    : string -> Classifier -> Classifier
 val attributes_of     : Classifier -> attribute list
+val associationends_of: Classifier -> associationend list 
 val operations_of     : Classifier -> operation list
 val invariant_of      : Classifier -> (string option * Rep_OclTerm.OclTerm) list
 val stereotypes_of    : Classifier -> string list
@@ -533,6 +534,9 @@ fun attributes_of (Class{attributes,...}) = attributes
   | attributes_of (Primitive{...})         = []  
          (* error "attributes_of <Primitive> not supported" *)  
   | attributes_of (Template{parameter,classifier}) = attributes_of classifier
+
+fun associationends_of (Class{associationends,...}) = associationends
+  | associationends_of (Primitive{associationends,...}) = associationends
 
 fun operations_of (Class{operations,...})          = operations
   | operations_of (Interface{operations,...})      = operations

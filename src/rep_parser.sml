@@ -495,8 +495,10 @@ fun transformXMI ({classifiers,constraints,packages,
  * read and transform a .xmi file.
  * @return a list of rep classifiers, or nil in case of problems
  *) 
-fun readFile f = map Rep.normalize ((transformXMI o XmiParser.readFile) f)
+fun readFile f = (info ("opening "^f);
+                  (map Rep.normalize o transformXMI o XmiParser.readFile) f)
 (*    handle ex as (IllFormed msg) => raise ex *)
+
 
 fun printStackTrace e =
     let val ss = CompilerExt.exnHistory e

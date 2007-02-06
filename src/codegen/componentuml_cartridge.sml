@@ -33,6 +33,10 @@ fun curClassifier (env : environment) = SuperCart.curClassifier (unpack env)
 fun curAttribute (env : environment) = SuperCart.curAttribute (unpack env)
 fun curOperation (env : environment) = SuperCart.curOperation (unpack env)
 fun curArgument (env : environment) = SuperCart.curArgument (unpack env)
+fun curAssociationEnd env = SuperCart.curAssociationEnd (unpack env)
+
+
+fun curClassifier' (env : environment) = valOf (SuperCart.curClassifier (unpack env))
 									  
 (** 
  * compute the atomic actions that are possible on the currently "active" 
@@ -74,7 +78,7 @@ fun lookup (env:environment) "permission_name" =
   | lookup env "entity_name" =
     (case #curEntity env
       of SOME s => Rep.short_name_of s
-       | NONE => SuperCart.lookup (unpack env) "entity_name") 
+       | NONE => SuperCart.lookup (unpack env) "classifier_name") 
   | lookup env s =  SuperCart.lookup (unpack env) s 
 
 (********** ADDING IF-CONDITION TYPE *****************************************)
@@ -105,7 +109,13 @@ fun foreach_permission env name =
     end
         
 fun foreach_entity (env:environment)  =
-    let val entities = List.filter (fn x => ListEq.includes (Rep.stereotypes_of x) "compuml.entity" )
+    let val cls = map (pack env) (SuperCart.foreach "classifier_list" (unpack env)) 
+    in 
+        List.filter (fn x => ListEq.includes (Rep.stereotypes_of (curClassifier' x)) 
+                                             "compuml.entity") cls
+    end
+
+(*    let val entities = List.filter (fn x => ListEq.includes (Rep.stereotypes_of x) "compuml.entity" )
                                         (#1 (#model (#extension env)))
         fun env_from_list_item c = { curPermissionList = #curPermissionList env,
                                      curPermission = #curPermission env,
@@ -113,14 +123,21 @@ fun foreach_entity (env:environment)  =
                                      extension = #extension env}:environment
     in 
         List.map env_from_list_item entities
-    end
+    end*)
 
-fun foreach "readPermission_list" env = foreach_permission env "read"
-  | foreach "updatePermission_list" env = foreach_permission env "update"
-  | foreach "createPermission_list" env = foreach_permission env "create"
-  | foreach "deletePermission_list" env = foreach_permission env "delete"
+fun foreach_attribute _ = []
+fun foreach_method _ = []
+fun foreach_assocend _ = []
+
+fun foreach "readPermission_list"    env = foreach_permission env "read"
+  | foreach "updatePermission_list"  env = foreach_permission env "update"
+  | foreach "createPermission_list"  env = foreach_permission env "create"
+  | foreach "deletePermission_list"  env = foreach_permission env "delete"
   | foreach "executePermission_list" env = foreach_permission env "execute"
-  | foreach "entity_list" env = foreach_entity env
+  | foreach "entity_list"            env = foreach_entity env
+(*  | foreach "attribute_list"         env = foreach_attribute env
+  | foreach "method_list"            env = foreach_method env
+  | foreach "associationend_list"    env = foreach_assocend env *)
   | foreach listType env =  map (pack env) (SuperCart.foreach listType (unpack env))
                             
 end

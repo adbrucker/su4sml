@@ -30,7 +30,7 @@
  *) 
 signature SECUREUML = 
 sig 
-include    SECURITY_LANGUAGE
+    include    SECURITY_LANGUAGE
 type Role
 val all_roles :      Configuration -> Role list 
 val all_constraints: Configuration -> Rep_OclTerm.OclTerm list
@@ -46,7 +46,7 @@ end
  *) 
 functor SecureUML(structure Design: DESIGN_LANGUAGE):SECUREUML =
 struct
-
+open library
 structure Design : DESIGN_LANGUAGE = Design
 
 type User = string
@@ -59,23 +59,23 @@ type Role = string
 
 type SubjectAssignment = (Subject * (Role list)) list
 
-				 
+                         
 type Permission = {name: string,
-				   roles: Role list,
-				   constraints: Rep_OclTerm.OclTerm list,
-				   actions: Design.Action list }
+                   roles: Role list,
+                   constraints: Rep_OclTerm.OclTerm list,
+                   actions: Design.Action list }
 
 type Config_Type = string
 
 type 'a partial_order = ('a * 'a) list
 
 type Configuration = { config_type: Config_Type,
-					   permissions: Permission list,
-					   subjects: Subject list,
-					   (* groups: Group partial_order,*)
-					   roles: Role list,
+                       permissions: Permission list,
+                       subjects: Subject list,
+                       (* groups: Group partial_order,*)
+                       roles: Role list,
                        rh: Role partial_order,
-					   sa: SubjectAssignment }
+                       sa: SubjectAssignment }
 
 
 fun constraints_of (x:Permission) = #constraints x
@@ -87,7 +87,7 @@ fun all_constraints (c:Configuration) = List.concat (List.map constraints_of (#p
 
 (** test whether a1 is (transitively) a subordinated_action of a2 *)
 fun is_contained_in a1 a2 = (a1 = a2) orelse 
-							List.exists (is_contained_in a1) 
+                            List.exists (is_contained_in a1) 
                                         (Design.subordinated_actions a2)
 
 (** test whether the permission p covers the action a. *)
@@ -96,14 +96,14 @@ fun permission_includes_action (p:Permission) (a:Design.Action) =
 
 
 (* unclear yet how this will look like: 
-fun domain_of (x:'a partial_order) = ...
-fun closure_of (x:'a partial_order) = ...
-*) 
+ fun domain_of (x:'a partial_order) = ...
+ fun closure_of (x:'a partial_order) = ...
+ *) 
 
 fun type_of  (c:Configuration) = #config_type c
 
 fun is_empty (c:Configuration) = List.null (#permissions c) andalso 
-				 List.null (#subjects c)
+                                 List.null (#subjects c)
 
 fun getPermissions (c:Configuration) = #permissions c
 
@@ -125,7 +125,7 @@ fun classifier_has_no_stereotype strings c =
 
 (** checks whether the classifier c has a parent.
  * (could be moved to rep_core?)
-*)
+ *)
 fun classifier_has_parent (Rep.Class c)       = Option.isSome (#parent c)
   | classifier_has_parent (Rep.Interface c)   = not (List.null (#parents c))
   | classifier_has_parent (Rep.Enumeration c) = Option.isSome (#parent c)
@@ -138,20 +138,26 @@ fun filter_permission cs = List.filter (classifier_has_stereotype
 fun filter_subject cs = List.filter (classifier_has_stereotype "secuml.user") cs
 fun filter_role cs = List.filter (classifier_has_stereotype "secuml.role") cs 
 
- 
-fun mkRole (C as Rep.Class c)  = Rep.string_of_path (Rep.name_of C)
-  | mkRole _              = library.error ("in mkRole: argument is not a class")
+                     
+fun mkRole (C as Rep.Class c) = Rep.string_of_path (Rep.name_of C)
+  | mkRole _                  = error ("in mkRole: argument is not a class")
 
 (* FIXME: handle groups also *)
 fun mkSubject (C as Rep.Class c) = User (Rep.string_of_path (Rep.name_of C))
-  | mkSubject _ = library.error ("in mkSubject: argument is not a class")
+  | mkSubject _                  = error ("in mkSubject: argument is not a class")
 
 fun mkPermission cs (C as Rep.Class c) = 
     let val atts = Rep.attributes_of (Rep.Class c)
-        val classifiers = List.mapPartial (fn (Rep_OclType.Classifier p) 
+        val att_classifiers = List.mapPartial (fn (Rep_OclType.Classifier p) 
                                               => SOME (Rep.class_of p cs)
                                             | _ => NONE)
                                           (map  #attr_type atts)
+        val aends = Rep_Core.associationends_of (Rep.Class c) 
+        val aend_classifiers = List.mapPartial (fn (Rep_OclType.Classifier p) 
+                                                   => SOME (Rep.class_of p cs)
+                                                 | _ => NONE)
+                                               (map  #aend_type aends)
+        val classifiers = att_classifiers @ aend_classifiers 
         val role_classes = List.filter (classifier_has_stereotype "secuml.role") 
                                        classifiers
         val root_classes =   List.filter (fn x => ListEq.overlaps 
@@ -159,49 +165,52 @@ fun mkPermission cs (C as Rep.Class c) =
                                                       Design.root_stereotypes)
                                          classifiers
         val root_resource = hd root_classes
-            handle Empty => library.error ("in mkPermission: no root resource found "^
-                                           "for permission "^Rep.string_of_path (Rep.name_of C))
+            handle Empty => error ("in mkPermission: no root resource found "^
+                                   "for permission "^Rep.string_of_path (Rep.name_of C))
         val action_attributes = 
             List.filter (fn x => List.exists 
                                      (fn y => List.exists 
                                                   (fn z => y= z) 
                                                   (#stereotypes x)) 
                                      Design.action_stereotypes) atts 
-            handle ex => (library.error_msg "could not parse permission attributes"; raise ex)
+            handle ex => (error_msg "could not parse permission attributes"; raise ex)
     in 
         { name  = (Rep.string_of_path (Rep.name_of C)),
           roles = (map (Rep.string_of_path o Rep.name_of) role_classes),
           (* FIXME: find attached constraints *)
           constraints = nil, 
           actions = if action_attributes = [] 
-                    then library.error ("in mkPermission: Permission "^
-                                        (Rep.string_of_path (Rep.name_of C))^
-                                        "has no action attributes")
+                    then error ("in mkPermission: Permission "^
+                                (Rep.string_of_path (Rep.name_of C))^
+                                "has no action attributes")
                     else map (Design.parse_action root_resource) action_attributes }
     end
-  | mkPermission _ _ = library.error "in mkPermission: argument is not a class"
+  | mkPermission _ _ = error "in mkPermission: argument is not a class"
                        
                        
 (** parse a list of classifiers accoriding to the SecureUML profile.
  * removes the classes with SecureUML stereotypes. 
  *)
 fun parse (cs:Rep_Core.Classifier list) = 
-    (List.filter (classifier_has_no_stereotype ["secuml.permission",
-                                                "secuml.role",
-                                                "secuml.subject",
-                                                "secuml.actiontype"]) 
-                 cs,
-	 { config_type = "SecureUML",
-	   permissions = map (mkPermission cs) (filter_permission cs),
-	   subjects    = map mkSubject (filter_subject cs),
+    let val _ = info "parsing security configuration"
+    in 
+        (List.filter (classifier_has_no_stereotype ["secuml.permission",
+                                                    "secuml.role",
+                                                    "secuml.subject",
+                                                    "secuml.actiontype"]) 
+                     cs,
+         { config_type = "SecureUML",
+           permissions = map (mkPermission cs) (filter_permission cs),
+           subjects    = map mkSubject (filter_subject cs),
            roles       = map mkRole (filter_role cs),
-	   rh          = map (fn x => (Rep.string_of_path (Rep.name_of x),
+           rh          = map (fn x => (Rep.string_of_path (Rep.name_of x),
                                        Rep.string_of_path (Rep.parent_name_of x)))
                              (List.filter classifier_has_parent (filter_role cs)),
-	   (* FIXME: find associations between Users and Roles. *)
-	   sa = nil})
-    handle ex => (library.error_msg "in SecureUML.parse: security configuration \
-                                    \could not be parsed";
+           (* FIXME: find associations between Users and Roles. *)
+           sa = nil})
+    end
+    handle ex => (error_msg "in SecureUML.parse: security configuration \
+                            \could not be parsed";
                   raise ex)
 
 
