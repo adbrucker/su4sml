@@ -36,9 +36,11 @@ structure Security:SECUREUML
 include BASE_CARTRIDGE where
 type Model = Rep.Classifier list * Security.Configuration
 
-val PermissionSet: environment -> Security.Permission list
-val curPermission : environment   -> Security.Permission option
-val curRole : environment -> string option
+val PermissionSet : environment -> Security.Permission list
+val curPermission : environment -> Security.Permission option
+val curRole       : environment -> string option
+val curSubject    : environment -> Security.Subject option
+val curSuperrole  : environment -> string option
 val curConstraint : environment -> Rep_OclTerm.OclTerm option 
 								   
 
@@ -53,6 +55,7 @@ functor SecureUML_Cartridge(structure SuperCart : BASE_CARTRIDGE;
                             structure D: DESIGN_LANGUAGE) : SECUREUML_CARTRIDGE =
 struct
 
+open library
 structure Security = SecureUML(structure Design = D)
 
 type Model = Rep.Classifier list * Security.Configuration
@@ -62,19 +65,23 @@ type environment = { model           : Model,
 		     curPermission   : Security.Permission option,
                      curSubject      : Security.Subject option,
 		     curRole         : string option,
+                     curSuperrole    : string option,
 		     curConstraint   : Rep_OclTerm.OclTerm option,	
 		     extension       : SuperCart.environment }
 		   
 fun PermissionSet    (env : environment) =  (#PermissionSet env)
 fun curPermission    (env : environment) =  (#curPermission env)
 fun curRole          (env : environment) =  (#curRole env)
+fun curSuperrole     (env : environment) =  (#curSuperrole env)
 fun curConstraint    (env : environment) =  (#curConstraint env)
 fun curSubject       (env : environment) =  (#curSubject env)
 
 fun curPermission'    (env : environment) = Option.valOf (#curPermission env)
 fun curRole'          (env : environment) = Option.valOf (#curRole env)
 fun curConstraint'    (env : environment) = Option.valOf (#curConstraint env)
-											
+
+fun security_conf (env: environment) = #2 (#model env)
+     
 fun initEnv model = let val m = Security.parse model 
 		    in
 			{ model = m, 
@@ -82,6 +89,7 @@ fun initEnv model = let val m = Security.parse model
 			  curPermission = NONE,
                           curSubject    = NONE,
 			  curRole       = NONE,
+                          curSuperrole  = NONE,
 			  curConstraint = NONE,
 			  extension = SuperCart.initEnv (#1 m) } : environment
 		    end
@@ -96,6 +104,7 @@ fun pack (env: environment) (new_env : SuperCart.environment)
       curSubject       = #curSubject env,
       curPermission    = #curPermission env,
       curRole          = #curRole env,
+      curSuperrole     = #curSuperrole env,
       curConstraint    = #curConstraint env,
       extension        = new_env}
     
@@ -122,8 +131,9 @@ fun lookup env "permission_name" = #name (curPermission' env)
   | lookup env "role_name"	 = name_of_role (curRole' env)
   | lookup env "constraint"	 = Ocl2String.ocl2string false (curConstraint' env)
   | lookup env "subject_name"    = (Security.subject_name_of o valOf o curSubject) env
+  | lookup env "superrole_name"  = (name_of_role o valOf o curSuperrole) env
   | lookup env s                 =  SuperCart.lookup (unpack env) s
-
+    handle Option => error "variable outside of context"
 (********** ADDING IF-CONDITION TYPE *****************************************)
 fun test env "first_permission" = (curPermission' env = hd (PermissionSet env))
   | test env "first_role"       = (curRole' env = hd (#roles (curPermission' env)))
@@ -147,17 +157,37 @@ fun foreach_role (env:environment)
                       | NONE   => case #curSubject env
                                    of SOME s => (Security.subject_roles_of s o #2 o #model) env 
                                     | NONE   => (Security.all_roles o #2 o #model) env
-	fun env_from_list_item r ={ model = #model env,
+	fun env_from_list_item r ={ model         = #model env,
 				    PermissionSet = #PermissionSet env,
 				    curPermission = #curPermission env,
                                     curSubject    = #curSubject env,
 				    curRole       = SOME r ,
+                                    curSuperrole  = NONE,
 				    curConstraint = NONE,
-				    extension = #extension env } : environment
+				    extension     = #extension env } : environment
     in 
 	List.map env_from_list_item roles
     end
-		
+
+(** iterate over all superroles in the context of a role *)
+fun foreach_superrole (env:environment) =
+    let val cur = valOf (curRole env )
+                  handle Option => error ("no current role")
+        val superroles = List.mapPartial (fn (r,s) => if r=cur then SOME s
+                                                      else NONE) 
+                                         (#rh (security_conf  env))
+        fun env_from_list_item s = { model         = #model env,
+				     PermissionSet = #PermissionSet env,
+				     curPermission = #curPermission env,
+                                     curSubject    = #curSubject env,
+				     curRole       = #curRole env,
+                                     curSuperrole  = SOME s,
+				     curConstraint = NONE,
+				     extension     = #extension env } : environment
+    in 
+        List.map env_from_list_item superroles
+    end
+
 (* FIXME: in the context of a permission, return the constraints of this permission. 
  * outside of such a context, return all constraints. *)
 fun foreach_constraint (env:environment) 
@@ -169,6 +199,7 @@ fun foreach_constraint (env:environment)
 				    curPermission = #curPermission env,
                                     curSubject    = NONE,
 				    curRole       = #curRole env ,
+                                    curSuperrole  = NONE,
 				    curConstraint = SOME c,
 				    extension = #extension env } : environment
     in 
@@ -185,6 +216,7 @@ fun foreach_permission env
 				    curPermission = SOME p,
                                     curSubject    = NONE,
 				    curRole       = NONE ,
+                                    curSuperrole  = NONE,
 				    curConstraint = NONE ,
 				    extension = #extension env } : environment
     in 
@@ -197,6 +229,7 @@ fun foreach_subject (env:environment) =
 				    PermissionSet = #PermissionSet env,
 				    curPermission = NONE,
                                     curSubject    = SOME s,
+                                    curSuperrole  = NONE,
 				    curRole       = NONE,
 				    curConstraint = NONE,
 				    extension = #extension env } : environment
@@ -206,6 +239,7 @@ fun foreach_subject (env:environment) =
     
     
 fun foreach "role_list"       env = foreach_role env 
+  | foreach "superrole_list"  env = foreach_superrole env
   | foreach "constraint_list" env = foreach_constraint env
   | foreach "permission_list" env = foreach_permission env
   | foreach "subject_list"    env = foreach_subject env

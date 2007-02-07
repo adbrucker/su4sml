@@ -156,18 +156,8 @@ fun mkRole (C as Rep.Class c) = Rep.string_of_path (Rep.name_of C)
 fun mkSubject (C as Rep.Class c) = User (Rep.string_of_path (Rep.name_of C))
   | mkSubject _                  = error ("in mkSubject: argument is not a class")
 
-fun mkPermission cs (C as Rep.Class c) = 
-    let val atts = Rep.attributes_of (Rep.Class c)
-        val att_classifiers = List.mapPartial 
-                                  (fn (Rep_OclType.Classifier p) => SOME (Rep.class_of p cs)
-                                    | _                          => NONE)
-                                  (map  #attr_type atts)
-        val aends = Rep_Core.associationends_of (Rep.Class c) 
-        val aend_classifiers = List.mapPartial (fn (Rep_OclType.Classifier p) 
-                                                   => SOME (Rep.class_of p cs)
-                                                 | _ => NONE)
-                                               (map  #aend_type aends)
-        val classifiers = att_classifiers @ aend_classifiers 
+fun mkPermission cs (c as Rep.Class _) = 
+    let val classifiers = (Rep.connected_classifiers_of c cs)
         val role_classes = List.filter (classifier_has_stereotype "secuml.role") 
                                        classifiers
         val root_classes =   List.filter (fn x => ListEq.overlaps 
@@ -176,22 +166,19 @@ fun mkPermission cs (C as Rep.Class c) =
                                          classifiers
         val root_resource = hd root_classes
             handle Empty => error ("in mkPermission: no root resource found "^
-                                   "for permission "^Rep.string_of_path (Rep.name_of C))
+                                   "for permission "^Rep.string_of_path (Rep.name_of c))
         val action_attributes = 
-            List.filter (fn x => List.exists 
-                                     (fn y => List.exists 
-                                                  (fn z => y= z) 
-                                                  (#stereotypes x)) 
-                                     Design.action_stereotypes) atts 
+            List.filter (fn x => ListEq.overlaps (#stereotypes x) (Design.action_stereotypes)) 
+                        (Rep.attributes_of c)
             handle ex => (error_msg "could not parse permission attributes"; raise ex)
     in 
-        { name  = (Rep.string_of_path (Rep.name_of C)),
+        { name  = (Rep.string_of_path (Rep.name_of c)),
           roles = (map (Rep.string_of_path o Rep.name_of) role_classes),
           (* FIXME: find attached constraints *)
           constraints = nil, 
           actions = if action_attributes = [] 
                     then error ("in mkPermission: Permission "^
-                                (Rep.string_of_path (Rep.name_of C))^
+                                (Rep.string_of_path (Rep.name_of c))^
                                 "has no action attributes")
                     else map (Design.parse_action root_resource) action_attributes }
     end

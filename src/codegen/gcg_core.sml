@@ -80,8 +80,8 @@ fun substituteVars e s =
     let val tkl = Gcg_Helper.joinEscapeSplitted "$" (Gcg_Helper.fieldSplit s #"$")
     in
 	String.concat (map2EveryOther (C.lookup e) tkl)
+        handle ex => error ("in GCG_Core.substituteVars: lookup failure for variable "^(String.concat tkl))
     end
-			 
 
 (** traverses a templateParseTree and executes the given instructions *)
 fun write env (Tpl_Parser.RootNode(l))                   = List.app (write env) l
