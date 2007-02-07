@@ -135,6 +135,7 @@ val parent_of           : Classifier -> Classifier list -> Classifier
 val parents_of          : Classifier -> Classifier list -> Rep_OclType.Path list
 val operation_of        : Classifier list -> Rep_OclType.Path -> operation option
 val topsort_cl          : Classifier list -> Classifier list
+val connected_classifiers_of : Classifier -> Classifier list -> Classifier list
 end
 
 structure Rep_Core :  REP_CORE = 
@@ -155,21 +156,21 @@ type operation = { name          : string,
                    scope         : Scope }     
 
 type associationend = {
-     name : string,
-     aend_type: Rep_OclType.OclType,
-     multiplicity: (int*int) list,
-     visibility: Visibility,
-     ordered: bool,
-     init : Rep_OclTerm.OclTerm option
+     name         : string,
+     aend_type    : Rep_OclType.OclType,
+     multiplicity : (int*int) list,
+     visibility   : Visibility,
+     ordered      : bool,
+     init         : Rep_OclTerm.OclTerm option
 }
 
 type attribute = {
-     name : string,
-     attr_type : Rep_OclType.OclType,
-     visibility : Visibility,
-     scope: Scope,
-	 stereotypes: string list,
-     init : Rep_OclTerm.OclTerm option
+     name        : string,
+     attr_type   : Rep_OclType.OclType,
+     visibility  : Visibility,
+     scope       : Scope,
+     stereotypes : string list,
+     init        : Rep_OclTerm.OclTerm option
 }
 
 
@@ -640,5 +641,21 @@ fun topsort_cl cl =
     in
 	foldl (op@) [] (map (fn a => sub cl a) (OclAny_subcl))  
     end
+
+fun connected_classifiers_of (Class {attributes,associationends,...}) (cl:Classifier list) =
+    let val att_classifiers = List.mapPartial (fn (Classifier p) => SOME (class_of p cl)
+                                                | _              => NONE)
+                                              (map  #attr_type attributes)
+        val aend_classifiers = List.mapPartial (fn (Classifier p) => SOME (class_of p cl)
+                                                 | _              => NONE)
+                                               (map #aend_type associationends)
+    in
+        att_classifiers @ aend_classifiers 
+    end
+  | connected_classifiers_of (Primitive {associationends,...}) (cl:Classifier list) = 
+    List.mapPartial (fn (Classifier p) => SOME (class_of p cl)
+                      | _              => NONE)
+                    (map #aend_type associationends)
+  | connected_classifiers_of _ _ = nil
 
 end

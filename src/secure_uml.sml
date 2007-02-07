@@ -199,19 +199,11 @@ fun mkPermission cs (C as Rep.Class c) =
                        
 
 fun mkSubjectAssignment cs (c as (Rep.Class _)) = 
-    let val att_classifiers = List.mapPartial 
-                                  (fn (Rep_OclType.Classifier p) => SOME (Rep.class_of p cs)
-                                    | _                          => NONE)
-                                  (map #attr_type (Rep.attributes_of c))
-        val aend_classifiers = List.mapPartial 
-                                   (fn (Rep_OclType.Classifier p) => SOME (Rep.class_of p cs)
-                                     | _                          => NONE)
-                                   (map #aend_type (Rep.associationends_of c))
-        (* FIXME: we just take all roles that are connected to the subject. *)
+    let (* FIXME: we just take all roles that are connected to the subject. *)
         (* in principle, we should check the stereotype of the association, *)
         (* but that does not exist in the rep datastructure...              *)  
         val classifiers = List.filter (classifier_has_stereotype "secuml.role")
-                                      (att_classifiers @ aend_classifiers)
+                                      (Rep.connected_classifiers_of c cs)
     in 
         (mkSubject c, map mkRole classifiers)
     end
