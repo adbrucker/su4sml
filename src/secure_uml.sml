@@ -34,6 +34,7 @@ sig
 type Role
 val all_roles :      Configuration -> Role list 
 val all_constraints: Configuration -> Rep_OclTerm.OclTerm list
+val all_subjects:    Configuration -> string list
 val constraints_of : Permission -> Rep_OclTerm.OclTerm list
 val roles_of:        Permission -> Role list 
 end
@@ -54,6 +55,9 @@ fun name_of (u:User) = u
 
 datatype Subject = Group of string * (string list)
                  | User of User
+
+fun subject_name (Group (g,_)) = g
+  | subject_name (User u)      = u
 
 type Role = string
 
@@ -82,7 +86,7 @@ fun constraints_of (x:Permission) = #constraints x
 fun roles_of       (x:Permission) = #roles x
 fun actions_of     (p:Permission) = #actions p
 fun all_roles   (c:Configuration) = #roles c
-
+fun all_subjects (c:Configuration)= map subject_name (#subjects c)
 fun all_constraints (c:Configuration) = List.concat (List.map constraints_of (#permissions c))
 
 (** test whether a1 is (transitively) a subordinated_action of a2 *)
@@ -148,10 +152,10 @@ fun mkSubject (C as Rep.Class c) = User (Rep.string_of_path (Rep.name_of C))
 
 fun mkPermission cs (C as Rep.Class c) = 
     let val atts = Rep.attributes_of (Rep.Class c)
-        val att_classifiers = List.mapPartial (fn (Rep_OclType.Classifier p) 
-                                              => SOME (Rep.class_of p cs)
-                                            | _ => NONE)
-                                          (map  #attr_type atts)
+        val att_classifiers = List.mapPartial 
+                                  (fn (Rep_OclType.Classifier p) => SOME (Rep.class_of p cs)
+                                    | _                          => NONE)
+                                  (map  #attr_type atts)
         val aends = Rep_Core.associationends_of (Rep.Class c) 
         val aend_classifiers = List.mapPartial (fn (Rep_OclType.Classifier p) 
                                                    => SOME (Rep.class_of p cs)
@@ -187,6 +191,24 @@ fun mkPermission cs (C as Rep.Class c) =
     end
   | mkPermission _ _ = error "in mkPermission: argument is not a class"
                        
+
+fun mkSubjectAssignment cs (c as (Rep.Class _)) = 
+    let val att_classifiers = List.mapPartial 
+                                  (fn (Rep_OclType.Classifier p) => SOME (Rep.class_of p cs)
+                                    | _                          => NONE)
+                                  (map #attr_type (Rep.attributes_of c))
+        val aend_classifiers = List.mapPartial 
+                                   (fn (Rep_OclType.Classifier p) => SOME (Rep.class_of p cs)
+                                     | _                          => NONE)
+                                   (map #aend_type (Rep.associationends_of c))
+        (* FIXME: we just take all roles that are connected to the subject. *)
+        (* in principle, we should check the stereotype of the association, *)
+        (* but that does not exist in the rep datastructure...              *)  
+        val classifiers = List.filter (classifier_has_stereotype "secuml.role")
+                                      (att_classifiers @ aend_classifiers)
+    in 
+        (mkSubject c, map mkRole classifiers)
+    end
                        
 (** parse a list of classifiers accoriding to the SecureUML profile.
  * removes the classes with SecureUML stereotypes. 
@@ -206,8 +228,7 @@ fun parse (cs:Rep_Core.Classifier list) =
            rh          = map (fn x => (Rep.string_of_path (Rep.name_of x),
                                        Rep.string_of_path (Rep.parent_name_of x)))
                              (List.filter classifier_has_parent (filter_role cs)),
-           (* FIXME: find associations between Users and Roles. *)
-           sa = nil})
+           sa          = map (mkSubjectAssignment cs) (filter_subject cs)})
     end
     handle ex => (error_msg "in SecureUML.parse: security configuration \
                             \could not be parsed";

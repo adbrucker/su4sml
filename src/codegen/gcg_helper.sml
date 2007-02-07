@@ -48,7 +48,7 @@
 *)
 exception GCG_Error
 
-fun gcg_error s = (print ("Error:"^s^"\n"); raise GCG_Error);
+fun gcg_error s = (print ("Error:"^s^"\n"); raise Fail s);
 
 fun gcg_warning s = (print ("Warning: "^s^"\n"));
 
@@ -61,8 +61,8 @@ in
  fun joinEscapeSplitted d [] 	   = []
    | joinEscapeSplitted d [l]	   = [l]
    | joinEscapeSplitted d (h::s::t) = if endsWithEscape(h)
-  				     then (substring(h,0,size(h)-1)^d^s)::t
-  				     else h::(joinEscapeSplitted d (s::t))
+  				      then (substring(h,0,size(h)-1)^d^s)::t
+  				      else h::(joinEscapeSplitted d (s::t))
 end 
 
 val curry = fn f => fn x => fn y => f (x, y)

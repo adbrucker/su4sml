@@ -13,8 +13,8 @@
 @end 
 @// FIXME: (insert-role-hierarchy $classifier_package$ : subrole <-> superrole .)
 
-@foreach user_list
-(insert-user $classifier_package$: $user_name$ .)
+@foreach subject_list
+(insert-user $classifier_package$: $subject_name$ .) @nl
 @end
 
 @foreach permission_list 
@@ -42,9 +42,6 @@
         @end                  
     @end              
 @end
-
-@// FIXME: insert-attribute
-@// FIXME: insert-method, insert-association-end, insert-non-query-method, insert-query-method
 
 @foreach constraint_list
 (insert-authorization-constraint $classifier_package$ : auth$counter_next$ : $constraint_body$.) @nl

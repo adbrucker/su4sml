@@ -60,6 +60,7 @@ type Model = Rep.Classifier list * Security.Configuration
 type environment = { model           : Model,
 		     PermissionSet   : Security.Permission list,
 		     curPermission   : Security.Permission option,
+                     curSubject      : string option,
 		     curRole         : string option,
 		     curConstraint   : Rep_OclTerm.OclTerm option,	
 		     extension       : SuperCart.environment }
@@ -68,6 +69,7 @@ fun PermissionSet    (env : environment) =  (#PermissionSet env)
 fun curPermission    (env : environment) =  (#curPermission env)
 fun curRole          (env : environment) =  (#curRole env)
 fun curConstraint    (env : environment) =  (#curConstraint env)
+fun curSubject       (env : environment) =  (#curSubject env)
 
 fun curPermission'    (env : environment) = Option.valOf (#curPermission env)
 fun curRole'          (env : environment) = Option.valOf (#curRole env)
@@ -78,6 +80,7 @@ fun initEnv model = let val m = Security.parse model
 			{ model = m, 
 			  PermissionSet = (#permissions (#2 m)),
 			  curPermission = NONE,
+                          curSubject    = NONE,
 			  curRole       = NONE,
 			  curConstraint = NONE,
 			  extension = SuperCart.initEnv (#1 m) } : environment
@@ -90,6 +93,7 @@ fun unpack (env : environment) = #extension env
 fun pack (env: environment) (new_env : SuperCart.environment) 
   = { model            = #model env,
       PermissionSet    = #PermissionSet env,
+      curSubject       = #curSubject env,
       curPermission    = #curPermission env,
       curRole          = #curRole env,
       curConstraint    = #curConstraint env,
@@ -117,6 +121,7 @@ fun name_of_role  r 	= r
 fun lookup env "permission_name" = #name (curPermission' env)
   | lookup env "role_name"	 = name_of_role (curRole' env)
   | lookup env "constraint"	 = Ocl2String.ocl2string false (curConstraint' env)
+  | lookup env "subject_name"    = valOf (curSubject env)
   | lookup env s                 =  SuperCart.lookup (unpack env) s
 
 (********** ADDING IF-CONDITION TYPE *****************************************)
@@ -140,6 +145,7 @@ fun foreach_role (env:environment)
 	fun env_from_list_item r ={ model = #model env,
 				    PermissionSet = #PermissionSet env,
 				    curPermission = #curPermission env,
+                                    curSubject    = NONE,
 				    curRole       = SOME r ,
 				    curConstraint = NONE,
 				    extension = #extension env } : environment
@@ -156,6 +162,7 @@ fun foreach_constraint (env:environment)
 	fun env_from_list_item c ={ model = #model env,
 				    PermissionSet = #PermissionSet env,
 				    curPermission = #curPermission env,
+                                    curSubject    = NONE,
 				    curRole       = #curRole env ,
 				    curConstraint = SOME c,
 				    extension = #extension env } : environment
@@ -171,17 +178,32 @@ fun foreach_permission env
 	fun env_from_list_item p ={ model = #model env,
 				    PermissionSet = #PermissionSet env,
 				    curPermission = SOME p,
+                                    curSubject    = NONE,
 				    curRole       = NONE ,
 				    curConstraint = NONE ,
 				    extension = #extension env } : environment
     in 
 	List.map env_from_list_item perms
     end
+
+fun foreach_subject (env:environment) =
+    let val subjects = (Security.all_subjects o #2 o #model) env
+        fun env_from_list_item s = { model = #model env,
+				    PermissionSet = #PermissionSet env,
+				    curPermission = NONE,
+                                    curSubject    = SOME s,
+				    curRole       = NONE,
+				    curConstraint = NONE,
+				    extension = #extension env } : environment
+    in 
+	List.map env_from_list_item subjects
+    end
     
     
 fun foreach "role_list"       env = foreach_role env 
   | foreach "constraint_list" env = foreach_constraint env
   | foreach "permission_list" env = foreach_permission env
+  | foreach "subject_list"    env = foreach_subject env
   | foreach listType          env = map (pack env) (SuperCart.foreach listType (unpack env))
                                     
   

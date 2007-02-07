@@ -135,9 +135,6 @@ fun foreach "readPermission_list"    env = foreach_permission env "read"
   | foreach "deletePermission_list"  env = foreach_permission env "delete"
   | foreach "executePermission_list" env = foreach_permission env "execute"
   | foreach "entity_list"            env = foreach_entity env
-(*  | foreach "attribute_list"         env = foreach_attribute env
-  | foreach "method_list"            env = foreach_method env
-  | foreach "associationend_list"    env = foreach_assocend env *)
   | foreach listType env =  map (pack env) (SuperCart.foreach listType (unpack env))
                             
 end
