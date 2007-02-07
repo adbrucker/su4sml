@@ -22,7 +22,6 @@
  ******************************************************************************)
 
 
-use "gcg_library.sml";
 use "gcg_helper.sml";
 use "stringHandling.sml";
 (*use "examples/simple.sml"; *)

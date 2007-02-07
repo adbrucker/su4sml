@@ -8,7 +8,6 @@ Group is
      ../su4sml.cm
      cartridge.sig
      security_cartridge.sig
-     gcg_library.sml
      gcg_helper.sml
      tpl_parser.sml
      SM_helper.sml
