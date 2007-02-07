@@ -60,7 +60,7 @@ type Model = Rep.Classifier list * Security.Configuration
 type environment = { model           : Model,
 		     PermissionSet   : Security.Permission list,
 		     curPermission   : Security.Permission option,
-                     curSubject      : string option,
+                     curSubject      : Security.Subject option,
 		     curRole         : string option,
 		     curConstraint   : Rep_OclTerm.OclTerm option,	
 		     extension       : SuperCart.environment }
@@ -121,7 +121,7 @@ fun name_of_role  r 	= r
 fun lookup env "permission_name" = #name (curPermission' env)
   | lookup env "role_name"	 = name_of_role (curRole' env)
   | lookup env "constraint"	 = Ocl2String.ocl2string false (curConstraint' env)
-  | lookup env "subject_name"    = valOf (curSubject env)
+  | lookup env "subject_name"    = (Security.subject_name_of o valOf o curSubject) env
   | lookup env s                 =  SuperCart.lookup (unpack env) s
 
 (********** ADDING IF-CONDITION TYPE *****************************************)
@@ -136,16 +136,21 @@ fun test env "first_permission" = (curPermission' env = hd (PermissionSet env))
 
 
 (********** ADDING FOREACH TYPE **********************************************)
-(* FIXME: in the context of a permission, return the roles of this permission.
- * outside of such a context, return all roles. *)
+(** iterates over roles, depending on the context.
+ * in the context of a permission, iterate over all roles which have this permission.
+ * in the context of a subject, iterate over all roles of that subject.
+ * outside of these contextes, iterate over all roles.
+ *)
 fun foreach_role (env:environment) 
   = let val roles = case #curPermission env
                      of SOME p => #roles p
-                      | NONE   => Security.all_roles (#2 (#model env))
+                      | NONE   => case #curSubject env
+                                   of SOME s => (Security.subject_roles_of s o #2 o #model) env 
+                                    | NONE   => (Security.all_roles o #2 o #model) env
 	fun env_from_list_item r ={ model = #model env,
 				    PermissionSet = #PermissionSet env,
 				    curPermission = #curPermission env,
-                                    curSubject    = NONE,
+                                    curSubject    = #curSubject env,
 				    curRole       = SOME r ,
 				    curConstraint = NONE,
 				    extension = #extension env } : environment

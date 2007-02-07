@@ -32,11 +32,15 @@ signature SECUREUML =
 sig 
     include    SECURITY_LANGUAGE
 type Role
+type Subject
 val all_roles :      Configuration -> Role list 
 val all_constraints: Configuration -> Rep_OclTerm.OclTerm list
-val all_subjects:    Configuration -> string list
+val all_subjects:    Configuration -> Subject list
 val constraints_of : Permission -> Rep_OclTerm.OclTerm list
 val roles_of:        Permission -> Role list 
+val subject_name_of: Subject -> string
+val subject_roles_of:Subject -> Configuration -> Role list
+     
 end
 
 
@@ -56,8 +60,8 @@ fun name_of (u:User) = u
 datatype Subject = Group of string * (string list)
                  | User of User
 
-fun subject_name (Group (g,_)) = g
-  | subject_name (User u)      = u
+fun subject_name_of (Group (g,_)) = g
+  | subject_name_of (User u)      = u
 
 type Role = string
 
@@ -81,12 +85,14 @@ type Configuration = { config_type: Config_Type,
                        rh: Role partial_order,
                        sa: SubjectAssignment }
 
+fun subject_roles_of (s:Subject) (c:Configuration) = 
+    (snd o valOf o (List.find (fn x => (fst x) = s)) o #sa) c
 
 fun constraints_of (x:Permission) = #constraints x
 fun roles_of       (x:Permission) = #roles x
 fun actions_of     (p:Permission) = #actions p
 fun all_roles   (c:Configuration) = #roles c
-fun all_subjects (c:Configuration)= map subject_name (#subjects c)
+fun all_subjects (c:Configuration)= #subjects c
 fun all_constraints (c:Configuration) = List.concat (List.map constraints_of (#permissions c))
 
 (** test whether a1 is (transitively) a subordinated_action of a2 *)

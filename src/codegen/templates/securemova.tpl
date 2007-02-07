@@ -15,6 +15,9 @@
 
 @foreach subject_list
 (insert-user $classifier_package$: $subject_name$ .) @nl
+    @foreach role_list 
+    (insert-user-assignment $classifier_package$ | $subject_name$ <-> $role_name$ .) @nl
+    @end 
 @end
 
 @foreach permission_list 
