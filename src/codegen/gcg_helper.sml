@@ -25,7 +25,8 @@
 structure Gcg_Helper =
 struct
 
-fun fieldSplit s d = String.fields (fn c => (c = d)) s
+fun fieldSplit d s = String.fields (fn c => (c = d)) s
+fun tokenSplit d s = String.tokens (fn c => (c = d)) s
                                    
 local
 	fun endsWithEscape "" = false
@@ -38,10 +39,10 @@ in
   				      else h::(joinEscapeSplitted d (s::t))
 end 
 
+(* FIXME: move to library.sml? *)
 val curry = fn f => fn x => fn y => f (x, y)
 val uncurry = fn f => fn (x, y) => f x y
  
-
 (* FIXME: move to ListEq (and rename to isPrefix...) (is this even used somewhere?) *)
 fun isSuffix  [] _ = true
  |  isSuffix  _ [] = false

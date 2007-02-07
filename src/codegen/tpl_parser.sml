@@ -50,12 +50,21 @@ val tplStream = ref (TextIO.openString "@// dummy template\n");
 
 fun opentFile file = (TextIO.closeIn (!tplStream) ; 
                       tplStream := (TextIO.openIn file))
+                     handle ex => error ("in Tpl_Parser.opentFile: \
+                                         \couldn't open preprocessed template file: "^
+                                         General.exnMessage ex)
                      
 fun cleanUp tplFile = (TextIO.closeIn (!tplStream);
                        OS.FileSys.remove tplFile)
 
 fun readNextLine () = TextIO.inputLine (!tplStream)
                       
+
+(* FIXME: this currently uses a simple line-based template-file structure *)
+(*        (every line corresponds to exactly one node in this tree)       *)
+(*        This should really be relaxed...                                *)
+(* FIXME: add separate VariableLeaf                                       *)
+(* FIXME: merge If and Else Nodes                                         *)
 datatype TemplateTree =   RootNode                of TemplateTree list
                         | OpenFileLeaf            of string
                         | OpenFileIfNotExistsLeaf of string
@@ -69,35 +78,25 @@ datatype TemplateTree =   RootNode                of TemplateTree list
 
 
 (** 
- *  replaceSafely (s,v,x) replaces every v in s with x or if v is escaped removes "\"  
+ *  replaceSafely (s,v,x) replaces every v that occurs unescaped in s with x.
+ * if v occurs escaped with "\" in s, then the "\" is removed from s.
  *)
-fun replaceSafely ("",_,_) = ""
-  | replaceSafely (s,v,x)  = 
-    let val v_size = size v and 
-                     s_size = size s
+fun replaceSafely _ _ "" = ""
+  | replaceSafely v x s  = 
+    let val v_size = size v  
+        val s_size = size s
     in
-        if String.isPrefix ((str #"\\")^v) s 
-        then (v^(replaceSafely(String.extract(s,v_size +1,NONE),v,x)))
+        if String.isPrefix (str #"\\"^v) s 
+        then v^replaceSafely v x (String.extract (s, v_size + 1, NONE))
         else if String.isPrefix v s 
-        then x^(replaceSafely(String.extract(s,v_size,NONE),v,x))
-        else str(String.sub(s,0))^(replaceSafely(String.extract(s,1,NONE),v,x))
+        then x^replaceSafely v x (String.extract (s, v_size, NONE))
+        else str (String.sub (s,0))^replaceSafely v x (String.extract (s, 1, NONE))
     end
                             
 
-(** 
- * splits string into tokens and
- * removes space- and tab-characters  
- *)
-fun cleanLine s = 
-    let fun removeWspace s = 
-            String.implode (List.filter (fn c => not (Char.isSpace c)) (String.explode s)) 
-        fun concatWith [] d = ""
-          | concatWith [s] d = s^" "
-          | concatWith (h::t) d = h^d^(concatWith t d)
-        val myToken = (String.tokens (fn c => c = #" "))
-    in
-        concatWith ( List.filter (fn s => s <>"")(((List.map removeWspace) o myToken) s )) " "
-    end
+(** removes leading, trainling, and multiple consecutive whitespace chars. *)
+fun cleanLine s = String.concatWith " " (String.tokens Char.isSpace s)
+
                   
 (* debugging function
  * prints ParseTree to stdOut
@@ -115,17 +114,15 @@ val printTTree = printTplTree ""
 
 fun isComment s = (String.isPrefix "//" s)
 
-(** returns the left part of l up to the element where f evaluates to true 
- *)
-fun itemsUntil f [] = []
-  | itemsUntil f (h::t) = if (f h) then []
-                          else h::(itemsUntil f t)
+(** returns the prefix of l up to the first element where f evaluates to true *)
+fun takeUntil f [] = []
+  | takeUntil f (h::t) = if f h then [] else h::(takeUntil f t)
                                
-                               
+                              
 (** splits line into tokens considering handling escaped @ *)
-fun tokenize line = let val l =   joinEscapeSplitted "@" (fieldSplit line #"@");
+fun tokenize line = let val l = joinEscapeSplitted "@" (fieldSplit #"@" line)
                     in
-                        (hd l)::(itemsUntil isComment (tl l))
+                        takeUntil isComment l
                     end
 
 (** 
@@ -135,9 +132,9 @@ fun tokenize line = let val l =   joinEscapeSplitted "@" (fieldSplit line #"@");
  *)
 fun getType l = let val sl = tokenize l
                 in
-                    if (length sl  = 1)
-                    then "text"
-                    else hd(fieldSplit (String.concat(tl(sl))) #" ")
+                    if (length sl = 1) 
+                    then "text" (* rather: comment *)
+                    else hd (tokenSplit #" " (String.concat sl))
                 end
 
 
@@ -147,20 +144,16 @@ fun getType l = let val sl = tokenize l
  *)             
 fun getContent l = let val sl = tokenize l 
                    in 
-                       if (length sl = 1)
-                       then hd(sl)
-                       else String.concat(tl(fieldSplit (String.concat(tl(sl))) #" "))
+                       if (length sl = 0) then ""
+                       else if  (length sl = 1) then hd sl
+                       else String.concat (tl (fieldSplit #" " (String.concat (tl sl))))
                    end
 
 (**
  * cleans line, replaces nl and tabs
  * so that no space char is left out
- *)                       
-                   
-fun preprocess s = let val rl = replaceSafely(replaceSafely(cleanLine s,"@nl ","\n"),"@tab ","\t")
-                   in
-                       replaceSafely(replaceSafely(rl,"@nl","\n"),"@tab","\t")
-                   end
+ *)                                          
+fun preprocess s = replaceSafely "@tab" "\t" (replaceSafely "@nl" "\n" (cleanLine s))
 
 
 (**
@@ -183,7 +176,7 @@ fun buildTree (SOME line) =
           | getNode ("eval", expr) = EvalLeaf [ TextLeaf expr ]:: buildTree (readNextLine())
           | getNode ("end",_)      = []
           | getNode (t,c)          = error ("in Tpl_Parser.buildTree: error while parsing \
-                                            \node \""^t^"\" with content\""^c^"\".")
+                                            \node \""^t^"\" with content \""^c^"\".")
         val prLine = preprocess line  
     in
         getNode ((getType prLine),(getContent prLine))
@@ -198,8 +191,7 @@ fun codegen_home _ = getOpt (OS.Process.getEnv "CODEGEN_HOME", su4sml_home()^"sr
  * and returns this file 
  *)
 fun call_cpp file = 
-    let (*val targetFile = String.substring (file,0,size file -4) ^".tmp";*)
-        val targetFile = OS.FileSys.tmpName () 
+    let val targetFile = OS.FileSys.tmpName () 
         val _ = OS.Process.system ("cpp -P -C "^codegen_home()^"/"^file^" "^targetFile)
     in
         targetFile
@@ -212,22 +204,10 @@ fun call_cpp file =
  *)
 fun parse file = let val _         = info ("parsing template "^file)
                      val mergedTpl = call_cpp file;
-                     val u         = opentFile mergedTpl;
+                     val _         = opentFile mergedTpl;
                      val pt        = RootNode(buildTree (readNextLine()));
-                     val u2        = cleanUp mergedTpl; 
+                     val _         = cleanUp mergedTpl; 
                  in 
                      pt
                  end
-                 
-(*                      
- val testline = "@foreach \\@public @// commkejbk";
- val textline1 = "\t\tpublic $class_name$ ";
- val textline2 = "";
- val endline = "\t@end";
- *)
-(*
- val ParseTree = parse "examples/C#.tpl";
-
-     printTplTree ParseTree;
- *)
 end

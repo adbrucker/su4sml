@@ -142,7 +142,7 @@ fun lookup env "classifier_name"  	 = Rep_Core.short_name_of (curClassifier' env
   | lookup env "counter"                 = Int.toString (!(#counter env))
   | lookup env "counter_next"            = ((#counter env) := !(#counter env)+1; 
                                             Int.toString (!(#counter env)))
-  | lookup _ s = (warn ("in Base_Cartridge.lookup: unknown variable \""^s^"\"."); s)
+  | lookup _ s = (warn ("in Base_Cartridge.lookup: unknown variable \""^s^"\"."); "$"^s^"$")
 
 
 (** 

@@ -39,8 +39,6 @@ struct
 open library
 
 val curFile = ref ""
-
-
 val out = ref TextIO.stdOut
 
 fun closeFile () = if (!curFile = "") 
@@ -77,10 +75,12 @@ fun map2EveryOther f [] = []
   | map2EveryOther f (a::b::z) = a::(f b)::(map2EveryOther f z)  
 
 fun substituteVars e s = 
-    let val tkl = Gcg_Helper.joinEscapeSplitted "$" (Gcg_Helper.fieldSplit s #"$")
+    let val tkl = Gcg_Helper.joinEscapeSplitted "$" (Gcg_Helper.fieldSplit #"$" s)
     in
 	String.concat (map2EveryOther (C.lookup e) tkl)
-        handle ex => error ("in GCG_Core.substituteVars: lookup failure for variable "^(String.concat tkl))
+        handle ex => (error_msg ("in GCG_Core.substituteVars: \
+                                 \variable lookup failure in string \""^s^"\".");
+                      s)
     end
 
 (** traverses a templateParseTree and executes the given instructions *)
@@ -114,6 +114,8 @@ fun write env (Tpl_Parser.RootNode(l))                   = List.app (write env) 
 	fun write_children e     = List.app (fn tree => write e tree) children
     in 
 	List.app (fn e => write_children e) list_of_environments
+        handle ex => (error_msg ("in GCG_Core.write: error in foreach node "^listType);
+                      ())
     end
     
 
