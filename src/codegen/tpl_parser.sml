@@ -80,6 +80,7 @@ datatype TemplateTree =   RootNode                of TemplateTree list
 (** 
  *  replaceSafely (s,v,x) replaces every v that occurs unescaped in s with x.
  * if v occurs escaped with "\" in s, then the "\" is removed from s.
+ * FIXME: move to stringhandling?
  *)
 fun replaceSafely _ _ "" = ""
   | replaceSafely v x s  = 
@@ -95,7 +96,8 @@ fun replaceSafely _ _ "" = ""
                             
 
 (** removes leading, trainling, and multiple consecutive whitespace chars. *)
-fun cleanLine s = String.concatWith " " (String.tokens Char.isSpace s)
+(* FIXME: movev to StringHandling? *)
+fun cleanLine s = String.concatWith " " (String.tokens Char.isSpace s) 
 
                   
 (* debugging function
@@ -149,10 +151,7 @@ fun getContent l = let val sl = tokenize l
                        else String.concat (tl (fieldSplit #" " (String.concat (tl sl))))
                    end
 
-(**
- * cleans line, replaces nl and tabs
- * so that no space char is left out
- *)                                          
+(** cleans line, replaces nl and tabs so that no space char is left out. *)
 fun preprocess s = replaceSafely "@tab" "\t" (replaceSafely "@nl" "\n" (cleanLine s))
 
 

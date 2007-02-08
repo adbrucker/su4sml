@@ -309,27 +309,27 @@ fun transform_event t (XMI.CallEvent ev) =
     Rep.SignalEvent (map (transform_parameter t) (#parameter ev))
 
 fun transform_proc t (XMI.mk_Procedure proc) = 
-    Rep.Proc_mk { proc_id    = #xmiid proc,
-		  language   = #language proc,
-		  body       = #body proc,
-		  expression = #expression proc }
-
-fun transform_transition t (XMI.mk_Transition trans) 
-  = Rep.T_mk { trans_id = #xmiid trans ,
-	       source = #source trans,
-	       target = #target trans,
-	       guard  = Option.map (transform_guard t) (#guard trans),
-	       trigger = Option.map ((transform_event t) o (find_event t)) 
-				    (#trigger trans),
-	       effect = Option.map (transform_proc t) (#effect trans)}
-
+    { proc_id    = #xmiid proc,
+      language   = #language proc,
+      body       = #body proc,
+      expression = #expression proc }
+    
+fun transform_transition t (XMI.mk_Transition trans) =
+    { trans_id = #xmiid trans ,
+      source   = #source trans,
+      target   = #target trans,
+      guard    = Option.map (transform_guard t) (#guard trans),
+      trigger  = Option.map ((transform_event t) o (find_event t)) 
+			   (#trigger trans),
+      effect   = Option.map (transform_proc t) (#effect trans)}
+    
 fun transform_activitygraph t (XMI.mk_ActivityGraph act) = 
-    Rep_StateMachine.SM_mk {top = transform_state t (#top act), 
-			    transition = map (transform_transition t) (#transitions act) }
+    {top        = transform_state t (#top act), 
+     transition = map (transform_transition t) (#transitions act) }
 
 fun transform_statemachine t (XMI.mk_StateMachine st) = 
-    Rep_StateMachine.SM_mk {top = transform_state t (#top st), 
-			    transition = map (transform_transition t) (#transitions st) }
+    {top        = transform_state t (#top st), 
+     transition = map (transform_transition t) (#transitions st) }
 
 (** transform a XMI.Classifier classifier into a Rep.Classifier *)
 fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,

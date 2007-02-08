@@ -9,6 +9,9 @@ sig
 
     (** checks whether the lists are disjunct, i.e., do not overlap. *)
     val disjunct: ''a list -> ''a list -> bool
+
+    (** removes duplicate elements. *)
+    val makeDistinct: ''a list -> ''a list
 end
 
 
@@ -24,5 +27,9 @@ fun overlaps xs ys = includes (map (includes xs) ys) true
 
 (** checks whether the lists are disjunct, i.e., do not overlap. *)
 fun disjunct xs ys = not (overlaps xs ys)
+
+(** removes duplicate elements. *)
+fun makeDistinct []  = []
+  | makeDistinct (h::t) = h::makeDistinct (List.filter (fn x => not (x=h)) t)
 
 end

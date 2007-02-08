@@ -97,7 +97,7 @@ fun lookup (env : environment) "state_name" = toUpper(name_of_state(#curState en
   | lookup (env : environment) "guard_ident" = ident_of_guard(#1(#curGuard env))
   | lookup (env : environment) "event_name" = toUpper(name_of_event(#curEvent env))
   | lookup (env : environment) "cur_event_id" = toUpper(name_of_event(#curEvent env))
-  | lookup (env : environment) "effect_ident" = ident_of_effect(#curEffect env)
+  | lookup (env : environment) "effect_ident" = #proc_id (#curEffect env)
   | lookup (env : environment) "trigger_name" = name_of_event(#curEvent env)
   | lookup (env : environment) "real_init" = id_of_state(realInit(Option.valOf(SuperCart.curClassifier (unpack env))))
   | lookup (env : environment) s =  SuperCart.lookup (unpack env) s
@@ -107,7 +107,7 @@ fun evalCondition (env : environment) "hasAG" = hasAG(Option.valOf(SuperCart.cur
   | evalCondition (env : environment) "isTrigger" = let val Transitions = transitions_of_classif(Option.valOf(SuperCart.curClassifier (unpack env)))
 							val oper = Option.valOf(SuperCart.curOperation (unpack env))
 						    in 
-							acts_as_trigger(oper,Transitions)
+							acts_as_trigger oper Transitions
 						    end
   | evalCondition (env : environment) "isLastGuard" = (#2(#curGuard env)) = 0
   | evalCondition (env : environment) "isLastTrans" = (#2(#curTransition env)) = 0
@@ -215,7 +215,7 @@ fun foreach_guard(env: environment) = let val GL = guards_of_SM_Trans(#1(#curTra
 					  List.map env_from_GL (transform(GL,(LEN-1)))
 				      end
 
-fun all_guards(env: environment) = let val AGL = createDistinct(List.concat (List.map guards_of_SM_Trans (#allTransitions env)))
+fun all_guards(env: environment) = let val AGL = makeDistinct(List.concat (List.map guards_of_SM_Trans (#allTransitions env)))
 				       fun env_from_GL G = {
 							    curState = #curState env,
 							    allTransitions = #allTransitions env,

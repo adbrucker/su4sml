@@ -122,6 +122,7 @@ val operations_of     : Classifier -> operation list
 val invariant_of      : Classifier -> (string option * Rep_OclTerm.OclTerm) list
 val stereotypes_of    : Classifier -> string list
 val string_of_path    : string list -> string    
+val activity_graphs_of: Classifier -> Rep_ActivityGraph.ActivityGraph list 
 
 val arguments_of_op     : operation -> (string * Rep_OclType.OclType) list
 val precondition_of_op  : operation -> (string option * Rep_OclTerm.OclTerm) list
@@ -620,6 +621,11 @@ fun parents_of C cl = case parent_name_of C of
                         | class => (if( class = (name_of OclAnyC) )
                                    then [(name_of OclAnyC)]
                                    else [class]@(parents_of (class_of class cl) cl))
+
+(* returns the activity graphs (list) of the given Classifier --> this is a list of StateMachines*)
+(* Classifier -> ActivityGraph list *)
+fun activity_graphs_of (Class{activity_graphs,...}) = activity_graphs
+  | activity_graphs_of _                            = []
 				  
 fun operation_of cl fq_name = 
     let 

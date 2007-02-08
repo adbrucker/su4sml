@@ -74,9 +74,9 @@ fun super2Native "ClassifierScope" = "static"
  * overrides some lookup entries of the base cartridge 
  *)
 fun lookup (env : environment) "attribute_name_small_letter" 
-	=  StringHandling.startWithSmallLetter (SuperCart.lookup (unpack env) "attribute_name")
+	=  StringHandling.uncapitalize (SuperCart.lookup (unpack env) "attribute_name")
   | lookup (env : environment) "attribute_name_capital" 
-	=  StringHandling.startWithCapital (SuperCart.lookup (unpack env) "attribute_name")
+	=  StringHandling.capitalize (SuperCart.lookup (unpack env) "attribute_name")
   | lookup (env : environment) (s as "attribute_type") 	= super2Native (SuperCart.lookup (unpack env) s )
   | lookup (env : environment) (s as "attribute_visibility")= super2Native (SuperCart.lookup (unpack env) s)
   | lookup (env : environment) (s as "attribute_scope")	= super2Native (SuperCart.lookup (unpack env) s)
