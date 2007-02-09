@@ -44,12 +44,19 @@ val out = ref TextIO.stdOut
 fun closeFile () = if (!curFile = "") 
 		   then ()
 		   else (TextIO.closeOut (!out); 
-			 info ("closing "^(!curFile));
+			 (* info ("closing "^(!curFile));*)
 			 curFile := "") 
 		        
-                        
+(* FIXME: set out to a real NullStream *)
+fun openNull file = (closeFile ();
+		     info ("skipping "^file);
+		     out := (TextIO.openOut "/dev/null");
+		     curFile := "/dev/null"
+		    )
+     
+
 fun openFile file = (closeFile ();
-		     info ("opening "^file^"...");
+		     info ("opening  "^file);
 		     Gcg_Helper.assureDir file;
 		     out := (TextIO.openOut file);
 		     curFile := file
@@ -57,7 +64,7 @@ fun openFile file = (closeFile ();
                     
 fun openFileIfNotExists file = (closeFile ();
 				(if ((OS.FileSys.fileSize file) > 0) 
-                                 then openFile "/dev/null"
+                                 then openNull file
 				 else openFile file
 				) handle SysErr => ( openFile file ))
 			       
@@ -128,7 +135,9 @@ fun generate model template
 	(initOut();
 	 (*printTTree tree;*)
 	 write env tree;
-	 closeFile () ) 
+	 closeFile ();
+         info "codegen  finished successfully"
+        ) 
 	handle ex => (closeFile(); raise ex)
     end
 	

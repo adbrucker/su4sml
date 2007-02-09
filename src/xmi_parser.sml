@@ -979,7 +979,8 @@ fun mkPackage tree =
     then let val trees = tree |> get "UML:Namespace.ownedElement"
 	     val atts = attributes tree 
              val package_name = atts |> name
-             val _ = info ("parsing package "^package_name)
+             val _ = if  tree is "UML:Model" then info ("parsing  model    "^package_name)
+                     else                         info ("parsing  package  "^package_name)
          in
              XMI.Package 
                  { xmiid           = atts  |> xmiid, 

@@ -50,13 +50,13 @@ val tplStream = ref (TextIO.openString "@// dummy template\n");
 
 fun opentFile file = (TextIO.closeIn (!tplStream) ; 
                       tplStream := (TextIO.openIn file))
-                     handle ex => error ("in Tpl_Parser.opentFile: \
-                                         \couldn't open preprocessed template file: "^
-                                         General.exnMessage ex)
-                     
+    handle ex => error ("in Tpl_Parser.opentFile: \
+                        \couldn't open preprocessed template file: "^
+                        General.exnMessage ex)
+                 
 fun cleanUp tplFile = (TextIO.closeIn (!tplStream);
                        OS.FileSys.remove tplFile)
-
+                      
 fun readNextLine () = TextIO.inputLine (!tplStream)
                       
 
@@ -65,6 +65,7 @@ fun readNextLine () = TextIO.inputLine (!tplStream)
 (*        This should really be relaxed...                                *)
 (* FIXME: add separate VariableLeaf                                       *)
 (* FIXME: merge If and Else Nodes                                         *)
+(* FIXME: add InfoLeaf to print informational messages during codegen     *)
 datatype TemplateTree =   RootNode                of TemplateTree list
                         | OpenFileLeaf            of string
                         | OpenFileIfNotExistsLeaf of string
@@ -135,7 +136,7 @@ fun tokenize line = let val l = joinEscapeSplitted "@" (fieldSplit #"@" line)
 fun getType l = let val sl = tokenize l
                 in
                     if (length sl = 1) orelse (length sl = 0)
-                    then "text" (* rather: comment *)
+                    then "text" (* rather: comment? *)
                     else hd (tokenSplit #" " (String.concat sl))
                 end
                 handle ex => error ("in Tpl_Parser.getType: "^General.exnMessage ex)
@@ -194,9 +195,7 @@ fun codegen_home _ = getOpt (OS.Process.getEnv "CODEGEN_HOME", su4sml_home()^"sr
  *)
 fun call_cpp file = 
     let val targetFile = OS.FileSys.tmpName () 
-        val _ = info ("tmpfile "^targetFile) 
         val _ = OS.Process.system ("cpp -P -C "^codegen_home()^"/"^file^" "^targetFile)
-        val _ = info ("cpp done") 
     in
         targetFile
     end
@@ -206,7 +205,7 @@ fun call_cpp file =
 (**  parse template-file
  *  @return the parsed template tree                 
  *)
-fun parse file = let val _         = info ("parsing template "^file)
+fun parse file = let val _         = info ("parsing  template "^file)
                      val mergedTpl = call_cpp file;
                      val _         = opentFile mergedTpl;
                      val pt        = RootNode(buildTree (readNextLine()));
