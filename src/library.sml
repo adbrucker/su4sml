@@ -117,4 +117,8 @@ fun fst (x, y) = x
                  
 fun snd (x, y) = y
 
+fun join s nil = ""
+  | join s (h::nil) = h
+  | join s (h::t) = h^s^(join s t)
+
 end

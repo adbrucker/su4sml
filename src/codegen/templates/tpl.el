@@ -14,7 +14,7 @@
    (list "\\W\\(@foreach\\)[ \t]*\\([a-zA-Z_-]*\\)\\W"
 	 '(1 font-lock-keyword-face)
 	 '(2 font-lock-variable-name-face))
-   (list "\\W\\(@openfile\\|@else\\|@end\\)\\W"
+   (list "\\W\\(@openfile\\|@openfileifnotexists\\|@else\\|@end\\)\\W"
 	 '(0 font-lock-keyword-face))
    ;; variables
    (list "\\$[a-zA-Z_-]*\\$" 

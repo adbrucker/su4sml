@@ -159,9 +159,11 @@ fun lookup env "classifier_name"  	 = Rep_Core.short_name_of (curClassifier' env
 fun test env "isClass"       = (case (#curClassifier env)  of 
 				    SOME (Rep.Class{...}) => true 
 				  | _                     => false)
+  | test env "notClass"      = not (test env "isClass")
   | test env "isInterface"   = (case (#curClassifier env)  of 
 				    SOME (Rep.Interface{...}) => true 
 				  | _                         => false)
+  | test env "notInterface"      = not (test env "isInterface")
   | test env "isEnumeration" = (case (#curClassifier env)  of 
 				    SOME (Rep.Enumeration{...}) => true 
 				  | _ 	                        => false)
@@ -220,6 +222,23 @@ fun foreach_classifier (env : environment)
 	List.map env_from_classifier cl
     end
     
+
+(* Only iterate over non-primitive classifiers such as Class, Interface, Enum *)
+fun foreach_nonprimitive_classifier (env : environment) 
+  = let val cl = List.filter (fn cenv => (case cenv of
+					      Rep.Primitive{...} => false
+					    | _                  => true)) (#model env)
+	fun env_from_classifier c = { model = (#model env),
+                                      counter = #counter env,
+				      curClassifier = SOME c,
+                                      curAssocEnd  = NONE,
+				      curOperation = NONE,
+				      curAttribute = NONE,
+				      curArgument  = NONE }
+    in 
+	List.map env_from_classifier cl
+    end
+				  
 fun foreach_attribute (env : environment) 
   = let val attrs = Rep_Core.attributes_of (curClassifier' env)
 	fun env_from_attr a = { model = #model env,
@@ -285,6 +304,7 @@ fun foreach "classifier_list" env = foreach_classifier env
   | foreach "attribute_list" env  = foreach_attribute env 
   | foreach "operation_list" env  = foreach_operation env
   | foreach "argument_list"  env  = foreach_argument env
+  | foreach "nonprimitive_classifier_list" env = foreach_nonprimitive_classifier env
   | foreach "assocend_list"  env  = foreach_assocend env
   (* hier muss man das Environment noch etwas umpacken 
   | foreach listType env = map (pack env) 

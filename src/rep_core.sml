@@ -111,8 +111,10 @@ val package_of    : Classifier -> Rep_OclType.Path
 val short_name_of : Classifier -> string 
 
 val parent_name_of       : Classifier -> Rep_OclType.Path 
+val parent_interface_names_of : Classifier -> Rep_OclType.Path list
 val parent_package_of    : Classifier -> Rep_OclType.Path 
 val short_parent_name_of : Classifier -> string 
+val parent_interfaces_of : Classifier -> Rep_OclType.OclType list
 
 val thy_name_of       : Classifier -> string
 val update_thyname    : string -> Classifier -> Classifier
@@ -494,6 +496,7 @@ fun parent_name_of (C as Class{parent,...}) =
   | parent_name_of (Template _) = error "in Rep.parent_name_of: \
                                         \unsupported argument type Template"
 
+
 fun short_parent_name_of C =  case (parent_name_of C) of
 	                          [] => error "in Rep.short_parent_name_of: empty type"
                                 | p => (hd o rev)  p
@@ -527,6 +530,16 @@ fun parent_package_of (Class{parent,...})       =
   | parent_package_of (Template{...})        = 
     error "in Rep.parent_package_of: unsupported argument type Template"
 						
+
+(* Get parent interfaces of a Classifier. *)
+fun parent_interfaces_of (Interface{parents,...}) = parents
+  | parent_interfaces_of (Class{interfaces,...}) = interfaces
+  | parent_interfaces_of (Enumeration{interfaces,...}) = interfaces
+  | parent_interfaces_of (Primitive{interfaces,...}) = interfaces
+  | parent_interfaces_of (Template{...}) = error "parent_interfaces_of <Template> not supported"
+
+(* Get the names of parent interfaces of a Classifier *)
+fun parent_interface_names_of c = map path_of_OclType (parent_interfaces_of c)
 
 fun attributes_of (Class{attributes,...}) = attributes
   | attributes_of (Interface{...})        = 

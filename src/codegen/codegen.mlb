@@ -8,8 +8,6 @@ in
     $(MLTON_ROOT)/basis/basis.mlb
     ../su4sml.mlb
   in
-     compiler/compiler_ext.sig
-     compiler/mlton.sml	
      stringHandling.sml
      gcg_helper.sml
      tpl_parser.sig

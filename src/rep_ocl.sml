@@ -37,6 +37,7 @@ sig
     val path_of_OclType   : OclType -> Path
     val string_of_OclType : OclType -> string	
     val string_of_path    : Path -> string	
+    val string_of_OclType_colon : OclType -> string
     val pathstring_of_path: Path -> string
     val is_Classifier     : OclType -> bool
     val is_Collection     : OclType -> bool
@@ -114,24 +115,31 @@ fun string_of_path (path:Path) = path_to_string path "."
 (** Convert Path to a string using /, creating a Unix directory like string *)
 fun pathstring_of_path (path:Path) = path_to_string path "/"
 
-fun string_of_OclType Integer        = "Integer" 
-  | string_of_OclType Real           = "Real"
-  | string_of_OclType String         = "String"
-  | string_of_OclType Boolean        = "Boolean"
-  | string_of_OclType OclAny         = "OclAny"
-  | string_of_OclType (Set t)	     = ("Set("^(string_of_OclType t)^")")			
-  | string_of_OclType (Sequence t)   = ("Sequence("^(string_of_OclType t)^")")	
-  | string_of_OclType (OrderedSet t) = ("OrderedSet("^(string_of_OclType t)^")")	
-  | string_of_OclType (Bag t)        = ("Bag("^(string_of_OclType t)^")")	
-  | string_of_OclType (Collection t) = ("Collection("^(string_of_OclType t)^")")	
-  | string_of_OclType OclVoid        = "OclVoid"
-  | string_of_OclType (Classifier p) = (string_of_path p)
-  | string_of_OclType DummyT         = "DummyT"
+
+
+fun string_of_OclType' f Integer        = "Integer" 
+  | string_of_OclType' f Real           = "Real"
+  | string_of_OclType' f String         = "String"
+  | string_of_OclType' f Boolean        = "Boolean"
+  | string_of_OclType' f OclAny         = "OclAny"
+  | string_of_OclType' f (Set t)	     = ("Set("^(string_of_OclType' f t)^")")			
+  | string_of_OclType' f (Sequence t)   = ("Sequence("^(string_of_OclType' f t)^")")	
+  | string_of_OclType' f (OrderedSet t) = ("OrderedSet("^(string_of_OclType' f t)^")")	
+  | string_of_OclType' f (Bag t)        = ("Bag("^(string_of_OclType' f t)^")")	
+  | string_of_OclType' f (Collection t) = ("Collection("^(string_of_OclType' f t)^")")	
+  | string_of_OclType' f OclVoid        = "OclVoid"
+  | string_of_OclType' f (Classifier p) = (path_to_string p f)
+  | string_of_OclType' f DummyT         = "DummyT"
+
+fun string_of_OclType t = string_of_OclType' "." t
+
 
 fun path_of_OclType (Classifier p) = p
   | path_of_OclType (TemplateParameter p) = [] (* FIXME *)
   | path_of_OclType x = ["oclLib",string_of_OclType x]
 
+(** Convert OclType to a string with :: in between *)
+fun string_of_OclType_colon t = string_of_OclType' "::" t
 
 fun is_Classifier (Classifier p) = true
   | is_Classifier _              = false 

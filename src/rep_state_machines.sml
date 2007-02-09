@@ -45,7 +45,7 @@ type Transition
 				   
 type PseudoStateVars = XMI_StateMachines.PseudoStateVars
 				
-     
+type StateMachine     
 datatype StateVertex  =
          State_CompositeState 
 	 of {name         : string,
@@ -91,8 +91,6 @@ datatype StateVertex  =
 	     outgoing     : Transition_Id list,
 	     incoming     : Transition_Id list}
 (*	  | StubState  *)
-withtype StateMachine = {top : StateVertex,
-                         transition : Transition list}
                                  
 	    
 val isInit         : StateVertex -> bool

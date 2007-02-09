@@ -47,18 +47,31 @@ fun curOperation env = SuperCart.curOperation (unpack env)
 fun curAttribute env = SuperCart.curAttribute (unpack env)
 fun curAssociationEnd env = SuperCart.curAssociationEnd (unpack env)
 
+fun curClassifier' env = Option.valOf(curClassifier env)
+fun curOperation' env = Option.valOf(curOperation env)
+
 
 (* any special variables? *)
-fun lookup (env : environment) s =  SuperCart.lookup (unpack env) s
+fun lookup (env : environment) (s as "preconditions") = Ocl2DresdenJava.precondString env "testObject" (curOperation' env)
+  | lookup (env : environment) (s as "postconditions") = Ocl2DresdenJava.postcondString env "testObject" (curOperation' env)
+  | lookup (env : environment) (s as "invariants") = Ocl2DresdenJava.invString env "testObject" (curClassifier' env)
+  | lookup (env : environment) s =  SuperCart.lookup (unpack env) s
 
 (* any special predicates?*) 
 fun test (env : environment ) "operation_isNotPrivate" = not (test env "operation_isPrivate")
   | test (env : environment ) "not_last_argument" = not (test env "last_argument")
-  | test (env : environment) "isTestable" = (test env "hasOperations") andalso (not (test env "isInterface"))
+  | test (env : environment) "isTestable" = (not (test env "isInterface")) (* andalso (not (test env "isAbstract")) *) andalso (test env "hasOperations")
   | test (env : environment)  s = SuperCart.test (unpack env) s
 
+(* Check if operation is already in given list *)
+fun opInList (operation : environment) oplist = foldr (fn (a,b) => if (lookup operation "operation_name") = (lookup a "operation_name") then (false andalso b) else (true andalso b)) true oplist
+
+(* Remove duplicate methods by comparing their names *)
+fun unique_op oplist = foldl (fn (el,l) => if (opInList el l) then l @ [el] else l) [] oplist
+
 (* any special lists? *)
-fun foreach listType (env : environment) 
+fun foreach "unique_operation_list" (env : environment) = unique_op (foreach "operation_list" env)
+  | foreach listType (env : environment) 
 		=  map pack (SuperCart.foreach listType (unpack env))
 
 end

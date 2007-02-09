@@ -8,8 +8,8 @@ in
     $(MLTON_ROOT)/smlnj-lib/Util/smlnj-lib.mlb
     ../lib/fxp/src/fxlib.mlb
   in
-    codegen/compiler/compiler_ext.sig
-    codegen/compiler/mlton.sml
+    compiler/compiler_ext.sig
+    compiler/mlton.sml
     library.sml
     xmi_ocl.sml 
     xmltree.sml
@@ -39,5 +39,6 @@ in
     rep_parser.sml
     rep_secure.sml
     rep_su2holocl.sml
+    ocl2dresdenjava.sml
   end
 end

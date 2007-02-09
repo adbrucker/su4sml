@@ -1,18 +1,15 @@
 @// Example template for Java
 @// assumption: all classifiers are classes
 
-@foreach nonprimitive_classifier_list
-	@openfileifnotexists generated/src/main/java/$classifier_package_path$/$classifier_name$.java
-	package $classifier_package$;
+@foreach classifier_list
+	@openfile generated/$classifier_package_path$/$classifier_name$.java
+	package $classifier_package$ ;			
 	@nl@nl
 	@if isClass
 		public class $classifier_name$
 	@end
 	@if isInterface
 		public interface $classifier_name$
-	@end
-	@if isEnumeration
-		public enum $classifier_name$
 	@end
 	@if notInterface
 		@if hasParent
@@ -33,27 +30,32 @@
 			@end
 		@end
 	@end
-	{
+	@nl {
 	@if notInterface
 		@foreach attribute_list
-			 @nl @tab $attribute_visibility$ $attribute_type$ $attribute_name$ ;
+			 @nl @tab	public $attribute_type$ $attribute_name$ ;
 		@end
 	@end
 	@foreach operation_list
-		@nl @tab  $operation_visibility$ $operation_result_type$ $operation_name$(
+	@nl @tab  public $operation_result_type$ $operation_name$(
 		@foreach argument_list
-			@if last_argument
-				$argument_type$ $argument_name$
-			@else
-				$argument_type$ $argument_name$,
-			@end
+			$argument_type$ $argument_name$
 		@end
-		)
-		@if notInterface	
-	    	    	{@nl@nl@tab} 
-		@else
-			;
-		@end
+		     )
+	@if notInterface 
+	    	{
+	    	@nl @tab @tab // Preconditions
+	    	@nl $preconditions$
+		@nl @tab @tab // Your Code
+	    	@nl @tab @tab // Postconditions
+	    	@nl $postconditions$
+		@nl@tab } 
+	@else
+		;
 	@end
+	@end
+	@nl // Invariant 
+	@nl $invariants$
+	@nl
 	@nl }
 @end 
