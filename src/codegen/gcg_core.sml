@@ -106,7 +106,7 @@ fun write env (Tpl_Parser.RootNode(l))                   = List.app (write env) 
   	 then writeThen env l
   	 else case (List.last l) of nd as (Tpl_Parser.ElseNode(_)) => write env nd
   			  	  | _                              => ())
-        handle ex => () (* ignore failed/unknown predicates *)
+        handle ex => error ("in GCG_Core.write: problem in IfNode "^cond)
     end
   | write env (Tpl_Parser.ElseNode(l))                   = List.app (write env) l
   | write env (Tpl_Parser.ForEachNode(listType,children))=
