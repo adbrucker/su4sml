@@ -53,6 +53,28 @@
 (insert-authorization-constraint-assignment $classifier_package$ : $constraint_perm$ : auth$counter$ .) @nl
 @end 
 
+@//TODO: also support composite actions (not supported in cartridge yet...
+@foreach entity_list
+    @foreach createPermission_list
+    (insert-atomic-create $classifier_package$ : $permission_name$ : $entity_name$ .) @nl
+    @end
+    @foreach deletePermission_list
+    (insert-atomic-delete $classifier_package$ : $permission_name$ : $entity_name$ .) @nl
+    @end
+    @foreach attribute_list
+        @foreach readPermission_list
+        (insert-atomic-read $classifier_package$ : $permission_name$  : $entity_name$ : $attribute_name$ .) @nl
+        @end
+        @foreach updatePermission_list
+        (insert-atomic-update $classifier_package$ : $permission_name$  : $entity_name$ : $attribute_name$ .) @nl
+        @end
+    @end
+    @foreach operation_list
+        @foreach executePermission_list
+        (insert-atomic-execute $classifier_package$ : $permission_name$ : $entity_name$ : $operation_name$ .) @nl
+        @end
+    @end
+@end
 
 @// FIXME: insert-entity-update et al.
 @// FIXME: (insert-entity-update $classifier_package$: $permission_name$ : $entity_name$ .)

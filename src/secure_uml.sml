@@ -149,11 +149,11 @@ fun filter_subject cs = List.filter (classifier_has_stereotype "secuml.user") cs
 fun filter_role cs = List.filter (classifier_has_stereotype "secuml.role") cs 
 
                      
-fun mkRole (C as Rep.Class c) = Rep.string_of_path (Rep.name_of C)
+fun mkRole (C as Rep.Class c) = Rep.short_name_of C
   | mkRole _                  = error ("in mkRole: argument is not a class")
 
 (* FIXME: handle groups also *)
-fun mkSubject (C as Rep.Class c) = User (Rep.string_of_path (Rep.name_of C))
+fun mkSubject (C as Rep.Class c) = User (Rep.short_name_of C)
   | mkSubject _                  = error ("in mkSubject: argument is not a class")
 
 fun mkPermission cs (c as Rep.Class _) = 

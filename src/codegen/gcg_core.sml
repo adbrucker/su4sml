@@ -114,7 +114,8 @@ fun write env (Tpl_Parser.RootNode(l))                   = List.app (write env) 
 	fun write_children e     = List.app (fn tree => write e tree) children
     in 
 	List.app (fn e => write_children e) list_of_environments
-        handle ex => (error_msg ("in GCG_Core.write: error in foreach node "^listType);
+        handle ex => (error_msg ("in GCG_Core.write: error in foreach node "^listType^
+                                ": "^General.exnMessage ex);
                       ())
     end
     

@@ -44,6 +44,7 @@ open ListEq
 (*return the initial state*)
 exception MalformedStateMachine
 
+(* TODO: check which functions here are really used... *)
 
 (************************************)
 (* STATE handling functions:	    *)
