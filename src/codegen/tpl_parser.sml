@@ -134,11 +134,11 @@ fun tokenize line = let val l = joinEscapeSplitted "@" (fieldSplit #"@" line)
  *)
 fun getType l = let val sl = tokenize l
                 in
-                    if (length sl = 1) 
+                    if (length sl = 1) orelse (length sl = 0)
                     then "text" (* rather: comment *)
                     else hd (tokenSplit #" " (String.concat sl))
                 end
-
+                handle ex => error ("in Tpl_Parser.getType: "^General.exnMessage ex)
 
 (** 
  * getContent line 
@@ -150,6 +150,7 @@ fun getContent l = let val sl = tokenize l
                        else if  (length sl = 1) then hd sl
                        else String.concat (tl (fieldSplit #" " (String.concat (tl sl))))
                    end
+    handle ex => error ("in Tpl_Parser.getContent: "^General.exnMessage ex)
 
 (** cleans line, replaces nl and tabs so that no space char is left out. *)
 fun preprocess s = replaceSafely "@tab" "\t" (replaceSafely "@nl" "\n" (cleanLine s))
@@ -160,7 +161,7 @@ fun preprocess s = replaceSafely "@tab" "\t" (replaceSafely "@nl" "\n" (cleanLin
  * @return a TemplateTree list
  *)
 fun buildTree (SOME line) = 
-    let fun getNode ("text", c)     = TextLeaf c :: buildTree (readNextLine())
+    (let fun getNode ("text", c)     = TextLeaf c :: buildTree (readNextLine())
           | getNode ("foreach", c)  = ForEachNode (c, buildTree (readNextLine()))
                                       :: buildTree (readNextLine())
           | getNode ("if", c)       = IfNode (c, buildTree (readNextLine()))
@@ -179,8 +180,10 @@ fun buildTree (SOME line) =
         val prLine = preprocess line  
     in
         getNode ((getType prLine),(getContent prLine))
-    end
+     end
+     handle ex => error ("in Tpl_Parser.buildTree: error "^General.exnMessage ex))
   | buildTree NONE  = []
+    
 
 
 fun codegen_home _ = getOpt (OS.Process.getEnv "CODEGEN_HOME", su4sml_home()^"src/codegen")
@@ -191,7 +194,9 @@ fun codegen_home _ = getOpt (OS.Process.getEnv "CODEGEN_HOME", su4sml_home()^"sr
  *)
 fun call_cpp file = 
     let val targetFile = OS.FileSys.tmpName () 
+        val _ = info ("tmpfile "^targetFile) 
         val _ = OS.Process.system ("cpp -P -C "^codegen_home()^"/"^file^" "^targetFile)
+        val _ = info ("cpp done") 
     in
         targetFile
     end
