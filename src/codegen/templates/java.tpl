@@ -16,14 +16,14 @@
 	@end
 	@if notInterface
 		@if hasParent
-			extends $classifier_parent$ 
+			@tab extends $classifier_parent$ 
 		@end
 	@end
 	@if hasParentInterfaces
 		@if isInterface
-			extends
+			@tab extends
 		@else
-			implements 
+			@tab implements 
 		@end
 		@foreach parent_interface_list
 			@if last_interface
