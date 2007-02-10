@@ -187,7 +187,7 @@ fun buildTree (SOME line) =
     
 
 
-fun codegen_home _ = getOpt (OS.Process.getEnv "CODEGEN_HOME", su4sml_home()^"/src/codegen")
+fun codegen_home _ = getOpt (OS.Process.getEnv "CODEGEN_HOME", su4sml_home()^"/codegen")
                      
 (** calls the external cpp ( C PreProcessor).
  * writes merged template to a file with extension .tmp instead of .tpl
