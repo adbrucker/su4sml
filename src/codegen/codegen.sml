@@ -27,6 +27,7 @@ OS.FileSys.chDir "../../../src";
 
 structure Codegen = struct 
 
+
  structure Base_Gcg = GCG_Core (Base_Cartridge)
 
  structure CSharp_Gcg = GCG_Core (CSharp_Cartridge(Base_Cartridge))
@@ -57,24 +58,48 @@ structure SecureMova_Gcg = GCG_Core (ComponentUML_Cartridge(Base_Cartridge))
 structure JavaSecure_Gcg = GCG_Core (Java_Cartridge(SecureUML_Cartridge(Base_Cartridge)));
 *)
 
-fun generate xmi_file "base" = 
-	Base_Gcg.generate ( RepParser.readFile xmi_file) "templates/base.tpl"
- |  generate xmi_file "c#"   = 
- 	CSharp_Gcg.generate ( RepParser.readFile xmi_file) "templates/C#.tpl"
- |  generate xmi_file "c#_secure" = 
- 	CSharpSecure_Gcg.generate ( RepParser.readFile xmi_file) "templates/C#_SecureUML.tpl"
- |  generate xmi_file "c#_net1"   = 
- 	CSharp_NET1_Gcg.generate ( RepParser.readFile xmi_file) "templates/C#.tpl"
- |  generate xmi_file "c#_secure_net1" = 
- 	CSharpSecure_NET1_Gcg.generate ( RepParser.readFile xmi_file) "templates/C#_SecureUML.tpl"
- |  generate xmi_file "c#sm" = 
-    CSharpSM_Gcg.generate (RepParser.readFile xmi_file) "templates/C#_SM.tpl"
- |  generate xmi_file "java" = 
-    Java_Gcg.generate (RepParser.readFile xmi_file) "templates/java.tpl"
- |  generate xmi_file "junit" = 
-    Junit_Gcg.generate (RepParser.readFile xmi_file) "templates/junit.tpl"
- |  generate xmi_file "javaocl" = 
-    Java_Ocl_Gcg.generate (RepParser.readFile xmi_file) "templates/java_ocl.tpl"
+datatype language = base | cSharp | cSharpSecure | dotNet | dotNetSecure 
+		  | cSharpSM | java | junit | javaocl | securemova 
+
+fun generateFromModel model base      
+    = Base_Gcg.generate model "templates/base.tpl"
+  | generateFromModel model cSharp        
+    = CSharp_Gcg.generate model "templates/C#.tpl"
+  | generateFromModel model cSharpSecure 
+    = CSharpSecure_Gcg.generate model "templates/C#_SecureUML.tpl"
+  | generateFromModel model dotNet   
+    = CSharp_NET1_Gcg.generate model "templates/C#.tpl"
+  | generateFromModel model dotNetSecure 
+    = CSharpSecure_NET1_Gcg.generate model "templates/C#_SecureUML.tpl"
+  | generateFromModel model cSharpSM      
+    = CSharpSM_Gcg.generate model "templates/C#_SM.tpl"
+  | generateFromModel model java      
+    = Java_Gcg.generate model "templates/java.tpl"
+  | generateFromModel model junit     
+    = Junit_Gcg.generate model "templates/junit.tpl"
+  | generateFromModel model javaocl   
+    = Java_Ocl_Gcg.generate model "templates/java_ocl.tpl"
+  | generateFromModel model securemova 
+    = SecureMova_Gcg.generate model "templates/securemova.tpl"
+
+fun generate xmi_file "base" 
+    = generateFromModel ( RepParser.readFile xmi_file) base
+  |  generate xmi_file "c#" 
+    = generateFromModel ( RepParser.readFile xmi_file) cSharp
+  |  generate xmi_file "c#_secure"  
+    = generateFromModel ( RepParser.readFile xmi_file) cSharpSecure
+  |  generate xmi_file "c#_net1"    
+    = generateFromModel ( RepParser.readFile xmi_file) dotNet
+  |  generate xmi_file "c#_secure_net1" 
+    = generateFromModel ( RepParser.readFile xmi_file) dotNetSecure
+  |  generate xmi_file "c#sm"  
+    = generateFromModel (RepParser.readFile xmi_file) cSharpSM
+  |  generate xmi_file "java"  
+    = generateFromModel (RepParser.readFile xmi_file) java
+  |  generate xmi_file "junit" 
+    = generateFromModel (RepParser.readFile xmi_file) junit
+  |  generate xmi_file "javaocl" 
+    = generateFromModel (RepParser.readFile xmi_file) javaocl
  (*
  |  generate "java_secure" = JavaSecure_Gcg.generate model "templates/java_SecureUML.tpl"
  *)
@@ -82,9 +107,8 @@ fun generate xmi_file "base" =
    Base_Gcg.generate ( RepParser.readFile xmi_file) "templates/maude.tpl"
  | generate xmi_file "maude_secure" = 
    SecureUML_Base_Gcg.generate ( Rep_SecureUML_ComponentUML.readXMI xmi_file) "templates/maude.tpl" *)
- | generate xmi_file "securemova" = 
-   SecureMova_Gcg.generate (RepParser.transformXMI (XmiParser.readFile xmi_file)) 
-                           "templates/securemova.tpl"
+ | generate xmi_file "securemova" 
+   = generateFromModel (RepParser.transformXMI (XmiParser.readFile xmi_file)) securemova
  |  generate _ s = print ("target language unknown : "^s^"\n"^
  			"usage: generate <xmi_file> \"base\" | \"c#\" | \"c#_secure\" | \"c#_net1\" | \"c#_secure_net1\" | \"java\" | \"junit\"\n")
  			
