@@ -29,6 +29,7 @@ end = struct
 open Rep_Core
 open XMI_DataTypes
 open Rep_OclTerm
+open Rep_OclHelper
 open Rep_SecureUML_ComponentUML
      
 (** capitalize the string s.
@@ -40,108 +41,6 @@ fun capitalize s = let val slist = String.explode s
                        String.implode (Char.toUpper (List.hd slist)::List.tl slist)
                    end
 
-(** gives the type of an OCL expression.
- * Should be moved to Rep_Ocl? 
- *)
-fun type_of (Literal                (_,t)) = t
-  | type_of (CollectionLiteral      (_,t)) = t
-  | type_of (If           (_,_,_,_,_,_,t)) = t
-  | type_of (AssociationEndCall (_,_,_,t)) = t
-  | type_of (AttributeCall      (_,_,_,t)) = t
-  | type_of (OperationCall    (_,_,_,_,t)) = t
-  | type_of (OperationWithType(_,_,_,_,t)) = t
-  | type_of (Variable               (_,t)) = t
-  | type_of (Let            (_,_,_,_,_,t)) = t
-  | type_of (Iterate  (_,_,_,_,_,_,_,_,t)) = t
-  | type_of (Iterator     (_,_,_,_,_,_,t)) = t
-
-fun self t = Variable ("self",t)
-fun result t = Variable ("result", t)
-
-
-fun ocl_let var rhs body = Let (var,type_of rhs,rhs,type_of rhs,body,type_of body)
-fun ocl_opcall source f args t  = OperationCall (source, type_of source, f,
-                                                 map (fn x => (x,type_of x)) args,
-                                                 t)
-fun ocl_attcall source att t    = AttributeCall (source, type_of source, att, t)
-fun ocl_aendcall source aend t  = AssociationEndCall (source, type_of source, aend,
-                                                      t)
-fun ocl_opwithtype source f t s = OperationWithType (source, type_of source, f,
-                                                     t, s)
-                                                    
-(* requires type_of t = type_of e *)
-fun ocl_if  cond t e = If (cond, type_of cond, t, type_of t, e, type_of e,
-                           (* FIXME: use the least common supertype of t and e *)
-                           (* or even DummyT?                                  *)
-                           type_of t)
-
-(* requires type_of init = type_of body *)
-fun ocl_iterate var acc init source body = Iterate ([(var,type_of source)],
-                                                    acc, type_of init, init,
-                                                    source, type_of source,
-                                                    body, type_of body,
-                                                    type_of init)
-
-(* Boolean *)
-val ocl_true        = Literal ("true",Boolean) 
-val ocl_false       = Literal ("false",Boolean)
-fun ocl_not     a   = ocl_opcall a ["oclLib", "Boolean", "not"]      []  Boolean
-fun ocl_and     a b = ocl_opcall a ["oclLib", "Boolean", "and"]      [b] Boolean
-fun ocl_or      a b = ocl_opcall a ["oclLib", "Boolean", "or"]       [b] Boolean
-fun ocl_xor     a b = ocl_opcall a ["oclLib", "Boolean", "xor"]      [b] Boolean
-fun ocl_implies a b = ocl_opcall a ["oclLib", "Boolean", "implies"]  [b] Boolean
-
-(* Integer: -,+,-,*,/,abs,div,mod,max,min               *)
-(* Real   : -,+,-,*,/,abs,floor,round,max,min,<,>,<=,>= *)
-(* String : size, concat, substring, toInteger, toReal  *)
-
-(* OclAny *)
-fun ocl_eq a b  = ocl_opcall a ["oclLib", "OclAny", "="] [b] Boolean
-fun ocl_neq a b = ocl_opcall a ["oclLib", "OclAny", "<>"] [b] Boolean
-fun ocl_isNew a = ocl_opcall a ["oclLib", "OclAny", "oclIsNew"] nil Boolean
-fun ocl_isUndefined  a = ocl_opcall a ["oclLib", "OclAny", "oclIsUndefined"] nil Boolean
-fun ocl_allInstances s = ocl_opcall s ["oclLib", "OclAny", "allInstances"] nil 
-                                    (Set (type_of s)) 
-fun ocl_isTypeOf a t = ocl_opwithtype a "oclIsTypeOf" t Boolean
-fun ocl_isKindOf a t = ocl_opwithtype a "oclIsKindOf" t Boolean
-fun ocl_asType   a t = ocl_opwithtype a "oclAsType"   t t
-
-(* Collection: size,includes,excludes,count,includesAll,excludesAll,isEmpty, *)
-(*             notEmpty,sum, product                                         *)
-(* Set       : union_set,union_bag,=,intersection_set,intersection_bag,-,    *)
-(*             including,excluding,symmetricDifference,count,flatten,asSet,  *)
-(*             asOrderedSet,asSequence,asBag                                 *)
-(* OrderedSet: append,prepend,insertAt,subOrderedSet,at,indexOf,first,last   *)
-(* Bag       : =,union_bag,union_set,intersection_bag,intersection_set,      *)
-(*             including,excluding,count,flatten,asBag,asSequence,asSet,     *)
-(*             asOrderedSet                                                  *)
-(* Sequence  : count,=,union,flatten,append,prepend,insertAt,subSequence,    *)
-(*             at,indexOf,first,last,including,excluding,asBag,asSequence,   *)
-(*             asSet,asOrderedSet                                            *)
-
-fun ocl_includes a b = ocl_opcall a ["oclLib", "Collection", "includes"] [b] Boolean
-fun ocl_excludes a b = ocl_opcall a ["oclLib", "Collection", "excludes"] [b] Boolean
-
-fun ocl_modifiedOnly a = ocl_opcall a ["oclLib", "Set", "modifiedOnly"] [] Boolean
-
-(* Collection constructors *)
-
-fun ocl_set xs t = CollectionLiteral (map (fn x => CollectionItem (x, type_of x)) xs, Set t)
-
-
-(* Iterators(Collection): exists,forAll,isUnique,any,one,collect             *)
-(* Iterators(Set)       : select,reject,collectNested,sortedBy               *)
-(* Iterators(Bag)       : select,reject,collectNested,sortedBy               *)
-(* Iterators(Sequence)  : select,reject,collectnested,sortedBy               *)
-
-(* FIXME: automatically take a "fresh" variable that is free in s? *)
-(* But then you need this information in body... *) 
-fun ocl_collect source var body = Iterator ("collect", [(var,type_of source)],
-                                            source, type_of source,
-                                            body, type_of body,
-                                            Bag (type_of body))
-                                  
-fun atpre exp = ocl_opcall exp ["oclLib","OclAny","atPre"] nil (type_of exp)
 
 fun deep_atpre (t as Literal _) = t
   | deep_atpre (t as CollectionLiteral _) = t
