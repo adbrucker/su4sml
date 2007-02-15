@@ -28,11 +28,11 @@ OS.FileSys.chDir "../../../src";
 structure Codegen = struct 
 
 
- structure Base_Gcg = GCG_Core (Base_Cartridge)
+structure Base_Gcg = GCG_Core (Base_Cartridge)
 
- structure CSharp_Gcg = GCG_Core (CSharp_Cartridge(Base_Cartridge))
+structure CSharp_Gcg = GCG_Core (CSharp_Cartridge(Base_Cartridge))
 
- structure CSharpSecure_Gcg 
+structure CSharpSecure_Gcg 
   = GCG_Core (CSharp_Cartridge( ComponentUML_Cartridge(Base_Cartridge))) 
 
 structure CSharp_NET1_Gcg 
@@ -61,62 +61,111 @@ structure JavaSecure_Gcg = GCG_Core (Java_Cartridge(SecureUML_Cartridge(Base_Car
 datatype language = base | cSharp | cSharpSecure | dotNet | dotNetSecure 
 		  | cSharpSM | java | junit | javaocl | securemova 
 
-fun generateFromModel model base      
-    = Base_Gcg.generate model "templates/base.tpl"
-  | generateFromModel model cSharp        
-    = CSharp_Gcg.generate model "templates/C#.tpl"
-  | generateFromModel model cSharpSecure 
-    = CSharpSecure_Gcg.generate model "templates/C#_SecureUML.tpl"
-  | generateFromModel model dotNet   
-    = CSharp_NET1_Gcg.generate model "templates/C#.tpl"
-  | generateFromModel model dotNetSecure 
-    = CSharpSecure_NET1_Gcg.generate model "templates/C#_SecureUML.tpl"
-  | generateFromModel model cSharpSM      
-    = CSharpSM_Gcg.generate model "templates/C#_SM.tpl"
-  | generateFromModel model java      
-    = Java_Gcg.generate model "templates/java.tpl"
-  | generateFromModel model junit     
-    = Junit_Gcg.generate model "templates/junit.tpl"
-  | generateFromModel model javaocl   
-    = Java_Ocl_Gcg.generate model "templates/java_ocl.tpl"
-  | generateFromModel model securemova 
-    = SecureMova_Gcg.generate model "templates/securemova.tpl"
 
-fun generate xmi_file "base" 
-    = generateFromModel ( RepParser.readFile xmi_file) base
-  |  generate xmi_file "c#" 
-    = generateFromModel ( RepParser.readFile xmi_file) cSharp
-  |  generate xmi_file "c#_secure"  
-    = generateFromModel ( RepParser.readFile xmi_file) cSharpSecure
-  |  generate xmi_file "c#_net1"    
-    = generateFromModel ( RepParser.readFile xmi_file) dotNet
-  |  generate xmi_file "c#_secure_net1" 
-    = generateFromModel ( RepParser.readFile xmi_file) dotNetSecure
-  |  generate xmi_file "c#sm"  
-    = generateFromModel (RepParser.readFile xmi_file) cSharpSM
-  |  generate xmi_file "java"  
-    = generateFromModel (RepParser.readFile xmi_file) java
-  |  generate xmi_file "junit" 
-    = generateFromModel (RepParser.readFile xmi_file) junit
-  |  generate xmi_file "javaocl" 
-    = generateFromModel (RepParser.readFile xmi_file) javaocl
- (*
- |  generate "java_secure" = JavaSecure_Gcg.generate model "templates/java_SecureUML.tpl"
- *)
-(* | generate xmi_file "maude" = 
-   Base_Gcg.generate ( RepParser.readFile xmi_file) "templates/maude.tpl"
- | generate xmi_file "maude_secure" = 
-   SecureUML_Base_Gcg.generate ( Rep_SecureUML_ComponentUML.readXMI xmi_file) "templates/maude.tpl" *)
- | generate xmi_file "securemova" 
-   = generateFromModel (RepParser.transformXMI (XmiParser.readFile xmi_file)) securemova
- |  generate _ s = print ("target language unknown : "^s^"\n"^
- 			"usage: generate <xmi_file> \"base\" | \"c#\" | \"c#_secure\" | \"c#_net1\" | \"c#_secure_net1\" | \"java\" | \"junit\"\n")
- 			
+val parse_language =
+ fn "base"           => base
+  | "c#"             => cSharp
+  | "c#_secure"      => cSharpSecure
+  | "c#_net1"        => dotNet
+  | "c#_secure_net1" => dotNetSecure
+  | "c#sm"           => cSharpSM
+  | "java"           => java
+  | "junit"          => junit
+  | "javaocl"        => javaocl
+  | "securemova"     => securemova
 
-fun main (_,[xmi_file,lang]) = (generate xmi_file lang ; OS.Process.success)
-  | main _ = (print ("usage: codegen <xmi_file> <language>\n"^
-  		    "\tlanguage = \"base\" | \"c#\" | \"c#sm\" | \"c#_secure\" | \"c#_net1\" | \"c#_secure_net1\" | \"java\" | \"junit\" | \"maude\" | \"maude_secure\" | \"javaocl\"\n"); OS.Process.success)
+val string_of_languages = "\"base\" \
+                          \| \"c#\" \
+                          \| \"c#sm\" \
+                          \| \"c#_secure\" \
+                          \| \"c#_net1\" \
+                          \| \"c#_secure_net1\" \
+                          \| \"c#sm\" \
+                          \| \"java\" \
+                          \| \"junit\" \
+                          \| \"javaocl\" \
+                          \| \"securemova\""
 
+(* maybe this should also hav a "description" field? *)
+type cartridge = {name     : string,
+                  generator: Rep.Model -> string -> unit, 
+                  parser   : string -> Rep.Model,
+                  template : string}
+
+(* maybe these should be declared by the individual cartridges and simply concatenated here? *) 
+val cartridge_list = [ {name      = "base",
+                        generator = Base_Gcg.generate, 
+                        parser    = RepParser.readFile, 
+                        template  = "base.tpl"},
+                       {name      = "c#",
+                        generator = CSharp_Gcg.generate,
+                        parser    = RepParser.readFile,
+                        template  = "C#.tpl"},
+                       {name      = "c#_secure",
+                        generator = CSharpSecure_Gcg.generate,
+                        parser    = RepParser.readFile,
+                        template  = "C#_SecureUML.tpl"},
+                       {name      = "c#_net1",
+                        generator = CSharp_NET1_Gcg.generate,
+                        parser    = RepParser.readFile,
+                        template  = "C#.pl"},
+                       {name      = "c#_secure_net1",
+                        generator = CSharpSecure_NET1_Gcg.generate,
+                        parser    = RepParser.readFile,
+                        template  = "C#_SecureUML.tpl"},
+                       {name      = "c#sm",
+                        generator = CSharpSM_Gcg.generate,
+                        parser    = RepParser.readFile,
+                        template  = "C#_SM.tpl"},
+                       {name      = "java",
+                        generator = Java_Gcg.generate,
+                        parser    = RepParser.readFile,
+                        template  = "java.tpl"},
+                       {name      = "junit",
+                        generator = Junit_Gcg.generate,
+                        parser    = RepParser.readFile,
+                        template  = "junit.tpl"},
+                       {name      = "javaocl",
+                        generator = Java_Ocl_Gcg.generate,
+                        parser    = RepParser.readFile,
+                        template  = "java_ocl.tpl"},
+                       {name      = "securemova",
+                        generator = SecureMova_Gcg.generate,
+                        parser    = RepParser.transformXMI o XmiParser.readFile,
+                        template  = "securemova.tpl"}]
+
+
+val supported_languages = map #name cartridge_list 
+
+fun is_supported lang = ListEq.includes lang supported_languages
+
+val string_of_languages = String.concatWith " | "  (map (fn s => "\""^s^"\"") supported_languages)
+
+fun cartridge_of lang = Option.valOf (List.find (fn c => #name c = lang) cartridge_list)
+
+                               
+fun generate_from_model model (cart:cartridge) = 
+    let val gen       = #generator cart
+        val template  = "templates/"^(#template cart)
+    in
+        gen model template
+    end
+
+
+fun generate xmi_file lang = let val cartridge = cartridge_of lang
+                                 val model     = (#parser cartridge) xmi_file
+                             in
+                                 generate_from_model model cartridge
+                             end
+
+fun print_usage () = print ("usage: codegen <xmi_file> <language>\n"^
+  		            "\tlanguage = "^string_of_languages ^"\n")
+
+fun main (_,[xmi_file,lang])          = (generate xmi_file lang ; 
+                                         OS.Process.success)
+(*  | main (_,[xmi_file,lang,template]) = (generate_with_template ; OS.Process.success) *)
+  | main _                            = (print_usage; OS.Process.success)
+             
 end
 
 val _ = Codegen.main(CommandLine.name(),CommandLine.arguments())
