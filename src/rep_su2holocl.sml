@@ -34,14 +34,14 @@ open Rep_SecureUML_ComponentUML
      
 (** capitalize the string s.
  * Returns the given string with the first letter changed to upper case
- * Should be moved to a helper library?
+ * Should be moved to a helper library? (StringHandling.sml)
  *)
 fun capitalize s = let val slist = String.explode s
                    in 
                        String.implode (Char.toUpper (List.hd slist)::List.tl slist)
                    end
 
-
+(* can this be expressed more combinatorially? *)
 fun deep_atpre (t as Literal _) = t
   | deep_atpre (t as CollectionLiteral _) = t
   | deep_atpre (t as If (cond,cond_type,then_term,then_type,

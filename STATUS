@@ -70,8 +70,8 @@ Package                | xmi_* does not distinguish between models, packages,
 ModelElement              | Status
 --------------------------+---------------------------------------------------
 Transition                |
-Event                     | no support for TimeEvent and ChangeEvent
-  (SignalEven, CallEvent) |
+Event                     | currently only support for CallEvent.
+  (SignalEvent, CallEvent)| 
 Guard                     | the guard's expression is just a string
 PseudoStateVars           |
 StateVertex               | no support for StubState's
@@ -154,7 +154,7 @@ AttributeCallExp         | ok
 OperationCallExp         | ok
 OperationWithTypeCallExp | ok
 LetExp:                  | ok
-IteratorExp              | ok
+IteratorExp              | ok 
 IterateExp               | ok
 PrimitiveLiteralExp      | ok (called "LiteralExp" in current code)
 CollectionLiteralExp     | only support for empty collections,

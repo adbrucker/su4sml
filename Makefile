@@ -21,5 +21,5 @@ repsecure_parser:
 	ml-build src/su4sml.cm Rep_SecureUML_ComponentUML.test src/repsecure_parser
 
 codegen: 
-	ml-build src/codegen/codegen.cm Codegen.main src/codegen
+	ml-build src/codegen/codegen.cm Codegen.main codegen
 

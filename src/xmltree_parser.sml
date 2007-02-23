@@ -42,15 +42,14 @@ fun readFile filename =
 	(* how to do the following in a clean/portable way? *)
 	fun read_dtd dtd = 
 	    (OS.FileSys.chDir (su4sml_home());
-	     (* dummy check to see if the file exists...*)	     
-	     OS.FileSys.fileSize "UML15OCL.xmi" ;
-	     (Parser.parseDocument 
-		  (SOME (Uri.String2Uri ("file:UML15OCL.xmi")))
-		  (SOME dtd) (dtd,nil,nil)
-	      handle ex => (error_msg ("Error while reading file UML15OCL.xmi: "^
-                                       General.exnMessage ex);
-                            raise ex));
-	     OS.FileSys.chDir currentDir )
+	     (* check to see if the DTD file exists. *)
+	     if OS.FileSys.access ("UML15OCL.xmi",[]) then 
+	         (Parser.parseDocument 
+		      (SOME (Uri.String2Uri ("file:UML15OCL.xmi")))
+		      (SOME dtd) (dtd,nil,nil))
+	     else error ("Error while reading file UML15OCL.xmi: "^
+                         "no such file or directory");
+	     OS.FileSys.chDir currentDir)
 
 	fun read_file dtd filename = 
 	    if filename = "-" 
