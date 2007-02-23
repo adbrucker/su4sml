@@ -70,85 +70,100 @@ type cartridge = {lang        : string, (* identifier (for input)         *)
 
 (* maybe these should be declared by the individual cartridges and simply concatenated here? *) 
 (* FIXME: add long descriptions *)
-val cartridge_list = [ {lang        = "base",
-                        name        = "Base Cartridge",
-                        description = "",
-                        recommended = false,
-                        generator   = Base_Gcg.generate, 
-                        parser      = RepParser.readFile, 
-                        template    = "base.tpl"},
-                       {lang        = "c#",
-                        name        = "C# Cartridge",
-                        description = "",
-                        recommended = true,
-                        generator   = CSharp_Gcg.generate,
-                        parser      = RepParser.readFile,
-                        template    = "C#.tpl"},
-                       {lang        = "c#_secure",
-                        name        = "C# SecureUML Cartridge",
-                        description = "",
-                        recommended = true,
-                        generator   = CSharpSecure_Gcg.generate,
-                        parser      = RepParser.readFile,
-                        template    = "C#_SecureUML.tpl"},
-                       {lang        = "c#_net1",
-                        name        = "C# .NET1 Cartridge",
-                        description = "",
-                        recommended = true,
-                        generator   = CSharp_NET1_Gcg.generate,
-                        parser      = RepParser.readFile,
-                        template    = "C#.pl"},
-                       {lang        = "c#_net1_secure",
-                        name        = "C# .NET1 SecureUML Cartridge",
-                        description = "",
-                        recommended = true,
-                        generator   = CSharpSecure_NET1_Gcg.generate,
-                        parser      = RepParser.readFile,
-                        template    = "C#_SecureUML.tpl"},
-                       {lang        = "c#_sm",
-                        name        = "C# StateMachine Cartridge",
-                        description = "",
-                        recommended = true,
-                        generator   = CSharpSM_Gcg.generate,
-                        parser      = RepParser.readFile,
-                        template    = "C#_SM.tpl"},
-                       {lang        = "java",
-                        name        = "Java Cartridge",
-                        description = "",
-                        recommended = true,
-                        generator   = Java_Gcg.generate,
-                        parser      = RepParser.readFile,
-                        template    = "java.tpl"},
-                       {lang        = "junit",
-                        name        = "Junit Cartridge",
-                        description = "",
-                        recommended = true,
-                        generator   = Junit_Gcg.generate,
-                        parser      = RepParser.readFile,
-                        template    = "junit.tpl"},
-                       {lang        = "java_ocl",
-                        name        = "Java OCL Cartridge",
-                        description = "",
-                        recommended = true,
-                        generator   = Java_Ocl_Gcg.generate,
-                        parser      = RepParser.readFile,
-                        template    = "java_ocl.tpl"},
-                       {lang        = "securemova",
-                        name        = "SecureMOVA Cartridge",
-                        description = "",
-                        recommended = false,
-                        generator   = SecureMova_Gcg.generate,
-                        parser      = RepParser.transformXMI o XmiParser.readFile,
-                        template    = "securemova.tpl"}]:cartridge list
+val supported_cartridges = [ 
+    (* Base Cartridge *)
+    {lang        = "base",
+     name        = "Base Cartridge",
+     description = "",
+     recommended = false,
+     generator   = Base_Gcg.generate, 
+     parser      = RepParser.readFile, 
+     template    = "base.tpl"},
+    (* C# Cartridge *)
+    {lang        = "c#",
+     name        = "C# Cartridge",
+     description = "",
+     recommended = true,
+     generator   = CSharp_Gcg.generate,
+     parser      = RepParser.readFile,
+     template    = "C#.tpl"},
+    (* C# SecureUML Cartridge *)
+    {lang        = "c#_secure",
+     name        = "C# SecureUML Cartridge",
+     description = "",
+     recommended = true,
+     generator   = CSharpSecure_Gcg.generate,
+     parser      = RepParser.readFile,
+     template    = "C#_SecureUML.tpl"},
+    (* C# .NET1 Cartridge *)
+    {lang        = "c#_net1",
+     name        = "C# .NET1 Cartridge",
+     description = "",
+     recommended = true,
+     generator   = CSharp_NET1_Gcg.generate,
+     parser      = RepParser.readFile,
+     template    = "C#.pl"},
+    (* C# .NET1 SecureUML Cartridge *)
+    {lang        = "c#_net1_secure",
+     name        = "C# .NET1 SecureUML Cartridge",
+     description = "",
+     recommended = true,
+     generator   = CSharpSecure_NET1_Gcg.generate,
+     parser      = RepParser.readFile,
+     template    = "C#_SecureUML.tpl"},
+    (* C# StateMachine Cartridge *)
+    {lang        = "c#_sm",
+     name        = "C# StateMachine Cartridge",
+     description = "",
+     recommended = true,
+     generator   = CSharpSM_Gcg.generate,
+     parser      = RepParser.readFile,
+     template    = "C#_SM.tpl"},
+    (* Java Cartridge *)
+    {lang        = "java",
+     name        = "Java Cartridge",
+     description = "",
+     recommended = true,
+     generator   = Java_Gcg.generate,
+     parser      = RepParser.readFile,
+     template    = "java.tpl"},
+    (* Junit Cartridge *)
+    {lang        = "junit",
+     name        = "Junit Cartridge",
+     description = "",
+     recommended = true,
+     generator   = Junit_Gcg.generate,
+     parser      = RepParser.readFile,
+     template    = "junit.tpl"},
+    (* Java OCL Cartridge *)
+    {lang        = "java_ocl",
+     name        = "Java OCL Cartridge",
+     description = "",
+     recommended = true,
+     generator   = Java_Ocl_Gcg.generate,
+     parser      = RepParser.readFile,
+     template    = "java_ocl.tpl"},
+    (* SecureMOVA Cartridge *)
+    {lang        = "securemova",
+     name        = "SecureMOVA Cartridge",
+     description = "",
+     recommended = false,
+     generator   = SecureMova_Gcg.generate,
+     parser      = RepParser.transformXMI o XmiParser.readFile,
+     template    = "securemova.tpl"}]:cartridge list
 
 
-val supported_languages   = map #lang cartridge_list 
-val recommended_languages = map #lang (List.filter #recommended cartridge_list)
-val string_of_languages   = String.concatWith " | " recommended_languages
+val recommended_cartridges = List.filter #recommended supported_cartridges 
 
-fun is_supported lang = ListEq.includes supported_languages lang
+val supported_languages    = map #lang supported_cartridges 
+val recommended_languages  = map #lang recommended_cartridges
 
-fun cartridge_of lang = Option.valOf (List.find (fn c => #lang c = lang) cartridge_list)
+fun is_supported lang      = ListEq.includes supported_languages   lang
+fun is_recommended lang    = ListEq.includes recommended_languages lang
+
+                            
+
+fun cartridge_of lang = Option.valOf (List.find (fn c => #lang c = lang) supported_cartridges)
 
 fun generateWithTemplate xmi_file lang template =
     let val cart  = cartridge_of lang 
@@ -172,8 +187,17 @@ fun generateWithCart xmi_file (cart:cartridge) =
 fun generateFromModel model    lang = genFromModelWithCart model    (cartridge_of lang)
 fun generate          xmi_file lang = generateWithCart     xmi_file (cartridge_of lang)
 
-fun print_usage () = print ("usage: codegen <xmi_file> <language>\n"^
-  		            "\tlanguage = "^string_of_languages ^"\n")
+fun print_usage () = let val language_names      = map #name recommended_cartridges
+                         val string_of_languages = String.concatWith " | " recommended_languages
+                         val desc_of_languages   = map (fn (l,n) => l^":\t"^n)
+                                                       (ListPair.zip (recommended_languages,
+                                                                      language_names))
+                     in 
+                         print ("usage: codegen <xmi_file> <language>\n"^
+  		                "where <language> = "^string_of_languages ^"\n\n"^
+                                "supported languges are:\n"^
+                                String.concatWith "\n" desc_of_languages^"\n")
+                     end
 
 fun main (_,[xmi_file,lang])          = ((if   is_supported lang 
                                           then generate xmi_file lang
