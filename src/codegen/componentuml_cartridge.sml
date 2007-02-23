@@ -7,10 +7,10 @@ structure Design = SuperCart.Security.Design
 open library
 
 (* TODO: fill out *)
-type environment = { curPermissionList: SuperCart.Security.Permission list option, 
-                     curPermission: SuperCart.Security.Permission option,
-                     curEntity: Rep.Classifier option,
-                     extension: SuperCart.environment}
+type environment = { curPermissionList : SuperCart.Security.Permission list option, 
+                     curPermission     : SuperCart.Security.Permission option,
+                     curEntity         : Rep.Classifier option,
+                     extension         : SuperCart.environment}
 type Model = SuperCart.Model
              
 (* unpack : environment -> SuperCart.environment *)
@@ -19,24 +19,23 @@ fun unpack (env : environment) = #extension env
 (* pack : environment -> SuperCart.environment -> environment *)
 fun pack (env: environment) (new_env : SuperCart.environment) = 
     { curPermissionList = #curPermissionList env,
-      curPermission = #curPermission env,
-      curEntity = #curEntity env,
-      extension = new_env} 
+      curPermission     = #curPermission env,
+      curEntity         = #curEntity env,
+      extension         = new_env} 
     
 fun initEnv model = { curPermissionList = NONE,
-                      curPermission = NONE,
-                      curEntity = NONE,
-                      extension = SuperCart.initEnv model}
+                      curPermission     = NONE,
+                      curEntity         = NONE,
+                      extension         = SuperCart.initEnv model}
                     
 (* fun getModel (env : environment) = SuperCart.getModel (unpack env) *)
-fun curClassifier (env : environment) = SuperCart.curClassifier (unpack env)
-fun curAttribute (env : environment) = SuperCart.curAttribute (unpack env)
-fun curOperation (env : environment) = SuperCart.curOperation (unpack env)
-fun curArgument (env : environment) = SuperCart.curArgument (unpack env)
-fun curAssociationEnd env = SuperCart.curAssociationEnd (unpack env)
+fun curClassifier     (env:environment) = SuperCart.curClassifier        (unpack env)
+fun curAttribute      (env:environment) = SuperCart.curAttribute         (unpack env)
+fun curOperation      (env:environment) = SuperCart.curOperation         (unpack env)
+fun curArgument       (env:environment) = SuperCart.curArgument          (unpack env)
+fun curAssociationEnd (env:environment) = SuperCart.curAssociationEnd    (unpack env)
 
-
-fun curClassifier' (env : environment) = valOf (SuperCart.curClassifier (unpack env))
+fun curClassifier'    (env:environment) = valOf (SuperCart.curClassifier (unpack env))
 									  
 (** 
  * compute the atomic actions that are possible on the currently "active" 
@@ -60,6 +59,8 @@ fun atomic_actions_from_context env =
                                                   (Option.valOf (curClassifier env)))
         in [make_action "create", make_action "delete"] end
     else raise Fail "no current resource"
+
+(* FIXME: i also need a function composite_actions_from_context *)
          
 (* FIX *)
 fun permissions_for_action env act = 
