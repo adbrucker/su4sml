@@ -150,17 +150,27 @@ fun is_supported lang = ListEq.includes supported_languages lang
 
 fun cartridge_of lang = Option.valOf (List.find (fn c => #lang c = lang) cartridge_list)
 
-                               
-fun generateFromModel model lang =
-    let val cart      = cartridge_of lang 
-        val gen       = #generator (cartridge_of lang)
-        val template  = "templates/"^(#template cart)
+fun generateWithTemplate xmi_file lang template =
+    let val cart  = cartridge_of lang 
+        val gen   = #generator cart
+        val model = (#parser cart) xmi_file
     in
         gen model template
     end
+                               
 
-    
-fun generate xmi_file lang = generateFromModel ((#parser (cartridge_of lang)) xmi_file) lang
+fun genFromModelWithCart model (cart:cartridge) =
+    let val gen = #generator cart
+        val template =  "templates/"^(#template cart)
+    in 
+        gen model template
+    end
+
+fun generateWithCart xmi_file (cart:cartridge) = 
+    genFromModelWithCart ((#parser cart) xmi_file) cart
+
+fun generateFromModel model    lang = genFromModelWithCart model    (cartridge_of lang)
+fun generate          xmi_file lang = generateWithCart     xmi_file (cartridge_of lang)
 
 fun print_usage () = print ("usage: codegen <xmi_file> <language>\n"^
   		            "\tlanguage = "^string_of_languages ^"\n")
@@ -169,7 +179,10 @@ fun main (_,[xmi_file,lang])          = ((if   is_supported lang
                                           then generate xmi_file lang
                                           else print_usage ());
                                          OS.Process.success)
-  (*  | main (_,[xmi_file,lang,template]) = (generate_with_template ; OS.Process.success) *)
+  | main (_,[xmi_file,lang,template]) = ((if   is_supported lang 
+                                          then generateWithTemplate xmi_file lang template
+                                          else print_usage ());
+                                         OS.Process.success) 
   | main _                            = (print_usage(); OS.Process.success)
                                         
 end
