@@ -155,7 +155,6 @@ fun mkRole (C as Rep.Class c) = Rep.string_of_path (Rep.name_of C)
 (* FIXME: handle groups also *)
 fun mkSubject (C as Rep.Class c) = User (Rep.string_of_path (Rep.name_of C))
   | mkSubject _                  = error ("in mkSubject: argument is not a class")
-
 fun mkPermission cs (c as Rep.Class _) = 
     let val classifiers = (Rep.connected_classifiers_of c cs)
         val role_classes = List.filter (classifier_has_stereotype "secuml.role") 
@@ -195,17 +194,38 @@ fun mkSubjectAssignment cs (c as (Rep.Class _)) =
         (mkSubject c, map mkRole classifiers)
     end
                        
+fun update_aends (Rep.Class { name, parent,	attributes,	operations,	associationends,	   
+							  invariant, stereotypes, interfaces, thyname, activity_graphs})
+				 aends = Rep.Class {name=name, parent=parent, attributes=attributes,
+									operations=operations, associationends=aends,
+									invariant=invariant, stereotypes=stereotypes,
+									interfaces=interfaces, thyname=thyname,
+									activity_graphs=activity_graphs}
+	
+fun assocConnectsToSecureUml cs (a:Rep.associationend) = 
+	classifier_has_no_stereotype ["secuml.permission",
+								  "secuml.role",
+								  "secuml.user"]
+								 (Rep.class_of (Rep_OclType.path_of_OclType (#aend_type a)) cs)
+
+(** remove aends from classifiers to permissions and roles. *)
+fun removeSecureUmlAends (cs:Rep.Classifier list) ((Rep.Class c):Rep.Classifier) = 
+	update_aends (Rep.Class c) (List.filter (assocConnectsToSecureUml cs)
+								(#associationends c))
+
 (** parse a list of classifiers accoriding to the SecureUML profile.
  * removes the classes with SecureUML stereotypes. 
  *)
 fun parse (cs:Rep_Core.Classifier list) = 
     let val _ = info "parsing  security configuration"
     in 
-        (List.filter (classifier_has_no_stereotype ["secuml.permission",
-                                                    "secuml.role",
-                                                    "secuml.subject",
-                                                    "secuml.actiontype"]) 
-                     cs,
+        (
+		 map (removeSecureUmlAends cs)
+			 (List.filter (classifier_has_no_stereotype ["secuml.permission",
+														 "secuml.role",
+														 "secuml.subject",
+														 "secuml.actiontype"]) 
+						  cs),
          { config_type = "SecureUML",
            permissions = map (mkPermission cs) (filter_permission cs),
            subjects    = map mkSubject (filter_subject cs),
