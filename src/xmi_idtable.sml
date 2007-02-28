@@ -373,6 +373,9 @@ fun class_taggedvalues_of table (XMI.Class c) =
   | class_taggedvalues_of table (XMI.AssociationClass c) = 
     map (fn x => (find_tagdefinition table (#tag_type x),#dataValue x)) 
 	(#taggedValue c)
+  | class_taggedvalues_of table (XMI.Primitive c) =
+    map (fn x => (find_tagdefinition table (#tag_type x),#dataValue x))
+        (#taggedValue c)
   | class_taggedvalues_of table _ = error "in class_taggedvalues_of: \
                                           \argument doesn't support tagged values"
 	
@@ -384,6 +387,9 @@ fun class_taggedvalue_of table tag (XMI.Class c) =
   | class_taggedvalue_of table tag (XMI.AssociationClass c) =
     Option.map #2 ((List.find (fn (x,y) => x=tag)) 
 		       (class_taggedvalues_of table (XMI.AssociationClass c)))
+  | class_taggedvalue_of table tag (XMI.Primitive c) =
+    Option.map #2 ((List.find (fn (x,y) => x=tag))
+                       (class_taggedvalues_of table (XMI.Primitive c)))
   | class_taggedvalue_of table tag _ = error "in class_taggedvalues_of: \
                                              \argument doesn't support tagged values"
 	

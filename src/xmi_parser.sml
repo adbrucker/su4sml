@@ -819,15 +819,17 @@ fun mkAssociationClass atts tree
 fun mkPrimitive atts tree
   = XMI.Primitive 
         { xmiid      = atts |> xmiid,
-	  name       = atts |> name,
-	  operations = tree |> get "UML:Classifier.feature"
-			    |> filter "UML:Operation"
+		  name       = atts |> name,
+		  operations = tree |> get "UML:Classifier.feature"
+							|> filter "UML:Operation"
                             |> map mkOperation,
-	  generalizations = tree |> get "UML:GeneralizableElement.generalization" 
+		  generalizations = tree |> get "UML:GeneralizableElement.generalization" 
                                  |> map xmiidref,
-	  invariant       = tree |> get "UML:ModelElement.constraint" 
-				 |> map xmiidref
-	}
+		  invariant       = tree |> get "UML:ModelElement.constraint" 
+								 |> map xmiidref,
+          taggedValue     = tree |> get "UML:ModelElement.taggedValue"
+                                 |> map mkTaggedValue
+		  }
 (* handle IllFormed msg => error ("in mkPrimitive: "^msg)*)
 
 fun mkInterface atts tree

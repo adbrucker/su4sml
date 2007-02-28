@@ -185,7 +185,9 @@ type Primitive = { xmiid:           string,
 		   name:            string,
 		   operations:      Operation list,
 		   generalizations: string list,
-		   invariant:       string list}
+		   invariant:       string list,
+		   taggedValue: TaggedValue list
+		   }
 
 
 (* from UML 1.5 Core: --------------------------------------------------------

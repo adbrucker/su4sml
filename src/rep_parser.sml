@@ -386,20 +386,20 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 		   thyname = NONE}
     end
   | transform_classifier t (XMI.Primitive {xmiid,name,generalizations,
-					   operations,invariant}) =
+										   operations,invariant,taggedValue}) =
     let val checked_invariants = filter_exists t invariant
     in
         Rep.Primitive {name = (* case *) find_classifier_type t xmiid (*of Rep_OclType.Classifier x => x
-								         | _ => raise Option*) , 
-		       parent = NONE,    (* FIX *)
-		       operations = map (transform_operation t) operations,
-		       associationends = map (transform_aend t) 
-					     (find_aends t xmiid), 
-		       invariant = map ((transform_constraint t) o 
-					(find_constraint t)) checked_invariants,
-		       stereotypes = nil, (*FIX *)
-		       interfaces = nil, (* FIX *)
-		       thyname = NONE}
+																		 | _ => raise Option*) , 
+					   parent = NONE,    (* FIX *)
+					   operations = map (transform_operation t) operations,
+					   associationends = map (transform_aend t) 
+											 (find_aends t xmiid), 
+											 invariant = map ((transform_constraint t) o 
+															  (find_constraint t)) checked_invariants,
+											 stereotypes = nil, (*FIX *)
+											 interfaces = nil, (* FIX *)
+											 thyname = NONE}
     end
   | transform_classifier t (XMI.Enumeration {xmiid,name,generalizations,
 					     operations,literals,invariant}) =
@@ -474,7 +474,8 @@ fun transformXMI ({classifiers,constraints,packages,
                                                                   xmiid="DummyT",
                                                                   operations=[],
                                                                   generalizations=[],
-                                                                  invariant=[]},
+                                                                  invariant=[],
+																  taggedValue=[]},
                                                     nil))
 	(* for some reasons, there are model elements outside of the top-level *) 
 	(* model the xmi-file. So we have to handle them here seperately:      *)
