@@ -24,7 +24,6 @@
  ******************************************************************************)
 
 use "library.sml";
-val ml_system = "polyml";
 
 
 (* ****************************************************** *)
@@ -37,6 +36,8 @@ OS.FileSys.chDir "../../../src";
 OS.FileSys.chDir "compiler";
 
 use "compiler_ext.sig";
+
+val ml_system  = getOpt (OS.Process.getEnv "ML_SYSTEM", "polyml")
 
 val use_wrapper = if (String.isSubstring "polyml" ml_system)
 		  then (use "../contrib/HashTable.sml"; "polyml.sml")
