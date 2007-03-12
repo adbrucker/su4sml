@@ -1,0 +1,13 @@
+[getSorted]
+resulttype = int[];
+setup = setup1();
+{
+    checker = resultCheck1();
+}
+
+[getInvalidSorted]
+resulttype = int[];
+setup = setup1();
+{
+    checker = resultCheck1();
+}

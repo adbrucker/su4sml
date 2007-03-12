@@ -1,0 +1,15 @@
+[getValue]
+resulttype = String;
+setup = setup1();
+{
+    result = "Hallo, Welt!";
+    checker = EQUALS;
+}
+
+[getValue]
+resulttype = String;
+setup = setup2();
+{
+    result = "Hello, World!";
+    checker = EQUALS;
+}

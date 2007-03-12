@@ -1,0 +1,17 @@
+[max]
+resulttype = int;
+inputtypes = int[];
+{
+    input = getInput1();
+    result = 9;
+    checker = EQUALS;
+}
+{
+    input = getInput1();
+    result = 0;
+    checker = NOTEQUAL;
+}
+{
+    input = getInput2();
+    result = java.lang.Exception;
+}
