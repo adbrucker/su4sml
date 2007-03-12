@@ -154,7 +154,7 @@ fun getContent l = let val sl = tokenize l
     handle ex => error ("in Tpl_Parser.getContent: "^General.exnMessage ex)
 
 (** cleans line, replaces nl and tabs so that no space char is left out. *)
-fun preprocess s = replaceSafely "@tab" "\t" (replaceSafely "@nl" "\n" (cleanLine s))
+fun preprocess s = replaceSafely "@spc" " " (replaceSafely "@tab" "\t" (replaceSafely "@nl" "\n" (cleanLine s)))
 
 
 (**

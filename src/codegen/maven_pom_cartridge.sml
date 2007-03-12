@@ -1,10 +1,10 @@
 (*****************************************************************************
- *          su4sml GCG - Generic Code Generator                          
+ *          su4sml - a SecureUML repository for SML              
  *                                                                            
- * ROOT.ML - main "ROOT.ML" file for su4sml-GCG
- * Copyright (C) 2005 Raphael Eidenbenz <eraphael@student.ethz.ch>
+ * maven_pom_cartridge.sml - a maven POM cartridge for gcg
+ * Copyright (C) 2007 Manfred Stock
  *                                                                            
- * This file is part of su4sml-gcg.                                              
+ * This file is part of su4sml.                                              
  *                                                                            
  * su4sml is free software; you can redistribute it and/or modify it under   
  * the terms of the GNU General Public License as published by the Free       
@@ -20,47 +20,37 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,    
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.                  
  ******************************************************************************)
+ 
+
+functor Maven_POM_Cartridge(SuperCart : BASE_CARTRIDGE) : BASE_CARTRIDGE =
+struct 
+
+type Model = SuperCart.Model
+			 
+type environment = { extension : SuperCart.environment }
+
+fun initEnv model = { extension = SuperCart.initEnv model } : environment
+fun unpack  (env : environment) = #extension env
+fun pack superEnv = {extension = superEnv} : environment
+
+(* for BASE_CARTRIDGE *)
+fun curClassifier env = SuperCart.curClassifier (unpack env)
+fun curArgument env = SuperCart.curArgument (unpack env)
+fun curOperation env = SuperCart.curOperation (unpack env)
+fun curAttribute env = SuperCart.curAttribute (unpack env)
+fun curAssociationEnd env = SuperCart.curAssociationEnd (unpack env)
+
+fun curClassifier' env = Option.valOf(curClassifier env)
+fun curOperation' env = Option.valOf(curOperation env)
 
 
-use "gcg_helper.sml";
-use "stringHandling.sml";
-(*use "examples/simple.sml"; *)
-(*use "examples/ebank.sml";*)
+(* any special variables? *)
+fun lookup (env : environment) s =  SuperCart.lookup (unpack env) s
 
-use "tpl_parser.sml";
+(* any special predicates?*) 
+fun test (env : environment)  s = SuperCart.test (unpack env) s
 
-(* Base *)
-use "cartridge.sig";
-use "base_cartridge.sml";
+(* any special lists? *)
+fun foreach listType (env : environment) =  map pack (SuperCart.foreach listType (unpack env))
 
-(* C# *)
-use "c#_cartridge.sml";
-use "c#_net1_cartridge.sml";
-
-(* SecureUML *)
-use "design_cartridge.sig";
-use "secureuml_cartridge.sml";
-use "componentuml_cartridge.sml";
-
-
-use "java_cartridge.sml";
-use "junit_cartridge.sml"; 
-use "maven_pom_cartridge.sml"; 
-
-
-(* Statemachines *)
-use "SM_helper.sml";
-use "stateMachineTypes.sml";
-use "stateMachine.sml";
-use "c#sm_cartridge.sig";
-use "c#sm_cartridge.sml";
-
-use "gcg_core.sig";
-use "gcg_core.sml";
-
-use "codegen.sml";
- 			
-
-
-
-
+end

@@ -54,10 +54,11 @@ structure Java_Ocl_Gcg = GCG_Core (Java_Cartridge(Base_Cartridge))
 
 structure SecureMova_Gcg = GCG_Core (ComponentUML_Cartridge(Base_Cartridge))
 
+ structure Maven_POM_Gcg = GCG_Core (Maven_POM_Cartridge(Base_Cartridge))
+
 (*
 structure JavaSecure_Gcg = GCG_Core (Java_Cartridge(SecureUML_Cartridge(Base_Cartridge)));
 *)
-
 
 (* maybe this should also hav a "description" field? *)
 type cartridge = {lang        : string, (* identifier (for input)         *)

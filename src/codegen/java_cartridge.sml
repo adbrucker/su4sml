@@ -70,10 +70,18 @@ fun super2Native "ClassifierScope" = "static"
  |  super2Native s =  ( if ((String.extract (s,0,SOME 8)) = "Sequence")
  			then  (super2Native (String.substring(s,9,size s -10)))^"[]"
  			else if ((String.extract (s,0,SOME 3)) = "Set")
- 	 		then "System.Collections.Generic.List<"
+ 	 		then "java.util.List<"
  				^(super2Native (String.substring(s,4,size s - 5)))^">"
  			else s )
  	handle Subscript => s
+
+(* Get a stub for the return value of an operation - eg. null for objects *)
+fun rvstub operation = case (Rep.result_of_op operation) of 
+			   Integer => "0"
+			 | Real    => "0"
+			 | String  => "\"\""
+			 | Boolean => "false"
+			 | _       => "null"
 
 (*	lookup  environment -> string -> string			
  * overrides some lookup entries of the base cartridge 
@@ -90,9 +98,10 @@ fun lookup (env : environment) "attribute_name_small_letter"
   | lookup (env : environment) (s as "operation_scope")	= super2Native (SuperCart.lookup (unpack env) s)
   | lookup (env : environment) (s as "argument_type") 	= super2Native (SuperCart.lookup (unpack env) s)
   | lookup (env : environment) (s as "parent_interface") = List.last (Option.valOf (#curParent env))
-  | lookup (env : environment) (s as "preconditions") = Ocl2DresdenJava.precondString env "this" (curOperation' env)
-  | lookup (env : environment) (s as "postconditions") = Ocl2DresdenJava.postcondString env "this" (curOperation' env)
-  | lookup (env : environment) (s as "invariants") = Ocl2DresdenJava.invString env "this" (curClassifier' env)
+  | lookup (env : environment) (s as "preconditions") = Ocl2DresdenJava.precondString env "this" (curOperation' env) "OclException"
+  | lookup (env : environment) (s as "postconditions") = Ocl2DresdenJava.postcondString env "this" (curOperation' env) "OclException"
+  | lookup (env : environment) (s as "invariants") = Ocl2DresdenJava.invString env "this" (curClassifier' env) "OclException"
+  | lookup (env : environment) (s as "returnvalue_stub") = rvstub (curOperation' env)
   | lookup (env : environment) s =  SuperCart.lookup (unpack env) s
 
 

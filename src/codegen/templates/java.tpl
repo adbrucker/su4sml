@@ -1,5 +1,4 @@
-@// Example template for Java
-@// assumption: all classifiers are classes
+@// Simple template for Java 
 
 @foreach nonprimitive_classifier_list
 	@openfileifnotexists generated/src/main/java/$classifier_package_path$/$classifier_name$.java
@@ -16,14 +15,14 @@
 	@end
 	@if notInterface
 		@if hasParent
-			@tab extends $classifier_parent$ 
+			@spcextends $classifier_parent$ 
 		@end
 	@end
 	@if hasParentInterfaces
 		@if isInterface
-			@tab extends
+			@spcextends
 		@else
-			@tab implements 
+			@spcimplements 
 		@end
 		@foreach parent_interface_list
 			@if last_interface
@@ -33,27 +32,32 @@
 			@end
 		@end
 	@end
-	{
+	@spc{
 	@if notInterface
 		@foreach attribute_list
-			 @nl @tab $attribute_visibility$ $attribute_type$ $attribute_name$ ;
+			 @nl@tab$attribute_visibility$ $attribute_type$ $attribute_name$;
 		@end
+		@nl
 	@end
 	@foreach operation_list
-		@nl @tab  $operation_visibility$ $operation_result_type$ $operation_name$(
+		@nl@tab$operation_visibility$ $operation_result_type$ $operation_name$(
 		@foreach argument_list
 			@if last_argument
 				$argument_type$ $argument_name$
 			@else
-				$argument_type$ $argument_name$,
+				$argument_type$ $argument_name$,@spc
 			@end
 		@end
 		)
 		@if notInterface	
-	    	    	{@nl@nl@tab} 
+	    	    	@spc{@nl
+			@if operation_non_void
+				@tab@tabreturn $returnvalue_stub$;
+			@end
+			@nl@tab}@nl
 		@else
 			;
 		@end
 	@end
-	@nl }
+	@nl}
 @end 

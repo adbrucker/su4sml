@@ -52,9 +52,9 @@ fun curOperation' env = Option.valOf(curOperation env)
 
 
 (* any special variables? *)
-fun lookup (env : environment) (s as "preconditions") = Ocl2DresdenJava.precondString env "testObject" (curOperation' env)
-  | lookup (env : environment) (s as "postconditions") = Ocl2DresdenJava.postcondString env "testObject" (curOperation' env)
-  | lookup (env : environment) (s as "invariants") = Ocl2DresdenJava.invString env "testObject" (curClassifier' env)
+fun lookup (env : environment) (s as "preconditions") = Ocl2DresdenJava.precondString env "testObject" (curOperation' env) "PreconditionFailedException"
+  | lookup (env : environment) (s as "postconditions") = Ocl2DresdenJava.postcondString env "testObject" (curOperation' env) "PostconditionFailedException"
+  | lookup (env : environment) (s as "invariants") = Ocl2DresdenJava.invString env "testObject" (curClassifier' env) "InvariantFailedException"
   | lookup (env : environment) s =  SuperCart.lookup (unpack env) s
 
 (* any special predicates?*) 

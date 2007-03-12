@@ -6,7 +6,7 @@
   (list  
    )
   (list
-   (list "@nl\\|@tab"
+   (list "@nl\\|@tab\\|@spc"
 	 '(0 font-lock-builtin-face))
    (list "\\W\\(@if\\|@elsif\\)[ \t]*\\([a-zA-Z_-]*\\)\\W"
 	 '(1 font-lock-keyword-face)

@@ -82,7 +82,10 @@ fun ocl2string show_types oclterm =
 	(* Literal                            *)
 	(**************************************)
 	(* OCL Boolean                        *)
-	Literal (lit, typ)          => if show_types 
+	Literal (s, String)         => if show_types 
+				       then "(\""^s^"\":"^(string_of_OclType String)^")" 
+				       else "\""^s^"\""
+      | Literal (lit, typ)          => if show_types 
 					then "("^lit^":"^(string_of_OclType typ)^")" 
 					else lit
   | CollectionLiteral (parts, typ as Bag x) => "Bag{"^(collection_part_list show_types parts)^"}" 
@@ -100,8 +103,8 @@ fun ocl2string show_types oclterm =
 								  ^" else "^(ocl2string show_types eterm)^" endif"
       | AssociationEndCall(src,styp,path,ptyp)    => if show_types
 						     then "(("^(ocl2string show_types src)^":"^(string_of_OclType styp)^")."
-							  ^(string_of_path path)^":"^(string_of_OclType ptyp)^")"
-						     else (ocl2string show_types src)^"."^(string_of_path path)
+							  ^(hd (rev path))^":"^(string_of_OclType ptyp)^")"
+						     else (ocl2string show_types src)^"."^(hd (rev path))
       | AttributeCall(src,styp,path,ptyp)         => if show_types
 						     then "(("^(ocl2string show_types src)^":"^(string_of_OclType styp)^")."
 							  ^(hd (rev path))^":"^(string_of_OclType ptyp)^")"
@@ -154,7 +157,7 @@ fun ocl2string show_types oclterm =
       | OperationCall (src,styp,op_name,args,t) => if show_types 
 						   then "("^(ocl2string show_types src)^"."^(hd (rev op_name))
 							^"("^arglist show_types args^")"
-							^")"^(string_of_OclType t)
+							^"):"^(string_of_OclType t)
 						   else (ocl2string show_types src)^"."^(hd (rev op_name))
 							^"("^arglist show_types args^")"
 							

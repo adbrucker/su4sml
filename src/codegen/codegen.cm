@@ -23,5 +23,6 @@ Group is
      c#sm_cartridge.sml
      java_cartridge.sml
      junit_cartridge.sml
+     maven_pom_cartridge.sml
      gcg_core.sml
      codegen.sml

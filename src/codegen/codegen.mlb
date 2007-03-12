@@ -23,6 +23,7 @@ in
      "c#sm_cartridge.sml"
      java_cartridge.sml
      junit_cartridge.sml
+     maven_pom_cartridge.sml
      secureuml_cartridge.sig
      secureuml_cartridge.sml
      design_cartridge.sig
