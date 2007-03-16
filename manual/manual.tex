@@ -1,0 +1,89 @@
+\documentclass[bibtotoc,liststotoc]{scrbook}
+\usepackage[utf8]{inputenc}
+\usepackage[draft]{fixme}
+\begin{document}
+\titlehead{Information Security Group\\ETH Zurich}
+\title{The SU4SML Manual}
+\author{Jürgen Doser (et al.?)}
+\maketitle
+
+\tableofcontents
+\chapter{Introduction}
+
+general introduction and overview over the capabilities presented
+below. Installation and ``getting started'' and short usage
+instructions?  
+
+Overview of the use of su4sml in the complete toolchain as described
+in \cite{brucker.ea:mda:2006-b}.  Also mention the work in
+\cite{marcel.beer:sa:2006,beer:generic:2007,brucker.ea:mda:2006-b}.
+ 
+\chapter{XMI \& Rep Parser}
+
+describe requirements on the xmi format. How to adjust to other xmi
+dialects. How to add other input languages (other than xmi) to the
+rep\_parser. 
+
+\chapter{Model Transformation Support}
+
+describe any major transformation function (su2holocl, normalizing
+associations,...), as well as any major functionality for writing
+transformation functions (are there any?)  
+
+\section{su2holocl}
+
+Based on \cite{crijke:transforming:2006}.
+
+\section{association-related}
+
+\section{generic transformation framework?}
+
+\chapter{The HOL-OCL Interface?}
+
+describe any requirements/limitations the HOL-OCL interface currently
+has. (no associations, etc.). Based on
+\cite{brucker.ea:hol-ocl-book:2006}? 
+
+\chapter{The Generic Code Generator: GCG}
+
+\section{The GCG Framework}
+
+some overall architecture stuff from
+\cite{eidenbenz:development:2006}. lots of 
+pictures :)  
+
+\section{Individual Cartridge Documentation}
+
+describe each cartridge in a fixed form (using some predefined
+makros). Basically a list of the supported variables, lists, and
+predicates of the cartridge, together with (short) descriptions of
+them. 
+
+\subsection{The BaseCartridge}
+
+\subsection{The C\# Cartridge}
+
+\subsection{The StateMachine Cartridge}
+Based on \cite{adelsberger:development:2006}
+
+\subsection{The JavaCartridge}
+
+\subsection{The Junit Cartridge}
+
+Based on \cite{stock:automatic:2007}
+
+\subsection{The SecureUML Cartridge}
+
+\subsection{...}
+ 
+\section{Misc. utilities}
+
+ subsections for additional things like the jtestdataaccessor
+  library from Manfred, or the statemachine animator from Rolf.
+
+%%% bibliography: all the related papers and student theses
+\bibliographystyle{alpha}
+\bibliography{su4sml}
+%\appendix
+%\listoffixmes
+\end{document}
