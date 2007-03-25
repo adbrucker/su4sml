@@ -28,12 +28,11 @@ sig
   val oclLib : Rep_Core.Classifier list
   val OclLibPackage : string
 end
-
+ 
 structure OclLibrary : OCL_LIBRARY=
 struct
 open Rep_Core
 open Rep_OclType
-
 val OclLibPackage="oclLib"
 		  
 val oclLib =
@@ -282,7 +281,7 @@ val oclLib =
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    }],
-			    parent=NONE,
+			    parent= NONE,
 			    stereotypes=[],thyname=NONE
 			   }: Rep_Core.Classifier
 	 },
@@ -636,8 +635,13 @@ val oclLib =
 	  attributes=[],
 	  associationends=[],
 	  activity_graphs=[],	  
-	  interfaces=[],invariant=[],name=OclVoid,operations=[],
-	  parent=NONE,stereotypes=[],thyname=NONE
+	  interfaces=[],
+	  invariant=[],
+	  name=OclVoid,
+	  operations=[],
+	  parent= SOME OclAny,
+	  stereotypes=[],
+	  thyname=NONE
 	 },
 
      Primitive
@@ -761,8 +765,10 @@ val oclLib =
           {
 	   arguments=[],isQuery=true,name="toLower",postcondition=[],
            precondition=[],result=Classifier [OclLibPackage,"String"],
-           scope=XMI.InstanceScope,visibility=XMI.public}],parent=NONE,
-	  stereotypes=[],thyname=NONE
+           scope=XMI.InstanceScope,visibility=XMI.public}],
+	  parent= SOME OclAny,
+	  stereotypes=[],
+	  thyname=NONE
 	 },
      Primitive
 	 {
@@ -831,8 +837,10 @@ val oclLib =
 	   arguments=[("b",Classifier [OclLibPackage,"Boolean"])],
            isQuery=true,name="implies2",postcondition=[],
            precondition=[],result=Classifier [OclLibPackage,"Boolean"],
-           scope=XMI.InstanceScope,visibility=XMI.public}],parent=NONE,
-	  stereotypes=[],thyname=NONE
+           scope=XMI.InstanceScope,visibility=XMI.public}],
+	  parent= SOME OclAny,
+	  stereotypes=[],
+	  thyname=NONE
 	 },
      Primitive
 	 {
@@ -894,7 +902,9 @@ val oclLib =
 	   arguments=[("i",Classifier [OclLibPackage,"Integer"])],
            isQuery=true,name="min",postcondition=[],precondition=[],
            result=Classifier [OclLibPackage,"Integer"],scope=XMI.InstanceScope,
-           visibility=XMI.public}],parent=NONE,stereotypes=[],
+           visibility=XMI.public}],
+	  parent= SOME OclAny,
+	  stereotypes=[],
 	  thyname=NONE
 	 },
      Primitive
@@ -979,7 +989,9 @@ val oclLib =
 	   arguments=[("r",Classifier [OclLibPackage,"Real"])],
            isQuery=true,name=">=",postcondition=[],precondition=[],
            result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
-           visibility=XMI.public}],parent=NONE,stereotypes=[],
+           visibility=XMI.public}],
+	  parent= SOME OclAny,
+	  stereotypes=[],
 	  thyname=NONE
 	 }
     ] : Rep_Core.Classifier list
