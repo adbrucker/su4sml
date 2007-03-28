@@ -637,7 +637,7 @@ val oclLib =
 	  activity_graphs=[],	  
 	  interfaces=[],
 	  invariant=[],
-	  name=OclVoid,
+	  name = OclVoid,
 	  operations=[],
 	  parent= SOME OclAny,
 	  stereotypes=[],
@@ -903,7 +903,7 @@ val oclLib =
            isQuery=true,name="min",postcondition=[],precondition=[],
            result=Classifier [OclLibPackage,"Integer"],scope=XMI.InstanceScope,
            visibility=XMI.public}],
-	  parent= SOME OclAny,
+	  parent= SOME Real,
 	  stereotypes=[],
 	  thyname=NONE
 	 },
