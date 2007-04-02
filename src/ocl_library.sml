@@ -53,92 +53,107 @@ val oclLib =
 			     name="count",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Integer"],
+			     result=Integer,
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
-			      arguments=[],isQuery=true,name="notEmpty",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
-			      scope=XMI.InstanceScope,visibility=XMI.public
-			     },
+			     arguments=[],
+			     isQuery=true,
+			     name="notEmpty",
+			     postcondition=[],
+			     precondition=[],
+			     result=Boolean,
+			     scope=XMI.InstanceScope,
+			     visibility=XMI.public
+			    },
 			    {
-			      arguments=[],isQuery=true,name="size",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Integer"],
-			      scope=XMI.InstanceScope,visibility=XMI.public
-			     },
+			     arguments=[],
+			     isQuery=true,
+			     name="size",
+			     postcondition=[],
+			     precondition=[],
+			     result=Integer,
+			     scope=XMI.InstanceScope,
+			     visibility=XMI.public
+			    },
 			    {
-			      arguments=[],isQuery=true,name="isEmpty",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
-			      scope=XMI.InstanceScope,visibility=XMI.public
-			     },
+			     arguments=[],
+			     isQuery=true,
+			     name="isEmpty",
+			     postcondition=[],
+			     precondition=[],
+			     result=Boolean,
+			     scope=XMI.InstanceScope,
+			     visibility=XMI.public
+			    },
 			    {
-			     arguments=[("s",Classifier [OclLibPackage,"Sequence(T)"])],
+			     arguments=[("s",Sequence(TemplateParameter "T"))],
 			     isQuery=true,
 			     name="=",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Boolean"],
+			     result=Boolean,
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[("s",Classifier [OclLibPackage,"Sequence(T)"])],
+			     arguments=[("s",Sequence(TemplateParameter "T"))],
 			     isQuery=true,
 			     name="==",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Boolean"],
+			     result=Boolean,
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[("s",Classifier [OclLibPackage,"Sequence(T)"])],
+			     arguments=[("s",Sequence(TemplateParameter "T"))],
 			     isQuery=true,
 			     name="~=",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Boolean"],
+			     result=Boolean,
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[("s",Classifier [OclLibPackage,"Sequence(T)"])],
+			     arguments=[("s",Sequence(TemplateParameter "T"))],
 			     isQuery=true,
 			     name="~==",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Boolean"],
+			     result=Boolean,
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[("s",Classifier [OclLibPackage,"Sequence(T)"])],
+			     arguments=[("s",Sequence(TemplateParameter "T"))],
 			     isQuery=true,
 			     name="~=~",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Boolean"],
+			     result=Boolean,
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[("s",Classifier [OclLibPackage,"Sequence(T)"])],
+			     arguments=[("s",Sequence(TemplateParameter "T"))],
 			     isQuery=true,
 			     name="~==~",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Boolean"],
+			     result=Boolean,
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[("s",Classifier [OclLibPackage,"Sequence(T)"])],
+			     arguments=[("s",Sequence(TemplateParameter "T"))],
 			     isQuery=true,
 			     name="union",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Sequence(T)"],
+			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
@@ -148,7 +163,7 @@ val oclLib =
 			     name="flatten",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Sequence(T)"],
+			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
@@ -158,7 +173,7 @@ val oclLib =
 			     name="append",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Sequence(T)"],
+			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
@@ -168,32 +183,32 @@ val oclLib =
 			     name="prepend",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Sequence(T)"],
+			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[("index",Classifier [OclLibPackage,"Integer"]),
+			     arguments=[("index",Integer),
 					("object",TemplateParameter "T")],
 			     isQuery=true,name="insertAt",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Sequence(T)"],
+			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[("lower",Classifier [OclLibPackage,"Integer"]),
-					("upper",Classifier [OclLibPackage,"Integer"])],
+			     arguments=[("lower",Integer),
+					("upper",Integer)],
 			     isQuery=true,
 			     name="subSequence",postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Sequence(T)"],
+			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[("i",Classifier [OclLibPackage,"Integer"])],
+			     arguments=[("i",Integer)],
 			     isQuery=true,
 			     name="at",
 			     postcondition=[],
@@ -208,7 +223,7 @@ val oclLib =
 			     name="indexOf",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Integer"],
+			     result=Integer,
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
@@ -237,7 +252,7 @@ val oclLib =
 			     name="including",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Sequence(T)"],
+			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
@@ -247,7 +262,7 @@ val oclLib =
 			     name="excluding",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Sequence(T)"],
+			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
@@ -257,7 +272,7 @@ val oclLib =
 			     name="asSet",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Set(T)"],
+			     result=Set(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
@@ -267,7 +282,7 @@ val oclLib =
 			     name="asSequence",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Sequence(T)"],
+			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
@@ -277,7 +292,7 @@ val oclLib =
 			     name="asBag",
 			     postcondition=[],
 			     precondition=[],
-			     result=Classifier [OclLibPackage,"Bag(T)"],
+			     result=Bag(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    }],
@@ -298,111 +313,129 @@ val oclLib =
 			    name=Bag (TemplateParameter "T"),
 			    operations=[
 			    {
-			     arguments=[("bag",Classifier [OclLibPackage,"Bag(T)"])],
-			     isQuery=true,name="=",postcondition=[],precondition=[],
-			     result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+			     arguments=[("bag",Bag(TemplateParameter "T"))],
+			     isQuery=true,name="=",
+			     postcondition=[],
+			     precondition=[],
+			     result=Boolean,
+			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
-			      arguments=[],isQuery=true,name="size",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Integer"],
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      arguments=[],
+			      isQuery=true,
+			      name="size",
+			      postcondition=[],
+			      precondition=[],
+			      result=Integer,
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
 			     },
 			    {
-			      arguments=[],isQuery=true,name="notEmpty",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      arguments=[],
+			      isQuery=true,
+			      name="notEmpty",
+			      postcondition=[],
+			      precondition=[],
+			      result=Boolean,
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
 			     },
 			    {
-			      arguments=[],isQuery=true,name="isEmpty",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      arguments=[],
+			      isQuery=true,
+			      name="isEmpty",
+			      postcondition=[],
+			      precondition=[],
+			      result=Boolean,
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
 			     },
 			    {
-			     arguments=[("bag",Classifier [OclLibPackage,"Bag(T)"])],
+			     arguments=[("bag",Bag(TemplateParameter "T"))],
 			     isQuery=true,name="==",postcondition=[],precondition=[],
-			     result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+			     result=Boolean,scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[("bag",Classifier [OclLibPackage,"Bag(T)"])],
+			     arguments=[("bag",Bag(TemplateParameter "T"))],
 			     isQuery=true,name="~=",postcondition=[],precondition=[],
-			     result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+			     result=Boolean,scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[("bag",Classifier [OclLibPackage,"Bag(T)"])],
+			     arguments=[("bag",Bag(TemplateParameter "T"))],
 			     isQuery=true,name="~==",postcondition=[],precondition=[],
-			     result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+			     result=Boolean,scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[("bag",Classifier [OclLibPackage,"Bag(T)"])],
+			     arguments=[("bag",Bag(TemplateParameter "T"))],
 			     isQuery=true,name="~=~",postcondition=[],precondition=[],
-			     result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+			     result=Boolean,scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[("bag",Classifier [OclLibPackage,"Bag(T)"])],
+			     arguments=[("bag",Bag(TemplateParameter "T"))],
 			     isQuery=true,name="~==~",postcondition=[],precondition=[],
-			     result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+			     result=Boolean,scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[("bag",Classifier [OclLibPackage,"Bag(T)"])],
+			     arguments=[("bag",Bag(TemplateParameter "T"))],
 			     isQuery=true,name="union",postcondition=[],precondition=[],
-			     result=Classifier [OclLibPackage,"Bag(T)"],
+			     result=Bag(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,visibility=XMI.public
 			    },
 			    {
-			     arguments=[("bag",Classifier [OclLibPackage,"Bag(T)"])],
+			     arguments=[("bag",Bag(TemplateParameter "T"))],
 			     isQuery=true,name="intersection",postcondition=[],
-			     precondition=[],result=Classifier [OclLibPackage,"Bag(T)"],
+			     precondition=[],result=Bag(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,visibility=XMI.public
 			    },
 			    {
-			     arguments=[("set",Classifier [OclLibPackage,"Set(T)"])],
+			     arguments=[("set",Set(TemplateParameter "T"))],
 			     isQuery=true,name="intersection",postcondition=[],
-			     precondition=[],result=Classifier [OclLibPackage,"Set(T)"],
+			     precondition=[],result=Set(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,visibility=XMI.public
 			    },
 			    {
 			     arguments=[("object",TemplateParameter "T")],
 			     isQuery=true,name="including",postcondition=[],
-			     precondition=[],result=Classifier [OclLibPackage,"Bag(T)"],
+			     precondition=[],result=Bag(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,visibility=XMI.public
 			    },
 			    {
 			     arguments=[("object",TemplateParameter "T")],
 			     isQuery=true,name="excluding",postcondition=[],
-			     precondition=[],result=Classifier [OclLibPackage,"Bag(T)"],
+			     precondition=[],result=Bag(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,visibility=XMI.public
 			    },
 			    {
 			     arguments=[("object",TemplateParameter "T")],
 			     isQuery=true,name="count",postcondition=[],precondition=[],
-			     result=Classifier [OclLibPackage,"Integer"],scope=XMI.InstanceScope,
+			     result=Integer,scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
 			     arguments=[],isQuery=true,name="flatten",postcondition=[],
-			     precondition=[],result=Classifier [OclLibPackage,"Bag(T)"],
+			     precondition=[],result=Bag(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,visibility=XMI.public
 			    },
 			    {
 			     arguments=[],isQuery=true,name="asSet",postcondition=[],
-			     precondition=[],result=Classifier [OclLibPackage,"Set(T)"],
+			     precondition=[],result=Set(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,visibility=XMI.public
 			    },
 			    {
 			     arguments=[],isQuery=true,name="asSequence",
 			     postcondition=[],precondition=[],
-			     result=Classifier [OclLibPackage,"Sequence(T)"],
+			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,visibility=XMI.public
 			    },
 			    {
 			     arguments=[],isQuery=true,name="asBag",postcondition=[],
-			     precondition=[],result=Classifier [OclLibPackage,"Bag(T)"],
+			     precondition=[],result=Bag(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,visibility=XMI.public}],parent=NONE,
 			    stereotypes=[],thyname=NONE
 			   }: Rep_Core.Classifier
@@ -419,138 +452,138 @@ val oclLib =
 			     name=Set (TemplateParameter "T"),
 			     operations=[
 			     {
-			      arguments=[("s",Classifier [OclLibPackage,"Set(T)"])],
+			      arguments=[("s",Set(TemplateParameter "T"))],
 			      isQuery=true,name="union",postcondition=[],precondition=[],
-			      result=Classifier [OclLibPackage,"Set(T)"],
+			      result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
 			      arguments=[],isQuery=true,name="notEmpty",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+			      precondition=[],result=Boolean,
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
 			      arguments=[],isQuery=true,name="size",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Integer"],
+			      precondition=[],result=Integer,
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
-			      arguments=[("bag",Classifier [OclLibPackage,"Bag(T)"])],
+			      arguments=[("bag",Bag(TemplateParameter "T"))],
 			      isQuery=true,name="union",postcondition=[],precondition=[],
-			      result=Classifier [OclLibPackage,"Bag(T)"],
+			      result=Bag(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
-			      arguments=[("s",Classifier [OclLibPackage,"Set(T)"])],
+			      arguments=[("s",Set(TemplateParameter "T"))],
 			      isQuery=true,name="=",postcondition=[],precondition=[],
-			      result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+			      result=Boolean,scope=XMI.InstanceScope,
 			      visibility=XMI.public
 			     },
 			     {
-			      arguments=[("s",Classifier [OclLibPackage,"Set(T)"])],
+			      arguments=[("s",Set(TemplateParameter "T"))],
 			      isQuery=true,name="==",postcondition=[],precondition=[],
-			      result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+			      result=Boolean,scope=XMI.InstanceScope,
 			      visibility=XMI.public
 			     },
 {
 			      arguments=[],isQuery=true,name="isEmpty",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+			      precondition=[],result=Boolean,
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
-			      arguments=[("s",Classifier [OclLibPackage,"Set(T)"])],
+			      arguments=[("s",Set(TemplateParameter "T"))],
 			      isQuery=true,name="~=",postcondition=[],precondition=[],
-			      result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+			      result=Boolean,scope=XMI.InstanceScope,
 			      visibility=XMI.public
 			     },
 			     {
-			      arguments=[("s",Classifier [OclLibPackage,"Set(T)"])],
+			      arguments=[("s",Set(TemplateParameter "T"))],
 			      isQuery=true,name="~==",postcondition=[],precondition=[],
-			      result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+			      result=Boolean,scope=XMI.InstanceScope,
 			      visibility=XMI.public
 			     },
 			     {
-			      arguments=[("s",Classifier [OclLibPackage,"Set(T)"])],
+			      arguments=[("s",Set(TemplateParameter "T"))],
 			      isQuery=true,name="~=~",postcondition=[],precondition=[],
-			      result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+			      result=Boolean,scope=XMI.InstanceScope,
 			      visibility=XMI.public
 			     },
 
 			     {
-			      arguments=[("s",Classifier [OclLibPackage,"Set(T)"])],
+			      arguments=[("s",Set(TemplateParameter "T"))],
 			      isQuery=true,name="~==~",postcondition=[],precondition=[],
-			      result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+			      result=Boolean,scope=XMI.InstanceScope,
 			      visibility=XMI.public
 			     },
 			     {
-			      arguments=[("s",Classifier [OclLibPackage,"Set(T)"])],
+			      arguments=[("s",Set(TemplateParameter "T"))],
 			      isQuery=true,name="intersection",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Set(T)"],
+			      precondition=[],result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
-			      arguments=[("bag",Classifier [OclLibPackage,"Bag(T)"])],
+			      arguments=[("bag",Bag(TemplateParameter "T"))],
 			      isQuery=true,name="intersection",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Set(T)"],
+			      precondition=[],result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
-			      arguments=[("s",Classifier [OclLibPackage,"Set(T)"])],
+			      arguments=[("s",Set(TemplateParameter "T"))],
 			      isQuery=true,name="-",postcondition=[],precondition=[],
-			      result=Classifier [OclLibPackage,"Set(T)"],
+			      result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
 			      arguments=[("object",TemplateParameter "T")],
 			      isQuery=true,name="including",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Set(T)"],
+			      precondition=[],result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
 			      arguments=[("object",TemplateParameter "T")],
 			      isQuery=true,name="excluding",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Set(T)"],
+			      precondition=[],result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
-			      arguments=[("s",Classifier [OclLibPackage,"Set(T)"])],
+			      arguments=[("s",Set(TemplateParameter "T"))],
 			      isQuery=true,name="symmetricDifference",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Set(T)"],
+			      precondition=[],result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
 			      arguments=[("object",TemplateParameter "T")],
 			      isQuery=true,name="count",postcondition=[],precondition=[],
-			      result=Classifier [OclLibPackage,"Integer"],scope=XMI.InstanceScope,
+			      result=Integer,scope=XMI.InstanceScope,
 			      visibility=XMI.public
 			     },
 			     {
 			      arguments=[],isQuery=true,name="flatten",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Set(T)"],
+			      precondition=[],result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
 			      arguments=[],isQuery=true,name="asSet",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Set(T)"],
+			      precondition=[],result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
 			      arguments=[],isQuery=true,name="asSequence",
 			      postcondition=[],precondition=[],
-			      result=Classifier [OclLibPackage,"Sequence(T)"],
+			      result=Sequence(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 
 			     {
 			      arguments=[],isQuery=true,name="asBag",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Bag(T)"],
+			      precondition=[],result=Bag(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 
 			     {
-			      arguments=[("set",Classifier [OclLibPackage,"Set(T)"])],
+			      arguments=[("set",Set(TemplateParameter "T"))],
 			      isQuery=true,name="union",postcondition=[],precondition=[],
-			      result=Classifier [OclLibPackage,"Bag(T)"],
+			      result=Bag(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,visibility=XMI.public}],parent=NONE,
 			     stereotypes=[],thyname=NONE
 			    }: Rep_Core.Classifier
@@ -567,53 +600,53 @@ val oclLib =
 			     operations=[
 			     {
 			      arguments=[],isQuery=true,name="size",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Integer"],
+			      precondition=[],result=Integer,
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
 			      arguments=[],isQuery=true,name="modifiedOnly",
 			      postcondition=[],precondition=[],
-			      result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+			      result=Boolean,scope=XMI.InstanceScope,
 			      visibility=XMI.public
 			     },
 			     {
 			      arguments=[("object",TemplateParameter "T")],
 			      isQuery=true,name="includes",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+			      precondition=[],result=Boolean,
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
 			      arguments=[("object",TemplateParameter "T")],
 			      isQuery=true,name="excludes",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+			      precondition=[],result=Boolean,
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
 			      arguments=[("object",TemplateParameter "T")],
 			      isQuery=true,name="count",postcondition=[],precondition=[],
-			      result=Classifier [OclLibPackage,"Integer"],scope=XMI.InstanceScope,
+			      result=Integer,scope=XMI.InstanceScope,
 			      visibility=XMI.public
 			     },
 			     {
-			      arguments=[("c",Classifier [OclLibPackage,"Collection(T)"])],
+			      arguments=[("c",Collection(TemplateParameter "T"))],
 			      isQuery=true,name="includesAll",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+			      precondition=[],result=Boolean,
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
-			      arguments=[("c",Classifier [OclLibPackage,"Collection(T)"])],
+			      arguments=[("c",Collection(TemplateParameter "T"))],
 			      isQuery=true,name="excludesAll",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+			      precondition=[],result=Boolean,
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
 			      arguments=[],isQuery=true,name="isEmpty",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+			      precondition=[],result=Boolean,
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
 			      arguments=[],isQuery=true,name="notEmpty",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+			      precondition=[],result=Boolean,
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
@@ -623,9 +656,9 @@ val oclLib =
 			     },
 			     {
 			      arguments=[("c2",
-					  Classifier [OclLibPackage,"Collection(T)"])],
+					  Collection(TemplateParameter "T"))],
 			      isQuery=true,name="product",postcondition=[],
-			      precondition=[],result=Classifier [OclLibPackage,"Set(T)"],
+			      precondition=[],result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,visibility=XMI.public}],parent=NONE,
 			     stereotypes=[],thyname=NONE
 			    }: Rep_Core.Classifier
@@ -649,78 +682,78 @@ val oclLib =
 	  associationends=[],interfaces=[],invariant=[],name=OclAny,
 	  operations=[
 	  {
-	   arguments=[("object",Classifier [OclLibPackage,"OclAny"])],
+	   arguments=[("object",OclAny)],
            isQuery=true,name="=",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+           result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("object",Classifier [OclLibPackage,"OclAny"])],
+	   arguments=[("object",OclAny)],
            isQuery=true,name="==",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+           result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("object",Classifier [OclLibPackage,"OclAny"])],
+	   arguments=[("object",OclAny)],
            isQuery=true,name="~=",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+           result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("object",Classifier [OclLibPackage,"OclAny"])],
+	   arguments=[("object",OclAny)],
            isQuery=true,name="~==",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+           result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("object",Classifier [OclLibPackage,"OclAny"])],
+	   arguments=[("object",OclAny)],
            isQuery=true,name="~=~",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+           result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("object",Classifier [OclLibPackage,"OclAny"])],
+	   arguments=[("object",OclAny)],
            isQuery=true,name="~==~",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+           result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("object",Classifier [OclLibPackage,"OclAny"])],
+	   arguments=[("object",OclAny)],
            isQuery=true,name="<>",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+           result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
 	   arguments=[],isQuery=true,name="oclIsNew",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+           precondition=[],result=Boolean,
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
 	   arguments=[],isQuery=true,name="oclIsUndefined",
            postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+           result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
 	   arguments=[],isQuery=true,name="asSet",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"Set(T)"],
+           precondition=[],result=Set(TemplateParameter "T"),
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
 	   arguments=[],isQuery=true,name="atPre",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"OclAny"],
+           precondition=[],result=OclAny,
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
 	   arguments=[("statename",Classifier ["OclState"])],
            isQuery=true,name="oclIsInState",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+           precondition=[],result=Boolean,
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
 	   arguments=[],isQuery=true,name="allInstances",
            postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Set(OclAny)"],
+           result=Set(OclAny),
            scope=XMI.ClassifierScope,visibility=XMI.public}],parent=NONE,
 	  stereotypes=[],thyname=NONE
 	 },
@@ -730,41 +763,41 @@ val oclLib =
 	  operations=[
 	  {
 	   arguments=[],isQuery=true,name="size",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"Integer"],
+           precondition=[],result=Integer,
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
-	   arguments=[("s",Classifier [OclLibPackage,"String"])],
+	   arguments=[("s",String)],
            isQuery=true,name="concat",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"String"],
+           precondition=[],result=String,
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
-	   arguments=[("lower",Classifier [OclLibPackage,"Integer"]),
-		      ("upper",Classifier [OclLibPackage,"Integer"])],
+	   arguments=[("lower",Integer),
+		      ("upper",Integer)],
            isQuery=true,name="substring",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"String"],
+           precondition=[],result=String,
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
 	   arguments=[],isQuery=true,name="toInteger",
            postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Integer"],scope=XMI.InstanceScope,
+           result=Integer,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
 	   arguments=[],isQuery=true,name="toReal",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"Real"],
+           precondition=[],result=Real,
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
 	   arguments=[],isQuery=true,name="toUpper",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"String"],
+           precondition=[],result=String,
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
 	   arguments=[],isQuery=true,name="toLower",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"String"],
+           precondition=[],result=String,
            scope=XMI.InstanceScope,visibility=XMI.public}],
 	  parent= SOME OclAny,
 	  stereotypes=[],
@@ -775,68 +808,68 @@ val oclLib =
 	  associationends=[],interfaces=[],invariant=[],name=Boolean,
 	  operations=[
 	  {
-	   arguments=[("b",Classifier [OclLibPackage,"Boolean"])],
+	   arguments=[("b",Boolean)],
            isQuery=true,name="or",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+           result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("b",Classifier [OclLibPackage,"Boolean"])],
+	   arguments=[("b",Boolean)],
            isQuery=true,name="xor",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+           result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("b",Classifier [OclLibPackage,"Boolean"])],
+	   arguments=[("b",Boolean)],
            isQuery=true,name="and",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+           result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("b",Classifier [OclLibPackage,"Boolean"])],
+	   arguments=[("b",Boolean)],
            isQuery=true,name="implies",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+           precondition=[],result=Boolean,
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
 	   arguments=[],isQuery=true,name="not",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+           precondition=[],result=Boolean,
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
-	   arguments=[("b",Classifier [OclLibPackage,"Boolean"])],
+	   arguments=[("b",Boolean)],
            isQuery=true,name="sor",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+           result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("b",Classifier [OclLibPackage,"Boolean"])],
+	   arguments=[("b",Boolean)],
            isQuery=true,name="sxor",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+           result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("b",Classifier [OclLibPackage,"Boolean"])],
+	   arguments=[("b",Boolean)],
            isQuery=true,name="sand",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+           result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("b",Classifier [OclLibPackage,"Boolean"])],
+	   arguments=[("b",Boolean)],
            isQuery=true,name="simplies",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+           precondition=[],result=Boolean,
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
-	   arguments=[("b",Classifier [OclLibPackage,"Boolean"])],
+	   arguments=[("b",Boolean)],
            isQuery=true,name="implies1",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+           precondition=[],result=Boolean,
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
-	   arguments=[("b",Classifier [OclLibPackage,"Boolean"])],
+	   arguments=[("b",Boolean)],
            isQuery=true,name="implies2",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"Boolean"],
+           precondition=[],result=Boolean,
            scope=XMI.InstanceScope,visibility=XMI.public}],
 	  parent= SOME OclAny,
 	  stereotypes=[],
@@ -847,61 +880,61 @@ val oclLib =
 	  associationends=[],interfaces=[],invariant=[],name=Integer,
 	  operations=[
 	  {
-	   arguments=[("i",Classifier [OclLibPackage,"Integer"])],
+	   arguments=[("i",Integer)],
            isQuery=true,name="+",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Integer"],scope=XMI.InstanceScope,
+           result=Integer,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("i",Classifier [OclLibPackage,"Integer"])],
+	   arguments=[("i",Integer)],
            isQuery=true,name="-",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Integer"],scope=XMI.InstanceScope,
+           result=Integer,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("i",Classifier [OclLibPackage,"Integer"])],
+	   arguments=[("i",Integer)],
            isQuery=true,name="*",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Integer"],scope=XMI.InstanceScope,
+           result=Integer,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
 	   arguments=[],isQuery=true,name="-",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"Integer"],
+           precondition=[],result=Integer,
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
-	   arguments=[("i",Classifier [OclLibPackage,"Integer"])],
+	   arguments=[("i",Integer)],
            isQuery=true,name="/",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Real"],scope=XMI.InstanceScope,
+           result=Real,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("i",Classifier [OclLibPackage,"Integer"])],
+	   arguments=[("i",Integer)],
            isQuery=true,name="div",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Integer"],scope=XMI.InstanceScope,
+           result=Integer,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
 	   arguments=[],isQuery=true,name="abs",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"Integer"],
+           precondition=[],result=Integer,
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
-	   arguments=[("i",Classifier [OclLibPackage,"Integer"])],
+	   arguments=[("i",Integer)],
            isQuery=true,name="mod",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Integer"],scope=XMI.InstanceScope,
+           result=Integer,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("i",Classifier [OclLibPackage,"Integer"])],
+	   arguments=[("i",Integer)],
            isQuery=true,name="max",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Integer"],scope=XMI.InstanceScope,
+           result=Integer,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("i",Classifier [OclLibPackage,"Integer"])],
+	   arguments=[("i",Integer)],
            isQuery=true,name="min",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Integer"],scope=XMI.InstanceScope,
+           result=Integer,scope=XMI.InstanceScope,
            visibility=XMI.public}],
 	  parent= SOME Real,
 	  stereotypes=[],
@@ -912,83 +945,83 @@ val oclLib =
 	  associationends=[],interfaces=[],invariant=[],name=Real,
 	  operations=[
 	  {
-	   arguments=[("r",Classifier [OclLibPackage,"Real"])],
+	   arguments=[("r",Real)],
            isQuery=true,name="+",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Real"],scope=XMI.InstanceScope,
+           result=Real,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("r",Classifier [OclLibPackage,"Real"])],
+	   arguments=[("r",Real)],
            isQuery=true,name="-",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Real"],scope=XMI.InstanceScope,
+           result=Real,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("r",Classifier [OclLibPackage,"Real"])],
+	   arguments=[("r",Real)],
            isQuery=true,name="*",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Real"],scope=XMI.InstanceScope,
+           result=Real,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
 	   arguments=[],isQuery=true,name="-",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"Real"],
+           precondition=[],result=Real,
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
-	   arguments=[("r",Classifier [OclLibPackage,"Real"])],
+	   arguments=[("r",Real)],
            isQuery=true,name="/",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Real"],scope=XMI.InstanceScope,
+           result=Real,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
 	   arguments=[],isQuery=true,name="abs",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"Real"],
+           precondition=[],result=Real,
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
 	   arguments=[],isQuery=true,name="floor",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"Integer"],
+           precondition=[],result=Integer,
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
 	   arguments=[],isQuery=true,name="round",postcondition=[],
-           precondition=[],result=Classifier [OclLibPackage,"Integer"],
+           precondition=[],result=Integer,
            scope=XMI.InstanceScope,visibility=XMI.public
 	  },
           {
-	   arguments=[("r",Classifier [OclLibPackage,"Real"])],
+	   arguments=[("r",Real)],
            isQuery=true,name="max",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Real"],scope=XMI.InstanceScope,
+           result=Real,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("r",Classifier [OclLibPackage,"Real"])],
+	   arguments=[("r",Real)],
            isQuery=true,name="min",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Real"],scope=XMI.InstanceScope,
+           result=Real,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("r",Classifier [OclLibPackage,"Real"])],
+	   arguments=[("r",Real)],
            isQuery=true,name="<",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+           result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("r",Classifier [OclLibPackage,"Real"])],
+	   arguments=[("r",Real)],
            isQuery=true,name=">",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+           result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("r",Classifier [OclLibPackage,"Real"])],
+	   arguments=[("r",Real)],
            isQuery=true,name="<=",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+           result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public
 	  },
           {
-	   arguments=[("r",Classifier [OclLibPackage,"Real"])],
+	   arguments=[("r",Real)],
            isQuery=true,name=">=",postcondition=[],precondition=[],
-           result=Classifier [OclLibPackage,"Boolean"],scope=XMI.InstanceScope,
+           result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public}],
 	  parent= SOME OclAny,
 	  stereotypes=[],
