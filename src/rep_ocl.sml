@@ -130,6 +130,7 @@ fun string_of_OclType' f Integer        = "Integer"
   | string_of_OclType' f OclVoid        = "OclVoid"
   | string_of_OclType' f (Classifier p) = (path_to_string p f)
   | string_of_OclType' f DummyT         = "DummyT"
+  | string_of_OclType' f (TemplateParameter s) = "TemplateParameter \""^s^"\"" 
 
 fun string_of_OclType t = string_of_OclType' "." t
 
