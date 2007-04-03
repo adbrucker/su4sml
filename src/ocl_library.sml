@@ -40,7 +40,7 @@ fun is_oclLib c = let
     fun listin _ []  = false
       | listin e (x::xs) = if e=x then true else listin e xs
 in
-    listin oclLib c
+    listin c oclLib 
 end
 
 val oclLib =
