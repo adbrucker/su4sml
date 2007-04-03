@@ -36,12 +36,6 @@ open Rep_Core
 open Rep_OclType
 val OclLibPackage="oclLib"
 
-fun is_oclLib c = let
-    fun listin _ []  = false
-      | listin e (x::xs) = if e=x then true else listin e xs
-in
-    listin c oclLib 
-end
 
 val oclLib =
     [Template
@@ -1243,4 +1237,10 @@ val oclLib =
 	 }
     ] : Rep_Core.Classifier list
 
+fun is_oclLib c = let
+    fun listin _ []  = false
+      | listin e (x::xs) = if e=x then true else listin e xs
+in
+    listin c oclLib 
+end
 end
