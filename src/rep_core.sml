@@ -447,7 +447,6 @@ fun name_of (Class{name,...})       = path_of_OclType name
   | name_of (Enumeration{name,...}) = path_of_OclType name
   | name_of (Primitive{name,...})   = path_of_OclType name
   | name_of (Template{classifier,...}) = name_of classifier
-  | name_of _                       = error "in Rep.name_of: Classifier has no name represenation"
 
 fun short_name_of C =  case (name_of C)  of
 	[] => error "in Rep.short_name_of: empty type"
