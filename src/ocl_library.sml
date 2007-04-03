@@ -27,6 +27,7 @@ signature OCL_LIBRARY=
 sig
   val oclLib : Rep_Core.Classifier list
   val OclLibPackage : string
+  val is_oclLib : Rep_Core.Classifier -> bool
 end
  
 structure OclLibrary : OCL_LIBRARY=
@@ -34,7 +35,14 @@ struct
 open Rep_Core
 open Rep_OclType
 val OclLibPackage="oclLib"
-		  
+
+fun is_oclLib c = let
+    fun listin _ []  = false
+      | listin e (x::xs) = if e=x then true else listin e xs
+in
+    listin oclLib c
+end
+
 val oclLib =
     [Template
 	 {
