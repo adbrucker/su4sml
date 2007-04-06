@@ -505,12 +505,14 @@ exception FileNotFound of string
 
 fun importArgoUML file =
     let 
+        fun basename  f = ((hd o rev) o (String.fields (fn x => x = #"/"))) f
+	    
 	val tmpFile = OS.FileSys.tmpName ()
 	val base =  if String.isSuffix ".zargo" file 
 		    then String.substring(file,0, (String.size file) -6)
 		    else file
-        val _ = print ("*** Syscall: unzip -ca "^base^".zargo "^base^".xmi > "^tmpFile^"\n")
-        val _ = OS.Process.system ("unzip -ca "^base^".zargo "^base^".xmi > "^tmpFile)
+        val _ = print ("*** Syscall: unzip -ca "^base^".zargo "^(basename base)^".xmi > "^tmpFile^"\n")
+        val _ = OS.Process.system ("unzip -ca "^base^".zargo "^(basename base)^".xmi > "^tmpFile)
 	val model = readFile tmpFile
 	val _ = OS.FileSys.remove tmpFile
 
