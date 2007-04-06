@@ -27,6 +27,7 @@ structure RepParser :
           sig
               val transformXMI : XMI.XmiContent -> Rep.Classifier list
               val readFile      : string -> Rep.Classifier list
+              val importArgoUML : string -> Rep.Classifier list
               val test: (string * string list) -> OS.Process.status
               (* generic exception if something is wrong *)
           end  =
@@ -499,6 +500,24 @@ fun transformXMI ({classifiers,constraints,packages,
 fun readFile f = (info ("opening "^f);
                   (map Rep.normalize o transformXMI o XmiParser.readFile) f)
 (*    handle ex as (IllFormed msg) => raise ex *)
+
+exception FileNotFound of string
+
+fun importArgoUML file =
+    let 
+	val tmpFile = OS.FileSys.tmpName ()
+	val base =  if String.isSuffix ".zargo" file 
+		    then String.substring(file,0, (String.size file) -6)
+		    else file
+        val _ = print ("*** Syscall: unzip -ca "^base^".zargo "^base^".xmi > "^tmpFile^"\n")
+        val _ = OS.Process.system ("unzip -ca "^base^".zargo "^base^".xmi > "^tmpFile)
+	val model = readFile tmpFile
+	val _ = OS.FileSys.remove tmpFile
+
+    in
+        model
+    end
+
 
 
 fun printStackTrace e =
