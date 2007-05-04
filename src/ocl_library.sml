@@ -246,7 +246,8 @@ val oclLib =
 			     postcondition=[],
 			     precondition=[],
 			     result=TemplateParameter "T",
-			     scope=XMI.InstanceScope,visibility=XMI.public
+			     scope=XMI.InstanceScope,
+			     visibility=XMI.public
 			    },
 			    {
 			     arguments=[("object",TemplateParameter "T")],
@@ -356,91 +357,156 @@ val oclLib =
 			     },
 			    {
 			     arguments=[("bag",Bag(TemplateParameter "T"))],
-			     isQuery=true,name="==",postcondition=[],precondition=[],
-			     result=Boolean,scope=XMI.InstanceScope,
+			     isQuery=true,
+			     name="==",
+			     postcondition=[],
+			     precondition=[],
+			     result=Boolean,
+			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
 			     arguments=[("bag",Bag(TemplateParameter "T"))],
-			     isQuery=true,name="~=",postcondition=[],precondition=[],
-			     result=Boolean,scope=XMI.InstanceScope,
+			     isQuery=true,
+			     name="~=",
+			     postcondition=[],
+			     precondition=[],
+			     result=Boolean,
+			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
 			     arguments=[("bag",Bag(TemplateParameter "T"))],
-			     isQuery=true,name="~==",postcondition=[],precondition=[],
-			     result=Boolean,scope=XMI.InstanceScope,
+			     isQuery=true,
+			     name="~==",
+			     postcondition=[],
+			     precondition=[],
+			     result=Boolean,
+			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
 			     arguments=[("bag",Bag(TemplateParameter "T"))],
-			     isQuery=true,name="~=~",postcondition=[],precondition=[],
-			     result=Boolean,scope=XMI.InstanceScope,
+			     isQuery=true,
+			     name="~=~",
+			     postcondition=[],
+			     precondition=[],
+			     result=Boolean,
+			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
 			     arguments=[("bag",Bag(TemplateParameter "T"))],
-			     isQuery=true,name="~==~",postcondition=[],precondition=[],
-			     result=Boolean,scope=XMI.InstanceScope,
+			     isQuery=true,
+			     name="~==~",
+			     postcondition=[],
+			     precondition=[],
+			     result=Boolean,
+			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
 			     arguments=[("bag",Bag(TemplateParameter "T"))],
-			     isQuery=true,name="union",postcondition=[],precondition=[],
+			     isQuery=true,
+			     name="union",
+			     postcondition=[],
+			     precondition=[],
 			     result=Bag(TemplateParameter "T"),
-			     scope=XMI.InstanceScope,visibility=XMI.public
+			     scope=XMI.InstanceScope,
+			     visibility=XMI.public
 			    },
 			    {
 			     arguments=[("bag",Bag(TemplateParameter "T"))],
-			     isQuery=true,name="intersection",postcondition=[],
-			     precondition=[],result=Bag(TemplateParameter "T"),
-			     scope=XMI.InstanceScope,visibility=XMI.public
+			     isQuery=true,
+			     name="intersection",
+			     postcondition=[],
+			     precondition=[],
+			     result=Bag(TemplateParameter "T"),
+			     scope=XMI.InstanceScope,
+			     visibility=XMI.public
 			    },
 			    {
 			     arguments=[("set",Set(TemplateParameter "T"))],
-			     isQuery=true,name="intersection",postcondition=[],
-			     precondition=[],result=Set(TemplateParameter "T"),
-			     scope=XMI.InstanceScope,visibility=XMI.public
-			    },
-			    {
-			     arguments=[("object",TemplateParameter "T")],
-			     isQuery=true,name="including",postcondition=[],
-			     precondition=[],result=Bag(TemplateParameter "T"),
-			     scope=XMI.InstanceScope,visibility=XMI.public
-			    },
-			    {
-			     arguments=[("object",TemplateParameter "T")],
-			     isQuery=true,name="excluding",postcondition=[],
-			     precondition=[],result=Bag(TemplateParameter "T"),
-			     scope=XMI.InstanceScope,visibility=XMI.public
-			    },
-			    {
-			     arguments=[("object",TemplateParameter "T")],
-			     isQuery=true,name="count",postcondition=[],precondition=[],
-			     result=Integer,scope=XMI.InstanceScope,
+			     isQuery=true,
+			     name="intersection",
+			     postcondition=[],
+			     precondition=[],
+			     result=Set(TemplateParameter "T"),
+			     scope=XMI.InstanceScope,
 			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[],isQuery=true,name="flatten",postcondition=[],
-			     precondition=[],result=Bag(TemplateParameter "T"),
-			     scope=XMI.InstanceScope,visibility=XMI.public
+			     arguments=[("object",TemplateParameter "T")],
+			     isQuery=true,
+			     name="including",
+			     postcondition=[],
+			     precondition=[],
+			     result=Bag(TemplateParameter "T"),
+			     scope=XMI.InstanceScope,
+			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[],isQuery=true,name="asSet",postcondition=[],
-			     precondition=[],result=Set(TemplateParameter "T"),
-			     scope=XMI.InstanceScope,visibility=XMI.public
+			     arguments=[("object",TemplateParameter "T")],
+			     isQuery=true,
+			     name="excluding",
+			     postcondition=[],
+			     precondition=[],
+			     result=Bag(TemplateParameter "T"),
+			     scope=XMI.InstanceScope,
+			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[],isQuery=true,name="asSequence",
-			     postcondition=[],precondition=[],
+			     arguments=[("object",TemplateParameter "T")],
+			     isQuery=true,
+			     name="count",
+			     postcondition=[],
+			     precondition=[],
+			     result=Integer,
+			     scope=XMI.InstanceScope,
+			     visibility=XMI.public
+			    },
+			    {
+			     arguments=[],
+			     isQuery=true,
+			     name="flatten",
+			     postcondition=[],
+			     precondition=[],
+			     result=Bag(TemplateParameter "T"),
+			     scope=XMI.InstanceScope,
+			     visibility=XMI.public
+			    },
+			    {
+			     arguments=[],
+			     isQuery=true,
+			     name="asSet",
+			     postcondition=[],
+			     precondition=[],
+			     result=Set(TemplateParameter "T"),
+			     scope=XMI.InstanceScope,
+			     visibility=XMI.public
+			    },
+			    {
+			     arguments=[],
+			     isQuery=true,
+			     name="asSequence",
+			     postcondition=[],
+			     precondition=[],
 			     result=Sequence(TemplateParameter "T"),
-			     scope=XMI.InstanceScope,visibility=XMI.public
+			     scope=XMI.InstanceScope,
+			     visibility=XMI.public
 			    },
 			    {
-			     arguments=[],isQuery=true,name="asBag",postcondition=[],
-			     precondition=[],result=Bag(TemplateParameter "T"),
-			     scope=XMI.InstanceScope,visibility=XMI.public}],parent=NONE,
-			    stereotypes=[],thyname=NONE
+			     arguments=[],
+			     isQuery=true,
+			     name="asBag",
+			     postcondition=[],
+			     precondition=[],
+			     result=Bag(TemplateParameter "T"),
+			     scope=XMI.InstanceScope,
+			     visibility=XMI.public}],
+			    parent=NONE,
+			    stereotypes=[],
+			    thyname=NONE
 			   }: Rep_Core.Classifier
 	 },
      Template
@@ -456,139 +522,238 @@ val oclLib =
 			     operations=[
 			     {
 			      arguments=[("s",Set(TemplateParameter "T"))],
-			      isQuery=true,name="union",postcondition=[],precondition=[],
+			      isQuery=true,
+			      name="union",
+			      postcondition=[],
+			      precondition=[],
 			      result=Set(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
 			     },
 			     {
-			      arguments=[],isQuery=true,name="notEmpty",postcondition=[],
-			      precondition=[],result=Boolean,
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      arguments=[],
+			      isQuery=true,
+			      name="notEmpty",
+			      postcondition=[],
+			      precondition=[],
+			      result=Boolean,
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
 			     },
 			     {
-			      arguments=[],isQuery=true,name="size",postcondition=[],
-			      precondition=[],result=Integer,
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      arguments=[],
+			      isQuery=true,
+			      name="size",
+			      postcondition=[],
+			      precondition=[],
+			      result=Integer,
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
 			     },
 			     {
 			      arguments=[("bag",Bag(TemplateParameter "T"))],
-			      isQuery=true,name="union",postcondition=[],precondition=[],
+			      isQuery=true,
+			      name="union",
+			      postcondition=[],
+			      precondition=[],
 			      result=Bag(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
-			     },
-			     {
-			      arguments=[("s",Set(TemplateParameter "T"))],
-			      isQuery=true,name="=",postcondition=[],precondition=[],
-			      result=Boolean,scope=XMI.InstanceScope,
+			      scope=XMI.InstanceScope,
 			      visibility=XMI.public
 			     },
 			     {
 			      arguments=[("s",Set(TemplateParameter "T"))],
-			      isQuery=true,name="==",postcondition=[],precondition=[],
-			      result=Boolean,scope=XMI.InstanceScope,
+			      isQuery=true,
+			      name="=",
+			      postcondition=[],
+			      precondition=[],
+			      result=Boolean,
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
+			     },
+			     {
+			      arguments=[("s",Set(TemplateParameter "T"))],
+			      isQuery=true,
+			      name="==",
+			      postcondition=[],
+			      precondition=[],
+			      result=Boolean,
+			      scope=XMI.InstanceScope,
 			      visibility=XMI.public
 			     },
 {
-			      arguments=[],isQuery=true,name="isEmpty",postcondition=[],
-			      precondition=[],result=Boolean,
-			      scope=XMI.InstanceScope,visibility=XMI.public
-			     },
-			     {
-			      arguments=[("s",Set(TemplateParameter "T"))],
-			      isQuery=true,name="~=",postcondition=[],precondition=[],
-			      result=Boolean,scope=XMI.InstanceScope,
+			      arguments=[],
+			      isQuery=true,
+			      name="isEmpty",
+			      postcondition=[],
+			      precondition=[],
+			      result=Boolean,
+			      scope=XMI.InstanceScope,
 			      visibility=XMI.public
 			     },
 			     {
 			      arguments=[("s",Set(TemplateParameter "T"))],
-			      isQuery=true,name="~==",postcondition=[],precondition=[],
-			      result=Boolean,scope=XMI.InstanceScope,
+			      isQuery=true,
+			      name="~=",
+			      postcondition=[],
+			      precondition=[],
+			      result=Boolean,
+			      scope=XMI.InstanceScope,
 			      visibility=XMI.public
 			     },
 			     {
 			      arguments=[("s",Set(TemplateParameter "T"))],
-			      isQuery=true,name="~=~",postcondition=[],precondition=[],
-			      result=Boolean,scope=XMI.InstanceScope,
-			      visibility=XMI.public
-			     },
-
-			     {
-			      arguments=[("s",Set(TemplateParameter "T"))],
-			      isQuery=true,name="~==~",postcondition=[],precondition=[],
-			      result=Boolean,scope=XMI.InstanceScope,
+			      isQuery=true,
+			      name="~==",
+			      postcondition=[],
+			      precondition=[],
+			      result=Boolean,
+			      scope=XMI.InstanceScope,
 			      visibility=XMI.public
 			     },
 			     {
 			      arguments=[("s",Set(TemplateParameter "T"))],
-			      isQuery=true,name="intersection",postcondition=[],
-			      precondition=[],result=Set(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      isQuery=true,
+			      name="~=~",
+			      postcondition=[],
+			      precondition=[],
+			      result=Boolean,
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
+			     },
+			     {
+			      arguments=[("s",Set(TemplateParameter "T"))],
+			      isQuery=true,
+			      name="~==~",
+			      postcondition=[],
+			      precondition=[],
+			      result=Boolean,
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
+			     },
+			     {
+			      arguments=[("s",Set(TemplateParameter "T"))],
+			      isQuery=true,
+			      name="intersection",
+			      postcondition=[],
+			      precondition=[],
+			      result=Set(TemplateParameter "T"),
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
 			     },
 			     {
 			      arguments=[("bag",Bag(TemplateParameter "T"))],
-			      isQuery=true,name="intersection",postcondition=[],
-			      precondition=[],result=Set(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
-			     },
-			     {
-			      arguments=[("s",Set(TemplateParameter "T"))],
-			      isQuery=true,name="-",postcondition=[],precondition=[],
+			      isQuery=true,
+			      name="intersection",
+			      postcondition=[],
+			      precondition=[],
 			      result=Set(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
-			     },
-			     {
-			      arguments=[("object",TemplateParameter "T")],
-			      isQuery=true,name="including",postcondition=[],
-			      precondition=[],result=Set(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
-			     },
-			     {
-			      arguments=[("object",TemplateParameter "T")],
-			      isQuery=true,name="excluding",postcondition=[],
-			      precondition=[],result=Set(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
-			     },
-			     {
-			      arguments=[("s",Set(TemplateParameter "T"))],
-			      isQuery=true,name="symmetricDifference",postcondition=[],
-			      precondition=[],result=Set(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
-			     },
-			     {
-			      arguments=[("object",TemplateParameter "T")],
-			      isQuery=true,name="count",postcondition=[],precondition=[],
-			      result=Integer,scope=XMI.InstanceScope,
+			      scope=XMI.InstanceScope,
 			      visibility=XMI.public
 			     },
 			     {
-			      arguments=[],isQuery=true,name="flatten",postcondition=[],
-			      precondition=[],result=Set(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      arguments=[("s",Set(TemplateParameter "T"))],
+			      isQuery=true,
+			      name="-",
+			      postcondition=[],
+			      precondition=[],
+			      result=Set(TemplateParameter "T"),
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
 			     },
 			     {
-			      arguments=[],isQuery=true,name="asSet",postcondition=[],
-			      precondition=[],result=Set(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      arguments=[("object",TemplateParameter "T")],
+			      isQuery=true,
+			      name="including",
+			      postcondition=[],
+			      precondition=[],
+			      result=Set(TemplateParameter "T"),
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
 			     },
 			     {
-			      arguments=[],isQuery=true,name="asSequence",
-			      postcondition=[],precondition=[],
+			      arguments=[("object",TemplateParameter "T")],
+			      isQuery=true,
+			      name="excluding",
+			      postcondition=[],
+			      precondition=[],
+			      result=Set(TemplateParameter "T"),
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
+			     },
+			     {
+			      arguments=[("s",Set(TemplateParameter "T"))],
+			      isQuery=true,
+			      name="symmetricDifference",
+			      postcondition=[],
+			      precondition=[],
+			      result=Set(TemplateParameter "T"),
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
+			     },
+			     {
+			      arguments=[("object",TemplateParameter "T")],
+			      isQuery=true,
+			      name="count",
+			      postcondition=[],
+			      precondition=[],
+			      result=Integer,
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
+			     },
+			     {
+			      arguments=[],
+			      isQuery=true,
+			      name="flatten",
+			      postcondition=[],
+			      precondition=[],
+			      result=Set(TemplateParameter "T"),
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
+			     },
+			     {
+			      arguments=[],
+			      isQuery=true,
+			      name="asSet",
+			      postcondition=[],
+			      precondition=[],
+			      result=Set(TemplateParameter "T"),
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
+			     },
+			     {
+			      arguments=[],
+			      isQuery=true,
+			      name="asSequence",
+			      postcondition=[],
+			      precondition=[],
 			      result=Sequence(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
 			     },
 
 			     {
-			      arguments=[],isQuery=true,name="asBag",postcondition=[],
-			      precondition=[],result=Bag(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      arguments=[],
+			      isQuery=true,
+			      name="asBag",
+			      postcondition=[],
+			      precondition=[],
+			      result=Bag(TemplateParameter "T"),
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public
 			     },
 
 			     {
 			      arguments=[("set",Set(TemplateParameter "T"))],
-			      isQuery=true,name="union",postcondition=[],precondition=[],
+			      isQuery=true,
+			      name="union",
+			      postcondition=[],
+			      precondition=[],
 			      result=Bag(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public}],parent=NONE,
-			     stereotypes=[],thyname=NONE
+			      scope=XMI.InstanceScope,
+			      visibility=XMI.public}],
+			     parent=NONE,
+			     stereotypes=[],
+			     thyname=NONE
 			    }: Rep_Core.Classifier
 	 },Template
 	 {
@@ -859,7 +1024,7 @@ val oclLib =
 			     },
 			     {
 			      arguments=[],isQuery=true,name="sum",postcondition=[],
-			      precondition=[],result=TemplateParameter "T",
+			      precondition=[],result=Integer,
 			      scope=XMI.InstanceScope,visibility=XMI.public
 			     },
 			     {
@@ -889,6 +1054,16 @@ val oclLib =
 	 {
 	  associationends=[],interfaces=[],invariant=[],name=OclAny,
 	  operations=[
+	  {
+	   arguments=[],
+	   isQuery=true,
+	   name="notEmpty",
+	   postcondition=[],
+	   precondition=[],
+	   result=Boolean,
+	   scope=XMI.InstanceScope,
+	   visibility=XMI.public
+	  },
 	  {
 	   arguments=[("object",OclAny)],
            isQuery=true,name="=",postcondition=[],precondition=[],
