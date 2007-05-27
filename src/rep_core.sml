@@ -139,6 +139,8 @@ val parents_of          : Classifier -> Classifier list -> Rep_OclType.Path list
 val operation_of        : Classifier list -> Rep_OclType.Path -> operation option
 val topsort_cl          : Classifier list -> Classifier list
 val connected_classifiers_of : Classifier -> Classifier list -> Classifier list
+
+val assoc_to_attr_type : associationend -> Rep_OclType.OclType
 end
 
 structure Rep_Core :  REP_CORE = 
