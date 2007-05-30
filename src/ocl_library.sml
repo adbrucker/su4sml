@@ -1055,16 +1055,6 @@ val oclLib =
 	  associationends=[],interfaces=[],invariant=[],name=OclAny,
 	  operations=[
 	  {
-	   arguments=[],
-	   isQuery=true,
-	   name="notEmpty",
-	   postcondition=[],
-	   precondition=[],
-	   result=Boolean,
-	   scope=XMI.InstanceScope,
-	   visibility=XMI.public
-	  },
-	  {
 	   arguments=[("object",OclAny)],
            isQuery=true,name="=",postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
