@@ -117,7 +117,6 @@ val short_parent_name_of : Classifier -> string
 val parent_interfaces_of : Classifier -> Rep_OclType.OclType list
 
 val thy_name_of       : Classifier -> string
-val update_thyname    : string -> Classifier -> Classifier
 val attributes_of     : Classifier -> attribute list
 val associationends_of: Classifier -> associationend list 
 val operations_of     : Classifier -> operation list
@@ -141,6 +140,10 @@ val topsort_cl          : Classifier list -> Classifier list
 val connected_classifiers_of : Classifier -> Classifier list -> Classifier list
 
 val assoc_to_attr_type : associationend -> Rep_OclType.OclType
+
+val update_thyname    : string -> Classifier -> Classifier
+val update_invariant  : (string option * Rep_OclTerm.OclTerm) list -> Classifier -> Classifier
+
 end
 
 structure Rep_Core :  REP_CORE = 
@@ -413,6 +416,7 @@ fun string_of_path (path:Rep_OclType.Path) = case path of
 			      [] => ""
 			    | p  => foldr1 (fn (a,b) => a^"."^b) p
 
+ 
 
 
 fun update_thyname tname (Class{name,parent,attributes,operations,invariant,
@@ -433,7 +437,26 @@ fun update_thyname tname (Class{name,parent,attributes,operations,invariant,
     = Primitive{name=name,parent=parent,operations=operations,
                 associationends=associationends,invariant=invariant,
                 stereotypes=stereotypes,interfaces=interfaces,thyname=(SOME tname)} 
-      
+
+fun update_invariant invariant' (Class{name,parent,attributes,operations,invariant,
+                                stereotypes,interfaces,associationends,activity_graphs,thyname})
+  = Class{name=name,parent=parent,attributes=attributes,operations=operations,
+          associationends=associationends,invariant=invariant',stereotypes=stereotypes,
+          interfaces=interfaces,thyname=thyname,activity_graphs=activity_graphs }
+  | update_invariant invariant' (Interface{name,parents,operations,stereotypes,invariant,thyname}) 
+    = Interface{name=name,parents=parents,operations=operations,stereotypes=stereotypes,
+                invariant=invariant',thyname=thyname} 
+  | update_invariant invariant' (Enumeration{name,parent,operations,literals,invariant,
+                                      stereotypes,interfaces,thyname}) 
+    = Enumeration{name=name,parent=parent,operations=operations,literals=literals,
+                  invariant=invariant',stereotypes=stereotypes,interfaces=interfaces,
+                  thyname=thyname}
+  | update_invariant invariant' (Primitive{name,parent,operations,associationends,invariant,
+                                    stereotypes,interfaces,thyname}) 
+    = Primitive{name=name,parent=parent,operations=operations,
+                associationends=associationends,invariant=invariant',
+                stereotypes=stereotypes,interfaces=interfaces,thyname=thyname} 
+     
       
       
       
