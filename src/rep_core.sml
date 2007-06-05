@@ -141,8 +141,12 @@ val connected_classifiers_of : Classifier -> Classifier list -> Classifier list
 
 val assoc_to_attr_type : associationend -> Rep_OclType.OclType
 
-val update_thyname    : string -> Classifier -> Classifier
-val update_invariant  : (string option * Rep_OclTerm.OclTerm) list -> Classifier -> Classifier
+val update_thyname      : string -> Classifier -> Classifier
+val update_invariant    : (string option * Rep_OclTerm.OclTerm) list -> Classifier -> Classifier
+val update_operations   : operation list -> Classifier -> Classifier 
+
+val update_precondition   : (string option * Rep_OclTerm.OclTerm) list -> operation ->  operation
+val update_postcondition  : (string option * Rep_OclTerm.OclTerm) list -> operation ->  operation
 
 end
 
@@ -456,8 +460,39 @@ fun update_invariant invariant' (Class{name,parent,attributes,operations,invaria
     = Primitive{name=name,parent=parent,operations=operations,
                 associationends=associationends,invariant=invariant',
                 stereotypes=stereotypes,interfaces=interfaces,thyname=thyname} 
+
+
+fun update_operations operations' (Class{name,parent,attributes,invariant,operations,
+                                stereotypes,interfaces,associationends,activity_graphs,thyname})
+  = Class{name=name,parent=parent,attributes=attributes,invariant=invariant,
+          associationends=associationends,operations=operations',stereotypes=stereotypes,
+          interfaces=interfaces,thyname=thyname,activity_graphs=activity_graphs }
+  | update_operations operations' (Interface{name,parents,invariant,stereotypes,operations,thyname}) 
+    = Interface{name=name,parents=parents,invariant=invariant,stereotypes=stereotypes,
+                operations=operations',thyname=thyname} 
+  | update_operations operations' (Enumeration{name,parent,invariant,literals,operations,
+                                      stereotypes,interfaces,thyname}) 
+    = Enumeration{name=name,parent=parent,invariant=invariant,literals=literals,
+                  operations=operations',stereotypes=stereotypes,interfaces=interfaces,
+                  thyname=thyname}
+  | update_operations operations' (Primitive{name,parent,invariant,associationends,operations,
+                                    stereotypes,interfaces,thyname}) 
+    = Primitive{name=name,parent=parent,invariant=invariant,
+                associationends=associationends,operations=operations',
+                stereotypes=stereotypes,interfaces=interfaces,thyname=thyname} 
      
       
+
+fun update_precondition pre' ({name,precondition,postcondition,arguments,result,isQuery,scope,visibility}:operation)
+				= ({name=name,precondition=pre',postcondition=postcondition,
+					    arguments=arguments,result=result,isQuery=isQuery,scope=scope,
+					    visibility=visibility}:operation)
+
+fun update_postcondition post' ({name,precondition,postcondition,arguments,result,isQuery,scope,visibility}:operation)
+				= ({name=name,precondition=precondition,postcondition=post',
+					    arguments=arguments,result=result,isQuery=isQuery,scope=scope,
+					    visibility=visibility}:operation)
+
       
       
 fun type_of (Class{name,...})       = name  
