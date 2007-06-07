@@ -30,6 +30,7 @@ type Visibility
 type operation = { name          : string,	
 		   precondition  : (string option * Rep_OclTerm.OclTerm) list,
 		   postcondition : (string option * Rep_OclTerm.OclTerm) list,
+		   body          : (string option * Rep_OclTerm.OclTerm) list,
 		   arguments     : (string * Rep_OclType.OclType) list,
 		   result        : Rep_OclType.OclType,
 		   isQuery       : bool,
@@ -127,6 +128,7 @@ val activity_graphs_of: Classifier -> Rep_ActivityGraph.ActivityGraph list
 
 val arguments_of_op     : operation -> (string * Rep_OclType.OclType) list
 val precondition_of_op  : operation -> (string option * Rep_OclTerm.OclTerm) list
+val body_of_op  : operation -> (string option * Rep_OclTerm.OclTerm) list
 val result_of_op        : operation -> Rep_OclType.OclType
 val postcondition_of_op : operation -> (string option * Rep_OclTerm.OclTerm) list
 val name_of_op          : operation -> string
@@ -161,6 +163,7 @@ type Scope      = XMI_DataTypes.ScopeKind
 type operation = { name          : string,	
 		   precondition  : (string option * Rep_OclTerm.OclTerm) list,
 		   postcondition : (string option * Rep_OclTerm.OclTerm) list,
+		   body : (string option * Rep_OclTerm.OclTerm) list,
 		   arguments     : (string * Rep_OclType.OclType) list,
 		   result        : Rep_OclType.OclType,
 		   isQuery       : bool,
@@ -483,14 +486,14 @@ fun update_operations operations' (Class{name,parent,attributes,invariant,operat
      
       
 
-fun update_precondition pre' ({name,precondition,postcondition,arguments,result,isQuery,scope,visibility}:operation)
+fun update_precondition pre' ({name,precondition,postcondition,body,arguments,result,isQuery,scope,visibility}:operation)
 				= ({name=name,precondition=pre',postcondition=postcondition,
-					    arguments=arguments,result=result,isQuery=isQuery,scope=scope,
+					    arguments=arguments,body=body,result=result,isQuery=isQuery,scope=scope,
 					    visibility=visibility}:operation)
 
-fun update_postcondition post' ({name,precondition,postcondition,arguments,result,isQuery,scope,visibility}:operation)
+fun update_postcondition post' ({name,precondition,postcondition,body,arguments,result,isQuery,scope,visibility}:operation)
 				= ({name=name,precondition=precondition,postcondition=post',
-					    arguments=arguments,result=result,isQuery=isQuery,scope=scope,
+					    arguments=arguments,body=body,result=result,isQuery=isQuery,scope=scope,
 					    visibility=visibility}:operation)
 
       
@@ -635,6 +638,7 @@ fun precondition_of_op ({precondition,...}:operation) = case precondition  of
 			 [] => [(NONE, Rep_OclTerm.Literal ("true",Rep_OclType.Boolean))]
 		       | il => il
 
+fun body_of_op ({body,...}:operation) = body
 
 fun postcondition_of_op ({postcondition, ...}:operation) = case postcondition  of  
 			 [] => [(NONE, Rep_OclTerm.Literal ("true",Rep_OclType.Boolean))]

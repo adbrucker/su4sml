@@ -87,13 +87,14 @@ fun deep_atpre (t as Literal _) = t
 
 
 (* FIXME: find appropriate name for this function *)  
-fun transform_postconds {name, precondition, postcondition, arguments, result,
+fun transform_postconds {name, precondition, postcondition, body,arguments, result,
                          isQuery, scope, visibility} = 
     { name=name,
       precondition=precondition,
       postcondition=map (fn (s,t) => (s,deep_atpre t)) postcondition,
       arguments=arguments,
       result=result,
+      body=body,
       isQuery=isQuery,
       scope=scope,
       visibility=visibility
@@ -208,6 +209,7 @@ fun replace_attcalls (t as Literal _) = t
 fun create_getter c {name,attr_type,visibility,scope,stereotypes,init} =
     { name="get"^(capitalize name),
       precondition=nil,
+      body=nil,
       (* post: result=self.att *)
       postcondition=[(SOME ("generated_getter_for_"^name),
                       ocl_eq (result attr_type) 
@@ -233,6 +235,7 @@ fun create_setter c {name,attr_type,visibility,scope,stereotypes,init} =
     in 
         { name="set"^(capitalize name),
           precondition=nil,
+	  body=nil,
           postcondition=[(SOME ("generated_setter_for_"^name),
                           ocl_and (ocl_eq self_att
                                           (Variable ("arg", attr_type)))
@@ -251,7 +254,7 @@ fun create_setter c {name,attr_type,visibility,scope,stereotypes,init} =
  * calls to appropriate getter functions, and operation calls with calls 
  * to corresponding "secured" operations.
  *)
-fun create_secured {name, precondition, postcondition, arguments, result,
+fun create_secured {name, body,precondition, postcondition, arguments, result,
                     isQuery, scope, visibility} =
     { name=name^"_sec",
       precondition=precondition,
@@ -259,6 +262,7 @@ fun create_secured {name, precondition, postcondition, arguments, result,
                         postcondition, 
       arguments=arguments,
       result=result,
+      body=body,
       isQuery=isQuery,
       scope=scope,
       visibility=public
@@ -344,6 +348,7 @@ fun add_operations c =
                                            ocl_and (ocl_isNew (result self_type))
                                                    (ocl_modifiedOnly (ocl_set [res] (self_type))))
                                           ],
+			   body = [],
                            arguments=nil,
                            result=Classifier (name_of c),
                            isQuery=false,
@@ -351,6 +356,7 @@ fun add_operations c =
                            visibility=public}
         val destructor  = {name="delete",
                            precondition=nil,
+			   body=nil,
                            (* post: self.oclIsUndefined() and self@pre->modifiedOnly() *)
                            postcondition=[(SOME "generated_destructor",
                                            ocl_and (ocl_isUndefined (self self_type))
@@ -394,6 +400,7 @@ val role =
                         name="getRoleByName",
                         postcondition=[],
                         precondition=[],
+                        body=[],
                         result=Classifier ["AuthorizationEnvironment","Role"],
                         scope=ClassifierScope,
                         visibility=public}],
@@ -473,6 +480,7 @@ val static_auth_env = [
                        name="isInRole",
                        postcondition=[],
                        precondition=[],
+                       body=[],
                      result=Boolean,
                        scope=InstanceScope,
                        visibility=public}],

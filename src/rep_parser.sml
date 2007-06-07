@@ -218,6 +218,7 @@ fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
 					   (find_constraint t))
 					  (filter_bodyconstraint t checked_constraints)],
 	 result = result_type,
+	 body = [],
 	 visibility = visibility,
 	 scope = ownerScope,
 	 isQuery = isQuery      (* FIX *)
