@@ -1108,11 +1108,6 @@ val oclLib =
            visibility=XMI.public
 	  },
           {
-	   arguments=[],isQuery=true,name="asSet",postcondition=[],
-           precondition=[],result=Set(TemplateParameter "T"),
-           scope=XMI.InstanceScope,visibility=XMI.public
-	  },
-          {
 	   arguments=[],isQuery=true,name="atPre",postcondition=[],
            precondition=[],result=OclAny,
            scope=XMI.InstanceScope,visibility=XMI.public
