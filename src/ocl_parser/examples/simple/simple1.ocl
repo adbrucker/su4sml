@@ -1,0 +1,16 @@
+--  
+-- Testing OCL syntax variations
+-- 
+package simple
+  -- testing implicit self 
+  -- =====================
+  context A
+    inv self_short: i = 5			
+    inv self_long:  self.i = 5			
+--  inv: self.i=self.attribB.attribA.i
+--  inv: i = attribB.attribA.i
+--  inv iskind:  self.oclIsKindOf(A)
+--  inv meth: self.m(1) > 5
+--  inv meth2: self.m(self.i) > 5
+    inv real: r = 2.45
+endpackage

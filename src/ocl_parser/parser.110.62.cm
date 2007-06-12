@@ -1,0 +1,26 @@
+Group is
+#if(defined(SMLNJ_VERSION))
+  $smlnj/basis/basis.cm 
+  $smlnj/compiler/compiler.cm
+  $smlnj/smlnj-lib/smlnj-lib.cm
+#else
+#endif
+     ../su4sml/src/su4sml.110.62.cm
+
+#if defined (NEW_CM)
+  $smlnj/basis/basis.cm
+  $smlnj/ml-yacc/ml-yacc-lib.cm
+#else
+  ml-yacc-lib.cm
+#endif
+
+  ocl.grm
+  ocl.lex
+  parser.sml
+  context_declarations.sml
+  library.sml		
+  preprocessor.sml
+  type_checker.sml
+  make_classifier_list.sml
+  fix_types.sml 
+  model_import.sml

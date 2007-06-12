@@ -1,0 +1,690 @@
+(**************************************************************************
+ *        SML OCL 2.0 Parser - A Parser writen in SML for OCL 2.0
+ *        
+ *        Copyright (C) 2007 Manuel P. Krucker <mkrucker@ethz.ch>
+ *
+ **************************************************************************)
+
+(* 
+
+THIS POINTS HAVE TO BE NOTICED TO UNDERSTAND THE SEMANTICS OF:
+
+         - context_declarations.sml
+         - type_checker.sml
+
+
+ i.)    'AttributeCall' needs a path for the name of the attriubte.
+        But it is not possible to extract the hole name when 'AttributeCall' is constructed.
+        So, we only have a 'Path' with one element, the name of the attribute.
+        But the type still is 'Path' because of the types.
+
+ ii.)   We cannot know if a 'propertycall_exp_cs' is a member of a Class or a Variable of the signature.
+        Therefore, all calls to Variables from signature are parsed as 'AttributeCall's
+
+
+
+*)
+
+
+
+open Rep_OclTerm
+open Rep_OclType
+open Context
+open Ext_Library
+
+exception NotYetSupported of string 
+
+
+%%
+
+%eop EOF 
+
+
+%left 
+%left LOG_AND LOG_OR LOG_XOR
+%left LOG_IMPL
+
+(* the operators precedencies *)
+
+
+%name OclParser
+
+%term EOF
+        | TICK of string
+        | COMMA of string
+        | ARROW_RIGHT of string
+        | DOT of string
+        | DBL_DOT of string
+        | COLON of string
+        | DBL_COLON of string
+        | SEMI_COLON of string
+        | EQUALS of string
+        | QUESTION_MARK of string
+        | HASH of string
+        | AT_PRE of string
+        | BAG of string
+        | COLLECTION of string
+        | SEQUENCE of string
+        | ORDERED_SET of string
+        | SET of string
+        | TUPLE of string
+        | TUPLE_TYPE of string
+        | BRACKET_OPEN of string
+        | BRACKET_CLOSE of string
+        | CARAT of string
+        | DBL_CARAT of string
+        | BODY of Context.ConditionType
+        | CONTEXT of string
+        | DEF of string
+        | DERIVE of Context.AttrOrAssoc
+        | ELSE of string
+        | ENDIF of string
+        | ENDPACKAGE of string
+        | FALSE of string
+	| FORALL of string
+	| TRUE of string
+        | IF of string
+        | IN of string
+        | INIT of Context.AttrOrAssoc
+        | INV of string
+        | LET of string
+        | PACKAGE of string
+        | PRE of Context.ConditionType
+        | POST of Context.ConditionType
+        | THEN of string
+	| PAREN_OPEN of string
+	| PAREN_CLOSE of string
+        | BRACE_OPEN of string
+        | BRACE_CLOSE of string
+        | VERTICAL_BAR of string
+        | GUARD of string
+        | ITERATE of string
+        | SELECT of string
+        | REJECT of string
+        | COLLECT of string
+        | ANY of string
+        | EXISTS of string
+        | ONE of string
+        | ISUNIQUE of string
+        | OCLISTYPEOF of string
+        | OCLISKINDOF of string
+        | OCLASTYPE of string
+        | MINUS of string
+        | STAR of string
+        | SLASH of string
+        | PLUS of string
+	| REL_NOTEQUAL of string
+        | REL_GT of string
+        | REL_LT of string
+        | REL_GTE of string
+        | REL_LTE of string
+        | LOG_AND of string
+        | LOG_OR of string
+        | LOG_XOR of string
+        | LOG_IMPL of string
+        | NOT of string
+        | INTEGER_LITERAL of string
+        | REAL_LITERAL of string
+        | STRING_LITERAL of string
+	| SIMPLE_NAME of string
+
+%nonterm START of context list
+	| OclExpression of Rep_OclTerm.OclTerm
+	| LiteralExp of OclTerm
+	| PrimitiveLiteralExp of Rep_OclTerm.OclTerm
+	| IntegerLiteralExp of Rep_OclTerm.OclTerm
+	| BooleanLiteralExp of Rep_OclTerm.OclTerm
+	| StringLiteralExp of Rep_OclTerm.OclTerm
+	| RealLiteralExp of Rep_OclTerm.OclTerm
+        | ocl_file of context list
+        | package_constraint_list_cs_p of context list
+        | package_constraint_list_cs of context list
+        | path_name_cs of Path
+	| path_name_head_cs of Path
+        | context_declaration_list_cs of context list
+	| context_declaration_cs of context list
+	| attr_or_assoc_cs of context list
+	| classifier_context_declaration_cs of context list
+	| operation_context_declaration_cs of context list
+        | guard_context_declaration_cs of context list
+        | type_specifier of OclType
+        | init_or_der_value_cs_p of (AttrOrAssoc*OclTerm) list
+        | init_or_der_value_cs of (AttrOrAssoc*OclTerm)
+        | classifier_constraint_cs_p of (string option*OclTerm) list
+        | classifier_constraint_cs of (string option*OclTerm)
+        | operation_signature_cs of (string * OclType) list
+        | operation_constraint_cs_p of (Context.ConditionType*string option*OclTerm) list
+        | operation_constraint_cs of (Context.ConditionType*string option*OclTerm)
+        | guard_constraint_cs_p of (string option*OclTerm) list
+        | guard_constraint_cs of (string option*OclTerm)
+        | invariant_cs of OclTerm
+        | definition_cs of OclTerm
+        | op_constraint_stereotype_cs of Context.ConditionType
+        | simple_name of string
+        | definition_constraint_cs of OclTerm
+        | defined_entity_decl_cs of OclTerm
+        | ocl_attribute_defined_entity_decl_cs of (string * OclType)
+        | ocl_operation_defined_entity_decl_cs of string * ((string * OclType) list) 
+        | formal_parameter_cs of (string * OclType)
+        | formal_parameter_list_cs of (string * OclType) list
+        | formal_parameter_list_tail_cs of (string * OclType) list
+        | operation_return_type_specifier_cs of OclType
+        | collection_literal_exp of OclTerm
+        | collection_type_identifier_cs of string
+        | collection_literal_parts_cs of CollectionPart list
+        | collection_literal_part_cs of CollectionPart
+        | collection_literal_parts_tail_cs of CollectionPart list
+        | collection_range_cs of CollectionPart
+        | expression of OclTerm
+        | collection_type_specifier_cs of OclType
+        | time_exp_cs of string
+        | is_marked_pre_cs of string
+        | if_exp_cs of OclTerm
+        | simple_type_specifier_cs of OclType
+        | tuple_type_specifier_cs of OclType
+        | ocl_expression_cs of OclTerm
+        | let_exp_cs of OclTerm
+        | message_arg_cs
+        | message_argument_list_cs
+        | message_argument_list_tail_cs
+        | identifier_cs of string
+        | iterator_name_cs of string
+        | ocl_op_name of string
+        | literal_exp_cs of OclTerm
+        | collection_literal_exp_cs of OclTerm
+        | tuple_literal_exp_cs of OclTerm
+        | primitive_literal_exp_cs of OclTerm
+        | numeric_literal_exp_cs of OclTerm
+        | string_literal_exp_cs of OclTerm
+        | boolean_literal_exp_cs of OclTerm
+        | integer_literal of OclTerm
+        | real_literal of OclTerm
+        | string_literal of OclTerm
+        | initialized_variable_list_cs of (string * OclType * OclTerm)list
+        | logical_exp_cs of OclTerm
+	| logical_exp_tail_cs of (string*OclTerm)
+        | relational_exp_cs of OclTerm
+        | relational_exp_tail_cs_p of (string*OclTerm)
+        | relational_exp_tail_cs of (string*OclTerm)
+        | logic_op of string
+        | additive_exp_cs of OclTerm
+        | additive_exp_tail_cs of (string*OclTerm)
+	| additive_exp_tail_cs_p of (string*OclTerm)
+        | rel_op of string
+        | multiplicative_exp_cs of OclTerm
+        | multiplicative_exp_tail_cs_p of (string*OclTerm)
+        | multiplicative_exp_tail_cs of (string*OclTerm)
+        | add_op of string
+        | unary_exp_cs of OclTerm
+        | mult_op of string
+        | unary_op of string
+        | postfix_exp_cs of OclTerm
+        | postfix_exp_tail_cs_p of OclTerm list
+	| postfix_exp_tail_cs of OclTerm
+        | primary_exp_cs of OclTerm
+        | property_call_exp_cs of OclTerm
+        | arrow_property_call_exp_cs of OclTerm
+        | signal_spec_exp_cs of OclTerm
+        | msg_operator_cs of OclTerm
+        | property_call_parameters_cs of (OclTerm * OclType) list
+        | qualifiers of CollectionPart list
+        | iterate_vars_cs
+        | initialized_variable_cs of (string * OclType * OclTerm) 
+        | actual_parameter_list_cs of (OclTerm * OclType) list
+        | actual_parameter_list_tail_cs of (OclTerm * OclType) list
+        | actual_parameter_list_tail_cs_p of (OclTerm * OclType) list
+        | actual_parameter_list_element_cs of (OclTerm * OclType)
+        | formal_parameter_type_specifier of OclType
+        | iterator_vars_cs of (string*OclType)list
+        | initialized_variable_list_tail_cs_p of (string * OclType * OclTerm)list
+        | initialized_variable_list_tail_cs of (string * OclType * OclTerm)
+        | variable_initializer of OclTerm
+        | variable_declaration_cs of (string*OclType)
+        | variable_declaration_list_cs of (string*OclType)list
+        | variable_declaration_list_tail_cs of (string*OclType)list
+        | logical_exp_tail_cs_p of (string*OclTerm)
+	| type_argument
+	| classifier_context_declarations_cs
+
+
+
+
+%pos (int * int * int)
+
+%noshift EOF
+
+%%
+
+(* RETURN: context list *)
+START   : 			 ocl_file									(ocl_file)
+
+(* RETURN: context list *)				                                            
+ocl_file :                       package_constraint_list_cs_p							(package_constraint_list_cs_p)
+
+(* RETURN: context list *)
+package_constraint_list_cs_p :   package_constraint_list_cs							(package_constraint_list_cs)
+                               | package_constraint_list_cs package_constraint_list_cs_p			(package_constraint_list_cs@package_constraint_list_cs_p)
+
+(* RETURN: context list *)
+package_constraint_list_cs :    PACKAGE path_name_cs ENDPACKAGE							(trace low ("Starts creatind empty package ... " ^ "\n"); ([Empty_context ("this is an empty context", Literal ("empty",OclVoid))]))
+                               | PACKAGE path_name_cs context_declaration_list_cs ENDPACKAGE			(trace low ("Starts creating contextes ..." ^ "\n"); (list_extend_path path_name_cs context_declaration_list_cs))
+
+(* RETURN: context list *)
+context_declaration_list_cs :     context_declaration_cs							(context_declaration_cs)
+				| context_declaration_cs context_declaration_list_cs				(context_declaration_cs@context_declaration_list_cs)
+
+(* RETURN: context list *)
+context_declaration_cs :         attr_or_assoc_cs             							(attr_or_assoc_cs)
+		               | classifier_context_declaration_cs						(classifier_context_declaration_cs)
+                               | operation_context_declaration_cs						(operation_context_declaration_cs)
+                               | guard_context_declaration_cs 							(guard_context_declaration_cs)
+
+(* RETURN: context list *)
+attr_or_assoc_cs :               CONTEXT path_name_cs COLON type_specifier init_or_der_value_cs_p		(attr_list (path_name_cs, type_specifier, init_or_der_value_cs_p))
+ 
+
+(* RETURN: string *)
+simple_name :			  SIMPLE_NAME								(trace low ("simple_name..." ^ "\n");SIMPLE_NAME)
+
+(* RETURN: context list *)
+classifier_context_declaration_cs :      CONTEXT path_name_cs classifier_constraint_cs_p			(inv_list (path_name_cs, classifier_constraint_cs_p))
+
+(* RETURN: context list *)
+operation_context_declaration_cs :        CONTEXT path_name_cs operation_signature_cs operation_constraint_cs_p (cond_list (path_name_cs, operation_signature_cs, operation_constraint_cs_p))
+
+(* RETURN: context list *)
+guard_context_declaration_cs :            CONTEXT path_name_cs guard_constraint_cs_p				(guard_list (real_path (path_name_cs), guard_constraint_cs_p))
+
+(* RETURN: (AttrOrAssoc,OclTerm) list  1.{INIT|DERIVE} 2.expression  *)
+init_or_der_value_cs_p:                   init_or_der_value_cs							([init_or_der_value_cs])
+                                        | init_or_der_value_cs init_or_der_value_cs_p				([init_or_der_value_cs]@init_or_der_value_cs_p)
+
+(* RETURN: (string option, OclTerm) list    1.name 2.expression  *)
+classifier_constraint_cs_p :              classifier_constraint_cs						([classifier_constraint_cs])
+                                        | classifier_constraint_cs classifier_constraint_cs_p			([classifier_constraint_cs]@classifier_constraint_cs_p)
+
+(* RETURN: (ConditionType, string option, OclTerm) list   1.{Pre|Post|Body} 2. name 3.expression  *)
+operation_constraint_cs_p :               operation_constraint_cs						([operation_constraint_cs])
+                                        | operation_constraint_cs operation_constraint_cs_p			([operation_constraint_cs]@operation_constraint_cs_p)
+
+(* RETURN: (string option,OclTerm) list *)
+guard_constraint_cs_p :                   guard_constraint_cs							([guard_constraint_cs])
+                                        | guard_constraint_cs guard_constraint_cs_p				([guard_constraint_cs]@guard_constraint_cs_p)
+
+(* RETURN: (AttrOrAssoc, OclTerm) *)
+init_or_der_value_cs :                    INIT COLON ocl_expression_cs						(INIT, ocl_expression_cs)
+                                        | DERIVE COLON ocl_expression_cs					(DERIVE, ocl_expression_cs)
+
+(* RETURN: (string option, OclTerm) 1.name 2.expression *)
+classifier_constraint_cs :                INV COLON ocl_expression_cs						(trace low ("INV COLON ocl_expression_cs ..." ^ "\n"); (NONE,ocl_expression_cs))
+					| INV simple_name COLON ocl_expression_cs				(trace low ("INV simple_name COLON ocl_expression_cs ..." ^ "\n");(SOME(simple_name),ocl_expression_cs))
+					| DEF COLON definition_constraint_cs					(NONE,definition_constraint_cs)		
+					| DEF simple_name COLON definition_constraint_cs			(SOME(simple_name),definition_constraint_cs)
+									
+
+(* RETURN: (ConditionType, string option, OclTerm) 1.{Pre|Post|Body} 2. name 3.expression*)
+operation_constraint_cs :                 op_constraint_stereotype_cs COLON ocl_expression_cs			(trace low ("operation_constraint_cs 1..." ^ "\n"); (op_constraint_stereotype_cs,NONE,ocl_expression_cs))
+                                        | op_constraint_stereotype_cs simple_name COLON ocl_expression_cs	(trace low ("operation_constraint_cs 23454..." ^ "\n"); (op_constraint_stereotype_cs,SOME(simple_name),ocl_expression_cs))
+
+(* RETURN: (string option, OclTerm) 1.name 2.expression *)
+guard_constraint_cs :                     GUARD COLON ocl_expression_cs						(NONE,ocl_expression_cs)
+                                        | GUARD simple_name COLON ocl_expression_cs				(SOME(simple_name),ocl_expression_cs)
+
+
+(* RETURN: OclTerm *)
+definition_constraint_cs :             defined_entity_decl_cs EQUALS ocl_expression_cs				(OperationCall (defined_entity_decl_cs,DummyT,[OclLibPackage,"DummyT",EQUALS],[(ocl_expression_cs,DummyT)],DummyT))	
+
+(* RETURN: OclTerm *)
+defined_entity_decl_cs :               ocl_attribute_defined_entity_decl_cs					(trace low ("AttributeCall 1 ..." ^ "\n");AttributeCall (Literal ("self2",DummyT),DummyT,[#1(ocl_attribute_defined_entity_decl_cs)],#2(ocl_attribute_defined_entity_decl_cs)))
+                                        | ocl_operation_defined_entity_decl_cs					(OperationCall (Literal ("self2",DummyT),DummyT,[#1(ocl_operation_defined_entity_decl_cs)],List.map gen_literal_term (real_signature (#2(ocl_operation_defined_entity_decl_cs))),#2(List.last (#2(ocl_operation_defined_entity_decl_cs)))))
+
+(* RETURN: (string * OclType) *)
+ocl_attribute_defined_entity_decl_cs : formal_parameter_cs							(formal_parameter_cs)
+
+(* RETURN: (string * (string * OclType)) list *)
+(* OclType is the return type *)
+ocl_operation_defined_entity_decl_cs :	simple_name operation_signature_cs					(simple_name,operation_signature_cs)		
+
+
+(* RETURN: (string * OclType) list *)
+(* last element of list is the return type. Only second part of tuple then used *)
+operation_signature_cs :                  PAREN_OPEN PAREN_CLOSE						(trace low  ("operation_signature_cs ..." ^ "\n");[("",OclVoid)])
+                                        | PAREN_OPEN PAREN_CLOSE operation_return_type_specifier_cs		(trace low ("operation_signature_cs ..." ^ "\n");[("",operation_return_type_specifier_cs)])
+                                        | PAREN_OPEN formal_parameter_list_cs PAREN_CLOSE 			(trace low ("operation_signature_cs ..." ^ "\n");formal_parameter_list_cs@[("",OclVoid)])
+                                        | PAREN_OPEN formal_parameter_list_cs PAREN_CLOSE operation_return_type_specifier_cs	(trace low ("operation_signature_cs ..." ^ "\n");formal_parameter_list_cs@[("",operation_return_type_specifier_cs)])
+(* RETURN: OclType *) 
+operation_return_type_specifier_cs :      COLON type_specifier							(trace low ("Contextes created form list of Attributes ..." ^ "\n");type_specifier)
+(* RETURN: (ConditionType) *)
+op_constraint_stereotype_cs :             PRE									(PRE)
+                                        | POST									(POST)
+                                        | BODY									(BODY)
+
+
+(* Taken from  OCL1.6 and merged with older OCL1.4 rules *)
+
+
+(* RETURN: OclTerm *)
+collection_literal_exp_cs :               collection_type_identifier_cs BRACE_OPEN  BRACE_CLOSE			(CollectionLiteral ([],dispatch_collection (collection_type_identifier_cs,DummyT)))
+                                        | collection_type_identifier_cs BRACE_OPEN collection_literal_parts_cs BRACE_CLOSE	(CollectionLiteral (collection_literal_parts_cs,dispatch_collection(collection_type_identifier_cs,DummyT)))
+
+
+(* RETURN: CollectionPart list *)
+collection_literal_parts_cs :             collection_literal_part_cs						([collection_literal_part_cs])
+                                        | collection_literal_part_cs collection_literal_parts_tail_cs		([collection_literal_part_cs]@collection_literal_parts_tail_cs)
+
+(* RETURN: CollectionPart list *)
+collection_literal_parts_tail_cs :        COMMA collection_literal_parts_cs				(collection_literal_parts_cs)
+
+(* RETURN: CollectionPart *)
+collection_literal_part_cs :              collection_range_cs							(collection_range_cs)	
+                                        | expression								(CollectionItem (expression,DummyT))
+
+(* RETURN: CollectionPart *)
+collection_range_cs :                   expression DBL_DOT expression						(CollectionRange (expression1,expression2,DummyT))
+
+(* renamed to collection_type_specifier_cs from collection_type_cs *)
+(* RETURN: OclType *)
+collection_type_specifier_cs :            collection_type_identifier_cs PAREN_OPEN type_specifier PAREN_CLOSE   (dispatch_collection (collection_type_identifier_cs,type_specifier))
+
+(* RETURN: string *)
+collection_type_identifier_cs:          SET                                                                     (SET)
+                                      | BAG                                                                     (BAG)
+                                      | SEQUENCE                                                                (SEQUENCE)
+                                      | COLLECTION                                                              (COLLECTION)
+                                      | ORDERED_SET                                                             (ORDERED_SET)         
+
+(* Part of OCL2.0 concrete syntax, but unused by now *)
+(* expression_in_ocl_cs   = ocl_expression_cs *)
+
+(* RETURN: string *)
+time_exp_cs :                             is_marked_pre_cs                                                      (is_marked_pre_cs)
+
+(* RETURN: string *)
+is_marked_pre_cs:                         AT_PRE                                                                (AT_PRE)
+
+
+(* RETURN: OclType *)
+(* NOT YET SUPPORTED 
+
+   ???   QUESTION: How can i implement this ??? 
+
+tuple_type_specifier_cs :                 TUPLE_TYPE PAREN_OPEN PAREN_CLOSE                                     (let _ = raise (NotYetSupported "not yet supported") in DummyT end)
+                                        | TUPLE_TYPE PAREN_OPEN formal_parameter_list_cs PAREN_CLOSE		(let _ = raise (NotYetSupported "not yet supported") in DummyT end) 
+*)
+
+(* RETURN: OclTerm *)
+ocl_expression_cs :                       logical_exp_cs							(trace low ("ocl_expression_cs..." ^ "\n");logical_exp_cs)
+
+					| let_exp_cs								(trace low ("ocl_expression_cs..." ^ "\n");let_exp_cs)
+                                        
+(* RETURN: OclTerm *)
+let_exp_cs :                              LET initialized_variable_list_cs IN expression			(gen_let_term initialized_variable_list_cs expression) 	
+
+(* RETURN: OclTerm *)
+expression :                              ocl_expression_cs							(ocl_expression_cs)
+(* NOT YET SUPPORTED 
+
+   ??? QUESTION: this is used for what ???
+
+message_arg_cs :                          QUESTION_MARK
+                                        | QUESTION_MARK formal_parameter_type_specifier
+                                        | expression
+message_argument_list_cs :                message_arg_cs
+                                        | message_arg_cs message_argument_list_tail_cs
+message_argument_list_tail_cs :           COMMA message_argument_list_cs
+*)
+
+(* RETURN: string *)
+iterator_name_cs :			  SELECT								(SELECT)
+     					| REJECT								(REJECT)
+					| COLLECT								(COLLECT)
+					| FORALL								(FORALL)
+					| EXISTS								(EXISTS)
+					| ANY									(ANY)
+					| ONE									(ONE)
+					| ISUNIQUE								(ISUNIQUE)
+
+(* RETURN: String *)
+ocl_op_name :				  OCLISKINDOF								(OCLISKINDOF)
+					| OCLISTYPEOF								(OCLISTYPEOF)
+					| OCLASTYPE								(OCLASTYPE)
+(* RETURN: Path *)
+path_name_cs :				  identifier_cs								(trace low ("path_name finished..." ^ "\n");[identifier_cs])
+					| path_name_head_cs identifier_cs					(trace low ("path_name generation ..." ^ "\n");path_name_head_cs@[identifier_cs])
+
+(* RETURN : string *)
+identifier_cs :                           simple_name								(trace low ("path_name generation..." ^ "\n");simple_name)
+                                        | ITERATE                                                               (ITERATE)     
+					| iterator_name_cs	                         			(iterator_name_cs)
+                                        | ocl_op_name								(ocl_op_name)
+
+(* RETURN: Path *)
+path_name_head_cs :			  identifier_cs DBL_COLON						(trace low ("path_name generation..." ^ "\n");[identifier_cs])
+		                        | path_name_head_cs identifier_cs DBL_COLON                             (trace low ("path_name generation..." ^ "\n");path_name_head_cs@[identifier_cs])
+
+(* RETURN: OclTerm *)
+literal_exp_cs :                         primitive_literal_exp_cs						(trace low ("primitive_literal_exp_cs..." ^ "\n");primitive_literal_exp_cs)                         
+                                       | collection_literal_exp_cs						(collection_literal_exp_cs)
+(* NOT YET SUPPORTED ...
+                                        | tuple_literal_exp_cs							(tuple_literal_exp_cs)
+*)
+
+primitive_literal_exp_cs :                numeric_literal_exp_cs						(trace low ("numeric_literal_exp_cs..." ^ "\n");numeric_literal_exp_cs)
+                                        | string_literal_exp_cs							(trace low ("string_literal_exp_cs..." ^ "\n");string_literal_exp_cs)
+                                        | boolean_literal_exp_cs						(boolean_literal_exp_cs)
+numeric_literal_exp_cs :                  INTEGER_LITERAL        	                              		(trace low ("INTEGER_LITERAL..." ^ "\n");Literal (INTEGER_LITERAL,Integer))
+                                        | REAL_LITERAL                  	                       		(Literal (REAL_LITERAL,Real))
+string_literal_exp_cs :                   STRING_LITERAL                        	               		(Literal (STRING_LITERAL,String))
+boolean_literal_exp_cs :                  TRUE                                          	       		(Literal ("true",Boolean))
+                                        | FALSE                                                			(Literal ("false",Boolean))
+(* NOT SUPPORTED YET
+tuple_literal_exp_cs :                    TUPLE BRACE_OPEN initialized_variable_list_cs BRACE_CLOSE
+*)
+
+(* RETURN: OclTerm *)
+logical_exp_cs :                          relational_exp_cs							(trace low ("logical_exp_cs..." ^ "\n");relational_exp_cs)
+                                        | relational_exp_cs logical_exp_tail_cs_p 		        	(trace low ("logical_exp_cs..." ^ "\n");OperationCall(relational_exp_cs,Boolean,[OclLibPackage,"Boolean",#1(logical_exp_tail_cs_p)],[(#2(logical_exp_tail_cs_p),Boolean)],Boolean))
+
+(* RETURN: (logic_op, OclTerm) *)
+logical_exp_tail_cs_p :                   logical_exp_tail_cs                                           	(logical_exp_tail_cs)
+                                        | logical_exp_tail_cs logical_exp_tail_cs_p				((#1(logical_exp_tail_cs),OperationCall(#2(logical_exp_tail_cs),Boolean,[OclLibPackage,"Boolean",#1(logical_exp_tail_cs_p)],[(#2(logical_exp_tail_cs_p),Boolean)],Boolean)))
+(* RETURN: (logic_op, Ocl_Term) *)
+logical_exp_tail_cs :                     logic_op relational_exp_cs                                    	(logic_op,relational_exp_cs) 
+
+(* RETURN: string *)
+logic_op :                                LOG_AND                                                       	(LOG_AND) 
+                                        | LOG_OR           							(LOG_OR)
+                                        | LOG_XOR								(LOG_XOR)
+                                        | LOG_IMPL								(LOG_IMPL)
+
+(* RETURN: OclTerm *)
+relational_exp_cs :                       additive_exp_cs							(trace low ("additive_exp_cs..." ^ "\n");additive_exp_cs)
+                                        | additive_exp_cs relational_exp_tail_cs                        	(trace low ("additive_exp_cs relational_exp_tail_cs ..." ^ "\n");OperationCall(additive_exp_cs,DummyT,[OclLibPackage,"DummyT",#1(relational_exp_tail_cs)],[(#2(relational_exp_tail_cs),DummyT)],Boolean))
+
+(* RETURN: (rel_op, Ocl_Term) *)
+relational_exp_tail_cs :                  rel_op additive_exp_cs						(trace low ("relational_exp_tail_cs..." ^ "\n");(rel_op, additive_exp_cs))
+
+(* RETURN: string *)
+rel_op :                                  EQUALS                                        	                (EQUALS)
+                                        | REL_GT								(trace low (">..." ^ "\n");REL_GT)
+                                        | REL_LT								(trace low ("<..." ^ "\n");REL_LT)
+                                        | REL_GTE                                                    		(REL_GTE) 
+                                        | REL_LTE                                                    		(REL_LTE)
+					| REL_NOTEQUAL                                                          (REL_NOTEQUAL)
+
+(* RETURN: OclTerm *)
+additive_exp_cs :                         multiplicative_exp_cs							(trace low ("multiplicative_exp_cs..." ^ "\n");multiplicative_exp_cs)
+                                        | multiplicative_exp_cs additive_exp_tail_cs_p     			(trace low ("multiplicative_exp_cs additive_exp_tail_cs_p..." ^ "\n");OperationCall (multiplicative_exp_cs,DummyT,[OclLibPackage,"DummyT",#1(additive_exp_tail_cs_p)],[(#2(additive_exp_tail_cs_p),DummyT)],DummyT))
+
+(* RETURN: (add_op, Ocl_Term) *)
+additive_exp_tail_cs_p :                  additive_exp_tail_cs                                      	 	(additive_exp_tail_cs)
+                                        | additive_exp_tail_cs additive_exp_tail_cs_p                   	(#1(additive_exp_tail_cs),OperationCall (#2(additive_exp_tail_cs),DummyT,[OclLibPackage,"DummyT",#1(additive_exp_tail_cs_p)],[(#2(additive_exp_tail_cs_p),DummyT)],DummyT))
+
+(* RETURN: (add_op,Ocl_Term) *)
+additive_exp_tail_cs :                    add_op multiplicative_exp_cs                              		(add_op, multiplicative_exp_cs)
+(* RETURN: string *)    
+add_op:                                   PLUS                                                       		(PLUS)
+                                        | MINUS                                    	                  	(MINUS) 
+(* RETURN: OclTerm *)
+multiplicative_exp_cs:                    unary_exp_cs                                  	                (trace low ("unary_exp_cs ..." ^ "\n");unary_exp_cs)
+                                        | unary_exp_cs multiplicative_exp_tail_cs_p              	        (OperationCall (unary_exp_cs,DummyT,[OclLibPackage,"DummyT",#1(multiplicative_exp_tail_cs_p)],[(#2(multiplicative_exp_tail_cs_p),DummyT)],DummyT))
+
+(* RETURN: (mult_op, Ocl_Term ) *)
+multiplicative_exp_tail_cs_p :            multiplicative_exp_tail_cs                                	 	(multiplicative_exp_tail_cs)
+                                        | multiplicative_exp_tail_cs multiplicative_exp_tail_cs_p 		(#1(multiplicative_exp_tail_cs),OperationCall (#2(multiplicative_exp_tail_cs),DummyT,[OclLibPackage,"DummyT",#1(multiplicative_exp_tail_cs_p)],[(#2(multiplicative_exp_tail_cs_p),DummyT)],DummyT))
+
+(* RETURN: (mult_op, Ocl_Term)  *)
+multiplicative_exp_tail_cs :              mult_op unary_exp_cs	 						(mult_op, unary_exp_cs)
+
+(* RETURN: string *)
+mult_op :                                 STAR        								(STAR)
+                                        | SLASH									(SLASH)	
+(* RETURN: OclTerm *)
+unary_exp_cs :                            unary_op postfix_exp_cs       	                             	(OperationCall (postfix_exp_cs,DummyT,[OclLibPackage,"DummyT",unary_op],[],DummyT))
+                                        | postfix_exp_cs                        	                        (postfix_exp_cs)
+(* RETURN: String *)
+unary_op :                                MINUS                                         	             	(MINUS)
+                                        | NOT                                                   	     	(NOT)
+
+(* RETURN: OclTerm *)
+postfix_exp_cs :                          primary_exp_cs  							(primary_exp_cs)
+                                        | primary_exp_cs postfix_exp_tail_cs_p                          	(trace low ("literal_call_exp_cs..." ^ "\n");nest_source ([primary_exp_cs]@postfix_exp_tail_cs_p))
+(* NOT YET IMPLEMENTED 
+					| msg_operator_cs signal_spec_exp_cs
+*)
+(* RETURN: OclTerm *)
+primary_exp_cs :                          literal_exp_cs                          	                      	(trace low ("literal_call_exp_cs..." ^ "\n");literal_exp_cs)
+                                        | PAREN_OPEN expression PAREN_CLOSE             	             	(expression)
+                                        | property_call_exp_cs                                  	        (trace low ("property_call_exp_cs..." ^ "\n");property_call_exp_cs)
+                                        | if_exp_cs                                                     	(if_exp_cs)
+
+(* RETURN: OclTerm *)
+if_exp_cs:                                IF logical_exp_cs THEN ocl_expression_cs ELSE ocl_expression_cs ENDIF                              (If (logical_exp_cs,DummyT,ocl_expression_cs1,DummyT,ocl_expression_cs2,DummyT,DummyT))
+
+(* RETURN: OclTerm list *)
+postfix_exp_tail_cs_p :                   postfix_exp_tail_cs							(trace low ("end of recursion..." ^ Ocl2String.ocl2string false postfix_exp_tail_cs ^ "\n");[postfix_exp_tail_cs])
+                                        | postfix_exp_tail_cs postfix_exp_tail_cs_p				(trace low ("add_source ..." ^ "\n" ^  "done");([postfix_exp_tail_cs]@postfix_exp_tail_cs_p))
+
+(* RETURN: OclTerm *)
+postfix_exp_tail_cs :                     DOT property_call_exp_cs						(property_call_exp_cs) 
+                                        | ARROW_RIGHT arrow_property_call_exp_cs				(arrow_property_call_exp_cs)
+(* NOT YET SUPPORTED 
+					| msg_operator_cs  signal_spec_exp_cs
+*)
+(* RETURN: OclTerm *)
+(* time_exp_cs ('atPre') gets handled separately in the preprocessor *) 
+property_call_exp_cs :                    path_name_cs								(AttributeCall (Variable ("dummy_source",DummyT),DummyT,path_name_cs, DummyT))
+					  (* '@pre'-expressions for 'AttributeCalls' *)
+                                        | path_name_cs time_exp_cs					        (AttributeCall (Variable ("dummy_source",DummyT),DummyT,path_name_cs@["atPre"],DummyT))
+                                        | path_name_cs property_call_parameters_cs				(OperationCall (Variable ("dummy_source",DummyT),DummyT,path_name_cs , property_call_parameters_cs,DummyT))
+					  (* '@pre'-expressions for 'OperationCalls' *)
+					| path_name_cs time_exp_cs property_call_parameters_cs			(OperationCall (Variable ("dummy_source",DummyT),DummyT,path_name_cs@["atPre"],property_call_parameters_cs,DummyT))
+
+(* NOT YET SUPPORTED 
+					| path_name_cs qualifiers						(CollectionLiteral (qualifiers, dispatch_collection (List.last path_name_cs,qualifiers)))
+                                       | path_name_cs qualifiers time_exp_cs
+*)
+
+(* RETURN: OclTerm *)
+arrow_property_call_exp_cs:             iterator_name_cs PAREN_OPEN expression PAREN_CLOSE (Iterator (iterator_name_cs,[],Variable("dummy_source",DummyT),DummyT,expression,DummyT,DummyT))
+    					| iterator_name_cs PAREN_OPEN iterator_vars_cs expression PAREN_CLOSE (trace low ("arrow_property_call_cs: iterator with vars..." ^ "\n");Iterator (iterator_name_cs,iterator_vars_cs,Variable("dummy_source",DummyT),DummyT,expression,DummyT,DummyT))
+					| simple_name PAREN_OPEN PAREN_CLOSE                                     (trace low ("arrow_property_call_exp_cs..." ^ "\n");OperationCall (Variable ("dummy_source",DummyT),DummyT,(["arrow"]@[simple_name]),[],DummyT))
+					| simple_name PAREN_OPEN actual_parameter_list_cs PAREN_CLOSE            (OperationCall (Variable ("dummy_source",DummyT),DummyT,(["arrow"]@[simple_name]),actual_parameter_list_cs,DummyT))
+(*
+                                        | ITERATE PAREN_OPEN initialized_variable_cs VERTICAL_BAR expression PAREN_CLOSE ()
+                                        | ITERATE PAREN_OPEN iterate_vars_cs initialize_variable_cs VERTICAL_BAR expression PAREN_CLOSE ()
+*)
+
+(*
+(* RETURN: (string * OclType) list *)
+iterate_vars_cs :                         actual_parameter_list_cs SEMI_COLON                ()
+*)
+(* RETURN: (string * OclType) list *)
+iterator_vars_cs :			  formal_parameter_list_cs VERTICAL_BAR              (formal_parameter_list_cs)
+
+(*
+(* RETURN: ... *)
+msg_operator_cs :			  CARAT                                              ()
+					| DBL_CARAT                                          ()
+*)
+
+(* NOT YET SUPPORTED 
+qualifiers :				  BRACKET_OPEN actual_parameter_list_cs BRACKET_CLOSE			(actual_parameter_list_cs)
+*)
+type_argument :				  PAREN_OPEN type_specifier PAREN_CLOSE					(type_specifier)
+
+(* RETURN: (OclTerm * OclType) list *)
+property_call_parameters_cs :		  PAREN_OPEN actual_parameter_list_cs PAREN_CLOSE			(actual_parameter_list_cs)
+                                        | PAREN_OPEN PAREN_CLOSE						([])
+
+
+(* NOT SUPPORTED YET
+signal_spec_exp_cs :			  simple_name PAREN_OPEN PAREN_CLOSE					
+					| simple_name PAREN_OPEN message_argument_list_cs PAREN_CLOSE
+
+*)
+(* RETURN: (OclTerm * OclType) list *)
+actual_parameter_list_cs :		  actual_parameter_list_element_cs					([actual_parameter_list_element_cs])
+					| actual_parameter_list_element_cs actual_parameter_list_tail_cs_p	([actual_parameter_list_element_cs]@actual_parameter_list_tail_cs_p)
+
+(* RETURN: (OclTerm * OclType) list *)
+actual_parameter_list_tail_cs_p :         actual_parameter_list_tail_cs						(actual_parameter_list_tail_cs)
+					| actual_parameter_list_tail_cs actual_parameter_list_tail_cs_p		(actual_parameter_list_tail_cs@actual_parameter_list_tail_cs_p)
+
+(* RETURN: (OclTerm * OclType) list *)
+actual_parameter_list_tail_cs :  	  COMMA actual_parameter_list_cs					(actual_parameter_list_cs)
+
+(* RETURN: (OclTerm * OclType) *)
+actual_parameter_list_element_cs :        expression 								(expression,DummyT)
+					| formal_parameter_cs							(Variable (#1(formal_parameter_cs),#2(formal_parameter_cs)),#2(formal_parameter_cs))
+
+(* RETURN: (string * OclType) list *)
+formal_parameter_list_cs :                formal_parameter_cs							([formal_parameter_cs])
+					| formal_parameter_cs formal_parameter_list_tail_cs			([formal_parameter_cs]@formal_parameter_list_tail_cs)
+
+(* RETURN: (string, OclType) list *)
+formal_parameter_list_tail_cs :		  COMMA formal_parameter_list_cs					(formal_parameter_list_cs)
+
+(* RETURN: (string, OclType) *)
+formal_parameter_cs :			  simple_name formal_parameter_type_specifier				(simple_name,formal_parameter_type_specifier)
+
+(* RETURN: OclType *)
+formal_parameter_type_specifier :         COLON type_specifier							(type_specifier)
+
+(* RETURN: OclType *)
+type_specifier:                           simple_type_specifier_cs                                              (trace low ("type_specifier ..." ^ "\n");simple_type_specifier_cs)
+                                        | collection_type_specifier_cs                                          (collection_type_specifier_cs)  
+(*
+	                                | typle_type_specifier_cs
+                                        
+*)
+
+(* RETURN: OclType *)
+simple_type_specifier_cs :                simple_name                                                           (string_to_type [simple_name])                                                          
+
+
+(* RETURN: (string * OclType * OclTerm) list *)
+initialized_variable_list_cs : 	          initialized_variable_cs                      ([initialized_variable_cs])
+                                        | initialized_variable_list_tail_cs_p          (initialized_variable_list_tail_cs_p)
+(* RETURN: (string * OclType * OclTerm) list *)
+initialized_variable_list_tail_cs_p :	  initialized_variable_list_tail_cs            ([initialized_variable_list_tail_cs])
+					| initialized_variable_list_tail_cs initialized_variable_list_tail_cs_p ([initialized_variable_list_tail_cs]@(initialized_variable_list_tail_cs_p))
+
+(* RETURN: (string * OclType * OclTerm) *)
+initialized_variable_list_tail_cs :       COMMA initialized_variable_cs                (initialized_variable_cs)
+
+(* RETURN: (string * OclType * OclTerm*)
+initialized_variable_cs :                 formal_parameter_cs variable_initializer      ((#1 formal_parameter_cs),(#2 formal_parameter_cs),variable_initializer)
+
+(* RETURN: (string * OclType) *)
+variable_declaration_cs :                 formal_parameter_cs                           (formal_parameter_cs)
+
+(* RETRUN: (OclTerm) *)
+variable_initializer :                    EQUALS ocl_expression_cs                      (ocl_expression_cs)
+
+(* RETURN: (string * OclType) list *)
+variable_declaration_list_cs :		  variable_declaration_cs                       ([variable_declaration_cs])
+					| variable_declaration_cs variable_declaration_list_tail_cs  ([variable_declaration_cs]@variable_declaration_list_tail_cs)
+
+(* RETURN: (string * OclType) list *)
+variable_declaration_list_tail_cs :       COMMA variable_declaration_list_cs            (variable_declaration_list_cs)
