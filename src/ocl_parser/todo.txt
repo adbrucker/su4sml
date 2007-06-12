@@ -1,9 +1,0 @@
-
-
-
-
-
-what needs to be done:
-
-- new copy of AssociationEndCall in typechecker.sml
-  (now written as comment and it is not actuall)
