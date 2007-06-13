@@ -39,3 +39,4 @@ use "ocl.grm.sml";
 use "parser.sml";
 use "fix_types.sml";
 use "model_import.sml";
+infix THEN;

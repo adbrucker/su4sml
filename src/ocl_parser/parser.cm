@@ -5,7 +5,7 @@ Group is
   $/smlnj-lib.cm
 #else
 #endif
-     ../su4sml/src/su4sml.cm
+     ../su4sml_core.cm
 
 #if defined (NEW_CM)
   $/basis.cm

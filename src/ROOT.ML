@@ -113,7 +113,13 @@ use "rep_secure.sml";
 use "rep_su2holocl.sml";
 
 (* ******************************************************** *)
-(* codegen-module, developed by Raphael Eidenbenz           *)
+(* OCL parser and type-checker                              *)
+OS.FileSys.chDir "ocl_parser"; 
+use "ROOT.ML"; 
+OS.FileSys.chDir "..";
+
+(* ******************************************************** *)
+(* codegen-module                                           *)
 OS.FileSys.chDir "codegen"; 
 use "ROOT.ML"; 
 OS.FileSys.chDir "..";
