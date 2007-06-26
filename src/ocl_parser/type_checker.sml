@@ -32,6 +32,7 @@ sig
     exception TypeCheckerResolveIfError of Rep_OclTerm.OclTerm * string
     exception NotYetSupportedError of string
     exception WrongContextChecked of Context.context
+    exception IterateError of string
 
     val check_context_list            : Context.context list -> Rep_Core.Classifier list -> Context.context option list
     val check_context                 : Context.context -> Rep_Core.Classifier list -> Context.context option
@@ -67,7 +68,7 @@ exception NotYetSupportedError of string
 exception WrongContextChecked of context
 exception AsSetError of (OclTerm * string list * int * (OclTerm * OclType) list *  Classifier list)
 exception DesugaratorCall of (OclTerm * string list * int * (OclTerm * OclType) list * Classifier list)
-			     
+exception IterateError of string			     
 
 (* RETURN: bool *)
 fun check_argument_type [] [] = true
@@ -422,10 +423,52 @@ let
 		     )
       end
   end
+(* generic iterate: Iterate *)
+| resolve_OclTerm (Iterate (iter_vars,res_var_name,res_var_typ,res_var_term,sterm,_,body_expr,_,res_typ)) model = 
+let
+    val _ = trace low ("RESOLVE Iterte: iterate = " ^ res_var_name  ^ "\n")
+	    
+	    
+    (* resolve source *)
+    val rsterm = resolve_OclTerm sterm model
+    val rtyp = type_of_term rsterm
+    val typ_of_iter = template_parameter rtyp
+
+    (* check type of iterate variables *)
+    val class_list = List.map (fn (a,b) => class_of_type b model) iter_vars
+    val typ_list = List.map type_of class_list
+		   
+    val list_conf = List.map (fn a => conforms_to a typ_of_iter model) typ_list
+in
+    if (List.all (fn (a) => if (a) then true else false) list_conf)
+    then
+	let
+	    (* resolve res term *)
+	    val res_var_rterm = resolve_OclTerm res_var_term model
+	    val res_var_rtyp = type_of_term res_var_rterm
+	    (* embed 'iterate'-variable in body_expr term *)
+	    val embed_body = embed_bound_variables iter_vars body_expr 
+	    (* resolve body_expr *)
+	    val rbody = resolve_OclTerm embed_body model
+	    val rbody_typ = type_of_term rbody
+	in
+	    if (conforms_to res_var_rtyp res_var_typ model)
+	    then
+		if (conforms_to rbody_typ res_var_typ model)
+		then
+		    Iterate (iter_vars,res_var_name,res_var_typ,res_var_rterm,rsterm,rtyp,rbody,rbody_typ,res_var_typ)
+		else
+		    raise IterateError ("Bodytermtyp (" ^ string_of_OclType rbody_typ ^") does not conform to result typ of expression (" ^ string_of_OclType res_var_typ ^ "\n")
+	    else
+		raise IterateError ("Static type of result variable (" ^ string_of_OclType res_var_typ ^ ") does not conform to dynamic type result variable (" ^ string_of_OclType res_var_rtyp ^ ") \n") 
+	end
+    else
+	raise IterateError ("Type of iteratores [] doesn't conform to type of source (" ^ (string_of_OclType rtyp) ^ "\n")
+end
 (* Iterator *)
 | resolve_OclTerm (Iterator (name,iter_vars,source_term,_,expr,expr_typ,res_typ)) model =
   let
-      (* resolve source term, type *)
+      (* resolve source term, type *)      
       val _ = trace low ("RESOLVE Itertor: name = " ^ name ^ "\n")
       val rterm = resolve_OclTerm source_term model
       val rtyp = type_of_term rterm
