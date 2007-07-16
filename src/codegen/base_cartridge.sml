@@ -40,7 +40,7 @@
 (* $Id$ *)
 
 (** 
- * This cartridge knows about the basic elements of UML class diagrams.
+ * This cartridge knows about the basic elements of UML class models.
  * The elements are classifiers, attributes, and operations with their
  * parameters in terms of the Rep interface
  *) 
@@ -90,8 +90,11 @@ type Model = Rep.Classifier list
 type environment = { model	  : Model,
                      counter      : int ref,
 		     curClassifier: Rep_Core.Classifier option,
+		     curInvariant : (string option * Rep_OclTerm.OclTerm) option, 
                      curAssocEnd  : Rep_Core.associationend option,
 		     curOperation : Rep_Core.operation option,
+		     curPrecondition : (string option * Rep_OclTerm.OclTerm) option, 
+		     curPostcondition: (string option * Rep_OclTerm.OclTerm) option, 
 		     curAttribute : Rep_Core.attribute option ,
 		     curArgument  : (string * Rep_OclType.OclType) option
 		   }
@@ -108,6 +111,9 @@ fun curArgument   (env : environment) = (#curArgument env)
 
 fun curClassifier' (env : environment) = Option.valOf((#curClassifier env))
 fun curAttribute'  (env : environment) = Option.valOf((#curAttribute env))
+fun curInvariant'  (env : environment) = Option.valOf((#curInvariant env))
+fun curPrecondition'  (env : environment) = Option.valOf((#curPrecondition env))
+fun curPostcondition'  (env : environment) = Option.valOf((#curPostcondition env))
 fun curAssociationEnd'  (env : environment) = Option.valOf((#curAssocEnd env))
 fun curOperation'  (env : environment) = Option.valOf((#curOperation env))
 fun curArgument'   (env : environment)  = Option.valOf((#curArgument env))
@@ -115,8 +121,11 @@ fun curArgument'   (env : environment)  = Option.valOf((#curArgument env))
 fun initEnv model = { model         = model,
                       counter       = ref 0,
 		      curClassifier = NONE,
+		      curInvariant  = NONE,
                       curAssocEnd   = NONE,
 		      curOperation  = NONE,
+		      curPrecondition  = NONE,
+		      curPostcondition = NONE,
 		      curAttribute  = NONE,
 		      curArgument   = NONE } : environment
 
@@ -142,8 +151,22 @@ fun lookup env "classifier_name"  	 = Rep_Core.short_name_of (curClassifier' env
   | lookup env "classifier_package_path" = curClassifierPackageToString env Rep_OclType.pathstring_of_path 
   | lookup env "classifier_parent"       = Rep_Core.short_parent_name_of (curClassifier' env)
   | lookup env "attribute_name"          = #name (curAttribute' env)
-  | lookup env "attribute_type" 	 = oclType2Native (#attr_type 
-                                                               (curAttribute' env))
+  | lookup env "attribute_type" 	 = oclType2Native (#attr_type (curAttribute' env))
+  
+  | lookup env "inv_name"                = (case #1 (curInvariant' env) of 
+  						NONE => "" 
+						| SOME n => n )
+  | lookup env "inv_cs" 	         = (Ocl2String.ocl2string false) (#2 (curInvariant' env))
+  | lookup env "post_name"               = (case #1 (curPostcondition' env) of 
+  						NONE => "" 
+						| SOME n => n )
+  | lookup env "post_cs" 	         = (Ocl2String.ocl2string false) (#2 (curPostcondition' env))
+  
+  | lookup env "pre_name"                = (case #1 (curPrecondition' env) of 
+  						NONE => "" 
+						| SOME n => n )
+  | lookup env "pre_cs" 	         = (Ocl2String.ocl2string false) (#2 (curPrecondition' env))
+
   | lookup env "attribute_visibility"    = visibility2Native(#visibility 
                                                                (curAttribute' env))
   | lookup env "attribute_scope" 	 = scope2Native (#scope (curAttribute' env))
@@ -195,6 +218,10 @@ fun test env "isClass"       = (case (#curClassifier env)  of
                                (parentName <> "oclLib.OclAny")
                            end
   | test env "hasOperations" = (length (Rep_Core.operations_of (curClassifier' env))) > 0
+  | test env "hasInvariants" = (length (Rep_Core.invariant_of (curClassifier' env))) > 0
+  | test env "hasOpSpec"     = ((length (Rep_Core.precondition_of_op (curOperation' env))) 
+                               +(length (Rep_Core.postcondition_of_op (curOperation' env)))) > 0
+  | test env "hasAttributes" = (length (Rep_Core.attributes_of (curClassifier' env))) > 0
   | test env "first_classifier" = (curClassifier' env = hd  (#model env))
   | test env "first_attribute" = (curAttribute'  env 
                                   = hd (Rep_Core.attributes_of (curClassifier' env)))
@@ -232,8 +259,11 @@ fun foreach_classifier (env : environment)
 	fun env_from_classifier c = { model        = #model env,
                                       counter      = #counter env,
 				      curClassifier= SOME c,
+		                      curInvariant  = NONE,
                                       curAssocEnd  = NONE,
 				      curOperation = NONE,
+		                      curPrecondition  = NONE,
+		                      curPostcondition = NONE,
 				      curAttribute = NONE,
 				      curArgument  = NONE }
     in 
@@ -249,21 +279,80 @@ fun foreach_nonprimitive_classifier (env : environment)
 	fun env_from_classifier c = { model = (#model env),
                                       counter = #counter env,
 				      curClassifier = SOME c,
+		                      curInvariant  = NONE,
                                       curAssocEnd  = NONE,
 				      curOperation = NONE,
+		                      curPrecondition  = NONE,
+		                      curPostcondition = NONE,
 				      curAttribute = NONE,
 				      curArgument  = NONE }
     in 
 	List.map env_from_classifier cl
     end
 				  
+fun foreach_invariant (env : environment) 
+  = let val invs = Rep_Core.invariant_of (curClassifier' env)
+	fun env_from_inv inv = { model = (#model env),
+                                      counter = #counter env,
+				      curClassifier = SOME (curClassifier' env),
+		                      curInvariant  = SOME inv,
+                                      curAssocEnd  = NONE,
+				      curOperation = NONE,
+		                      curPrecondition  = NONE,
+		                      curPostcondition = NONE,
+				      curAttribute = NONE,
+				      curArgument  = NONE }
+    in 
+	List.map env_from_inv invs
+    end
+				  
+
+fun foreach_precondition (env : environment) 
+  = let val pres = Rep_Core.precondition_of_op (curOperation' env)
+	fun env_from_pre pre = { model = (#model env),
+                                      counter = #counter env,
+				      curClassifier = SOME (curClassifier' env),
+		                      curInvariant  = NONE,
+                                      curAssocEnd  = NONE,
+				      curOperation = NONE,
+		                      curPrecondition  = SOME pre,
+		                      curPostcondition = NONE,
+				      curAttribute = NONE,
+				      curArgument  = NONE }
+    in 
+	List.map env_from_pre pres
+    end
+				  
+
+fun foreach_postcondition (env : environment) 
+  = let val posts = Rep_Core.postcondition_of_op (curOperation' env)
+	fun env_from_post post = { model = (#model env),
+                                      counter = #counter env,
+				      curClassifier = SOME (curClassifier' env),
+		                      curInvariant  = NONE,
+                                      curAssocEnd  = NONE,
+				      curOperation = NONE,
+		                      curPrecondition  = NONE,
+		                      curPostcondition = SOME post,
+				      curAttribute = NONE,
+				      curArgument  = NONE }
+    in 
+	List.map env_from_post posts
+    end
+				  
+
+
+
 fun foreach_attribute (env : environment) 
   = let val attrs = Rep_Core.attributes_of (curClassifier' env)
 	fun env_from_attr a = { model = #model env,
                                 counter      = #counter env,
 				curClassifier = SOME (curClassifier' env),
+		                curInvariant  = NONE,
                                 curAssocEnd  = NONE,
 				curOperation = NONE,
+		                curPrecondition  = NONE,
+		                curPostcondition = NONE,
 				curAttribute = SOME a,
 				curArgument  = NONE	}
     in 
@@ -275,7 +364,10 @@ fun foreach_operation (env : environment)
 	fun env_from_op operation = { model = #model env,
                                       counter      = #counter env,
 				      curClassifier = SOME (curClassifier' env),
+		                      curInvariant  = NONE,
 				      curOperation = SOME operation,
+		      curPrecondition  = NONE,
+		      curPostcondition = NONE,
                                       curAssocEnd  = NONE,
 				      curAttribute = NONE,
 				      curArgument  = NONE }
@@ -288,7 +380,10 @@ fun foreach_argument (env : environment)
 	fun env_from_argument arg = { model = #model env,
                                       counter      = #counter env,
 				      curClassifier = SOME (curClassifier' env),
+				      curInvariant  = NONE,
 				      curOperation = SOME (curOperation' env),
+		      curPrecondition  = NONE,
+		      curPostcondition = NONE,
                                       curAssocEnd  = NONE,
 				      curAttribute = NONE,
 				      curArgument  = SOME arg }
@@ -301,8 +396,11 @@ fun foreach_assocend (env : environment)
 	fun env_from_argument arg = { model = #model env,
                                       counter      = #counter env,
 				      curClassifier = SOME (curClassifier' env),
+				      curInvariant  = NONE,
                                       curAssocEnd   = SOME arg,
 				      curOperation = NONE,
+		                      curPrecondition  = NONE,
+		                      curPostcondition = NONE,
 				      curAttribute = NONE,
 				      curArgument  = NONE  }
     in 
@@ -322,6 +420,9 @@ fun foreach "classifier_list" env = foreach_classifier env
   | foreach "attribute_list" env  = foreach_attribute env 
   | foreach "operation_list" env  = foreach_operation env
   | foreach "argument_list"  env  = foreach_argument env
+  | foreach "invariant_list"  env  = foreach_invariant env
+  | foreach "precondition_list"  env  = foreach_precondition env
+  | foreach "postcondition_list"  env  = foreach_postcondition env
   | foreach "nonprimitive_classifier_list" env = foreach_nonprimitive_classifier env
   | foreach "assocend_list"  env  = foreach_assocend env
   (* hier muss man das Environment noch etwas umpacken 

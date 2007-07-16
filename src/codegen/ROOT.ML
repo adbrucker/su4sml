@@ -61,6 +61,7 @@ use "componentuml_cartridge.sml";
 use "java_cartridge.sml";
 use "junit_cartridge.sml"; 
 use "maven_pom_cartridge.sml"; 
+use "use_cartridge.sml"; 
 
 
 (* Statemachines *)

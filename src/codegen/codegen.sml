@@ -70,6 +70,8 @@ structure Junit_Gcg = GCG_Core (Junit_Cartridge(Java_Cartridge(Base_Cartridge)))
 
 structure Java_Ocl_Gcg = GCG_Core (Java_Cartridge(Base_Cartridge))
 
+structure Use_Gcg = GCG_Core (Use_Cartridge(Base_Cartridge))
+
 structure SecureMova_Gcg = GCG_Core (ComponentUML_Cartridge(Base_Cartridge))
 
  structure Maven_POM_Gcg = GCG_Core (Maven_POM_Cartridge(Base_Cartridge))
@@ -162,6 +164,14 @@ val supported_cartridges = [
      generator   = Java_Ocl_Gcg.generate,
      parser      = RepParser.readFile,
      template    = "java_ocl.tpl"},
+    (* USE (UML Specification Environment) Cartridge *)
+    {lang        = "USE",
+     name        = "USE Cartridge",
+     description = "",
+     recommended = true,
+     generator   = Use_Gcg.generate,
+     parser      = RepParser.readFile,
+     template    = "use.tpl"},
     (* SecureMOVA Cartridge *)
     {lang        = "securemova",
      name        = "SecureMOVA Cartridge",

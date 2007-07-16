@@ -100,8 +100,8 @@ fun ocl2string show_types oclterm =
 	(**************************************)
 	(* OCL Boolean                        *)
 	Literal (s, String)         => if show_types 
-				       then "(\""^s^"\":"^(string_of_OclType String)^")" 
-				       else "\""^s^"\""
+				       then "("^s^":"^(string_of_OclType String)^")" 
+				       else ""^s^""
       | Literal (lit, typ)          => if show_types 
 					then "("^lit^":"^(string_of_OclType typ)^")" 
 					else lit
@@ -166,6 +166,8 @@ fun ocl2string show_types oclterm =
 	=> OclSubString u (ocl2string u  src) (ocl2string u  b) (ocl2string u  e)		 
 *)
 
+      | OperationCall (src,styp,["oclLib",classifier,"allInstances"],[],_)
+        => (string_of_OclType (Rep_OclHelper.type_of src))^"::allInstances()"
       | OperationCall (src,styp,["oclLib",classifier,opname],[],rtyp) =>  string_of_oo_postfix1 show_types src styp opname rtyp
       | OperationCall (src,styp,["oclLib",classifier,opname],[(arg,atyp)],rtyp) => string_of_oo_infix show_types  src styp opname arg atyp rtyp
   

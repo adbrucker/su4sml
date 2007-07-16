@@ -2,10 +2,10 @@
  * su4sml --- a SML repository for managing (Secure)UML/OCL models
  *             http://projects.brucker.ch/su4sml/
  *                                                                            
- * codegen.cm --- 
+ * codegen.110.62.cm --- 
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2007, ETH Zurich, Switzerland
  *
  * All rights reserved.
  *
@@ -37,16 +37,16 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************)
-(* $Id$ *)
+(* $Id: codegen.cm 40127 2007-07-04 06:41:30Z brucker $ *)
 
 Group is
-#if(defined(SMLNJ_VERSION))
-  $/basis.cm 
-  $smlnj/compiler/current.cm
-  $/smlnj-lib.cm
+#if(defined(NEW_CM))
+ $smlnj/basis/basis.cm
+ $smlnj/compiler/compiler.cm
+  $smlnj/smlnj-lib/smlnj-lib.cm
+     ../su4sml.110.62.cm
 #else
 #endif
-     ../su4sml.cm
      cartridge.sig
      security_cartridge.sig
      gcg_helper.sml
