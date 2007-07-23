@@ -40,31 +40,35 @@
 (* $Id$ *)
 
 Group is
-#if(defined(SMLNJ_VERSION))
+
+#if(defined(SMLNJ_VERSION) && (SMLNJ_MINOR_VERSION < 60))
   $/basis.cm 
-  $smlnj/compiler/current.cm
-  $/smlnj-lib.cm
-#else
+  $/ml-yacc-lib.cm
 #endif
-     ../su4sml.cm
-     cartridge.sig
-     security_cartridge.sig
-     gcg_helper.sml
-     tpl_parser.sml
-     SM_helper.sml
-     stateMachine.sml
-     stateMachineTypes.sml
-     base_cartridge.sml
-     stringHandling.sml
-     c#_cartridge.sml
-     c#_net1_cartridge.sml
-     secureuml_cartridge.sml
-     design_cartridge.sig
-     componentuml_cartridge.sml
-     c#sm_cartridge.sml
-     java_cartridge.sml
-     junit_cartridge.sml
-     maven_pom_cartridge.sml
-     use_cartridge.sml
-     gcg_core.sml
-     codegen.sml
+#if(defined(SMLNJ_VERSION) && (SMLNJ_MINOR_VERSION >= 60))
+  $smlnj/basis/basis.cm
+  $smlnj/ml-yacc/ml-yacc-lib.cm
+#endif
+
+  ../su4sml_core.cm
+
+  stringHandling.sml
+  gcg_helper.sml
+  tpl_parser.sml
+  SM_helper.sml
+  stateMachineTypes.sml
+  stateMachine.sml
+  cartridge.sig
+  base_cartridge.sml
+  "c#_cartridge.sml"
+  "c#_net1_cartridge.sml"
+  "c#sm_cartridge.sml"
+  java_cartridge.sml
+  junit_cartridge.sml
+  maven_pom_cartridge.sml
+  use_cartridge.sml
+  secureuml_cartridge.sml
+  design_cartridge.sig
+  componentuml_cartridge.sml
+  gcg_core.sml
+  codegen.sml

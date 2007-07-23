@@ -40,26 +40,33 @@
 (* $Id$ *)
 
 Group is
-#if(defined(SMLNJ_VERSION))
+  ../su4sml_core.cm
+
+#if(defined(SMLNJ_VERSION) && (SMLNJ_MINOR_VERSION < 60))
   $/basis.cm 
-  $smlnj/compiler/compiler.cm
-  $/smlnj-lib.cm
-#else
-#endif
-     ../su4sml_core.cm
-
-#if defined (NEW_CM)
-  $/basis.cm
   $/ml-yacc-lib.cm
-#else
-  ml-yacc-lib.cm
+#endif
+#if(defined(SMLNJ_VERSION) && (SMLNJ_MINOR_VERSION >= 60))
+  $smlnj/basis/basis.cm
+  $smlnj/ml-yacc/ml-yacc-lib.cm
 #endif
 
+  "library.sml"	
+  context_declarations.sml		
+#if(defined(SMLNJ_VERSION))
   ocl.grm
   ocl.lex
+#else
+  "ml-yacc-lib/base.sig"
+  "ml-yacc-lib/join.sml"
+  "ml-yacc-lib/lrtable.sml"
+  "ml-yacc-lib/stream.sml"
+  "ml-yacc-lib/parser2.sml"
+  ocl.grm.sig
+  ocl.lex.sml
+  ocl.grm.sml
+#endif
   parser.sml
-  library.sml	
-  context_declarations.sml		
   preprocessor.sml
   type_checker.sml
   make_classifier_list.sml

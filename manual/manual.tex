@@ -2,9 +2,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage[draft]{fixme}
 \begin{document}
-\titlehead{Information Security Group\\ETH Zurich}
 \title{The SU4SML Manual}
-\author{Jürgen Doser (et al.?)}
+\author{Achim Brucker and Jürgen Doser}
 \maketitle
 
 \tableofcontents
@@ -80,6 +79,16 @@ Based on \cite{stock:automatic:2007}
 
  subsections for additional things like the jtestdataaccessor
   library from Manfred, or the statemachine animator from Rolf.
+
+\chapter{Developer's Guide}
+\section{Build Setup}
+We currently support the following SML compiler:
+\begin{itemize}
+\item sml/NJ (tested with version 110.52 and 110.62) using CM files
+\item mlton  (tested with version 20061107-1) using CM files
+\item poly/ML (tested with version 5.0) using ROOT.ML files (i.e., plain \texttt{use} commands)
+\end{itemize}
+
 
 %%% bibliography: all the related papers and student theses
 \bibliographystyle{alpha}

@@ -40,4 +40,11 @@
 (* $Id$ *)
 
 Group is
-    ocl_parser/parser.cm
+#if(defined(SMLNJ_VERSION) && (SMLNJ_MINOR_VERSION < 60))
+  $/basis.cm 
+#endif
+#if(defined(SMLNJ_VERSION) && (SMLNJ_MINOR_VERSION >= 60))
+  $smlnj/basis/basis.cm
+#endif
+  ocl_parser/parser.cm
+  codegen/codegen.cm
