@@ -341,6 +341,14 @@ and prefix_expression ext_path (Variable (s,t)) = (Variable (s,t))
     (OperationWithType (prefix_expression ext_path sterm,stype,para_name,para_type,res_type)) 
   | prefix_expression ext_path (CollectionLiteral (coll_part_list,typ)) =
     (CollectionLiteral (List.map (prefix_collectionpart ext_path) coll_part_list,typ))
+  | prefix_expression ext_path (Iterate (iter_vars,acc_var_name,acc_var_type,acc_var_term,sterm,stype,bterm,btype,restype)) = 
+    let
+	val prefixed_vars = List.map (fn a => (#1 a,prefix_type ext_path (#2 a))) iter_vars
+	val prefix_acc_type = prefix_type ext_path acc_var_type 
+    in
+	(Iterate (prefixed_vars,acc_var_name,prefix_acc_type,acc_var_term,sterm,stype,bterm,btype,restype))
+    end
+
 
 (* RETURN: OclType *)
 fun template_parameter typ =

@@ -229,6 +229,18 @@ fun add_source (source,(AttributeCall (_, _, path, res_typ ))) =
   | add_source (source, If (paras)) = 
     (* If has no source *)
     If (paras)
+  | add_source (source, Iterate([],acc_var_name,acc_var_type,acc_var_term,sterm,stype,bterm,btype,res_type)) =
+    let
+	val _ = trace low ("source added for Iterate ..." ^ "\n");
+    in
+	(Iterate ([],acc_var_name,acc_var_type,acc_var_term,source,DummyT,bterm,btype,res_type))
+    end
+  | add_source (source, Iterate(iter_vars,acc_var_name,acc_var_type,acc_var_term,sterm,stype,bterm,btype,res_type)) =
+    let
+	val _ = trace high ("source added for Iterate ..." ^ "\n");
+    in
+	(Iterate (iter_vars,acc_var_name,acc_var_type,acc_var_term,source,DummyT,bterm,btype,res_type))
+    end
 
 (* RETURN: OclTerm list *)
 fun add_source_to_list source (h::tail) = (add_source (source,h))::tail

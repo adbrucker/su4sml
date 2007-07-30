@@ -262,7 +262,7 @@ exception NotYetSupported of string
         | msg_operator_cs of OclTerm
         | property_call_parameters_cs of (OclTerm * OclType) list
         | qualifiers of CollectionPart list
-        | iterate_vars_cs
+        | iterate_vars_cs of (string * OclType) list
         | initialized_variable_cs of (string * OclType * OclTerm) 
         | actual_parameter_list_cs of (OclTerm * OclType) list
         | actual_parameter_list_tail_cs of (OclTerm * OclType) list
@@ -625,14 +625,14 @@ arrow_property_call_exp_cs:             iterator_name_cs PAREN_OPEN expression P
 					| simple_name PAREN_OPEN PAREN_CLOSE                                     (trace low ("arrow_property_call_exp_cs..." ^ "\n");OperationCall (Variable ("dummy_source",DummyT),DummyT,(["arrow"]@[simple_name]),[],DummyT))
 					| simple_name PAREN_OPEN actual_parameter_list_cs PAREN_CLOSE            (OperationCall (Variable ("dummy_source",DummyT),DummyT,(["arrow"]@[simple_name]),actual_parameter_list_cs,DummyT))
 (*
-                                        | ITERATE PAREN_OPEN initialized_variable_cs VERTICAL_BAR expression PAREN_CLOSE ()
-                                        | ITERATE PAREN_OPEN iterate_vars_cs initialize_variable_cs VERTICAL_BAR expression PAREN_CLOSE ()
+                                        | ITERATE PAREN_OPEN initialized_variable_cs VERTICAL_BAR expression PAREN_CLOSE  (Iterate ([],(#1 initialized_variable_cs),(#2 initialized_variable_cs),(#3 initialized_variable_cs),Variable ("dummy_source",DummyT),DummyT,expression,DummyT,DummyT))
 *)
+                                        | ITERATE PAREN_OPEN iterate_vars_cs initialized_variable_cs VERTICAL_BAR expression PAREN_CLOSE (Iterate (iterate_vars_cs,(#1 (initialized_variable_cs)),(#2 (initialized_variable_cs)),(#3 (initialized_variable_cs)),Variable ("dummy_source",DummyT),DummyT,expression,DummyT,DummyT))
 
-(*
+
 (* RETURN: (string * OclType) list *)
-iterate_vars_cs :                         actual_parameter_list_cs SEMI_COLON                ()
-*)
+iterate_vars_cs :                         formal_parameter_list_cs SEMI_COLON                (formal_parameter_list_cs)
+
 (* RETURN: (string * OclType) list *)
 iterator_vars_cs :			  formal_parameter_list_cs VERTICAL_BAR              (formal_parameter_list_cs)
 
@@ -707,7 +707,7 @@ initialized_variable_list_tail_cs_p :	  initialized_variable_list_tail_cs       
 (* RETURN: (string * OclType * OclTerm) *)
 initialized_variable_list_tail_cs :       COMMA initialized_variable_cs                (initialized_variable_cs)
 
-(* RETURN: (string * OclType * OclTerm*)
+(* RETURN: string * OclType * OclTerm  *)
 initialized_variable_cs :                 formal_parameter_cs variable_initializer      ((#1 formal_parameter_cs),(#2 formal_parameter_cs),variable_initializer)
 
 (* RETURN: (string * OclType) *)

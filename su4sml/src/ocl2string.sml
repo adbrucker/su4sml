@@ -203,7 +203,15 @@ fun ocl2string show_types oclterm =
       (* Iterate                            *)
       (**************************************)
       (* Error                              *)
-      | Iterate (_,s,_,_,src,_,c,_,_) =>  error ("error: unknown Iterate '"^(s)^"' in in ocl2string") 
+      | Iterate ([],acc_name,acc_type,acc_term,sterm,stype,bterm,btype,res_type) =>
+	(ocl2string false sterm) ^ "->" ^ "iterate(" ^ acc_name ^ ":" ^ (Rep_OclType.string_of_OclType acc_type) ^ (ocl2string false acc_term) ^ (ocl2string false bterm)
+      | Iterate (iter_vars,acc_name,acc_type,acc_term,sterm,stype,bterm,btype,res_type) =>  
+	let
+	    fun  string_of_vars [] = "" 
+	       | string_of_vars ((string,typ)::tail) = (string ^ ":" ^ (Rep_OclType.string_of_OclType typ))^(string_of_vars tail)
+	in
+	    (ocl2string false sterm) ^ "->" ^ "iterate(" ^ (string_of_vars iter_vars)  ^ acc_name ^ ":" ^ (Rep_OclType.string_of_OclType acc_type) ^ (ocl2string false acc_term) ^ (ocl2string false bterm)
+	end
       (**************************************)
       (* Iterator                           *)
       (**************************************)
@@ -217,17 +225,17 @@ fun ocl2string show_types oclterm =
 						       else (ocl2string show_types src)^"->"^iname^"("
 							    ^(cs_list (map #1 vars))
 							    ^"|"^(ocl2string show_types c)^")"
+(*
       (* OCL Collection                     *) 
-   (* 
       | Iterate (src,styp,["oclLib",classifier,"iterate"],args,Collection _) => OclIterate u C be e  
       | Iterate (src,styp,["oclLib",classifier,"isUnique"],args,Collection _) => OclIsUnique  u C be  
       | Iterate (src,styp,["oclLib",classifier,"one"],args,Collection _) => OclOne  u C be       
       | Iterate (src,styp,["oclLib",classifier,"any"],args,Collection _) => OclAny  u C be       
       (* OCL OrderedSet                     *) 
-      | Iterate (src,styp,["oclLib",classifier,"count"],[(arg,_)],OrderedSet _) => OclOSetCount u S e       *)
+      | Iterate (src,styp,["oclLib",classifier,"count"],[(arg,_)],OrderedSet _) => OclOSetCount u S e   *)
       (* Error                              *)
-  (*    | Iterator (s,_,_,_,_,_,_) => error ("error: unknown Iterator '"^(s)^"' in in ocl2string") 
-   *)   (**************************************)
+      (*    | Iterator (s,_,_,_,_,_,_) => error ("error: unknown Iterator '"^(s)^"' in in ocl2string") *)   
+      (**************************************)
       (* Catch out                          *)
       (**************************************)
       (* Error                              *)

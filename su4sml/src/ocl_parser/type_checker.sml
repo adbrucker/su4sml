@@ -51,6 +51,8 @@ sig
     exception NotYetSupportedError of string
     exception WrongContextChecked of Context.context
     exception IterateError of string
+    exception IterateAccumulatorTypeError of string
+    exception IterateTypeMissMatch of string
 
     val check_context_list            : Context.context list -> Rep_Core.Classifier list -> Context.context option list
     val check_context                 : Context.context -> Rep_Core.Classifier list -> Context.context option
@@ -75,8 +77,6 @@ open Ext_Library
 type operation = Rep_Core.operation
 type attribute = Rep_Core.attribute
 
-
-
 exception wrongCollectionLiteral of Rep_OclTerm.OclTerm * string
 exception CollectionRangeError of Rep_OclTerm.CollectionPart * string
 exception IteratorTypeMissMatch of Rep_OclTerm.OclTerm * string 
@@ -87,6 +87,8 @@ exception WrongContextChecked of context
 exception AsSetError of (OclTerm * string list * int * (OclTerm * OclType) list *  Classifier list)
 exception DesugaratorCall of (OclTerm * string list * int * (OclTerm * OclType) list * Classifier list)
 exception IterateError of string			     
+exception IterateAccumulatorTypeError of string
+exception IterateTypeMissMatch of string			  
 
 (* RETURN: bool *)
 fun check_argument_type [] [] = true
@@ -440,48 +442,6 @@ let
 			   | NoCollectionTypeError typ => AsSet_desugarator rterm meth_path 0 rargs model 
 		     )
       end
-  end
-(* generic iterate: Iterate *)
-| resolve_OclTerm (Iterate (iter_vars,res_var_name,res_var_typ,res_var_term,sterm,_,body_expr,_,res_typ)) model = 
-let
-    val _ = trace low ("RESOLVE Iterte: iterate = " ^ res_var_name  ^ "\n")
-	    
-	    
-    (* resolve source *)
-    val rsterm = resolve_OclTerm sterm model
-    val rtyp = type_of_term rsterm
-    val typ_of_iter = template_parameter rtyp
-
-    (* check type of iterate variables *)
-    val class_list = List.map (fn (a,b) => class_of_type b model) iter_vars
-    val typ_list = List.map type_of class_list
-		   
-    val list_conf = List.map (fn a => conforms_to a typ_of_iter model) typ_list
-in
-    if (List.all (fn (a) => if (a) then true else false) list_conf)
-    then
-	let
-	    (* resolve res term *)
-	    val res_var_rterm = resolve_OclTerm res_var_term model
-	    val res_var_rtyp = type_of_term res_var_rterm
-	    (* embed 'iterate'-variable in body_expr term *)
-	    val embed_body = embed_bound_variables iter_vars body_expr 
-	    (* resolve body_expr *)
-	    val rbody = resolve_OclTerm embed_body model
-	    val rbody_typ = type_of_term rbody
-	in
-	    if (conforms_to res_var_rtyp res_var_typ model)
-	    then
-		if (conforms_to rbody_typ res_var_typ model)
-		then
-		    Iterate (iter_vars,res_var_name,res_var_typ,res_var_rterm,rsterm,rtyp,rbody,rbody_typ,res_var_typ)
-		else
-		    raise IterateError ("Bodytermtyp (" ^ string_of_OclType rbody_typ ^") does not conform to result typ of expression (" ^ string_of_OclType res_var_typ ^ "\n")
-	    else
-		raise IterateError ("Static type of result variable (" ^ string_of_OclType res_var_typ ^ ") does not conform to dynamic type result variable (" ^ string_of_OclType res_var_rtyp ^ ") \n") 
-	end
-    else
-	raise IterateError ("Type of iteratores [] doesn't conform to type of source (" ^ (string_of_OclType rtyp) ^ "\n")
 end
 (* Iterator *)
 | resolve_OclTerm (Iterator (name,iter_vars,source_term,_,expr,expr_typ,res_typ)) model =
@@ -540,6 +500,53 @@ end
 	  end
       else      
 	  raise IteratorTypeMissMatch (Iterator (name,iter_vars,source_term,DummyT,expr,expr_typ,res_typ),("Iterator variable doesn't conform to choosen set \n"))
+  end     
+| resolve_OclTerm (Iterate (iter_vars,acc_var_name,acc_var_type,acc_var_term,sterm,stype,bterm,btype,res_type)) model = 
+let
+      (* resolve source term, type *)
+      val _ = trace medium ("RESOLVE Iterate: accumulator " ^ acc_var_name ^ "\n")
+      val rterm = resolve_OclTerm sterm model
+      val rtyp = type_of_term rterm
+      val _ = trace medium ("res Iterate: source type " ^ string_of_OclType (type_of_term  rterm) ^ "\n\n")
+      (* get source classifier *)
+      val source_class = get_classifier rterm model
+      val _ = trace medium ("res Iterate: type of classifier: " ^ string_of_OclType (type_of source_class) ^ "\n")
+      (* prefix types *)
+      val prfx = (package_of_template_parameter (type_of source_class))
+      val _ = trace medium ("res Iterate: Type prefixed ... \n")
+      val piter_vars = List.map (fn (a,b) => (a,prefix_type prfx b)) iter_vars
+      val piter_types = List.map (fn (a,b) => b) piter_vars 
+      val _ = trace medium ("res Iterate: first iter types: " ^ string_of_OclType (List.hd piter_types) ^ "\n") 
+      (* check if iterator types correspond to source type *)
+      val static_iter_type = template_parameter (type_of (source_class))
+      val _ = trace medium ("Length of iter_types: " ^ Int.toString (List.length piter_types) ^ "\n")
+      val _ = trace medium ("parent of classifier: " ^ string_of_OclType (type_of_parent source_class) ^ "\n")
+      val _ = trace medium ("\nstatic iter type : " ^ string_of_OclType static_iter_type ^ "  \n")
+      val _ = trace medium ("iter types: " ^ string_of_OclType (List.hd piter_types) ^ "\n")
+      val h2 = List.map (fn a => conforms_to a static_iter_type model) (piter_types)
+      val check = List.all (fn a => a=true) h2
+      (* check if initial value of accumulator has correct type *)
+      val racc_var_term = resolve_OclTerm acc_var_term model
+      val racc_var_type = type_of_term racc_var_term
+  in
+      if (check) then
+	  if (racc_var_type = acc_var_type) then
+	      let
+		  val _ = trace medium  ("res Iterate: types conforms \n")
+		  val bound_expr = embed_bound_variables piter_vars bterm
+		  val bound_expr2 = embed_bound_variables [(acc_var_name,acc_var_type)] bound_expr
+		  val _ = trace medium ("myres Iterate: term : " ^ Ocl2String.ocl2string false bound_expr2 ^ "\n")
+		  val rexpr = resolve_OclTerm bound_expr2 model
+		  val _ = trace medium (" manuel " ^ string_of_OclType (type_of_term rexpr) ^ "\n")
+		  val _ = trace medium (" ma     " ^ string_of_OclType (Set(static_iter_type)) ^ "\n")
+		  val _ = trace medium  ("res Iterate: \n\n\n")
+	      in
+		  Iterate(piter_vars,acc_var_name,racc_var_type,racc_var_term,rterm,rtyp,rexpr,type_of_term rexpr,racc_var_type)
+	      end
+	  else
+	      raise IterateAccumulatorTypeError ("Type of accumulator does not conform to type of expression of accumulator")
+      else
+	  raise IterateTypeMissMatch ("Iterate variables doesn't conform to choosen set \n")
   end     
 | resolve_OclTerm (CollectionLiteral ([],typ)) model = 
   let

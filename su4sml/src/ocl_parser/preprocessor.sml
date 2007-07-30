@@ -187,7 +187,8 @@ and embed_atPre_expressions (Variable (str,typ)) = (Variable (str,typ))
     (Let (var_name,var_type,embed_atPre_expressions rhs,rhs_type,embed_atPre_expressions in_e,in_type))
   | embed_atPre_expressions (Iterator (name,iter_vars,sterm,stype,body_e,body_type,res_type)) = 
     (Iterator (name,iter_vars,embed_atPre_expressions sterm,stype,embed_atPre_expressions body_e,body_type,res_type))
-
+  | embed_atPre_expressions (Iterate (iter_vars,acc_var_name,acc_var_type,acc_var_term,sterm,stype,bterm,btype,res_type)) = 
+    (Iterate (iter_vars,acc_var_name,acc_var_type,acc_var_term,embed_atPre_expressions sterm,stype,embed_atPre_expressions bterm,btype,res_type))
 (* RETURN: OclTerm *)
 fun embed_bound_variable (str,typ) (Variable(s,t)) = 
     let
@@ -219,6 +220,12 @@ fun embed_bound_variable (str,typ) (Variable(s,t)) =
       	val _ = trace zero ("Bound variable '" ^ s ^ "' in 'Iterator': " ^ Ocl2String.ocl2string false (Iterator (name,iter_list,sterm,styp,expr,expr_typ,rtyp)) ^ "\n")
   in
       (Iterator (name,iter_list,embed_bound_variable (s,typ) sterm,styp,embed_bound_variables iter_list (embed_bound_variable (s,typ) expr),expr_typ,rtyp))
+  end
+| embed_bound_variable (s,typ) (Iterate (iter_vars,acc_name,acc_type,acc_term,sterm,stype,bterm,btype,res_type)) =
+  let
+      val  _ = trace medium ("Bound variable '" ^ s ^ "' in 'Iterate': " ^ Ocl2String.ocl2string false (Iterate (iter_vars,acc_name,acc_type,acc_term,sterm,stype,bterm,btype,res_type)) ^ "\n")
+  in
+     (Iterate (iter_vars,acc_name,acc_type,acc_term,embed_bound_variable (s,typ) sterm,stype,embed_bound_variable (s,typ) bterm,btype,res_type))
   end
 | embed_bound_variable (s,typ) (Let (var_name,var_type,rhs,rhs_type,in_e,in_type)) =
   let
@@ -353,9 +360,15 @@ check_for_self arg_list typ (AttributeCall (Variable("dummy_source",_),_,path,_)
   end
 | check_for_self arg_list typ (Iterator (name,iter_var,sterm,styp,expr,expr_typ,res_typ)) model = 
   let
-      val _ = trace zero ("check_for_self: complex OperationCall "^ "\n")
+      val _ = trace zero ("check_for_self: Iterator "^ "\n")
   in
       (Iterator (name,iter_var,(check_for_self arg_list typ sterm model),styp,(check_for_self arg_list typ expr model),expr_typ,res_typ))
+  end
+| check_for_self arg_list typ (Iterate (iter_vars,acc_name,acc_type,acc_term,sterm,stype,bterm,btype,res_type)) model = 
+  let
+      val _ = trace zero ("check_for_self: Iterate "^ "\n")
+  in
+      (Iterate (iter_vars,acc_name,acc_type,acc_term,(check_for_self arg_list typ sterm model),stype,(check_for_self arg_list typ bterm model),btype,res_type))
   end
 | check_for_self arg_list typ (Let (str,ttyp,rhs_term,rhs_typ,in_term,in_typ)) model =
   let
