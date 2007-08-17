@@ -52,7 +52,9 @@ fun su4sml_home () = case OS.Process.getEnv "HOLOCL_HOME" of
 			 SOME p => p^"/lib/su4sml/src"
 		       | NONE   => (case OS.Process.getEnv "SU4SML_HOME" of
 				        SOME p => p^"/src"
-				      | NONE => getOpt(OS.Process.getEnv "UML2CDL_HOME",".")
+				      | NONE => (case OS.Process.getEnv "UML2CDL_HOME" of 
+                                                     SOME p => p^"../../../src"
+                                                   | NONE => ".")
                                    )
 
 
