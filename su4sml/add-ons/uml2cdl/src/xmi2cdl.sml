@@ -40,17 +40,18 @@
 
 (**
  * functions for parsing xmi into cdl types.
+ * TODO: fix exception handling
  *)
 structure Xmi2Cdl :
 sig
     val transformXMI : XMI.XmiContent -> CDL.tPackage
     val readXMI      : string -> CDL.tPackage
     (* generic exception if something is wrong *)
-    exception IllFormed of string
+    exception IllFormed of string 
 end  = 
 struct
 open Xmi_IDTable
-
+exception IllFormed of string
 
 fun filterClassifiersByStereotype t st list = 
     List.filter (fn XMI.Class x            => List.exists (fn y => find_stereotype t y = st) (#stereotype x)
@@ -69,7 +70,7 @@ fun filterToken            t = filterClassifiersByStereotype t "CDL.Token"
 fun mkBehavior (XMI.Interface c) = { name = #name c,
 				     (* FIX: how to specify the WSDL interface? *)
 				     interface = NONE }
-	handle IllFormed msg => raise IllFormed ("Error in mkBehavior: "^msg^"\n") 
+    handle IllFormed msg => raise IllFormed ("Error in mkBehavior: "^msg^"\n") 
 
 
 (** 
@@ -82,7 +83,7 @@ fun mkToken t (XMI.Class c) =
       informationType = getOpt(Option.map (XMI.classifier_name_of o (find_classifier t) o #type_id) 
 					  (List.find (fn (x:XMI.Attribute) => #name x = "informationType") 
 						     (#attributes c)),"dummyType")} 
-	handle IllFormed msg => raise IllFormed ("Error in mkToken: "^msg^"\n") 
+    handle IllFormed msg => raise IllFormed ("Error in mkToken: "^msg^"\n") 
 
 (** 
  * transform a class with Stereotype <<CDL.RoleType>> into a CDL.tRoleType.
@@ -95,7 +96,7 @@ fun mkRoleType t (XMI.Class c) =
 		       #supplier o (find_dependency t))
 		      (#clientDependency c)
 		      }
-	handle IllFormed msg => raise IllFormed ("Error in mkRoleType: "^msg^"\n") 
+    handle IllFormed msg => raise IllFormed ("Error in mkRoleType: "^msg^"\n") 
                                   
 (** 
  * transform an association class with stereotype <<CDL.RelationshipType>>     
@@ -114,7 +115,7 @@ fun mkRelationshipType t (XMI.AssociationClass c) =
 		  behavior = NONE})
 	 }
     end
-	handle IllFormed msg => raise IllFormed ("Error in mkRelationshipType: "^msg^"\n") 
+    handle IllFormed msg => raise IllFormed ("Error in mkRelationshipType: "^msg^"\n") 
 
 
 val mkRelationshipRef = XMI.classifier_name_of    
@@ -132,7 +133,7 @@ fun mkParticipantType t (XMI.Class c) =
 	{ name = #name c,
 	  role = map (fn x => {ref_type=x}) connected_names  }
     end
-	handle IllFormed msg => raise IllFormed ("Error in mkParticipantType: "^msg^"\n") 
+    handle IllFormed msg => raise IllFormed ("Error in mkParticipantType: "^msg^"\n") 
 
 
 (** 
@@ -163,7 +164,7 @@ fun mkChannelType t (class as XMI.Class c) =
 						"dummyToken")},
 	 identity = NONE (* FIX *)}
     end
-	handle IllFormed msg => raise IllFormed ("Error in mkChannelType: "^msg^"\n") 
+    handle IllFormed msg => raise IllFormed ("Error in mkChannelType: "^msg^"\n") 
 	
 (** 
  * transform an attribute of a classifier into a CDL.tVariable.
@@ -193,7 +194,7 @@ fun mkVariable t (a:XMI.Attribute) =
 	  roleTypes = rt
 	  }
     end
-	handle IllFormed msg => raise IllFormed ("Error in mkVariable: "^msg^"\n") 
+    handle IllFormed msg => raise IllFormed ("Error in mkVariable: "^msg^"\n") 
 
 (** 
  * transform the given action state with stereotype <<CDL.send>>,      
@@ -229,7 +230,7 @@ fun mkExchange t ((send_state,objflow_state,receive_state):XMI.StateVertex*XMI.S
 		     causeException = Option.mapPartial Bool.fromString (state_taggedvalue_of t "CDL.causeException" send_state)}
 	  }
     end
-	handle IllFormed msg => raise IllFormed ("Error in mkExchange: "^msg^"\n") 
+    handle IllFormed msg => raise IllFormed ("Error in mkExchange: "^msg^"\n") 
 
 fun entry_action_body (XMI.ActionState {entry,...}) =
     case entry
@@ -306,7 +307,7 @@ fun mkInteraction t (act:CDL.tActivity list) (st:XMI.StateVertex)=
 			   record = nil (* FIX *)
 			   })::act,next)
     end
-	handle IllFormed msg => raise IllFormed ("Error in mkInteraction: "^msg^"\n") 
+    handle IllFormed msg => raise IllFormed ("Error in mkInteraction: "^msg^"\n") 
 
 (** 
  * transform a procedure into an CDL.tDescription 
@@ -316,7 +317,7 @@ fun mkInteraction t (act:CDL.tActivity list) (st:XMI.StateVertex)=
 fun mkDescription (XMI.mk_Procedure p) =
     {description_type = CDL.tDescriptionTypeFromString (#language p),
      content = #body p}
-	handle IllFormed msg => raise IllFormed ("Error in mkDescription: "^msg^"\n") 
+    handle IllFormed msg => raise IllFormed ("Error in mkDescription: "^msg^"\n") 
 
 
 (** 
@@ -337,7 +338,7 @@ fun mkSilentAction t (act:CDL.tActivity list) (st:XMI.StateVertex) =
 			    description = Option.map mkDescription doc})::act,
 	 next) 
     end
-	handle IllFormed msg => raise IllFormed ("Error in mkSilentAction: "^msg^"\n") 
+    handle IllFormed msg => raise IllFormed ("Error in mkSilentAction: "^msg^"\n") 
  
 (** 
  * transform any other Action State into a CDL.noAction.
@@ -350,25 +351,25 @@ fun mkNoAction t (act:CDL.tActivity list) (st:XMI.StateVertex) =
 	((CDL.noAction {roleType = state_taggedvalue_of t "partition" st })::act,
 	 next)
     end
-	handle IllFormed msg => raise IllFormed ("Error in mkNoAction: "^msg^"\n") 
+    handle IllFormed msg => raise IllFormed ("Error in mkNoAction: "^msg^"\n") 
 
 fun mkAssign t (act:CDL.tActivity list) (st:XMI.StateVertex) =
     let val next = hd (successor_states_of t st)
     in
 	((CDL.assign { copy = [{name = "undefined", (* FIX *)
-                           causeException = SOME false, (* FIX *)
-                           source = {variable = "cdl:getVariable('"^
-                                                (Option.valOf(state_taggedvalue_of t "CDL.source" st))^
-                                                "','','')",
-                                     expression = "" },
-                           target = {variable = "cdl.getVariable('"^
-                                                (Option.valOf(state_taggedvalue_of t "CDL.target" st))^
-                                                "','','')"}
-                          }],
-                   roleType = Option.valOf(state_taggedvalue_of t "partition" st )})::act,
+                                causeException = SOME false, (* FIX *)
+                                source = {variable = "cdl:getVariable('"^
+                                                     (Option.valOf(state_taggedvalue_of t "CDL.source" st))^
+                                                     "','','')",
+                                          expression = "" },
+                                target = {variable = "cdl.getVariable('"^
+                                                     (Option.valOf(state_taggedvalue_of t "CDL.target" st))^
+                                                     "','','')"}
+                              }],
+                       roleType = Option.valOf(state_taggedvalue_of t "partition" st )})::act,
 	 next)
     end
-	handle IllFormed msg => raise IllFormed ("Error in mkAssign: "^msg^"\n") 
+    handle IllFormed msg => raise IllFormed ("Error in mkAssign: "^msg^"\n") 
     
 
 (** 
@@ -399,7 +400,7 @@ fun mkActivity t (act:CDL.tActivity list) (st:XMI.StateVertex) =
 		   | XMI.PseudoState{kind=XMI.join,...} => (wrap_up acts, next)
 		   | _  => mkActivity t acts next
     end
-	handle IllFormed msg => raise IllFormed ("Error in mkActivity: "^msg^"\n") 
+    handle IllFormed msg => raise IllFormed ("Error in mkActivity: "^msg^"\n") 
 (**
  * transform the parallel action states following this fork state into
  * a CDL.parallel activity  
@@ -410,7 +411,7 @@ and mkParallel t (act:CDL.tActivity list) (st:XMI.StateVertex) =
     in 
         (((CDL.parallel acts)::act),hd (successor_states_of t join))
     end
-	handle IllFormed msg => raise IllFormed ("Error in mkParallel: "^msg^"\n") 
+    handle IllFormed msg => raise IllFormed ("Error in mkParallel: "^msg^"\n") 
 
 (** transforms a class with stereotype <<CDL.Choreography>> into a       
  * CDL.tchoreography. The attributes complete, isolation, root, and     
@@ -459,7 +460,7 @@ fun mkChoreography t (class as XMI.Class c) =
 			  exceptionBlock = [], (* FIX: use association with stereotype exceptionBlock *)
 			  finalizerBlock = [] (* FIX: use association with stereotype finalizerBlock *)}
     end
-	handle IllFormed msg => raise IllFormed ("Error in mkChoreography: "^msg^"\n") 
+    handle IllFormed msg => raise IllFormed ("Error in mkChoreography: "^msg^"\n") 
 
 
 
@@ -516,7 +517,7 @@ fun mkInformationType t (XMI.Class c) =
      information_type = SOME (class2typename (#name c)),
      element=class_taggedvalue_of t "CDL.element" (XMI.Primitive c),
      exceptionType = Option.mapPartial Bool.fromString (class_taggedvalue_of t "CDL.exceptionType" (XMI.Primitive c))}
-	handle IllFormed msg => raise IllFormed ("Error in mkInformationType: "^msg^"\n") 
+    handle IllFormed msg => raise IllFormed ("Error in mkInformationType: "^msg^"\n") 
 
 (**
  * transform a UML package (model) into a CDL package.
@@ -557,7 +558,7 @@ fun mkPackage t (XMI.Package p) =
      choreography = map (mkChoreography t)
 			   (filterChoreography t (#classifiers p))
      }:CDL.tPackage
-	handle IllFormed msg => raise IllFormed ("Error in mkPackage: "^msg^"\n") 
+    handle IllFormed msg => raise IllFormed ("Error in mkPackage: "^msg^"\n") 
 
 (**
  * transform the first package (i.e., the top-level model) of an
@@ -583,8 +584,8 @@ fun transformXMI ({classifiers,constraints,packages,
 	mkPackage xmiid_table model (* FIX: use first package with *)
                                     (* stereotype <<CDL.package>>  *)
     end
-	handle XmlTree.IllFormed msg =>  error ("Warning: "^msg^"\n") 
-	     | IllFormed msg => error ("Warning: "^msg^"\n") 
+    (* handle XmlTree.IllFormed msg =>  error ("Warning: "^msg^"\n") *)
+    handle IllFormed msg => error ("Warning: "^msg^"\n") 
 	     (* | _ => error "" *)
 (** 
  * read an xmi-file and transform to CDL.
