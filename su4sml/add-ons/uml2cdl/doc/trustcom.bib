@@ -1,0 +1,332 @@
+@STRING{lncs	= "Lecture Notes in Computer Science" }
+
+@Book{		  winskel:semantics:1993,
+  bibkey	= { winskel:semantics:1993},
+  author	= {Glynn Winskel},
+  title		= {The Formal Semantics of Programming Languages},
+  publisher	= {MIT Press},
+  address	= {Cambridge, Massachusetts},
+  pages		= 384,
+  year		= 1993
+}
+
+@Book{		  andrews:introduction:1986,
+  author	= {Peter B. Andrews},
+  title		= {An Introduction to Mathematical Logic and Type Theory: To
+		  Truth Through Proof},
+  year		= 1986,
+  month		= may,
+  publisher	= {Academic Press},
+  myseries	= {Computer Science and Applied Mathematics},
+  address	= {Orlando}
+}
+
+@Article{	  church:types:1940,
+  author	= {Church, Alonzo},
+  title		= {A formulation of the simple theory of types},
+  journal	= {Journal of Symbolic Logic},
+  year		= 1940,
+  volume	= 5,
+  pages		= {56--68}
+}
+
+@Book{		  nipkow.ea:isabelle:2002,
+  author	= {Tobias Nipkow and Lawrence C. Paulson and Markus Wenzel},
+  title		= {Isabelle/HOL --- A Proof Assistant for Higher-Order
+		  Logic},
+  publisher	= {Springer},
+  series	= {LNCS},
+  volume	= 2283,
+  abstract	= {This book is a self-contained introduction to interactive
+		  proof in higher-order logic (HOL), using the proof
+		  assistant Isabelle2002. It is a tutorial for potential
+		  users rather than a monograph for researchers. The book has
+		  three parts.
+		  
+		  1. Elementary Techniques shows how to model functional
+		  programs in higher-order logic. Early examples involve
+		  lists and the natural numbers. Most proofs are two steps
+		  long, consisting of induction on a chosen variable followed
+		  by the auto tactic. But even this elementary part covers
+		  such advanced topics as nested and mutual recursion. 2.
+		  Logic and Sets presents a collection of lower-level tactics
+		  that you can use to apply rules selectively. It also
+		  describes Isabelle/HOL's treatment of sets, functions and
+		  relations and explains how to define sets inductively. One
+		  of the examples concerns the theory of model checking, and
+		  another is drawn from a classic textbook on formal
+		  languages. 3. Advanced Material describes a variety of
+		  other topics. Among these are the real numbers, records and
+		  overloading. Advanced techniques are described involving
+		  induction and recursion. A whole chapter is devoted to an
+		  extended example: the verification of a security protocol.
+		  },
+  year		= 2002
+}
+
+@Article{	  nipkow:winskel:1998,
+  author	= {Tobias Nipkow},
+  title		= {Winskel is (almost) Right: Towards a Mechanized Semantics
+		  Textbook},
+  journal	= {Formal Aspects of Computing},
+  volume	= 10,
+  pages		= {171--186},
+  abstract	= {We present a formalization of the first 100 pages of
+		  Winskel's textbook `The Formal Semantics of Programming
+		  Languages' in the theorem prover Isabelle/HOL: 2
+		  operational, 2 denotational, 2 axiomatic semantics, a
+		  verification condition generator, and the necessary
+		  soundness, completeness and equivalence proofs, all for a
+		  simple imperative programming language.},
+  year		= 1998
+}
+
+@MastersThesis{	  kimmig:red-black:2003,
+  address	= {Freiburg},
+  author	= {Angelika Kimmig},
+  type		= {Studienarbeit},
+  language	= {german},
+  month		= nov,
+  public	= {yes},
+  school	= {Universit\"at Freiburg},
+  title		= {Red-black Trees of smlnj},
+  year		= 2003
+}
+
+@PhDThesis{	  wenzel:isabelleisar:2002,
+  author	= {Markus M. Wenzel},
+  title		= {Isabelle/Isar --- a versatile environment for
+		  human-readable formal proof documents},
+  school	= {TU M\"unchen},
+  year		= 2002,
+  abstract	= {The basic motivation of this work is to make formal theory
+		  developments with machine-checked proofs accessible to a
+		  broader audience. Our particular approach is centered
+		  around the Isar formal proof language that is intended to
+		  support adequate composition of proof documents that are
+		  suitable for human consumption. Such primary proofs written
+		  in Isar may be both checked by the machine and read by
+		  human-beings; final presentation merely involves trivial
+		  pretty printing of the sources. Sound logical foundations
+		  of Isar are achieved by interpretation within the generic
+		  Natural Deduction framework of Isabelle, reducing all
+		  high-level reasoning steps to primitive inferences.
+		  
+		  The resulting Isabelle/Isar system is generic with respect
+		  to object-logics and proof tools, just as pure Isabelle
+		  itself. The full Isar language emerges from a small core by
+		  means of several derived elements, which may be combined
+		  freely with existing ones. This results in a very rich
+		  space of expressions of formal reasoning, supporting many
+		  viable proof techniques. The general paradigms of Natural
+		  Deduction and Calculational Reasoning are both covered
+		  particularly well. Concrete examples from logic,
+		  mathematics, and computer-science demonstrate that the Isar
+		  concepts are indeed sufficiently versatile to cover a broad
+		  range of applications.},
+  pdf		= {papers/2002/wenzel.pdf},
+  address	= {M\"unchen},
+  month		= feb
+}
+
+@Article{	  grieskamp.ea:instrumenting:2004,
+  author	= {Wolfgang Grieskamp and Nikolai Tillmann and Margus
+		  Veanes},
+  booktitle	= {Third International Conference on Quality Software: QSIC
+		  2003},
+  title		= {Instrumenting scenarios in a model-driven development
+		  environment},
+  journal	= {Information and Software Technology},
+  year		= 2004,
+  number	= 15,
+  volume	= 46,
+  pages		= {1027--1036},
+  pdf		= {papers/2004/grieskamp.ea-instrumenting-2004.pdf},
+  doi		= {10.1016/j.infsof.2004.07.007},
+  abstract	= {SpecExplorer is an integrated environment for model-driven
+		  development of .NET software. In this paper we discuss how
+		  scenarios can be described in SpecExplorer's modeling
+		  language, Spec#, and how the SpecExplorer tool can be used
+		  to validate those scenarios by various means.}
+}
+
+@InCollection{	  brucker.ea:symbolic:2005,
+  abstract	= {We present a method for the automatic generation of test
+		  cases for HOL formulae containing primitive recursive
+		  predicates. These test cases can be used for the animation
+		  of specifications as well as for black-box testing of
+		  external programs. Our method is two-staged: first, the
+		  original formula is partitioned into test cases by
+		  transformation into a Horn-clause normal form (HCNF).
+		  Second, the test cases are analyzed for instances with
+		  constant terms satisfying the premises of the clauses.
+		  Particular emphasis is put on the control of test
+		  hypotheses and test hierarchies to avoid intractability. We
+		  applied our method to several examples, including AVL-trees
+		  and the red-black tree implementation in the standard
+		  library from SML/NJ. },
+  keywords	= {symbolic test case generations, black box testing, theorem
+		  proving, Isabelle/HOL },
+  address	= {Linz},
+  author	= {Achim D. Brucker and Burkhart Wolff},
+  booktitle	= {Formal Approaches to Testing of Software},
+  language	= {USenglish},
+  pages		= {16--32},
+  publisher	= {Springer-Verlag},
+  series	= lncs,
+  number	= 3395,
+  editor	= {Jens Grabowski and Brian Nielsen},
+  title		= {Symbolic Test Case Generation for Primitive Recursive Functions},
+  year		= 2005
+}
+
+@Article{	  visser.ea:model:2003,
+  author	= {Willem Visser and Klaus Havelund and Guillaume Brat and
+		  Seungjoon Park and Flavio Lerda},
+  title		= {Model Checking Programs},
+  journal	= {Automated Software Engg.},
+  volume	= 10,
+  number	= 2,
+  year		= 2003,
+  issn		= {0928-8910},
+  pages		= {203--232},
+  doi		= {http://dx.doi.org/10.1023/A:1022920129859},
+  publisher	= {Kluwer Academic Publishers},
+  address	= {Hingham, MA, USA},
+  pdf		= {papers/2003/ase00FinalJournal.pdf}
+}
+
+@TechReport{	  brucker.ea:hol-testgen:2005,
+  author	= {Achim D. Brucker and Burkhart Wolff},
+  institution	= {ETH Zürich},
+  language	= {USenglish},
+  month		= apr,
+  title		= {{HOL-TestGen} 1.0.0 User Guide},
+  categories	= {testing,holtestgen},
+  classification= {unrefereed},
+  keywords	= {symbolic test case generations, black box testing, theorem
+		  proving, Isabelle/HOL},
+  year		= 2005,
+  number	= 482,
+  num_pages	= 50
+}
+
+
+@Misc{		  imp,
+  title		= {{IMP}},
+  note		= {\url{http://isabelle.in.tum.de/library/HOL/IMP/Denotation.html}}
+}
+@Misc{		  testgen,
+  title		= {{HOL-TestGen}},
+  note		= {\url{http://www.brucker.ch/projects/hol-testgen/}}
+}
+
+@TechReport{	  plotkin:structural:1981,
+  author	= {Gordon D. Plotkin},
+  title		= {A structural approach to operational semantics},
+  institution	= {Computer Science Department, Aarhus University, Denmark},
+  year		= 1981,
+  number	= {DAIMI FN-19}
+}
+
+@InProceedings{	  clement.ea:simple:1986,
+  author	= {Dominique Cl\'ement and Thierry Despeyroux and Gilles Kahn
+		  and Jo\"elle Despeyroux},
+  title		= {A simple applicative language: {mini-ML}},
+  booktitle	= {LFP '86: Proceedings of the 1986 ACM conference on LISP
+		  and functional programming},
+  year		= {1986},
+  pages		= {13--27},
+  location	= {Cambridge, Massachusetts, United States},
+  doi		= {http://doi.acm.org/10.1145/319838.319847},
+  publisher	= {ACM Press},
+  address	= {New York, NY, USA},
+  pdf		= {papers/1986/p13-clement.pdf}
+}
+
+@InProceedings{   boyapati.ea:korat:2002,
+  author        = {Chandrasekhar Boyapati and Sarfraz Khurshid and Darko
+                  Marinov},
+  title         = {Korat: automated testing based on Java predicates},
+  booktitle     = {Proceedings of the international symposium on Software
+                  testing and analysis},
+  year          = 2002,
+  pages         = {123--133},
+  location      = {Roma, Italy},
+  abstract      = {This paper presents Korat, a novel framework for automated
+                  testing of Java programs. Given a formal specification for
+                  a method, Korat uses the method precondition to
+                  automatically generate all (nonisomorphic) test cases up to
+                  a given small size. Korat then executes the method on each
+                  test case, and uses the method postcondition as a test
+                  oracle to check the correctness of each output.To generate
+                  test cases for a method, Korat constructs a Java predicate
+                  (i.e., a method that returns a boolean) from the method's
+                  pre-condition. The heart of Korat is a technique for
+                  automatic test case generation: given a predicate and a
+                  bound on the size of its inputs, Korat generates all
+                  (nonisomorphic) inputs for which the predicate returns
+                  true. Korat exhaustively explores the bounded input space
+                  of the predicate but does so efficiently by monitoring the
+                  predicate's executions and pruning large portions of the
+                  search space.This paper illustrates the use of Korat for
+                  testing several data structures, including some from the
+                  Java Collections Framework. The experimental results show
+                  that it is feasible to generate test cases from Java
+                  predicates, even when the search space for inputs is very
+                  large. This paper also compares Korat with a testing
+                  framework based on declarative specifications. Contrary to
+                  our initial expectation, the experiments show that Korat
+                  generates test cases much faster than the declarative
+                  framework.},
+  publisher     = {ACM Press},
+}
+
+@Misc{cdl,
+  title =	 {Web Services Choreography Description Language Version 1.0},
+  month =	 {December},
+  year =	 2004,
+  note =         {W3C Working Draft 17},
+  annote =	 {http://www.w3.org/TR/2004/WD-ws-cdl-10-20041217/}
+}
+
+
+@Misc{bpel05,
+  title =	 {Business Process Execution Language for Web Services},
+  month =	 {May},
+  year =	 2003,
+  note =	 {Version 1.1 5 May 2003},
+  annote =	 {http://www.siebel.com/bpel}
+}
+
+
+
+@InProceedings{qiu05,
+  author = 	 {Zongyan Qiu and Shuling Wang and Geguang Pu and Xiangpeng Zhao},
+  title = 	 {Semantics of BPEL4WS-Like Fault and Compensation Handling},
+  booktitle =	 {Formal Methods 2005},
+  year =	 2005,
+  volume =	 {LNCS 3582},
+  month =	 {July}
+}
+
+
+@Misc{fxp,
+  author =	 {Andreas Neumann and Alexandru Berlea},
+  title =	 {fxp --- The Functional XML Parser},
+  note =	 {http://atseidl2.informatik.tu-muenchen.de/~berlea/Fxp/}
+}
+
+
+@Misc{njml,
+  author =	 {Andrew Appel and Matthias Blume and Emden Gansner and Lal George and Lorenz Huelsbergen and David MacQueen and John Reppy and Zhong Shao},
+  title =	 {Standard ML of New Jersey},
+  note =	 {http://www.smlnj.org/}
+}
+
+
+@Misc{mlton,
+  title =	 {The MLton Home Page},
+  note =	 {http://mlton.org/}
+}
+

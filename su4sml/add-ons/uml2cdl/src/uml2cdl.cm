@@ -1,0 +1,12 @@
+Group is
+#if(defined(SMLNJ_VERSION))
+  $/basis.cm 
+  $smlnj/compiler/compiler.cm
+  $/smlnj-lib.cm
+#else
+#endif
+    ../lib/su4sml/src/su4sml.cm
+    xsd.sml
+    cdl.sml
+    xmi2cdl.sml
+    cdl2xml.sml

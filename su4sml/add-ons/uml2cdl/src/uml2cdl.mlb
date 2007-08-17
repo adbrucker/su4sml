@@ -1,0 +1,17 @@
+ann
+  "warnMatch false"
+  "sequenceUnit false"
+  "allowFFI true"
+in
+  local
+    $(MLTON_ROOT)/basis/basis.mlb
+    $(MLTON_ROOT)/smlnj-lib/Util/smlnj-lib.mlb
+    ../lib/su4sml/src/su4sml.mlb
+  in
+    xsd.sml
+    cdl.sml
+    xmi2cdl.sml
+    cdl2xml.sml
+    uml2cdl.sml  
+  end
+end
