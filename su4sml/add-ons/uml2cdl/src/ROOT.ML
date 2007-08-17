@@ -42,12 +42,13 @@
 (* ****************************************************** *)
 (* include su4sml library:                                *)
 val curdir = OS.FileSys.getDir ();
-OS.FileSys.chDir "../lib/su4sml/src";
+OS.FileSys.chDir "../../../src";
 use "ROOT.ML";
 OS.FileSys.chDir  curdir;
 
 (* ****************************************************** *)
 (* Representation of a Choreography in WS-CDL             *)
+use "xsd.sml";
 use "cdl.sml";
 
 (* ****************************************************** *)
