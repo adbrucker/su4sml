@@ -508,8 +508,9 @@ fun mkAttribute tree =
                                |> map_optional (get_optional "OCL.Expressions.ExpressionInOcl.bodyExpression")
                                |> Option.join
                                |> map_optional mkOCLExpression,
-	  type_id       = tree |> get_one "UML:StructuralFeature.type"
-                               |> xmiidref,
+	  type_id       = tree |> get_optional "UML:StructuralFeature.type"
+                               |> map_optional xmiidref
+                               |> get_optional_or_default "",
 	  multiplicity  = tree |> get_optional "UML:StructuralFeature.multiplicity" 
                                |> map_optional mkMultiplicity
                                |> get_optional_or_default [(1,1)],

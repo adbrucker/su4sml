@@ -123,7 +123,7 @@ fun info s  = print (s^"\n")
 
 (** output a warning that something is wrong, 
  * but it is dealt with somehow.  *)
-fun warn s  = print (s^"\n")
+fun warn s  = print ("Warning: "^s^"\n")
 
 (** output an error message *)
 fun error_msg s = print (s^"\n")

@@ -245,6 +245,9 @@ fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
 fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,ordering,
 			    multiplicity,taggedValue,ownerScope,targetScope,stereotype,initialValue}) =
     let val cls_type = find_classifier_type t type_id 
+                       handle _ => (warn ("no type found for attribute '"^name^
+                                          "', defaulting to OclVoid"); 
+                                    Rep_OclType.OclVoid)
     in
 	{name= name,
 	 attr_type = if multiplicity = [(1,1)] 
