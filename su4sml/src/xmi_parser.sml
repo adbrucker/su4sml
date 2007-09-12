@@ -458,8 +458,9 @@ fun mkParameter tree =
         { xmiid   = atts |> xmiid,
 	  name    = atts |> name,
 	  kind    = atts |> kind,
-	  type_id = tree |> get_one "UML:Parameter.type" 
-			 |> xmiidref 
+	  type_id = tree |> get_optional "UML:Parameter.type" 
+			 |> map_optional xmiidref 
+                         |> get_optional_or_default ""
         }
     end
 (*handle IllFormed msg => error ("in mkParameter: "^msg)*)

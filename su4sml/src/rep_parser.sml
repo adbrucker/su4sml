@@ -213,13 +213,21 @@ fun transform_bodyconstraint result_type t ({xmiid,name,body,...}:XMI.Constraint
                   (NONE, triv_expr))
 
 fun transform_parameter t {xmiid,name,kind,type_id} =
-    (name, find_classifier_type t type_id)
+    (name, find_classifier_type t type_id
+           handle _ => (warn ("no type found for parameter '"^name^
+                              "', defaulting to OclVoid"); 
+                        Rep_OclType.OclVoid)
+    )
 
 fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
 			   constraints,ownerScope} =
     let val result_type =  find_classifier_type t 
 						((#type_id o hd) (filter (fn x => #kind x = XMI.Return) 
 									 parameter))
+            handle _ => (warn ("no return type found for operation '"^name^
+                               "', defaulting to OclVoid"); 
+                         Rep_OclType.OclVoid)
+
 	val checked_constraints = filter_exists t constraints
     in
 	{name=name,
@@ -245,9 +253,9 @@ fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
 fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,ordering,
 			    multiplicity,taggedValue,ownerScope,targetScope,stereotype,initialValue}) =
     let val cls_type = find_classifier_type t type_id 
-                       handle _ => (warn ("no type found for attribute '"^name^
-                                          "', defaulting to OclVoid"); 
-                                    Rep_OclType.OclVoid)
+            handle _ => (warn ("no type found for attribute '"^name^
+                               "', defaulting to OclVoid"); 
+                         Rep_OclType.OclVoid)
     in
 	{name= name,
 	 attr_type = if multiplicity = [(1,1)] 
