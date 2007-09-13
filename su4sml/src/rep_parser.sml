@@ -539,8 +539,8 @@ fun importArgoUML file =
 	val base =  if String.isSuffix ".zargo" file 
 		    then String.substring(file,0, (String.size file) -6)
 		    else file
-        val _ = print ("*** Syscall: unzip -ca "^base^".zargo "^(basename base)^".xmi > "^tmpFile^"\n")
-        val _ = OS.Process.system ("unzip -ca "^base^".zargo "^(basename base)^".xmi > "^tmpFile)
+        val _ = print ("*** Syscall: unzip -p -ca "^base^".zargo "^(basename base)^".xmi > "^tmpFile^"\n")
+        val _ = OS.Process.system ("unzip -p -ca "^base^".zargo "^(basename base)^".xmi > "^tmpFile)
 	val model = readFile tmpFile
 	val _ = OS.FileSys.remove tmpFile
 
