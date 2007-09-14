@@ -194,7 +194,8 @@ fun transform_constraint t ({xmiid,name,body,...}:XMI.Constraint) =
     in	
     	(n_name,transform_expression t body)
 	handle ex => (print ("Warning: in RepParser.transform_constraint: \
-                             \Could not parse Constraint: "^General.exnMessage ex^"\n");
+                             \Could not parse Constraint: "^General.exnMessage ex^"\n"^
+                            "using the trivial constraint 'true' instead");
                       (NONE, triv_expr))
     end
 
@@ -209,7 +210,8 @@ fun transform_bodyconstraint result_type t ({xmiid,name,body,...}:XMI.Constraint
 						Rep_OclType.Boolean))
     end
     handle ex => (print ("Warning: in RepParser.transform_bodyconstraint: \
-                         \Could not parse Constraint: "^General.exnMessage ex^"\n");
+                         \Could not parse Constraint: "^General.exnMessage ex^"\n"^
+                         "using the trivial constraint 'true' instead");
                   (NONE, triv_expr))
 
 fun transform_parameter t {xmiid,name,kind,type_id} =
