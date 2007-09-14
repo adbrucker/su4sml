@@ -370,13 +370,18 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
     let val parents = map ((find_classifier_type t) o (find_parent t)) 
 			  generalizations 
 	val filtered_parents   = filter (fn x => x <> Rep_OclType.OclAny) parents
+        val filtered_parent = case filtered_parents
+                               of []  => NONE
+                                | [x] => SOME x
+                                | x::y::_ => (warn ("Class '"^name^"' has multiple parents."^
+                                                    " Using only '"^
+                                                    (Rep_OclType.string_of_OclType x)^"'."); 
+                                              SOME x)
  	val checked_invariants = filter_exists t invariant
         val navigable_aends    = filter #isNavigable (find_aends t xmiid)
     in
 	Rep.Class {name = (* path_of_classifier *) (find_classifier_type t xmiid), 
-		   parent = case filtered_parents 
-			     of [] => NONE
-			      | xs => SOME ((* path_of_classifier *) (hd xs)),
+		   parent = filtered_parent,
 		   attributes = map (transform_attribute t) attributes,
 		   operations = map (transform_operation t) operations,
 		   invariant  = map ((transform_constraint t) o 
