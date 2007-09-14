@@ -221,12 +221,24 @@ fun transform_parameter t {xmiid,name,kind,type_id} =
 
 fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
 			   constraints,ownerScope} =
-    let val result_type =  find_classifier_type t 
-						((#type_id o hd) (filter (fn x => #kind x = XMI.Return) 
-									 parameter))
-            handle _ => (warn ("no return type found for operation '"^name^
-                               "', defaulting to OclVoid"); 
-                         Rep_OclType.OclVoid)
+    let val result_type   = case filter (fn x => #kind x = XMI.Return) parameter
+                             of []      => (warn ("no return type found for operation '"^name^
+                                                  "', defaulting to OclVoid"); 
+                                            Rep_OclType.OclVoid)
+                              | [x]     => (find_classifier_type t (#type_id x)
+                                            handle _ => (warn ("return parameter for operation '"^name^
+                                                               "' has no declared type, defaulting to OclVoid"); 
+                                                         Rep_OclType.OclVoid))
+                              | x::y::_ => let val ret_type = find_classifier_type t (#type_id x)
+                                                   handle _ => (warn ("return parameter for operation '"^name^
+                                                                      "' has no declared type, defaulting to OclVoid"); 
+                                                                Rep_OclType.OclVoid)
+                                           in 
+                                               (warn ("operation '"^name^
+                                                  "' has multiple return parameters. Using only '"^
+                                                      (Rep_OclType.string_of_OclType ret_type)^"'.");
+                                                ret_type)
+                                           end
 
 	val checked_constraints = filter_exists t constraints
     in
