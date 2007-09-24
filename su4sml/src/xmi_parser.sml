@@ -199,6 +199,21 @@ fun mkAssociationEnd tree =
     end
 (*handle IllFormed msg => error ("in mkAssociationEnd: "^msg)*)
 
+fun mkAssociationEndFromAssociationClass tree =
+    let val atts = tree |> assert "UML:AssociationClass" |> attributes
+    in 
+        { xmiid      = "associationclass_"^(atts |> xmiid), 
+	  name       = NONE, (* atts |> optional_value_of "name" ,*)
+	  isNavigable    = true,
+	  ordering       = XMI_DataTypes.Unordered,
+	  aggregation    = XMI_DataTypes.Aggregate,
+	  targetScope    = XMI_DataTypes.InstanceScope,
+	  multiplicity   = [(0,~1)],
+	  changeability  = XMI_DataTypes.Changeable, 
+	  visibility     = XMI_DataTypes.public,
+	  participant_id = atts |> xmiid
+	}
+    end
 
 (* FIX: this is a hack to handle AssociationClasses like Associations. *)
 (* It neglects the participation ot the AssociationClass itself in the *)
@@ -209,8 +224,9 @@ fun mkAssociationFromAssociationClass tree =
     in 
         { xmiid      = atts |> xmiid, 
 	  name       = atts |> optional_value_of "name" ,
-	  connection = tree |> get_many "UML:Association.connection" 
-                            |> map mkAssociationEnd 
+	  connection = (tree |> get_many "UML:Association.connection" 
+                            |> map mkAssociationEnd)@
+                       [(mkAssociationEndFromAssociationClass tree)]
 	}
     end
 (*handle IllFormed msg => error ("in mkAssociation: "^msg)*)
