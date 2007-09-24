@@ -483,42 +483,9 @@ fun transform_assocation t (assoc:XMI.Association) =
         List.app add_aend_to_type mappings
     end
 
-(** 
- * insert the association from assocation class to the connected classifiers.
- * the other direction (from connected classifiers to the association class
- * is more difficult (and not implemented) because the association class does 
- * not specify (syntactically) an association end.  
- * FIX: multiplicity of association ends should be 1..1, regardless of what 
- * is specified.
- * FIX: also add associationfrom connected classifiers to the association class
- * (this would probably mean to "invent" an appropriate association end...)
- *)
-fun transform_associationclass_as_association t (XMI.AssociationClass assoc) = 
-    let	val aends = #connection assoc
-	fun add_aend_to_type (id,ae) = 
-	    if not (Option.isSome (HashTable.find t id)) then () else 
-	    let val type_of_id  = find_classifier_type t id
-		val cls_of_id   = find_classifier t id
-		val aends_of_id = ae::(find_aends t id)
-		val ags_of_id   = find_activity_graph_of t id
-	    in 
-		(HashTable.insert t (id,Type (type_of_id,aends_of_id,cls_of_id,ags_of_id));
-		 HashTable.insert t (#xmiid ae, AssociationEnd ae))
-	    end
-    in 
-	List.app (fn x => add_aend_to_type (#xmiid assoc, x)) aends
-    end
-		
-  | transform_associationclass_as_association t _ = 
-    library.error ("in transform_associationclass_as_association: "^
-                   "argument is not an association classes")
 
 (* recursively transforms all associations in the package p. *)
 fun transform_associations t (XMI.Package p) = 
     (List.app (transform_associations t) (#packages p);
-     List.app (transform_assocation t) (#associations p);
-     List.app (transform_associationclass_as_association t)
-	      (List.filter (fn (XMI.AssociationClass x) => true
-			     | _                        => false)
-			   (#classifiers p)))
+     List.app (transform_assocation t) (#associations p))
 end
