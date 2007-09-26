@@ -39,11 +39,14 @@
 ##############################################################################
 # $Id: AVL_test.thy 40058 2007-06-29 21:40:20Z brucker $
 
+DATE=$(shell date)
 
 .PHONY: doc apidoc tags
 
 doc: 
-	smldoc --directory=doc --linksource --showsummary --overview=doc/overview.html --windowtitle="SU4SML_Documentation" \
+	smldoc --directory=doc --linksource --showsummary \
+	       --overview=doc/overview.html \
+	       --windowtitle="SU4SML_Documentation ($(DATE))" \
 		`find src -name "*.sml" -or -name "*.sig"`
 
 apidoc: 
