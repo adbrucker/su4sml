@@ -61,7 +61,7 @@ val oclLib =
           classifier = Class
 			   {
 			    interfaces=[],attributes=[],
-			    associationends=[],
+			    associations=[],
 			    activity_graphs=[],
 			    invariant=[],
 			    name=Sequence (TemplateParameter "T"),
@@ -327,7 +327,7 @@ val oclLib =
           classifier = Class
 			   {
 			    attributes=[],
-			    associationends=[],
+			    associations=[],
 			    activity_graphs=[],
 			    interfaces=[],
 			    invariant=[],
@@ -532,7 +532,7 @@ val oclLib =
           classifier =  Class
 			    {
 			     attributes=[],
-			     associationends=[],
+			     associations=[],
 			     activity_graphs=[],
 			     interfaces=[],invariant=[],
 			     name=Set (TemplateParameter "T"),
@@ -778,7 +778,7 @@ val oclLib =
           classifier =  Class
 			    {
 			     attributes=[],
-			     associationends=[],
+			     associations=[],
 			     activity_graphs=[],
 			     interfaces=[],
 			     invariant=[],
@@ -984,7 +984,7 @@ val oclLib =
           classifier =  Class
 			    {
 			     attributes=[],
-			     associationends=[],
+			     associations=[],
 			     activity_graphs=[],	  
 			     interfaces=[],invariant=[],name=Collection(TemplateParameter "T"),
 			     operations=[
@@ -1056,7 +1056,7 @@ val oclLib =
      Class
 	 {
 	  attributes=[],
-	  associationends=[],
+	  associations=[],
 	  activity_graphs=[],	  
 	  interfaces=[],
 	  invariant=[],
@@ -1069,7 +1069,7 @@ val oclLib =
 
      Primitive
 	 {
-	  associationends=[],interfaces=[],invariant=[],name=OclAny,
+	  associations=[],interfaces=[],invariant=[],name=OclAny,
 	  operations=[
 	  {
 	   arguments=[("object",OclAny)],
@@ -1144,7 +1144,7 @@ val oclLib =
 	 },
      Primitive
 	 {
-	  associationends=[],interfaces=[],invariant=[],name=String,
+	  associations=[],interfaces=[],invariant=[],name=String,
 	  operations=[
 	  {
 	   arguments=[],isQuery=true,name="size",body=[],postcondition=[],
@@ -1190,7 +1190,7 @@ val oclLib =
 	 },
      Primitive
 	 {
-	  associationends=[],interfaces=[],invariant=[],name=Boolean,
+	  associations=[],interfaces=[],invariant=[],name=Boolean,
 	  operations=[
 	  {
 	   arguments=[("b",Boolean)],
@@ -1262,7 +1262,7 @@ val oclLib =
 	 },
      Primitive
 	 {
-	  associationends=[],interfaces=[],invariant=[],name=Integer,
+	  associations=[],interfaces=[],invariant=[],name=Integer,
 	  operations=[
 	  {
 	   arguments=[("i",Integer)],
@@ -1327,7 +1327,7 @@ val oclLib =
 	 },
      Primitive
 	 {
-	  associationends=[],interfaces=[],invariant=[],name=Real,
+	  associations=[],interfaces=[],invariant=[],name=Real,
 	  operations=[
 	  {
 	   arguments=[("r",Real)],

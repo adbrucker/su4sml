@@ -153,6 +153,7 @@ fun classifier_has_no_stereotype strings c =
  * (could be moved to rep_core?)
  *)
 fun classifier_has_parent (Rep.Class c)       = Option.isSome (#parent c)
+  | classifier_has_parent (Rep.AssociationClass c) = Option.isSome (#parent c)
   | classifier_has_parent (Rep.Interface c)   = not (List.null (#parents c))
   | classifier_has_parent (Rep.Enumeration c) = Option.isSome (#parent c)
   | classifier_has_parent (Rep.Primitive c)   = Option.isSome (#parent c)
@@ -172,7 +173,7 @@ fun mkRole (C as Rep.Class c) = Rep.string_of_path (Rep.name_of C)
 fun mkSubject (C as Rep.Class c) = User (Rep.string_of_path (Rep.name_of C))
   | mkSubject _                  = error ("in mkSubject: argument is not a class")
 fun mkPermission cs (c as Rep.Class _) = 
-    let val classifiers = (Rep.connected_classifiers_of c cs)
+    let val classifiers = (Rep.connected_classifiers_of_old c cs)
         val role_classes = List.filter (classifier_has_stereotype "secuml.role") 
                                        classifiers
         val root_classes =   List.filter (fn x => ListEq.overlaps 
@@ -205,18 +206,59 @@ fun mkSubjectAssignment cs (c as (Rep.Class _)) =
         (* in principle, we should check the stereotype of the association, *)
         (* but that does not exist in the rep datastructure...              *)  
         val classifiers = List.filter (classifier_has_stereotype "secuml.role")
-                                      (Rep.connected_classifiers_of c cs)
+                                      (Rep.connected_classifiers_of_old c cs)
     in 
         (mkSubject c, map mkRole classifiers)
     end
                        
-fun update_aends (Rep.Class { name, parent,	attributes,	operations,	associationends,	   
-							  invariant, stereotypes, interfaces, thyname, activity_graphs})
-				 aends = Rep.Class {name=name, parent=parent, attributes=attributes,
-									operations=operations, associationends=aends,
+(*                     
+fun update_aends (Rep.Class { name, parent,attributes,operations,associations,
+			      invariant, stereotypes,interfaces,thyname,activity_graphs}) aends = 
+    let
+	(* 
+	 *)
+	fun assoc_of_aend ({name,...}:Rep_Core.associationend) = List.take (name,List.length name -1 )
+	val assocs = map assoc_of_aend aends
+	fun is_member ({name,...}:Rep_Core.association) = List.exists (fn x => x=name) assocs
+    in
+	Rep.Class {name=name, parent=parent, attributes=attributes,
+		   operations=operations(*, associations=map assoc_of_aend aends*),
+		   associations = filter is_member associations,
 									invariant=invariant, stereotypes=stereotypes,
 									interfaces=interfaces, thyname=thyname,
 									activity_graphs=activity_graphs}
+    end
+  | update_aends (Rep.AssociationClass { name, parent,attributes,operations,associations,association,
+					 invariant, stereotypes,interfaces,thyname,activity_graphs}) aends = 
+    let
+	fun assoc_of_aend ({name,...}:Rep_Core.associationend) = List.take (name,List.length name -1 )
+	val assocs = map assoc_of_aend aends
+	fun is_member ({name,...}:Rep_Core.association) = List.exists (fn x => x=name) assocs
+    in
+	Rep.AssociationClass {name=name, parent=parent, attributes=attributes,
+			      operations=operations(*, associations=map assoc_of_aend aends*),
+			      associations = filter is_member associations,
+			      association = association (* FIXME: proper handling? *),
+			      invariant=invariant, stereotypes=stereotypes,
+			      interfaces=interfaces, thyname=thyname,
+			      activity_graphs=activity_graphs}
+    end
+*)
+fun update_assocs (Rep.Class { name, parent,attributes,operations,associations,
+			      invariant, stereotypes,interfaces,thyname,activity_graphs}) assocs = 
+    Rep.Class {name=name, parent=parent, attributes=attributes,
+	       operations=operations, associations=assocs,
+	       invariant=invariant, stereotypes=stereotypes,
+	       interfaces=interfaces, thyname=thyname,
+	       activity_graphs=activity_graphs}
+  | update_assocs (Rep.AssociationClass { name, parent,attributes,operations,associations,association,
+					  invariant, stereotypes,interfaces,thyname,activity_graphs}) assocs = 
+    Rep.AssociationClass {name=name, parent=parent, attributes=attributes,
+			  operations=operations, associations=assocs,association=association,
+			  invariant=invariant, stereotypes=stereotypes,
+			  interfaces=interfaces, thyname=thyname,
+			  activity_graphs=activity_graphs}
+	
 	
 fun assocConnectsToSecureUml cs (a:Rep.associationend) = 
 	classifier_has_no_stereotype ["secuml.permission",
@@ -224,24 +266,108 @@ fun assocConnectsToSecureUml cs (a:Rep.associationend) =
 								  "secuml.user"]
 								 (Rep.class_of (Rep_OclType.path_of_OclType (#aend_type a)) cs)
 
-(** remove aends from classifiers to permissions and roles. *)
-fun removeSecureUmlAends (cs:Rep.Classifier list) ((Rep.Class c):Rep.Classifier) = 
-	update_aends (Rep.Class c) (List.filter (assocConnectsToSecureUml cs)
-								(#associationends c))
+(** remove aends from classifiers to permissions and roles.
+ * Actual generation of permissions and roles is done in parse below.
+ *)
+fun removeSecureUmlAends (Rep.Class {name=class_name,...},(assocs,removed_assocs)):(Rep.association list * Rep.association list) = 
+    let
+	fun remove_aend ({name,aclass,aends}:Rep.association):Rep.association = 
+	    {name = name,
+	     aclass = aclass,
+	     aends = filter (fn {aend_type,...} => not (aend_type = class_name)) aends
+	    }
+	fun non_emtpy ({aends,...}:Rep.association) = List.length aends >= 2 (* FIXME: reflexive association -> 2 aends? *)
+	val reduced_assocs = map remove_aend assocs
+	val (modified_assocs,newly_removed_assocs) = List.partition non_emtpy reduced_assocs
+    in
+	(modified_assocs,newly_removed_assocs @ removed_assocs)
+    end
+  | removeSecureUmlAends (Rep.AssociationClass {name=class_name,...},(assocs,removed_assocs)):(Rep.association list * Rep.association list) = 
+    let
+	fun remove_aend ({name,aclass,aends}:Rep.association):Rep.association = 
+	    {name = name,
+	     aclass = aclass,
+	     aends = filter (fn {aend_type,...} => not (aend_type = class_name)) aends
+	    }
+	fun non_emtpy ({aends,...}:Rep.association) = List.length aends >= 2 (* FIXME: reflexive association -> 2 aends? *)
+	val reduced_assocs = map remove_aend assocs
+	val (modified_assocs,newly_removed_assocs) = List.partition non_emtpy reduced_assocs
+	(* FIXME: proper handling for aclass? *)
+    in
+	(modified_assocs,newly_removed_assocs @ removed_assocs)
+    end
 
-(** parse a list of classifiers accoriding to the SecureUML profile.
+
+(** parse a list of classifiers according to the SecureUML profile.
  * removes the classes with SecureUML stereotypes. 
  *)
-fun parse (cs:Rep_Core.Classifier list) = 
+fun parse (model as (cs,assocs):Rep.Model) = 
     let val _ = info "parsing  security configuration"
+	val non_secureumlstereotypes = List.filter (classifier_has_no_stereotype ["secuml.permission",
+										  "secuml.role",
+										  "secuml.subject",
+										  "secuml.actiontype"])  cs
+	val secureumlstereotypes = List.filter (classifier_has_no_stereotype ["secuml.permission",
+									      "secuml.role",
+									      "secuml.user"]) cs 
+	(* remove classes with SecureUML stereotypes from the association list
+	 * and update affected classes if the association ceases to exist 
+	 *)
+	fun updateClassifierAssociations rem_assocs (Rep.Class {name, parent, attributes, operations,
+								associations, invariant, stereotypes,
+								interfaces, thyname, activity_graphs}) =
+	    let
+		val assoc_names = map (fn {name,aends,aclass} => name) rem_assocs
+		fun non_emtpy path = not (List.exists (fn aname => aname = path) assoc_names)
+    in 
+		Rep.Class {name = name, 
+			   parent = parent, 
+			   attributes = attributes, 
+			   operations = operations,
+			   associations = filter non_emtpy associations, 
+			   invariant = invariant, 
+			   stereotypes = stereotypes,
+			   interfaces = interfaces, 
+			   thyname = thyname, 
+			   activity_graphs = activity_graphs
+			  }
+	    end
+	  | updateClassifierAssociations rem_assocs (Rep.AssociationClass {name, parent, attributes, 
+									   operations, associations, 
+									   association, invariant, 
+									   stereotypes, interfaces, 
+									   thyname, activity_graphs}) =
+	    let
+		val assoc_names = map (fn {name,aends,aclass} => name) rem_assocs
+		fun non_emtpy path = not (List.exists (fn aname => aname = path) assoc_names)
+	    in
+		Rep.AssociationClass {name = name, 
+				      parent = parent, 
+				      attributes = attributes, 
+				      operations = operations,
+				      associations = filter non_emtpy associations, 
+				      association = association (* FIXME: proper handling? *),
+				      invariant = invariant, 
+				      stereotypes = stereotypes,
+				      interfaces = interfaces, 
+				      thyname = thyname, 
+				      activity_graphs = activity_graphs
+			  }
+	    end
+	    
+	val (modified_assocs,removed_assocs) = case secureumlstereotypes of [] => (assocs,[])
+									  | xs => foldl removeSecureUmlAends (assocs,[]) xs
+	val modified_classifiers = case removed_assocs of [] => non_secureumlstereotypes
+							| xs => map (updateClassifierAssociations xs) non_secureumlstereotypes
     in 
         (
-		 map (removeSecureUmlAends cs)
+(*	 map (removeSecureUmlAends cs)
 			 (List.filter (classifier_has_no_stereotype ["secuml.permission",
 														 "secuml.role",
 														 "secuml.subject",
 														 "secuml.actiontype"]) 
 						  cs),
+ *)	 (modified_classifiers,modified_assocs),
          { config_type = "SecureUML",
            permissions = map (mkPermission cs) (filter_permission cs),
            subjects    = map mkSubject (filter_subject cs),

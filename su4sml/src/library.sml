@@ -113,6 +113,11 @@ fun space_implode a bs = implode (separate a bs);
 
 fun print_stderr s = (TextIO.output (TextIO.stdErr, s); TextIO.flushOut TextIO.stdErr);
 
+fun lowercase s = let val sl = String.explode s
+		  in
+	              String.implode ((Char.toLower (hd sl))::(tl sl))
+	          end
+
 exception ERROR;
    
 (* val writeln = std_output o suffix "\n";*)

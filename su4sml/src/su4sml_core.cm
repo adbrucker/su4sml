@@ -83,6 +83,7 @@ Group is
   xmi_idtable.sml
   ocl2string.sml
   rep_parser.sml
+  rep_transform.sml 
   mds.sig
   component_uml.sml
   secure_uml.sml

@@ -55,8 +55,8 @@ type operation = { name          : string,
 		   visibility    : Visibility	
 				   }     	
 
-type associationend = {name : string,
-		       aend_type : Rep_OclType.OclType,	
+type associationend = {name : Rep_OclType.Path (* path_of_association @ [aend_name]*),
+		       aend_type : Rep_OclType.OclType,	 (* participant type *)
 		       multiplicity: (int * int) list,
 		       ordered: bool,
 		       visibility: Visibility,
@@ -72,19 +72,45 @@ type attribute = {
      init : Rep_OclTerm.OclTerm option
 }
 
+type association = { name: Rep_OclType.Path (* path_of_package @ [assoc_name] *),
+		     aends: associationend list,
+		     aclass: Rep_OclType.Path option
+		   }
+
+type constraint = (string option * Rep_OclTerm.OclTerm)
+
 datatype Classifier =  
 	 Class of 
 	 { name        : Rep_OclType.OclType, 
 	   parent      : Rep_OclType.OclType option,
 	   attributes  : attribute list,
 	   operations  : operation list,
-	   associationends : associationend list,
+	   associations: Rep_OclType.Path list (* associations *),
 	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   stereotypes : string list,
 	   interfaces  : Rep_OclType.OclType list,
 	   thyname     : string option,
            activity_graphs : Rep_ActivityGraph.ActivityGraph list
 	  }
+       | AssociationClass of (* billk_tag *)
+	 { name        : Rep_OclType.OclType, 
+	   parent      : Rep_OclType.OclType option,
+	   attributes  : attribute list,
+	   operations  : operation list,
+	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
+	   stereotypes : string list,
+	   interfaces  : Rep_OclType.OclType list,
+	   thyname     : string option,
+           activity_graphs    : Rep_ActivityGraph.ActivityGraph list,
+(*	   visibility  : Visibility,
+	   isActive    : bool,
+	   generalizations    : string list,
+	   taggedValue : TaggedValue list,
+	   clientDependency   : string list,
+	   supplierDependency : string list,
+*)	   associations: Rep_OclType.Path list,
+	   association: Rep_OclType.Path
+	 } 
        | Interface of               (* not supported yet *)
 	 { name        : Rep_OclType.OclType,
 	   parents     : Rep_OclType.OclType list, 
@@ -107,7 +133,7 @@ datatype Classifier =
 	 { name        : Rep_OclType.OclType,
 	   parent      : Rep_OclType.OclType option,
 	   operations  : operation list,
-	   associationends : associationend list,
+	   associations: Rep_OclType.Path list,
 	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   stereotypes : string list,
 	   interfaces  : Rep_OclType.OclType list,
@@ -118,10 +144,13 @@ datatype Classifier =
 	   classifier  : Classifier
 	 }
 
+type transform_model = (Classifier list * association list)
+
 val OclAnyC : Classifier
 
-val normalize : Classifier -> Classifier
+val normalize      : association list -> Classifier -> Classifier
 val normalize_init : Classifier -> Classifier
+val normalize_ext  : transform_model -> transform_model
 
 val name_of       : Classifier -> Rep_OclType.Path 
 val type_of       : Classifier -> Rep_OclType.OclType 
@@ -136,7 +165,10 @@ val parent_interfaces_of : Classifier -> Rep_OclType.OclType list
 
 val thy_name_of       : Classifier -> string
 val attributes_of     : Classifier -> attribute list
-val associationends_of: Classifier -> associationend list 
+val associationends_of: association list -> Classifier -> associationend list 
+(* FIXME: dummy workaround for ocl_parser compile error *)
+(*val associationends_of_old: Classifier -> associationend list *)
+
 val operations_of     : Classifier -> operation list
 val invariant_of      : Classifier -> (string option * Rep_OclTerm.OclTerm) list
 val stereotypes_of    : Classifier -> string list
@@ -156,9 +188,13 @@ val parent_of           : Classifier -> Classifier list -> Classifier
 val parents_of          : Classifier -> Classifier list -> Rep_OclType.Path list
 val operation_of        : Classifier list -> Rep_OclType.Path -> operation option
 val topsort_cl          : Classifier list -> Classifier list
-val connected_classifiers_of : Classifier -> Classifier list -> Classifier list
+val connected_classifiers_of : association list -> Classifier -> Classifier list -> Classifier list
+(* FIXME: dummy workaround for compile error *)
+val connected_classifiers_of_old : Classifier -> Classifier list -> Classifier list
 
-val assoc_to_attr_type : associationend -> Rep_OclType.OclType
+(* billk_tag *)
+(* changed assoc to aend, since associations are now part of the model *)
+val aend_to_attr_type : associationend -> Rep_OclType.OclType
 
 val update_thyname      : string -> Classifier -> Classifier
 val update_invariant    : (string option * Rep_OclTerm.OclTerm) list -> Classifier -> Classifier
@@ -166,6 +202,7 @@ val update_operations   : operation list -> Classifier -> Classifier
 
 val update_precondition   : (string option * Rep_OclTerm.OclTerm) list -> operation ->  operation
 val update_postcondition  : (string option * Rep_OclTerm.OclTerm) list -> operation ->  operation
+
 
 end
 
@@ -188,7 +225,7 @@ type operation = { name          : string,
                    scope         : Scope }     
 
 type associationend = {
-     name         : string,
+     name         : Rep_OclType.Path,
      aend_type    : Rep_OclType.OclType,
      multiplicity : (int*int) list,
      visibility   : Visibility,
@@ -206,7 +243,12 @@ type attribute = {
 }
 
 
+type association = { name: Rep_OclType.Path,
+		     aends: associationend list,
+		     aclass: Rep_OclType.Path option
+		   }
 
+type constraint = (string option * Rep_OclTerm.OclTerm)
 
 datatype Classifier =  
 	 Class of 
@@ -214,13 +256,32 @@ datatype Classifier =
 	   parent      : Rep_OclType.OclType option,
 	   attributes  : attribute list,
 	   operations  : operation list,
-	   associationends : associationend list,
+	   associations: Rep_OclType.Path list,
 	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   stereotypes : string list,
 	   interfaces  : Rep_OclType.OclType list,
 	   thyname     : string option,
            activity_graphs : Rep_ActivityGraph.ActivityGraph list
 	  }
+      | AssociationClass of (* billk_tag *)
+	 { name        : Rep_OclType.OclType, 
+	   parent      : Rep_OclType.OclType option,
+	   attributes  : attribute list,
+	   operations  : operation list,
+	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
+	   stereotypes : string list,
+	   interfaces  : Rep_OclType.OclType list,
+	   thyname     : string option,
+           activity_graphs    : Rep_ActivityGraph.ActivityGraph list,
+(*	   visibility  : Visibility,
+	   isActive    : bool, 
+	   generalizations    : string list,
+	   taggedValue : TaggedValue list,
+	   clientDependency   : string list,
+	   supplierDependency : string list,
+*)	   associations: Rep_OclType.Path list,
+	   association: Rep_OclType.Path
+	 }
        | Interface of               (* not supported yet *)
 	 { name        : Rep_OclType.OclType,
 	   parents     : Rep_OclType.OclType list, 
@@ -243,7 +304,7 @@ datatype Classifier =
 	 { name        : Rep_OclType.OclType,
 	   parent      : Rep_OclType.OclType option,
 	   operations  : operation list,
-	   associationends : associationend list,
+	   associations: Rep_OclType.Path list,
 	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   stereotypes : string list,
 	   interfaces  : Rep_OclType.OclType list,
@@ -254,29 +315,49 @@ datatype Classifier =
 	   classifier  : Classifier
 	 }
 
+type transform_model = (Classifier list * association list)
+
 (* convert an association end into the corresponding collection type *)
-fun assoc_to_attr_type {name,aend_type,multiplicity,ordered,visibility,init} =
+fun aend_to_attr_type ({name,aend_type,multiplicity,ordered,visibility,init}:associationend) =
     case multiplicity of 
 	[(0,1)] => aend_type
       | [(1,1)] => aend_type
       | _ =>if ordered then Rep_OclType.Sequence aend_type (* OrderedSet? *)
 	    else Rep_OclType.Set aend_type
     
+
 (* convert an association end into an attribute of the *)
 (* corresponding collection type                       *)
+(* original version
 fun assoc_to_attr (assoc:associationend) = {name = #name assoc,
 					    attr_type = assoc_to_attr_type assoc,
 					    visibility = #visibility assoc,
 					    scope = XMI.InstanceScope,
 						stereotypes = nil,
 					    init = #init assoc}
+*)
+
+(** dummy *)
+fun associationends_of_old cls:associationend list= []
+fun connected_classifiers_of_old cls cls_list:Classifier list = cls_list
+
+
+fun aend_to_attr (cls_name:string) (aend:associationend):attribute = 
+    {name = cls_name ^ List.last (#name aend),
+     attr_type = aend_to_attr_type aend,
+     visibility = #visibility aend,
+     scope = XMI.InstanceScope,
+     stereotypes = nil,
+     init = #init aend}
+
+
 
 (* convert a multiplicity range into an invariant of the form *)
 (* size > lowerBound and size < upperBound )                 *)
 fun range_to_inv cls_name aend (a,b) = 
     let val cls       = Rep_OclType.Classifier cls_name
-	val attr_type = assoc_to_attr_type aend
-	val attr_name = cls_name@[#name aend]
+	val attr_type = aend_to_attr_type aend
+	val attr_name = cls_name@[List.last (#name aend)]
 	val literal_a = Rep_OclTerm.Literal (Int.toString a, Rep_OclType.Integer)
 	val literal_b = Rep_OclTerm.Literal (Int.toString b, Rep_OclType.Integer)
 	val self      = Rep_OclTerm.Variable ("self",cls)
@@ -314,13 +395,13 @@ fun range_to_inv cls_name aend (a,b) =
 (* 2. consistency constraints between opposing association ends  *)
 (*    i.e., A.b.a->includes(A)                                   *)
 (*    FIXME: 2. is not implemented yet...                        *)
-fun assoc_to_inv cls_name (aend:associationend) =
-    let val inv_name = "multconstraint_for_aend_"^(#name aend)
+fun aend_to_inv cls_name (aend:associationend) =
+    let val inv_name = "multconstraint_for_aend_"^string_of_path (#name aend)
 	val range_constraints = case (#multiplicity aend) of
 				    [(0,1)] => []
 				  | [(1,1)] => let
-					val attr_name = cls_name@[#name aend]
-					val attr_type = assoc_to_attr_type aend
+					val attr_name = cls_name@[List.last (#name aend)]
+					val attr_type = aend_to_attr_type aend
 					val cls       = Rep_OclType.Classifier cls_name
 					val self      = Rep_OclTerm.Variable ("self",cls)
 					val attribute = Rep_OclTerm.AttributeCall (self,cls,attr_name,attr_type)
@@ -341,37 +422,72 @@ fun assoc_to_inv cls_name (aend:associationend) =
     end
 
 
+fun association_to_associationends (associations:association list) (assoc:Path):associationend list=
+    (* FIXME: only return opposite association ends*)
+    let
+	val assoc = filter (fn {name,...} => name=assoc ) associations
+	val aends = if (List.length assoc) > 1 then error ("in association_to_associationends: non-unique association name")
+		    else #aends (hd assoc)
+    in
+	aends
+    end
 	
+(* billk_tag *)
+(** find the associations belonging to a classifier *)
+fun associationends_of (all_associations:association list) (Class{associations,...}):associationend list= 
+    List.concat (map (association_to_associationends all_associations) associations)
+  | associationends_of all_associations (AssociationClass{associations,association,...}) = 
+    (* association only contains endpoints to the other, pure clases *)
+    List.concat (map (association_to_associationends all_associations) (association::associations))
+  | associationends_of all_associations (Primitive{associations,...}) = 
+    List.concat (map (association_to_associationends all_associations) associations)	
+  | associationends_of _ _ = error ("in associationends_of: This classifier has no associationends") (*FIXME: or rather []? *)
 
      
-(* convert association ends into attributes + invariants *)
-fun normalize (Class {name,parent,attributes,operations,associationends,invariant,
-		      stereotypes,interfaces,thyname,activity_graphs}) =
+(** convert association ends into attributes + invariants *)
+fun normalize (all_associations:association list) (C as (Class {name,parent,attributes,operations,associations,invariant,
+								stereotypes,interfaces,thyname,activity_graphs})):Classifier=
 	       Class {name   = name,
 		      parent = parent,
-		      attributes = (append (map assoc_to_attr associationends) 
-					   attributes),
+	   attributes = (append (map (aend_to_attr (string_of_path (path_of_OclType name))) 
+				     (associationends_of all_associations C)) attributes),
 		      operations = operations,
-		      associationends = nil,
-		      invariant = append (map (assoc_to_inv (path_of_OclType name)) associationends)  
+	   associations = nil,
+	   invariant = append (map (aend_to_inv (path_of_OclType name)) (associationends_of all_associations C))  
 					  invariant,
 		      stereotypes = stereotypes,
                       interfaces = interfaces,
 		      thyname = thyname,
                       activity_graphs=activity_graphs}
-  | normalize (Primitive p) =
+  | normalize all_associations (AC as (AssociationClass {name,parent,attributes,association,associations,operations,invariant,
+					stereotypes,interfaces,thyname,activity_graphs})) =
+    (* FIXME: how to handle AssociationClass.association? *)
+    AssociationClass {name   = name,
+		      parent = parent,
+		      attributes = append (map (aend_to_attr (string_of_path (path_of_OclType name))) 
+					       (associationends_of all_associations AC)) attributes,
+		      operations = operations,
+		      invariant = append (map (aend_to_inv (path_of_OclType name)) (associationends_of all_associations AC))
+					 invariant,
+		      stereotypes = stereotypes,
+		      interfaces = interfaces,
+		      thyname = thyname,
+		      activity_graphs = activity_graphs,
+		      associations = [],
+		      association = association (* FIXME? *)}
+  | normalize all_associations (Primitive p) =
     (* Primitive's do not have attributes, so we have to convert *)
     (* them into Classes...                                      *)
-    if (#associationends p) = [] 
+    if (#associations p) = [] 
     then Primitive p 
-    else normalize (Class {name = #name p, parent = #parent p, attributes=[],
+    else normalize all_associations (Class {name = #name p, parent = #parent p, attributes=[],
 			   operations = #operations p, invariant = #invariant p,
-			   associationends = #associationends p,
+					    associations = #associations p,
 			   stereotypes = #stereotypes p,
 			   interfaces = #interfaces p,
 			   thyname = #thyname p,
                            activity_graphs=nil})
-  | normalize c = c
+  | normalize all_associations c = c
 
 
 fun rm_init_attr (attr:attribute) = {
@@ -410,31 +526,51 @@ fun init_to_inv cls_name (attr:attribute) =
 	end
 
 
-fun normalize_init (Class {name,parent,attributes,operations,associationends,invariant,
+fun normalize_init (Class {name,parent,attributes,operations,associations,invariant,
 		      stereotypes,interfaces,thyname,activity_graphs}) =
 	       Class {name   = name,
 		      parent = parent,
 		      attributes = (map rm_init_attr attributes),
 		      operations = operations,
-		      associationends = nil,
+		      associations = nil,
 		      invariant = append (map (init_to_inv  (path_of_OclType name)) attributes)  
 					  invariant,
 		      stereotypes = stereotypes,
                       interfaces = interfaces,
 		      thyname = thyname,
                       activity_graphs=activity_graphs}
+  | normalize_init (AssociationClass {name,parent,attributes,operations,associations,association,
+				      invariant,stereotypes,interfaces,thyname,activity_graphs}) =
+    AssociationClass {name   = name,
+		      parent = parent,
+		      attributes = (map rm_init_attr attributes),
+		      operations = operations,
+		      associations = nil,
+		      association = []:Path (* FIXME: better dummy? *),
+		      invariant = append (map (init_to_inv  (path_of_OclType name)) attributes)  
+					 invariant,
+		      stereotypes = stereotypes,
+                      interfaces = interfaces,
+		      thyname = thyname,
+                      activity_graphs=activity_graphs}
   | normalize_init c = c
 
-
-
-
+fun normalize_ext ((all_classifiers,all_associations):transform_model):transform_model =
+    (map (normalize all_associations) all_classifiers, all_associations)
 
 val OclAnyC = Class{name=Rep_OclType.OclAny,parent=NONE,attributes=[],
 			  operations=[], interfaces=[],
-			  invariant=[],stereotypes=[], associationends=[],
+			  invariant=[],stereotypes=[], associations=[],
 			  thyname=NONE,
                           activity_graphs=nil}
 
+val OclAnyAC = AssociationClass{name=Rep_OclType.OclAny,parent=NONE,attributes=[],
+			  operations=[], interfaces=[],
+			  invariant=[],stereotypes=[], associations=[],
+			  association= []:Path (* FIXME: sensible dummy *),
+			  thyname=NONE,
+                          activity_graphs=nil}
+		   
 		   
 fun string_of_path (path:Rep_OclType.Path) = case path of
 			      [] => ""
@@ -444,10 +580,15 @@ fun string_of_path (path:Rep_OclType.Path) = case path of
 
 
 fun update_thyname tname (Class{name,parent,attributes,operations,invariant,
-                                stereotypes,interfaces,associationends,activity_graphs,...})
+                                stereotypes,interfaces,associations,activity_graphs,...})
   = Class{name=name,parent=parent,attributes=attributes,operations=operations,
-          associationends=associationends,invariant=invariant,stereotypes=stereotypes,
+          associations=associations,invariant=invariant,stereotypes=stereotypes,
           interfaces=interfaces,thyname=(SOME tname),activity_graphs=activity_graphs }
+  | update_thyname tname (AssociationClass{name,parent,attributes,operations,invariant,stereotypes,
+					   interfaces,associations,association,activity_graphs,...})
+    = AssociationClass{name=name,parent=parent,attributes=attributes,operations=operations,
+		       associations=associations,association=association,invariant=invariant,stereotypes=stereotypes,
+		       interfaces=interfaces,thyname=(SOME tname),activity_graphs=activity_graphs }
   | update_thyname tname (Interface{name,parents,operations,stereotypes,invariant,...}) 
     = Interface{name=name,parents=parents,operations=operations,stereotypes=stereotypes,
                 invariant=invariant,thyname=(SOME tname)} 
@@ -456,17 +597,23 @@ fun update_thyname tname (Class{name,parent,attributes,operations,invariant,
     = Enumeration{name=name,parent=parent,operations=operations,literals=literals,
                   invariant=invariant,stereotypes=stereotypes,interfaces=interfaces,
                   thyname=(SOME tname)}
-  | update_thyname tname (Primitive{name,parent,operations,associationends,invariant,
+  | update_thyname tname (Primitive{name,parent,operations,associations,invariant,
                                     stereotypes,interfaces,...}) 
     = Primitive{name=name,parent=parent,operations=operations,
-                associationends=associationends,invariant=invariant,
+                associations=associations,invariant=invariant,
                 stereotypes=stereotypes,interfaces=interfaces,thyname=(SOME tname)} 
+  | update_thyname _ (Template T) = error ("in update_thyname: Template does not have a theory")
 
 fun update_invariant invariant' (Class{name,parent,attributes,operations,invariant,
-                                stereotypes,interfaces,associationends,activity_graphs,thyname})
+                                stereotypes,interfaces,associations,activity_graphs,thyname})
   = Class{name=name,parent=parent,attributes=attributes,operations=operations,
-          associationends=associationends,invariant=invariant',stereotypes=stereotypes,
+          associations=associations,invariant=invariant',stereotypes=stereotypes,
           interfaces=interfaces,thyname=thyname,activity_graphs=activity_graphs }
+  | update_invariant invariant' (AssociationClass{name,parent,attributes,operations,invariant,stereotypes,
+						  interfaces,association,associations,activity_graphs,thyname})
+    = AssociationClass{name=name,parent=parent,attributes=attributes,operations=operations,
+		       associations=associations,association=association,invariant=invariant',
+		       stereotypes=stereotypes,interfaces=interfaces,thyname=thyname,activity_graphs=activity_graphs }
   | update_invariant invariant' (Interface{name,parents,operations,stereotypes,invariant,thyname}) 
     = Interface{name=name,parents=parents,operations=operations,stereotypes=stereotypes,
                 invariant=invariant',thyname=thyname} 
@@ -475,18 +622,24 @@ fun update_invariant invariant' (Class{name,parent,attributes,operations,invaria
     = Enumeration{name=name,parent=parent,operations=operations,literals=literals,
                   invariant=invariant',stereotypes=stereotypes,interfaces=interfaces,
                   thyname=thyname}
-  | update_invariant invariant' (Primitive{name,parent,operations,associationends,invariant,
+  | update_invariant invariant' (Primitive{name,parent,operations,associations,invariant,
                                     stereotypes,interfaces,thyname}) 
     = Primitive{name=name,parent=parent,operations=operations,
-                associationends=associationends,invariant=invariant',
+                associations=associations,invariant=invariant',
                 stereotypes=stereotypes,interfaces=interfaces,thyname=thyname} 
+  | update_invariant _ (Template T) = error ("in update_invariant: Template does not have an invariant")
 
 
 fun update_operations operations' (Class{name,parent,attributes,invariant,operations,
-                                stereotypes,interfaces,associationends,activity_graphs,thyname})
+                                stereotypes,interfaces,associations,activity_graphs,thyname})
   = Class{name=name,parent=parent,attributes=attributes,invariant=invariant,
-          associationends=associationends,operations=operations',stereotypes=stereotypes,
+          associations=associations,operations=operations',stereotypes=stereotypes,
           interfaces=interfaces,thyname=thyname,activity_graphs=activity_graphs }
+  | update_operations operations' (AssociationClass{name,parent,attributes,invariant,operations,stereotypes,
+						    interfaces,associations,association,activity_graphs,thyname})
+    = AssociationClass{name=name,parent=parent,attributes=attributes,invariant=invariant,
+		       associations=associations,association=association,operations=operations',stereotypes=stereotypes,
+		       interfaces=interfaces,thyname=thyname,activity_graphs=activity_graphs }
   | update_operations operations' (Interface{name,parents,invariant,stereotypes,operations,thyname}) 
     = Interface{name=name,parents=parents,invariant=invariant,stereotypes=stereotypes,
                 operations=operations',thyname=thyname} 
@@ -495,14 +648,14 @@ fun update_operations operations' (Class{name,parent,attributes,invariant,operat
     = Enumeration{name=name,parent=parent,invariant=invariant,literals=literals,
                   operations=operations',stereotypes=stereotypes,interfaces=interfaces,
                   thyname=thyname}
-  | update_operations operations' (Primitive{name,parent,invariant,associationends,operations,
+  | update_operations operations' (Primitive{name,parent,invariant,associations,operations,
                                     stereotypes,interfaces,thyname}) 
     = Primitive{name=name,parent=parent,invariant=invariant,
-                associationends=associationends,operations=operations',
+                associations=associations,operations=operations',
                 stereotypes=stereotypes,interfaces=interfaces,thyname=thyname} 
+  | update_operations _ (Template T) = error ("in update_operations: Template does not have operations")
      
       
-
 fun update_precondition pre' ({name,precondition,postcondition,body,arguments,result,isQuery,scope,visibility}:operation)
 				= ({name=name,precondition=pre',postcondition=postcondition,
 					    arguments=arguments,body=body,result=result,isQuery=isQuery,scope=scope,
@@ -516,6 +669,7 @@ fun update_postcondition post' ({name,precondition,postcondition,body,arguments,
       
       
 fun type_of (Class{name,...})       = name  
+  | type_of (AssociationClass{name,...}) = name
   | type_of (Interface{name,...})   = name
   | type_of (Enumeration{name,...}) = name
   | type_of (Primitive{name,...})   = name
@@ -523,6 +677,7 @@ fun type_of (Class{name,...})       = name
 
 
 fun name_of (Class{name,...})       = path_of_OclType name  
+  | name_of (AssociationClass{name,...}) = path_of_OclType name
   | name_of (Interface{name,...})   = path_of_OclType name
   | name_of (Enumeration{name,...}) = path_of_OclType name
   | name_of (Primitive{name,...})   = path_of_OclType name
@@ -533,6 +688,7 @@ fun short_name_of C =  case (name_of C)  of
 	| p => (hd o rev)  p
 
 fun stereotypes_of (Class{stereotypes,...})       = stereotypes  
+  | stereotypes_of (AssociationClass{stereotypes,...}) = stereotypes
   | stereotypes_of (Interface{stereotypes,...})   = stereotypes
   | stereotypes_of (Enumeration{stereotypes,...}) = stereotypes
   | stereotypes_of (Primitive{stereotypes,...})    = stereotypes
@@ -545,6 +701,10 @@ fun package_of (Class{name,...})       = if (length (path_of_OclType name)) > 1
                                          then take (((length (path_of_OclType name)) -1),
                                                     (path_of_OclType name))  
                                          else []
+  | package_of (AssociationClass{name,...}) = if (length (path_of_OclType name)) > 1 
+                                              then take (((length (path_of_OclType name)) -1),
+							 (path_of_OclType name))  
+                                              else []
   | package_of (Interface{name,...})   = if (length (path_of_OclType name)) > 1 
                                          then take (((length (path_of_OclType name)) -1),
                                                     (path_of_OclType name)) 
@@ -562,6 +722,9 @@ fun package_of (Class{name,...})       = if (length (path_of_OclType name)) > 1
 fun parent_name_of (C as Class{parent,...}) = 
     (case parent  of NONE   => name_of OclAnyC
 		   | SOME p => path_of_OclType p ) 
+  | parent_name_of (AC as AssociationClass{parent,...}) = 
+    (case parent  of NONE   => name_of OclAnyAC
+		   | SOME p => path_of_OclType p )
   | parent_name_of (Interface{...})         =  error "in Rep.parent_name_of: \
                                                      \unsupported argument type Interface"
   | parent_name_of (E as Enumeration{parent,...}) = 
@@ -582,6 +745,13 @@ fun short_parent_name_of C =  case (parent_name_of C) of
                                 | p => (hd o rev)  p
 				       
 fun parent_package_of (Class{parent,...})       = 
+    (case parent of  NONE => package_of OclAnyC
+		   | SOME q   => let val p = path_of_OclType q in 
+				     if (length p) > 1 
+                                     then  (take (((length p) -1),p))  
+                                     else []
+				 end)
+  | parent_package_of (AssociationClass{parent,...})       = 
     (case parent of  NONE => package_of OclAnyC
 		   | SOME q   => let val p = path_of_OclType q in 
 				     if (length p) > 1 
@@ -614,6 +784,7 @@ fun parent_package_of (Class{parent,...})       =
 (* Get parent interfaces of a Classifier. *)
 fun parent_interfaces_of (Interface{parents,...}) = parents
   | parent_interfaces_of (Class{interfaces,...}) = interfaces
+  | parent_interfaces_of (AssociationClass{interfaces,...}) = interfaces
   | parent_interfaces_of (Enumeration{interfaces,...}) = interfaces
   | parent_interfaces_of (Primitive{interfaces,...}) = interfaces
   | parent_interfaces_of (Template{...}) = error "parent_interfaces_of <Template> not supported"
@@ -622,6 +793,7 @@ fun parent_interfaces_of (Interface{parents,...}) = parents
 fun parent_interface_names_of c = map path_of_OclType (parent_interfaces_of c)
 
 fun attributes_of (Class{attributes,...}) = attributes
+  | attributes_of (AssociationClass{attributes,...}) = attributes					    
   | attributes_of (Interface{...})        = 
          error "in Rep.attributes_of: argument is Interface"
   | attributes_of (Enumeration{...})      = 
@@ -630,16 +802,25 @@ fun attributes_of (Class{attributes,...}) = attributes
          (* error "attributes_of <Primitive> not supported" *)  
   | attributes_of (Template{parameter,classifier}) = attributes_of classifier
 
-fun associationends_of (Class{associationends,...}) = associationends
-  | associationends_of (Primitive{associationends,...}) = associationends
+(* needed further up -> moved to the beginning
+fun associationends_of (Class{associations,...}):associationend list= 
+    map association_to_associationend associations
+  | associationends_of (AssociationClass{associations,association,...}) = 
+    (* association only contains endpoints to the other, pure clases *)
+    map association_to_associationend (association::associations)
+  | associationends_of (Primitive{associations,...}) = 
+    map association_to_associationend associations
+*)
 
 fun operations_of (Class{operations,...})          = operations
+  | operations_of (AssociationClass{operations,...}) = operations
   | operations_of (Interface{operations,...})      = operations
   | operations_of (Enumeration{operations,...})    = operations
   | operations_of (Primitive{operations,...})      = operations  
   | operations_of (Template{parameter,classifier}) = operations_of classifier
 
 fun p_invariant_of (Class{invariant,...})       = invariant 
+  | p_invariant_of (AssociationClass{invariant,...}) = invariant
   | p_invariant_of (Interface{invariant,...})   = invariant
   | p_invariant_of (Enumeration{invariant,...}) = invariant
   | p_invariant_of (Primitive{invariant,...})   = invariant
@@ -682,6 +863,10 @@ fun arguments_of_op ({arguments,...}:operation) = arguments
 fun thy_name_of (C as Class{thyname,...})       = 
      (case thyname of  SOME tname =>  tname
 		     | NONE => error  ("Class "^((string_of_path o name_of) C)^
+                                       " has no thyname"))
+  |  thy_name_of (AC as AssociationClass{thyname,...})       = 
+     (case thyname of  SOME tname =>  tname
+		     | NONE => error  ("AssociationClass "^((string_of_path o name_of) AC)^
                                        " has no thyname"))
   | thy_name_of (I as Interface{thyname,...})   = 
      (case thyname of SOME tname =>  tname
@@ -742,20 +927,31 @@ fun topsort_cl cl =
 	foldl (op@) [] (map (fn a => sub cl a) (OclAny_subcl))  
     end
 
-fun connected_classifiers_of (Class {attributes,associationends,...}) (cl:Classifier list) =
+fun connected_classifiers_of (all_associations:association list) (C as Class {attributes,associations,...}) (cl:Classifier list) =
     let val att_classifiers = List.mapPartial (fn (Classifier p) => SOME (class_of p cl)
                                                 | _              => NONE)
                                               (map  #attr_type attributes)
         val aend_classifiers = List.mapPartial (fn (Classifier p) => SOME (class_of p cl)
                                                  | _              => NONE)
-                                               (map #aend_type associationends)
+                                               (map #aend_type (associationends_of all_associations C))
     in
         att_classifiers @ aend_classifiers 
     end
-  | connected_classifiers_of (Primitive {associationends,...}) (cl:Classifier list) = 
+  | connected_classifiers_of all_associations (AC as AssociationClass {attributes,associations,association,...}) (cl:Classifier list) =
+    let val att_classifiers = List.mapPartial (fn (Classifier p) => SOME (class_of p cl)
+                                                | _              => NONE)
+                                              (map  #attr_type attributes)
+			      (* FIXME: correct handling for association classes? *)
+        val aend_classifiers = List.mapPartial (fn (Classifier p) => SOME (class_of p cl)
+                                                 | _              => NONE)
+                                               (map #aend_type (associationends_of all_associations AC))
+    in
+        att_classifiers @ aend_classifiers 
+    end
+  | connected_classifiers_of all_associations (P as Primitive {associations,...}) (cl:Classifier list) = 
     List.mapPartial (fn (Classifier p) => SOME (class_of p cl)
                       | _              => NONE)
-                    (map #aend_type associationends)
-  | connected_classifiers_of _ _ = nil
+                    (map #aend_type (associationends_of all_associations P))
+  | connected_classifiers_of _  _ _ = nil
 
 end

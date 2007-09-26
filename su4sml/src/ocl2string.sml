@@ -284,6 +284,15 @@ fun classifier2string (C as Rep.Class x) =
     String.concat (map attribute2string (#attributes x))^
     String.concat (map operation2string (#operations x))^
     "}\n"
+  | classifier2string (C as Rep.AssociationClass x) =
+    String.concat (map stereotype2string (#stereotypes x))^
+    "associationclass "^Rep.string_of_path (Rep.name_of C)^
+    parent2string (#parent x)^
+    " {\n"^
+    String.concat (map inv2string (#invariant x))^
+    String.concat (map attribute2string (#attributes x))^
+    String.concat (map operation2string (#operations x))^
+    "}\n"
   | classifier2string (C as Rep.Interface x) =
     String.concat (map stereotype2string (#stereotypes x))^
     "interface "^Rep.string_of_path (Rep.name_of C)^"{\n"^
@@ -299,6 +308,8 @@ fun classifier2string (C as Rep.Class x) =
     "enum "^Rep.string_of_path (Rep.name_of C)^"{\n"^
     String.concat (map operation2string (#operations x))^
     "}\n"
+  | classifier2string (C as Rep.Template x) =
+    "template of "^ (classifier2string (#classifier x))
 
 fun printClass (x:Rep.Classifier) = print (classifier2string x)
 

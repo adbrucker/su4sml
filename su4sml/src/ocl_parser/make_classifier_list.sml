@@ -172,14 +172,29 @@ fun context_to_classifier (Inv (path,string_opt,term)) model =
     in
 	(
 	 case c of
-	     (Class {name,parent,attributes,operations,associationends,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
+	     (Class {name,parent,attributes,operations,associations,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
 	     Class 
 		 {
 		  name = name,
 		  parent = parent,
 		  attributes = attributes,
 		  operations = operations,
-		  associationends = associationends,
+		  associations = associations,
+		  interfaces = interfaces,
+		  stereotypes = stereotypes,
+		  invariant = invariant@[(string_opt,term)],
+		  thyname = thyname,
+ 		  activity_graphs = activity_graphs
+		 }
+	   | (AssociationClass {name,parent,attributes,operations,associations,association,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
+	     AssociationClass 
+		 {
+		  name = name,
+		  parent = parent,
+		  attributes = attributes,
+		  operations = operations,
+		  associations = associations,
+		  association = association,
 		  interfaces = interfaces,
 		  stereotypes = stereotypes,
 		  invariant = invariant@[(string_opt,term)],
@@ -208,17 +223,37 @@ fun context_to_classifier (Inv (path,string_opt,term)) model =
      in
 	 (
 	  case c of
-	      (Class {name,parent,attributes,operations,associationends,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
+	      (Class {name,parent,attributes,operations,associations,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
 	      (
 	       case attrorassoc of 
 		   init => 
 		   Class 
+		       {name = name,
+			parent = parent,
+			attributes = add_attribute (List.last path,term) (attributes),
+			operations = operations,
+			associations = associations,
+			interfaces = interfaces,
+			stereotypes = stereotypes,
+			invariant = invariant,
+			thyname = thyname,
+ 			activity_graphs = activity_graphs
+		       }
+		 | derive => raise NotYetSupportedError ("derive not yet supported ... sorry" ^ "\n")
+		 | def => raise NotYetSupportedError ("def not yet supported ... sorry" ^ "\n")
+	      )
+	    | (AssociationClass {name,parent,attributes,operations,associations,association,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
+	      (
+	       case attrorassoc of 
+		   init => 
+		   AssociationClass 
 		       {
 			name = name,
 			parent = parent,
 			attributes = add_attribute (List.last path,term) (attributes),
 			operations = operations,
-			associationends = associationends,
+			associations = associations,
+			association = association,
 			interfaces = interfaces,
 			stereotypes = stereotypes,
 			invariant = invariant,
@@ -241,20 +276,35 @@ fun context_to_classifier (Inv (path,string_opt,term)) model =
     in
 	(
 	 case c of
-	     (Class {name,parent,attributes,operations,associationends,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
+	     (Class {name,parent,attributes,operations,associations,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
 	     Class 
 		 {
 		  name = name,
 		  parent = parent,
 		  attributes = attributes,
 		  operations = add_operations cond_type (op_name,cond_name,term) operations,
-		  associationends = associationends,
+		  associations = associations,
 		  interfaces = interfaces,
 		  stereotypes = stereotypes,
 		  invariant = invariant,
 		  thyname = thyname,
  		  activity_graphs = activity_graphs
 		  }
+	   | (AssociationClass {name,parent,attributes,operations,associations,association,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
+	     AssociationClass 
+		 {
+		  name = name,
+		  parent = parent,
+		  attributes = attributes,
+		  operations = add_operations cond_type (op_name,cond_name,term) operations,
+		  associations = associations,
+		  association = association,
+		  interfaces = interfaces,
+		  stereotypes = stereotypes,
+		  invariant = invariant,
+		  thyname = thyname,
+ 		  activity_graphs = activity_graphs
+		 }
 	   | (Interface {name,parents,operations,stereotypes,invariant,thyname}) =>
 	     Interface
 	         {

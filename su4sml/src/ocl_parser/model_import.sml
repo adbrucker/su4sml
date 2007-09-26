@@ -42,13 +42,12 @@
 
 signature MODEL_IMPORT = 
 sig
-
-    val parseUML         : string -> Rep_Core.Classifier list
+    val parseUML         : string -> Rep_Core.transform_model
     val parseOCL         : string -> Context.context list
-    val import           : string -> string -> string list -> Rep_Core.Classifier list
-    val removePackages   : (Rep_Core.Classifier list * Context.context list) 
+    val import           : string -> string -> string list -> Rep_Core.transform_model
+    val removePackages   : (Rep_Core.transform_model * Context.context list) 
 			   -> string list
-			   -> (Rep_Core.Classifier list * Context.context list)
+			   -> (Rep_Core.transform_model * Context.context list)
     val removeOclLibrary : Rep_Core.Classifier list -> Rep_Core.Classifier list
 end
 
@@ -64,6 +63,10 @@ open Context
 open TypeChecker
 open Update_Model
 
+(* Rep_Transform *)
+(* FIXME: library consolidation? *)
+open Rep_Transform
+
 
 (* Error logging *)
 val high = 5
@@ -71,7 +74,7 @@ val medium = 20
 val low = 100
 
 fun readFileUnNormalized f = 
-                  (RepParser.transformXMI o XmiParser.readFile) f
+                  (RepParser.transformXMI_ext o XmiParser.readFile) f
 
 fun importArgoUMLUnNormalized file =
     let
@@ -101,7 +104,7 @@ fun parseUML umlFile  =
 		       then importArgoUMLUnNormalized umlFile
 		       else readFileUnNormalized umlFile
 	val _        = trace high ("### Finished Parsing UML Model ("
-			      ^(Int.toString(length umlModel))
+			      ^(Int.toString(length (#1 umlModel)))
 			      ^" Classifiers found)###\n\n")
     in
 	umlModel
@@ -122,7 +125,66 @@ fun parseOCL oclFile =
 
 fun removePackages (uml,ocl) packageList = 
     let
-        fun filter_package model p = filter (fn cl => not (Rep_Core.package_of cl = p)) model
+	(* billk_tag
+	 * filter package and update associations 
+	 * fun filter_package model p = filter (fn cl => not (Rep_Core.package_of cl = p)) model
+	 *)
+        fun filter_package (all_classifiers,all_associations) p = 
+	    let
+		(* FIXME: correct handling for reflexive assocs + !isNavigable *)
+		fun valid_assoc {name,aends,aclass} = case aends of 
+							  []  =>  false
+							| [x] =>  false
+							| _   =>  true
+		fun update_association cls_name {name,aends,aclass}:Rep_Core.association = 
+		    let
+			val cls_path = Rep_OclType.path_of_OclType cls_name
+			val modified_aclass = if (cls_path = (valOf aclass))
+					      then
+						  NONE
+					      else
+						  aclass
+			val modified_aends = filter (fn {aend_type,...} => not (aend_type = cls_name)) aends
+		    in
+			{name=name,
+			 aends=modified_aends,
+			 aclass=modified_aclass}
+		    end
+		fun update_associationends ((Rep_Core.Class {name,associations,...}),assocs):Rep_Core.association list =
+		    let
+			val assocs = map (get_association all_associations) associations
+			val modified_assocs = map (update_association name) assocs
+		    in
+			filter valid_assoc modified_assocs
+		    end
+		  |  update_associationends ((Rep_Core.AssociationClass{name,associations,association,...}),assocs) =
+		     let
+			 (* update_association also handles the aclass update *)
+			 val assocs = map (get_association all_associations) (association::associations)
+			 val modified_assocs = map (update_association name) assocs
+		     in
+			 filter valid_assoc modified_assocs
+		     end
+		  |  update_associationends ((Rep_Core.Primitive{name,associations,...}),assocs) =
+		     let
+			 val assocs = map (get_association all_associations) associations
+			 val modified_assocs = map (update_association name) assocs
+		     in
+			 filter valid_assoc modified_assocs
+		     end
+		  |  update_associationends ((Rep_Core.Template{parameter,classifier}),assocs) =
+		     (* FIXME: sound? *)
+		     update_associationends (classifier,assocs)
+		  |  update_associationends (_,assocs) =
+		     assocs
+
+		val (kept_classifiers,removed_cls) = partition (fn cl => not (Rep_Core.package_of cl = p)) all_classifiers
+		val kept_associations = case removed_cls of 
+					    []    => all_associations
+					  | xs   => foldl update_associationends all_associations xs
+	    in
+		(kept_classifiers,kept_associations)
+	    end
         fun filter_cl_package cl p = filter (fn cl => not (package_of_context cl = p)) cl
 	val _ =  trace high "### Excluding Packages ###\n"
 	val uml = 
@@ -138,8 +200,10 @@ fun removePackages (uml,ocl) packageList =
 		foldr (fn (p,m) => filter_cl_package m (stringToPath  p)) ocl packageList  
 	    end
 	val _ =  trace high ("### Finished excluding Packages ("
-		 ^(Int.toString(length uml))
+		 ^(Int.toString(length (#1 uml)))
 		 ^ " Classifiers found and "
+		 ^(Int.toString(length (#2 uml)))
+		 ^ " Associations found and "
 		 ^(Int.toString(length ocl))
 		 ^" Constraints Found) ###\n\n")
     in
@@ -164,22 +228,22 @@ fun import xmifile oclfile excludePackages =
     let
         val xmi = parseUML xmifile
 	val ocl = parseOCL oclfile
-	val (xmi,ocl) = removePackages (xmi,ocl) excludePackages
+	val ((xmi_cls,xmi_assocs),ocl) = removePackages (xmi,ocl) excludePackages
 
 
 	val model = case ocl of 
-			[] => xmi
+			[] => xmi_cls
 		      | ocl => let
 			    val _         = trace high "### Preprocess Context List ###\n"
-			    val fixed_ocl = Preprocessor.preprocess_context_list ocl ((OclLibrary.oclLib)@xmi)
+			    val fixed_ocl = Preprocessor.preprocess_context_list ocl ((OclLibrary.oclLib)@xmi_cls)
 			    val _         = trace high "### Finished Preprocess Context List ###\n\n"	
 
 			    val _         = trace high "### Type Checking ###\n"
-			    val typed_cl  = TypeChecker.check_context_list fixed_ocl ((OclLibrary.oclLib)@xmi);
+			    val typed_cl  = TypeChecker.check_context_list fixed_ocl (((OclLibrary.oclLib)@xmi_cls),xmi_assocs);
 			    val _         = trace high "### Finished Type Checking ###\n\n"
 
 			    val _         = print"### Updating Classifier List ###\n"
-			    val model     = Update_Model.gen_updated_classifier_list typed_cl ((OclLibrary.oclLib)@xmi);
+			    val model     = Update_Model.gen_updated_classifier_list typed_cl ((OclLibrary.oclLib)@xmi_cls);
 			    val _         = trace high ("### Finished Updating Classifier List "
 							^(Int.toString(length model))
 							^ " Classifiers found (11 from 'oclLib') ###\n")
@@ -195,7 +259,8 @@ fun import xmifile oclfile excludePackages =
 			end
 			      
     in
-       model 
+	(* FIXME: propagate associations into the ocl_parser *)
+       (model,xmi_assocs)
     end
     
 end

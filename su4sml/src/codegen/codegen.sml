@@ -178,7 +178,7 @@ val supported_cartridges = [
      description = "",
      recommended = false,
      generator   = SecureMova_Gcg.generate,
-     parser      = RepParser.transformXMI o XmiParser.readFile,
+     parser      = RepParser.transformXMI_ext o XmiParser.readFile,
      template    = "securemova.tpl"}]:cartridge list
 
 

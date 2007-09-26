@@ -179,11 +179,12 @@ fun mkMultiplicity tree =
            |> get "UML:Multiplicity.range"
            |> map mkRange
     
-fun mkAssociationEnd tree = 
+fun mkAssociationEnd association  tree = 
     let val atts = tree |> assert "UML:AssociationEnd" |> attributes
     in 
 	{ xmiid          = atts |> xmiid, 
 	  name           = atts |> optional_value_of "name", 
+	  association    = association,
 	  isNavigable    = atts |> bool_value_of "isNavigable" ,
 	  ordering       = atts |> ordering,
 	  aggregation    = atts |> aggregation,
@@ -225,25 +226,28 @@ fun mkAssociationEndFromAssociationClass tree =
 (* From an AssociationClass,  we build the corresponding association *)
 (* that will later be handles just like any other association.       *)
 fun mkAssociationFromAssociationClass tree =
-    let val atts = tree |> assert "UML:AssociationClass" |> attributes
+    let 
+	val atts = tree |> assert "UML:AssociationClass" |> attributes
+	val id = atts |> xmiid
     in 
-        { xmiid      = atts |> xmiid, 
+        { xmiid      = id, 
 	  name       = atts |> optional_value_of "name" ,
-	  connection = (tree |> get_many "UML:Association.connection" 
-                            |> map mkAssociationEnd)@
-                       [(mkAssociationEndFromAssociationClass tree)] (* *)
+	  connection = tree |> get_many "UML:Association.connection"
+                            |> map (mkAssociationEnd id)
 	}
     end
 (*handle IllFormed msg => error ("in mkAssociation: "^msg)*)
 
 
 fun mkAssociation tree = 
-    let val atts = tree |> assert "UML:Association" |> attributes
+    let 
+	val atts = tree |> assert "UML:Association" |> attributes
+	val   id = atts |> xmiid    
     in 
-        { xmiid      = atts |> xmiid, 
+        { xmiid      = id,  
           name       = atts |> optional_value_of "name",
 	  connection = tree |> get_many "UML:Association.connection" 
-                            |> map mkAssociationEnd
+                            |> map (mkAssociationEnd id)
         }
     end
 (* handle IllFormed msg => error ("in mkAssociation: "^msg)*)
@@ -402,10 +406,16 @@ and mkVariableDec vtree =
 (* handle IllFormed msg => error ("in mkVariableDec: "^msg)*)
 
     
+(* FIX: Handle AssociationClasses like Associations.     	*)
+(*  	See mkAssociationFromAssociationClass for details.      *)
+(* billk_tag: handle separately *)
+val filterAssociations = filter "UML:Association"
+val filterAssociationClasses = filter "UML:AssociationClass"
 
-fun getAssociations t = (map mkAssociation (filter "UML:Association" t))@
-			(map mkAssociationFromAssociationClass 
-			     (filter "UML:AssociationClass" t))
+fun getAssociations t = (map mkAssociation (filter "UML:Association" t))
+(*                                                           @*)
+(*			(map mkAssociationFromAssociationClass *)
+(*			     (filter "UML:AssociationClass" t))*)
 (*handle _ => error ("Error in getAssociations") *)
                         
                         
@@ -825,9 +835,14 @@ fun mkClass atts tree =
 (*handle IllFormed msg => error ("Error in mkClass "^(name atts)^
 				 ": "^msg)*)
     
-fun mkAssociationClass atts tree
-  = XMI.AssociationClass
-        { xmiid              = atts |> xmiid,
+(* billk_tag *)
+(* extended to match Rep.AssociationClass *)
+fun mkAssociationClass atts tree =
+    let
+	val id = atts |> xmiid
+    in
+	XMI.AssociationClass
+            { xmiid              = id,
 	  name               = atts |> name,
 	  isActive           = atts |> bool_value_of "isActive",
 	  visibility         = atts |> visibility,
@@ -850,9 +865,20 @@ fun mkAssociationClass atts tree
 				    |> map xmiidref,
 	  supplierDependency = tree |> get "UML:ModelElement.supplierDependency"
 				    |> map xmiidref,
-	  connection         = tree |> get_many "UML:Association.connection" 
-				    |> map mkAssociationEnd
+(*	      classifierInState  = tree |> get "UML:Namespace.ownedElement"
+					|> filter "UML:ClassifierInState"
+					|> map (xmiid o attributes),
+	      state_machines     = tree |> get "UML:Namespace.ownedElement"
+					|> filter "UML:StateMachine"
+					|> map mkStateMachine,                        
+	      activity_graphs    = tree |> get "UML:Namespace.ownedElement" 
+					|> filter "UML:ActivityGraph"
+					|> map mkActivityGraph,
+*)	      connection         = tree |> get_many "UML:Association.connection" 
+					|> map (mkAssociationEnd id)
         }
+    end
+
 (*handle IllFormed msg => error ("in mkAssociationClass: "^msg)*)
 
 
@@ -1030,7 +1056,8 @@ fun mkPackage tree =
 		   visibility      = atts  |> visibility,
 		   packages        = trees |> filterPackages    |> map mkPackage,
 		   classifiers     = trees |> filterClassifiers |> map mkClassifier,
-		   associations    = trees |> getAssociations, 
+		   (*associations    = trees |> getAssociations,*) 
+		   associations    = trees |> filterAssociations |> map mkAssociation,
 		   generalizations = trees |> filter "UML:Generalization"
                                            |> map mkGeneralization,
 		   constraints     = trees |> filterConstraints |> map mkConstraint,

@@ -47,7 +47,8 @@ include REP_CORE
 include REP_ACTIVITY_GRAPH 
 include OCL_LIBRARY
 
-type Model = Classifier list				 
+(*type Model = Classifier list*)
+type Model = Classifier list * association list
 
 end
 
@@ -57,6 +58,7 @@ struct
 open Rep_Core Rep_StateMachine Rep_ActivityGraph
 open OclLibrary
 
-type Model = Classifier list
+(*type Model = Classifier list *)
+type Model = Classifier list * association list
 end
 

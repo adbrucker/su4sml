@@ -130,9 +130,11 @@ sig
     (** 
      * parse a UML model and return a (modified) list of classes and the 
      * recognized security configuration. 
+     * FIXME: proper descr./impl. of all funtctions re the changed model
+     * FIXME: Associations? Classifier.association?
      *)
-    val parse: Rep_Core.Classifier list -> 
-			   (Rep_Core.Classifier list * Configuration)
+    val parse: Rep.Model -> 
+			   (Rep.Model * Configuration)
 end 	
 
 

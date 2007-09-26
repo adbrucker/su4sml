@@ -51,7 +51,8 @@ sig
 	 * a "secure repository" model consist of a repository model 
 	 * plus a security configuration.
 	 *)
-    type Model = Rep_Core.Classifier list * Security.Configuration
+    (*type Model = Rep_Core.Classifier list * Security.Configuration*)
+    type Model = Rep.Model * Security.Configuration
 				 
 	(** *) 
     val readXMI: string -> Model
@@ -65,11 +66,13 @@ struct
 
     structure Security = Security
 
-    type Model = Rep_Core.Classifier list * Security.Configuration
+    (*type Model = Rep_Core.Classifier list * Security.Configuration*)
+    type Model = Rep.Model * Security.Configuration
 
     val readXMI = Security.parse o RepParser.readFile
 
-    fun test (_,filename::_) = (Rep2String.printList (#1 (readXMI filename)); OS.Process.success)
+    (* FIXME: extend to associations? *)
+    fun test (_,filename::_) = (Rep2String.printList (#1(#1 (readXMI filename))); OS.Process.success)
 end
 
 structure Rep_SecureUML_ComponentUML 

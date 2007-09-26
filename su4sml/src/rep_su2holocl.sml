@@ -288,14 +288,24 @@ fun create_secured {name, body,precondition, postcondition, arguments, result,
  * Should be moved to Rep_Core?
  *)
 fun add_invariant_to_classifier inv (Class {name, parent, attributes, 
-                                             operations, associationends, 
+                                            operations, associations, 
                                              invariant, stereotypes, 
                                              interfaces, thyname, activity_graphs})
   = Class {name=name, parent=parent, attributes=attributes, 
            operations=operations, 
-           associationends=associationends, invariant=inv::invariant, 
+           associations=associations, invariant=inv::invariant, 
            stereotypes=stereotypes, interfaces=interfaces, 
            thyname=thyname, activity_graphs=activity_graphs}
+  | add_invariant_to_classifier inv (AssociationClass {name, parent, attributes, 
+						       operations, associations,
+						       association, invariant,
+						       stereotypes, interfaces, 
+						       thyname, activity_graphs})
+  = AssociationClass {name=name, parent=parent, attributes=attributes, 
+		      operations=operations, associations=associations,
+		      association=association, invariant=inv::invariant, 
+		      stereotypes=stereotypes, interfaces=interfaces, 
+		      thyname=thyname, activity_graphs=activity_graphs}
   | add_invariant_to_classifier inv (Interface {name, parents, operations,  
                                                  invariant, stereotypes,  thyname})
     = Interface {name=name, parents=parents, operations=operations,
@@ -307,10 +317,10 @@ fun add_invariant_to_classifier inv (Class {name, parent, attributes,
                   invariant=inv::invariant, stereotypes=stereotypes,
                   interfaces=interfaces, thyname=thyname}
   | add_invariant_to_classifier inv (Primitive {name, parent, operations, 
-                                                 associationends, invariant, 
+                                                 associations, invariant, 
                                                  stereotypes, interfaces, thyname})
     = Primitive{name=name, parent=parent, operations=operations, 
-                associationends=associationends, invariant=inv::invariant, 
+                associations=associations, invariant=inv::invariant, 
                 stereotypes=stereotypes, interfaces=interfaces, thyname=thyname}
   | add_invariant_to_classifier inv (Template {parameter, classifier}) 
     = Template { parameter=parameter, 
@@ -322,14 +332,24 @@ fun add_invariant_to_classifier inv (Class {name, parent, attributes,
  * Should be moved to Rep_Core?
  *)
 fun add_operation_to_classifier oper (Class {name, parent, attributes, 
-                                             operations, associationends, 
+                                             operations, associations, 
                                              invariant, stereotypes, 
                                              interfaces, thyname, activity_graphs})
   = Class {name=name, parent=parent, attributes=attributes, 
            operations=oper::operations, 
-           associationends=associationends, invariant=invariant, 
+           associations=associations, invariant=invariant, 
            stereotypes=stereotypes, interfaces=interfaces, 
            thyname=thyname, activity_graphs=activity_graphs}
+  | add_operation_to_classifier oper (AssociationClass {name, parent, attributes, 
+							operations, associations, 
+							association, invariant,
+							stereotypes, interfaces,
+							thyname, activity_graphs})
+  = AssociationClass {name=name, parent=parent, attributes=attributes, 
+		      operations=oper::operations, associations=associations,
+		      association=association, invariant=invariant, 
+		      stereotypes=stereotypes, interfaces=interfaces, 
+		      thyname=thyname, activity_graphs=activity_graphs}
   | add_operation_to_classifier oper (Interface {name, parents, operations,  
                                                  invariant, stereotypes,  thyname})
     = Interface {name=name, parents=parents, operations=oper::operations,
@@ -341,10 +361,10 @@ fun add_operation_to_classifier oper (Class {name, parent, attributes,
                   literals=literals, invariant=invariant, stereotypes=stereotypes,
                   interfaces=interfaces, thyname=thyname}
   | add_operation_to_classifier oper (Primitive {name, parent, operations, 
-                                                 associationends, invariant, 
+                                                 associations, invariant, 
                                                  stereotypes, interfaces, thyname})
     = Primitive{name=name, parent=parent, operations=oper::operations, 
-                associationends=associationends, invariant=invariant, 
+                associations=associations, invariant=invariant, 
                 stereotypes=stereotypes, interfaces=interfaces, thyname=thyname}
   | add_operation_to_classifier oper (Template {parameter, classifier}) 
     = Template { parameter=parameter, 
@@ -395,14 +415,65 @@ fun add_operations c =
     end
                        
 
+(* billk_tag: associationend -> path + associations *)
+val identity_role_association =
+    {name=["AuthorizationEnvironment","IdentityRoleAssociation"],
+     aends=[{name=["AuthorizationEnvironment","Association","identity"],
+	     aend_type=Classifier ["AuthorizationEnvironment","Identity"],
+	     init=NONE,
+	     multiplicity=[(0,~1)],
+	     ordered=false,
+	     visibility=public},
+	    {name=["AuthorizationEnvironment","Association","roles"],
+	     aend_type=Classifier ["AuthorizationEnvironment","Role"],
+	     init=NONE,multiplicity=[(0,~1)],
+	     ordered=false,
+	     visibility=public}
+	   ],
+     aclass=NONE}
+    
+val identity_principal_association =
+    {name=["AuthorizationEnvironment","IdentityPrincipalAssociation"],
+     aends=[{name=["AuthorizationEnvironment","Association","identity"],
+	     aend_type=Classifier ["AuthorizationEnvironment","Identity"],
+	     init=NONE,
+	     multiplicity=[(1,1)],
+	     ordered=false,
+	     visibility=public},
+	    {name=["AuthorizationEnvironment","Association","principal"],
+	     aend_type=Classifier ["AuthorizationEnvironment","Principal"],
+	     init=NONE,multiplicity=[(0,~1)],
+	     ordered=false,
+	     visibility=public}
+	   ],
+     aclass=NONE}
+    
+val context_principal_association =
+    {name=["AuthorizationEnvironment","ContextPrincipalAssociation"],
+     aends=[{name=["AuthorizationEnvironment","ContextPrincipalAssociation","principal"],
+	     aend_type=Classifier ["AuthorizationEnvironment","Principal"],
+	     init=NONE,
+	     multiplicity=[(1,1)],
+	     ordered=false,
+	     visibility=public},
+	    {name=["AuthorizationEnvironment","ContextPrincipalAssociation","context"],
+	     aend_type=Classifier ["AuthorizationEnvironment","Context"],
+	     init=NONE,
+	     multiplicity=[(0,~1)],
+	     ordered=false,
+	     visibility=public}
+	   ],
+     aclass=NONE}
+
 val role =    
     Class {activity_graphs=[],
-           associationends=[{aend_type=Classifier
+(*           associationends=[{aend_type=Classifier
                                            ["AuthorizationEnvironment","Identity"],
                              init=NONE,multiplicity=[(0,~1)],
                              name="identity",
                              ordered=false,
                              visibility=public}],
+ *)        associations=[["AuthorizationEnvironment","IdentityRoleAssociation"]],
            attributes=[{attr_type=String,
                         init=NONE,name="name",
                         scope=InstanceScope,
@@ -426,7 +497,7 @@ val role =
     
 val identity =  
     Class { activity_graphs=[],
-            associationends=[{aend_type=Classifier
+(*            associations=[{aend_type=Classifier
                                             ["AuthorizationEnvironment","Role"],
                               init=NONE,multiplicity=[(0,~1)],
                               name="roles",
@@ -439,6 +510,9 @@ val identity =
                               name="principal",
                               ordered=false,
                               visibility=public}],
+*)	    associations= [["AuthorizationEnvironment","IdentityRoleAssociation"],
+			   ["AuthorizationEnvironment","IdentityPrincipalAssociation"]
+			  ],
             attributes=[{attr_type=String,
                          init=NONE,name="name",
                          scope=InstanceScope,
@@ -453,16 +527,16 @@ val identity =
             thyname=NONE
           }
     
-    
 val static_auth_env = [
     Class { activity_graphs=[],
-            associationends=[{aend_type=Classifier
+(*            associations=[{aend_type=Classifier
                                             ["AuthorizationEnvironment","Principal"],
                               init=NONE,
                               multiplicity=[(1,1)],
                               name="principal",
                               ordered=false,
                               visibility=public}],
+ *)         associations=[["AuthorizationEnvironment","ContextPrincipalAssociation"]],
             attributes=[],
             interfaces=[],
             invariant=[],
@@ -473,7 +547,7 @@ val static_auth_env = [
             thyname=NONE},
     Class
         { activity_graphs=[],
-          associationends=[{aend_type=Classifier
+(*          associations=[{aend_type=Classifier
                                           ["AuthorizationEnvironment","Identity"],
                             init=NONE,
                             multiplicity=[(1,1)],
@@ -487,6 +561,9 @@ val static_auth_env = [
                             name="context",
                             ordered=false,
                             visibility=public}],
+*)	  associations=[["AuthorizationEnvironment","IdentityPrincipalAssociation"],
+			["AuthorizationEnvironment","ContextPrincipalAssociation"]
+		       ],
           attributes=[],
           interfaces=[],
           invariant=[],
@@ -557,13 +634,14 @@ fun define_roles sc =
 fun create_sec_postconds sc c = c
 
 
-fun transform (cl,sc) =
+fun transform (model:Rep.Model,sc) =
     let
-        val transformed_design_model = map add_operations cl
-        val transformed_model = map (create_sec_postconds sc) transformed_design_model 
-        val auth_env          = map normalize (define_roles sc::define_role_hierarchy sc::static_auth_env) 
+        val transformed_design_model = (map add_operations (#1 model),#2 model)
+        val transformed_model = create_sec_postconds sc transformed_design_model 
+        val auth_env          = map (normalize (#2 transformed_model)) (define_roles sc::define_role_hierarchy sc::static_auth_env) 
     in
-         transformed_model @ auth_env
+         ((#1 transformed_model) @ auth_env,identity_role_association::identity_principal_association::
+				       context_principal_association::(#2 transformed_model))
     end
     
 end 

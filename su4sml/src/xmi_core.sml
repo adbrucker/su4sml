@@ -261,6 +261,7 @@ type Void = {xmiid: string,
  * --------------------------------------------------------------------------*)
 type AssociationEnd = { xmiid : string,
 			name : string option,
+			association: string (* xmiid of enclosing association *),
 			isNavigable: bool,
 			ordering : OrderingKind,
 			aggregation : AggregationKind,

@@ -53,7 +53,8 @@ sig
 structure Security:SECUREUML
 		
 include BASE_CARTRIDGE where
-type Model = Rep.Classifier list * Security.Configuration
+(*type Model = Rep.Classifier list * Security.Configuration*)
+type Model = Rep.Model * Security.Configuration
 
 val PermissionSet : environment -> Security.Permission list
 val curPermission : environment -> Security.Permission option
@@ -77,7 +78,8 @@ struct
 open library
 structure Security = SecureUML(structure Design = D)
 
-type Model = Rep.Classifier list * Security.Configuration
+(*type Model = Rep.Classifier list * Security.Configuration*)
+type Model = Rep.Model * Security.Configuration
 	     
 type environment = { model           : Model,
 		     PermissionSet   : Security.Permission list,

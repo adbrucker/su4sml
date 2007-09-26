@@ -52,6 +52,7 @@ sig
 		         | Classifier of Path | OclVoid | DummyT | TemplateParameter of string
 
     val path_of_OclType   : OclType -> Path
+    val collection_type_of_OclType : OclType -> OclType
     val string_of_OclType : OclType -> string	
     val string_of_path    : Path -> string	
     val string_of_OclType_colon : OclType -> string
@@ -149,6 +150,13 @@ fun string_of_OclType' f Integer        = "Integer"
   | string_of_OclType' f DummyT         = "DummyT"
   | string_of_OclType' f (TemplateParameter s) = "TemplateParameter \""^s^"\"" 
 
+fun collection_type_of_OclType (Set t)        = t
+  | collection_type_of_OclType (Sequence t)   = t
+  | collection_type_of_OclType (OrderedSet t) = t
+  | collection_type_of_OclType (Bag t)        = t
+  | collection_type_of_OclType (Collection t) = t
+
+
 fun string_of_OclType t = string_of_OclType' "." t
 
 
@@ -235,6 +243,20 @@ fun type_of (Literal                (_,t)) = t
   | type_of (Iterate  (_,_,_,_,_,_,_,_,t)) = t
   | type_of (Iterator     (_,_,_,_,_,_,t)) = t
 
+(* or rather short_string_of ?*)
+fun term_name_of (Literal            _) = "Literal"
+  | term_name_of (CollectionLiteral  _) = "CollectionLiteral"
+  | term_name_of (If                 _) = "If"
+  | term_name_of (AssociationEndCall _) = "AssociationEndCall"
+  | term_name_of (AttributeCall      _) = "AttributeCall"
+  | term_name_of (OperationCall      _) = "OperationCall"
+  | term_name_of (OperationWithType  _) = "OperationWithType"
+  | term_name_of (Variable           _) = "Variable"
+  | term_name_of (Let                _) = "Let"
+  | term_name_of (Iterate            _) = "Iterate"
+  | term_name_of (Iterator           _) = "Iterator"
+
+
 fun self t = Variable ("self",t)
 fun result t = Variable ("result", t)
 
@@ -274,6 +296,9 @@ fun ocl_implies a b = ocl_opcall a ["oclLib", "Boolean", "implies"]  [b] Boolean
 (* Integer: -,+,-,*,/,abs,div,mod,max,min               *)
 (* Real   : -,+,-,*,/,abs,floor,round,max,min,<,>,<=,>= *)
 (* String : size, concat, substring, toInteger, toReal  *)
+(* billk_tag *)
+fun ocl_leq a b = ocl_opcall a ["oclLib", "Integer", "<="] [b] Boolean
+fun ocl_geq a b = ocl_opcall a ["oclLib", "Integer", ">="] [b] Boolean
 
 (* OclAny *)
 fun ocl_eq a b  = ocl_opcall a ["oclLib", "OclAny", "="] [b] Boolean
@@ -300,9 +325,14 @@ fun ocl_asType   a t = ocl_opwithtype a "oclAsType"   t t
 (*             asSet,asOrderedSet                                            *)
 
 fun ocl_includes a b = ocl_opcall a ["oclLib", "Collection", "includes"] [b] Boolean
+fun ocl_includesAll a b = ocl_opcall a ["oclLib", "Collection", "includesAll"] [b] Boolean
 fun ocl_excludes a b = ocl_opcall a ["oclLib", "Collection", "excludes"] [b] Boolean
+fun ocl_excludesAll a b = ocl_opcall a ["oclLib", "Collection", "excludesAll"] [b] Boolean
 
 fun ocl_modifiedOnly a = ocl_opcall a ["oclLib", "Set", "modifiedOnly"] [] Boolean
+
+(* billk_tag *)
+fun ocl_size a = ocl_opcall a ["oclLib", "Collection", "size"] [] Integer
 
 (* Collection constructors *)
 
@@ -320,6 +350,17 @@ fun ocl_collect source var body = Iterator ("collect", [(var,type_of source)],
                                             source, type_of source,
                                             body, type_of body,
                                             Bag (type_of body))
+                                  
+(* billk_tag, using a Variable: type_of variable == type_of_source *)
+fun ocl_forAll (source:OclTerm) (Variable variable) (body:OclTerm) = Iterator ("forAll", [variable],
+									       source, type_of source,
+									       body, type_of body,
+									       Bag (type_of body))
+
+fun ocl_select (source:OclTerm) (Variable variable) (body:OclTerm) = Iterator ("select", [variable],
+							      source, type_of source,
+							      body, type_of body,
+							      Bag (type_of body))
                                   
 fun atpre exp = ocl_opcall exp ["oclLib","OclAny","atPre"] nil (type_of exp)
 

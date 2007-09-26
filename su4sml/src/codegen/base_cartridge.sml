@@ -85,7 +85,8 @@ fun scope2Native XMI.ClassifierScope = "ClassifierScope"
   | scope2Native XMI.InstanceScope   = "InstanceScope"
 				       
 				       
-type Model = Rep.Classifier list
+(*type Model = Rep.Classifier list*)
+type Model = Rep_Core.transform_model
              
 type environment = { model	  : Model,
                      counter      : int ref,
@@ -103,6 +104,8 @@ type environment = { model	  : Model,
  * list items
  *)
 fun getModel      (env : environment) = #model env
+fun getClassifiers  (env: environment) = #1 (getModel env)
+fun getAssociations (env: environment) = #2 (getModel env)
 fun curClassifier (env : environment) = (#curClassifier env)
 fun curAttribute  (env : environment) = (#curAttribute env)
 fun curAssociationEnd  (env : environment) = (#curAssocEnd env)
@@ -132,7 +135,7 @@ fun initEnv model = { model         = model,
 fun curClassifierPackageToString env p2sfun = (case (#curClassifier env) of 
                                                    NONE  =>  p2sfun
                                                                  (Rep.package_of 
-                                                                      (hd (#model env)))
+                                                                      (hd (getClassifiers env)))
                                                  | SOME c => p2sfun
                                                                  (Rep.package_of 
                                                                       (curClassifier' env)))
@@ -170,7 +173,7 @@ fun lookup env "classifier_name"  	 = Rep_Core.short_name_of (curClassifier' env
   | lookup env "attribute_visibility"    = visibility2Native(#visibility 
                                                                (curAttribute' env))
   | lookup env "attribute_scope" 	 = scope2Native (#scope (curAttribute' env))
-  | lookup env "assocend_name"           = (#name o valOf o #curAssocEnd) env
+  | lookup env "assocend_name"           = (Rep_OclType.string_of_path o #name o valOf o #curAssocEnd) env
   | lookup env "assocend_type"           = (oclType2Native o #aend_type o valOf o #curAssocEnd) env
   | lookup env "operation_name" 	 = Rep.name_of_op (curOperation' env)
   | lookup env "operation_result_type"   = oclType2Native (Rep.result_of_op 
@@ -222,14 +225,14 @@ fun test env "isClass"       = (case (#curClassifier env)  of
   | test env "hasOpSpec"     = ((length (Rep_Core.precondition_of_op (curOperation' env))) 
                                +(length (Rep_Core.postcondition_of_op (curOperation' env)))) > 0
   | test env "hasAttributes" = (length (Rep_Core.attributes_of (curClassifier' env))) > 0
-  | test env "first_classifier" = (curClassifier' env = hd  (#model env))
+  | test env "first_classifier" = (curClassifier' env = hd  (getClassifiers env))
   | test env "first_attribute" = (curAttribute'  env 
                                   = hd (Rep_Core.attributes_of (curClassifier' env)))
   | test env "first_operation" = (curOperation'  env 
                                   = hd (Rep_Core.operations_of (curClassifier' env)))
   | test env "first_argument"  = (curArgument'   env 
                                   = hd (Rep_Core.arguments_of_op (curOperation' env)))
-  | test env "last_classifier" = (curClassifier' env = List.last (#model env))
+  | test env "last_classifier" = (curClassifier' env = List.last (getClassifiers env))
   | test env "last_attribute"  = (curAttribute' env = 
                                   List.last (Rep_Core.attributes_of 
                                                  (curClassifier' env)))
@@ -255,7 +258,7 @@ fun test env "isClass"       = (case (#curClassifier env)  of
 		  
 (* fun foreach_classifier: environment -> environment list *)
 fun foreach_classifier (env : environment) 
-  = let val cl = (#model env)
+  = let val cl = (getClassifiers env)
 	fun env_from_classifier c = { model        = #model env,
                                       counter      = #counter env,
 				      curClassifier= SOME c,
@@ -275,7 +278,7 @@ fun foreach_classifier (env : environment)
 fun foreach_nonprimitive_classifier (env : environment) 
   = let val cl = List.filter (fn cenv => (case cenv of
 					      Rep.Primitive{...} => false
-					    | _                  => true)) (#model env)
+					    | _                  => true)) (getClassifiers env)
 	fun env_from_classifier c = { model = (#model env),
                                       counter = #counter env,
 				      curClassifier = SOME c,
@@ -392,7 +395,8 @@ fun foreach_argument (env : environment)
     end
 
 fun foreach_assocend (env : environment) 
-  = let val aends = Rep_Core.associationends_of (curClassifier' env)
+  = let val associations = getAssociations env
+	val aends = Rep_Core.associationends_of associations (curClassifier' env)
 	fun env_from_argument arg = { model = #model env,
                                       counter      = #counter env,
 				      curClassifier = SOME (curClassifier' env),
