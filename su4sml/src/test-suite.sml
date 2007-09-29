@@ -127,6 +127,12 @@ val testcases = [
     uml  = prefix^"vehicles/vehicles.zargo",
     ocl  = prefix^"vehicles/vehicles.ocl",
     result = initResult
+   }:testcase,
+   {
+    name = "SimpleChair",
+    uml  = prefix^"SimpleChair/SimpleChair.zargo",
+    ocl  = "";
+    result = initResult
    }:testcase
 ]
 
