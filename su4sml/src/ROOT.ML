@@ -120,7 +120,7 @@ use "xmi_parser.sml";        (* conversion XML to XMI *);
 use "xmi_idtable.sml";    (* auxiliary table to store and dereference xmi.id's *)
 use "rep_parser.sml";        (* conversion XMI to Rep *)
 
-
+use "rep_transform.sml";
 use "listeq.sml";
 use "mds.sig";
 use "component_uml.sml";
