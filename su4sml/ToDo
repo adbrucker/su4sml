@@ -1,5 +1,6 @@
 - define "error" in a clean way including its exception...
 
+- maintain regression test suite
 
 - Ideas for extensions (e.g., as SA)
   * additional import formats (USE, Rational, etc)
