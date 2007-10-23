@@ -1,0 +1,41 @@
+We here document coding-style guidelines that should be adhered to.
+Much of the existing code is not yet following these guidelines, patches 
+are welcome. (some of these guidelines even are not yet decided upon, 
+these are marked by TBD, To Be Decided. Some of the SHOULDs might also
+changed into MUSTs)
+
+ 1. structures, and exported types and functions SHOULD be documented
+    (using smldoc)
+
+ 2. functions SHOULD be defined in their curried form: 
+    fun f x y = ... instead of fun f(x,y) = ...
+
+ 3. TBD: camelCase vs seperated_by_underscore (we really should decide on one...)
+
+ 4. function names SHOULD be meaningful and unabbreviated 
+
+ 5. function names MUST be lowercase
+
+ 6. datatype names and datatype constructor names SHOULD be capitalized
+
+ 7. datatypes SHOULD be preferred to type synonyms
+    in particular for record types
+
+ 8. structures SHOULD be given a signature
+
+ 9. structure names MUST be capitalized, and CamelCased
+
+10. signature names MUST be ALL_CAPS.
+
+11. TBD: signatures in separate .sig files or inline in the .sml file?
+
+12. code MUST be portable among the supported sml systems 
+    (currently: SML/NJ, MLTon, polyml in various versions)
+
+13. source files SHOULD contain only one signature resp. structure.
+
+14. source file names SHOULD reflect the structure/signature name.
+
+15. source file names SHOULD be lowercase and seperated_by_underscore.
+
+
