@@ -131,7 +131,7 @@ val testcases = [
    {
     name = "SimpleChair",
     uml  = prefix^"SimpleChair/SimpleChair.zargo",
-    ocl  = "";
+    ocl  = "",
     result = initResult
    }:testcase
 ]

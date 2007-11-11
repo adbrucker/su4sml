@@ -228,6 +228,9 @@ end
 structure Rep_OclHelper =
 struct
 open Rep_OclTerm
+
+exception InvalidArguments of string
+
 (** gives the type of an OCL expression.
  * Should be moved to Rep_Ocl? 
  *)
@@ -260,7 +263,7 @@ fun term_name_of (Literal            _) = "Literal"
 fun self t = Variable ("self",t)
 fun result t = Variable ("result", t)
 
-
+(* BUG: let...? *)
 fun ocl_let var rhs body = Let (var,type_of rhs,rhs,type_of rhs,body,type_of body)
 fun ocl_opcall source f args t  = OperationCall (source, type_of source, f,
                                                  map (fn x => (x,type_of x)) args,
@@ -292,11 +295,16 @@ fun ocl_and     a b = ocl_opcall a ["oclLib", "Boolean", "and"]      [b] Boolean
 fun ocl_or      a b = ocl_opcall a ["oclLib", "Boolean", "or"]       [b] Boolean
 fun ocl_xor     a b = ocl_opcall a ["oclLib", "Boolean", "xor"]      [b] Boolean
 fun ocl_implies a b = ocl_opcall a ["oclLib", "Boolean", "implies"]  [b] Boolean
+fun ocl_and_all [] = raise (InvalidArguments "rep_ocl.ocl_and_all: empty argument list")
+  | ocl_and_all [a] = a
+  | ocl_and_all (a::xs) = ocl_and a (ocl_and_all xs)
+fun ocl_or_all [] = raise (InvalidArguments "rep_ocl.ocl_or_all: empty argument list")
+  | ocl_or_all [a] = a
+  | ocl_or_all (a::xs) = ocl_or a (ocl_or_all xs)
 
 (* Integer: -,+,-,*,/,abs,div,mod,max,min               *)
 (* Real   : -,+,-,*,/,abs,floor,round,max,min,<,>,<=,>= *)
 (* String : size, concat, substring, toInteger, toReal  *)
-(* billk_tag *)
 fun ocl_leq a b = ocl_opcall a ["oclLib", "Integer", "<="] [b] Boolean
 fun ocl_geq a b = ocl_opcall a ["oclLib", "Integer", ">="] [b] Boolean
 
@@ -306,7 +314,7 @@ fun ocl_neq a b = ocl_opcall a ["oclLib", "OclAny", "<>"] [b] Boolean
 fun ocl_isNew a = ocl_opcall a ["oclLib", "OclAny", "oclIsNew"] nil Boolean
 fun ocl_isUndefined  a = ocl_opcall a ["oclLib", "OclAny", "oclIsUndefined"] nil Boolean
 fun ocl_allInstances s = ocl_opcall s ["oclLib", "OclAny", "allInstances"] nil 
-                                    (Set (type_of s)) 
+				    (Set (type_of s)) 
 fun ocl_isTypeOf a t = ocl_opwithtype a "oclIsTypeOf" t Boolean
 fun ocl_isKindOf a t = ocl_opwithtype a "oclIsKindOf" t Boolean
 fun ocl_asType   a t = ocl_opwithtype a "oclAsType"   t t
@@ -328,6 +336,7 @@ fun ocl_includes a b = ocl_opcall a ["oclLib", "Collection", "includes"] [b] Boo
 fun ocl_includesAll a b = ocl_opcall a ["oclLib", "Collection", "includesAll"] [b] Boolean
 fun ocl_excludes a b = ocl_opcall a ["oclLib", "Collection", "excludes"] [b] Boolean
 fun ocl_excludesAll a b = ocl_opcall a ["oclLib", "Collection", "excludesAll"] [b] Boolean
+fun ocl_intersection_set a b = ocl_opcall a ["oclLib", "Set", "intersection_set"] [b] (Set (type_of a))
 
 fun ocl_modifiedOnly a = ocl_opcall a ["oclLib", "Set", "modifiedOnly"] [] Boolean
 
@@ -351,16 +360,22 @@ fun ocl_collect source var body = Iterator ("collect", [(var,type_of source)],
                                             body, type_of body,
                                             Bag (type_of body))
                                   
-(* billk_tag, using a Variable: type_of variable == type_of_source *)
-fun ocl_forAll (source:OclTerm) (Variable variable) (body:OclTerm) = Iterator ("forAll", [variable],
+(* source::Collection/Set/..., variables:: Variable list , body:: expression to be evaluated *)
+(* body must be Boolean *)
+fun ocl_forAll (source:OclTerm) (variables:OclTerm list) (body:OclTerm) = 
+    let
+	fun strip_var (Variable(name,var_type)) = (name,var_type)
+    in
+	Iterator ("forAll", map strip_var variables,
+    		  source, type_of source,
+		  body, type_of body,
+		  Bag (type_of body))
+    end
+
+fun ocl_select (source:OclTerm) (Variable variable) (body:OclTerm) = Iterator ("select", [variable],
 									       source, type_of source,
 									       body, type_of body,
 									       Bag (type_of body))
-
-fun ocl_select (source:OclTerm) (Variable variable) (body:OclTerm) = Iterator ("select", [variable],
-							      source, type_of source,
-							      body, type_of body,
-							      Bag (type_of body))
                                   
 fun atpre exp = ocl_opcall exp ["oclLib","OclAny","atPre"] nil (type_of exp)
 
