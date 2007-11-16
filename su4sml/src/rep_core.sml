@@ -203,7 +203,9 @@ val update_operations   : operation list -> Classifier -> Classifier
 val update_precondition   : (string option * Rep_OclTerm.OclTerm) list -> operation ->  operation
 val update_postcondition  : (string option * Rep_OclTerm.OclTerm) list -> operation ->  operation
 
-
+val addInvariant : constraint -> Classifier -> Classifier
+val addOperation : operation  -> Classifier -> Classifier
+     
 end
 
 structure Rep_Core :  REP_CORE = 
@@ -953,5 +955,87 @@ fun connected_classifiers_of (all_associations:association list) (C as Class {at
                       | _              => NONE)
                     (map #aend_type (associationends_of all_associations P))
   | connected_classifiers_of _  _ _ = nil
+
+(** adds an invariant to a classifier.
+ *)
+fun addInvariant inv (Class {name, parent, attributes, operations, 
+                             associations, invariant, stereotypes, 
+                             interfaces, thyname, activity_graphs})
+  = Class {name=name, parent=parent, attributes=attributes, 
+           operations=operations, 
+           associations=associations, invariant=inv::invariant, 
+           stereotypes=stereotypes, interfaces=interfaces, 
+           thyname=thyname, activity_graphs=activity_graphs}
+  | addInvariant inv (AssociationClass {name, parent, attributes, 
+						       operations, associations,
+						       association, invariant,
+						       stereotypes, interfaces, 
+						       thyname, activity_graphs})
+  = AssociationClass {name=name, parent=parent, attributes=attributes, 
+		      operations=operations, associations=associations,
+		      association=association, invariant=inv::invariant, 
+		      stereotypes=stereotypes, interfaces=interfaces, 
+		      thyname=thyname, activity_graphs=activity_graphs}
+  | addInvariant inv (Interface {name, parents, operations,  
+                                                 invariant, stereotypes,  thyname})
+    = Interface {name=name, parents=parents, operations=operations,
+                 invariant=inv::invariant, stereotypes=stereotypes, thyname=thyname}
+  | addInvariant inv (Enumeration {name, parent, operations,
+                                                   literals, invariant, stereotypes,
+                                                   interfaces, thyname})
+    = Enumeration{name=name, parent=parent, operations=operations,literals=literals,
+                  invariant=inv::invariant, stereotypes=stereotypes,
+                  interfaces=interfaces, thyname=thyname}
+  | addInvariant inv (Primitive {name, parent, operations, 
+                                                 associations, invariant, 
+                                                 stereotypes, interfaces, thyname})
+    = Primitive{name=name, parent=parent, operations=operations, 
+                associations=associations, invariant=inv::invariant, 
+                stereotypes=stereotypes, interfaces=interfaces, thyname=thyname}
+  | addInvariant inv (Template {parameter, classifier}) 
+    = Template { parameter=parameter, 
+                 classifier=addInvariant inv classifier
+               }
+      
+
+(** adds an operation to a classifier. *)
+fun addOperation oper (Class {name, parent, attributes, operations, 
+                              associations, invariant, stereotypes, 
+                              interfaces, thyname, activity_graphs})
+  = Class {name=name, parent=parent, attributes=attributes, 
+           operations=oper::operations, 
+           associations=associations, invariant=invariant, 
+           stereotypes=stereotypes, interfaces=interfaces, 
+           thyname=thyname, activity_graphs=activity_graphs}
+  | addOperation oper (AssociationClass {name, parent, attributes, 
+					 operations, associations, 
+					 association, invariant,
+					 stereotypes, interfaces,
+					 thyname, activity_graphs})
+    = AssociationClass {name=name, parent=parent, attributes=attributes, 
+		        operations=oper::operations, associations=associations,
+		        association=association, invariant=invariant, 
+		        stereotypes=stereotypes, interfaces=interfaces, 
+		      thyname=thyname, activity_graphs=activity_graphs}
+  | addOperation  oper (Interface {name, parents, operations,  
+                                   invariant, stereotypes,  thyname})
+    = Interface {name=name, parents=parents, operations=oper::operations,
+                 invariant=invariant, stereotypes=stereotypes, thyname=thyname}
+  | addOperation oper (Enumeration {name, parent, operations,
+                                    literals, invariant, stereotypes,
+                                    interfaces, thyname})
+    = Enumeration{name=name, parent=parent, operations=oper::operations, 
+                  literals=literals, invariant=invariant, stereotypes=stereotypes,
+                  interfaces=interfaces, thyname=thyname}
+  | addOperation oper (Primitive {name, parent, operations, 
+                                  associations, invariant, 
+                                  stereotypes, interfaces, thyname})
+    = Primitive{name=name, parent=parent, operations=oper::operations, 
+                associations=associations, invariant=invariant, 
+                stereotypes=stereotypes, interfaces=interfaces, thyname=thyname}
+  | addOperation oper (Template {parameter, classifier}) 
+    = Template { parameter=parameter, 
+                 classifier=addOperation oper classifier
+               }
 
 end

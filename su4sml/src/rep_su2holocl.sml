@@ -276,92 +276,7 @@ fun create_secured {name, body,precondition, postcondition, arguments, result,
       visibility=public
     }
 
-(** adds an invariant to a classifier.
- * Should be moved to Rep_Core?
- *)
-fun add_invariant_to_classifier inv (Class {name, parent, attributes, 
-                                            operations, associations, 
-                                             invariant, stereotypes, 
-                                             interfaces, thyname, activity_graphs})
-  = Class {name=name, parent=parent, attributes=attributes, 
-           operations=operations, 
-           associations=associations, invariant=inv::invariant, 
-           stereotypes=stereotypes, interfaces=interfaces, 
-           thyname=thyname, activity_graphs=activity_graphs}
-  | add_invariant_to_classifier inv (AssociationClass {name, parent, attributes, 
-						       operations, associations,
-						       association, invariant,
-						       stereotypes, interfaces, 
-						       thyname, activity_graphs})
-  = AssociationClass {name=name, parent=parent, attributes=attributes, 
-		      operations=operations, associations=associations,
-		      association=association, invariant=inv::invariant, 
-		      stereotypes=stereotypes, interfaces=interfaces, 
-		      thyname=thyname, activity_graphs=activity_graphs}
-  | add_invariant_to_classifier inv (Interface {name, parents, operations,  
-                                                 invariant, stereotypes,  thyname})
-    = Interface {name=name, parents=parents, operations=operations,
-                 invariant=inv::invariant, stereotypes=stereotypes, thyname=thyname}
-  | add_invariant_to_classifier inv (Enumeration {name, parent, operations,
-                                                   literals, invariant, stereotypes,
-                                                   interfaces, thyname})
-    = Enumeration{name=name, parent=parent, operations=operations,literals=literals,
-                  invariant=inv::invariant, stereotypes=stereotypes,
-                  interfaces=interfaces, thyname=thyname}
-  | add_invariant_to_classifier inv (Primitive {name, parent, operations, 
-                                                 associations, invariant, 
-                                                 stereotypes, interfaces, thyname})
-    = Primitive{name=name, parent=parent, operations=operations, 
-                associations=associations, invariant=inv::invariant, 
-                stereotypes=stereotypes, interfaces=interfaces, thyname=thyname}
-  | add_invariant_to_classifier inv (Template {parameter, classifier}) 
-    = Template { parameter=parameter, 
-                 classifier=add_invariant_to_classifier inv classifier
-               }
-      
 
-(** adds an operation to a classifier.
- * Should be moved to Rep_Core?
- *)
-fun add_operation_to_classifier oper (Class {name, parent, attributes, 
-                                             operations, associations, 
-                                             invariant, stereotypes, 
-                                             interfaces, thyname, activity_graphs})
-  = Class {name=name, parent=parent, attributes=attributes, 
-           operations=oper::operations, 
-           associations=associations, invariant=invariant, 
-           stereotypes=stereotypes, interfaces=interfaces, 
-           thyname=thyname, activity_graphs=activity_graphs}
-  | add_operation_to_classifier oper (AssociationClass {name, parent, attributes, 
-							operations, associations, 
-							association, invariant,
-							stereotypes, interfaces,
-							thyname, activity_graphs})
-  = AssociationClass {name=name, parent=parent, attributes=attributes, 
-		      operations=oper::operations, associations=associations,
-		      association=association, invariant=invariant, 
-		      stereotypes=stereotypes, interfaces=interfaces, 
-		      thyname=thyname, activity_graphs=activity_graphs}
-  | add_operation_to_classifier oper (Interface {name, parents, operations,  
-                                                 invariant, stereotypes,  thyname})
-    = Interface {name=name, parents=parents, operations=oper::operations,
-                invariant=invariant, stereotypes=stereotypes, thyname=thyname}
-  | add_operation_to_classifier oper (Enumeration {name, parent, operations,
-                                                   literals, invariant, stereotypes,
-                                                   interfaces, thyname})
-    = Enumeration{name=name, parent=parent, operations=oper::operations, 
-                  literals=literals, invariant=invariant, stereotypes=stereotypes,
-                  interfaces=interfaces, thyname=thyname}
-  | add_operation_to_classifier oper (Primitive {name, parent, operations, 
-                                                 associations, invariant, 
-                                                 stereotypes, interfaces, thyname})
-    = Primitive{name=name, parent=parent, operations=oper::operations, 
-                associations=associations, invariant=invariant, 
-                stereotypes=stereotypes, interfaces=interfaces, thyname=thyname}
-  | add_operation_to_classifier oper (Template {parameter, classifier}) 
-    = Template { parameter=parameter, 
-                 classifier=add_operation_to_classifier oper classifier
-               }
 
 (** The design model transformation for a single class. 
  * generates constructors, destructors, setters, getters, and "secured" operations. 
@@ -402,7 +317,7 @@ fun add_operations c =
         val sec_ops = map create_secured (operations_of c)
         val generated_ops = [constructor,destructor]@getters@setters@sec_ops  
     in 
-        List.foldl (fn (oper,x) => add_operation_to_classifier oper x) c
+        List.foldl (fn (oper,x) => addOperation oper x) c
                    generated_ops 
     end
                        
@@ -596,7 +511,7 @@ fun define_role_hierarchy (sc:Security.Configuration) =
             ocl_implies (is_in_role (Literal (sub,String)))
                         (is_in_role (Literal (super,String)))
     in
-        List.foldl (fn (rh,ident) => add_invariant_to_classifier 
+        List.foldl (fn (rh,ident) => addInvariant
                                          (SOME "role_hierarchy", 
                                           invariant_for_role_inheritance rh) ident)
                    identity
@@ -618,7 +533,7 @@ fun define_roles sc =
                                                    String))
                          (CollectionLiteral (role_collection, Bag String))
     in 
-        add_invariant_to_classifier (SOME "list_of_roles",inv) role
+        addInvariant (SOME "list_of_roles",inv) role
     end
                                
 (** transform the postconditions to also include the authorization constraints. *)
