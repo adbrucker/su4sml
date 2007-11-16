@@ -39,8 +39,30 @@
  ******************************************************************************)
 (* $Id: ROOT.ML 6662 2007-07-04 06:41:30Z brucker $ *)
 
+
+(* (JD) some ideas for medium to long-term refactorings:
+ * 
+ * maybe split up into two seperate structures. 
+ * Rep_Transfrom for generic transformation functions, 
+ * and Rep_TransformAssociations for transforming associations 
+ * 
+ * I could also imagine types like
+ * type modelTransformation = Rep.Model -> Rep.Model 
+ * type classifierTransformation = Rep.Classifier -> Rep.Classifier
+ * ...
+ * and functions like
+ * forAllClassifiers : classifierTransformation -> modelTransformation
+ * forMatchingClassifier : (Rep.Classifier -> Bool) -> classifierTransformation -> modelTransformation
+ * ...
+ *
+ *)
+
 signature REP_TRANSFORM =
 sig
+
+(* (JD) maybe not all of the following functions need to be exported.
+ * e.g., generate_pairs, ...
+ *)
 
 val transformClassifiers_ext : Rep_Core.transform_model -> Rep.Model
 val transformClassifiers     : Rep_Core.transform_model -> Rep.Classifier list
@@ -105,17 +127,21 @@ exception NotYetImplemented
  ***********************************)
 val triv_expr = Rep_OclTerm.Literal ("true",Rep_OclType.Boolean)
 
+(* (JD) siehe codegen/stringHandling.sml -> uncapitalize. I will move stringHandling.sml and put this function there. *)
 fun lowercase s = let val sl = String.explode s
 		  in
 		      String.implode ((Char.toLower (hd sl))::(tl sl))
 		  end
-	
+
+(* (JD) -> Rep_Core? *)	
 fun path_of_aend (aend:associationend) =
     #name aend
 
+(* (JD) -> Rep_Core? *)	
 fun type_of_aend (aend:associationend) =
     #aend_type aend
 
+(* (JD) -> Rep_Core? *)	
 fun association_of_aend (aend:associationend) =
     let 
 	val name = #name aend
@@ -123,16 +149,20 @@ fun association_of_aend (aend:associationend) =
 	List.take(name, (List.length name)-1)
     end
 
+(* (JD) -> Rep_Core? *)	
 fun name_of_aend (aend:associationend):string =
     List.last (#name aend)
 
+(* (JD) -> Rep_Core? *)	
 fun multiplicities_of_aend (aend:associationend):(int*int)list =
     #multiplicity aend
 
 (** chop-off the last part of the path *)	  
+(* (JD) -> Rep_OclType? *)
 fun get_qualifier (path:Path):Path =
     List.take (path,List.length path - 1)
 
+(* (JD) -> Rep_OclType? *)
 fun get_short_name (path:Path):string =
     List.last path
 
@@ -258,6 +288,7 @@ fun get_associationends (all_assocs:association list) (assoc_path:Path):associat
 	#aends assoc
     end
 
+(* (JD) -> Rep_Core? *)
 fun associationends_of (assoc:association):associationend list =
     #aends assoc
 
