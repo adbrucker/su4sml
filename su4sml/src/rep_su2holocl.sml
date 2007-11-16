@@ -42,6 +42,7 @@
 structure SecureUML2HolOcl:sig 
     val transform : Rep_SecureUML_ComponentUML.Model -> Rep.Model 
 end = struct 
+open library
 open Rep_Core
 open XMI_DataTypes
 open Rep_OclTerm
@@ -317,8 +318,7 @@ fun add_operations c =
         val sec_ops = map create_secured (operations_of c)
         val generated_ops = [constructor,destructor]@getters@setters@sec_ops  
     in 
-        List.foldl (fn (oper,x) => addOperation oper x) c
-                   generated_ops 
+        List.foldl (uncurry addOperation) c generated_ops 
     end
                        
 
