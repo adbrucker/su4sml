@@ -140,4 +140,6 @@ fun join s nil = ""
   | join s (h::nil) = h
   | join s (h::t) = h^s^(join s t)
 
+fun uncurry f (x,y) = f x y
+fun curry f x y     = f (x,y)
 end

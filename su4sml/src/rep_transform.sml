@@ -114,8 +114,6 @@ open Rep_OclType
 open Rep_OclHelper
 open Rep_Core
 
-(** not found library funtioncs *)
-fun uncurry f(x,y) = f x y
 infix |>>
 fun (x |>> f) = (f x)
 
