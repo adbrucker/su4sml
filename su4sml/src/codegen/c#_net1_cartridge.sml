@@ -78,22 +78,13 @@ fun super2Native "ClassifierScope" = "static"
  			 (*(gcg_warning ("Couldn't lookup \""^s^"\" in c#_cartridge.super2Native !");s)*)
  			 s
  
-fun startWithSmallLetter s = let val sl = String.explode s
- 			     in
- 			       String.implode ((Char.toLower (hd sl))::(tl sl))
- 			     end
- 
-fun startWithCapital s = let val sl = String.explode s
- 			     in
- 			       String.implode ((Char.toUpper (hd sl))::(tl sl))
-			     end
 (*	lookup  environment -> string -> string			
  * overrides some lookup entries of the base cartridge 
  *)
 fun lookup (env : environment) "attribute_name_small_letter" 
-	=  startWithSmallLetter (SuperCart.lookup (unpack env) "attribute_name")
+	=  StringHandling.uncapitalize (SuperCart.lookup (unpack env) "attribute_name")
   | lookup (env : environment) "attribute_name_capital" 
-	=  startWithCapital (SuperCart.lookup (unpack env) "attribute_name")
+	=  StringHandling.capitalize (SuperCart.lookup (unpack env) "attribute_name")
   | lookup (env : environment) (s as "attribute_type") 	= super2Native (SuperCart.lookup (unpack env) s )
   | lookup (env : environment) (s as "attribute_visibility")= super2Native (SuperCart.lookup (unpack env) s)
   | lookup (env : environment) (s as "attribute_scope")	= super2Native (SuperCart.lookup (unpack env) s)

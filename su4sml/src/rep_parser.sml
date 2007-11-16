@@ -64,12 +64,6 @@ exception NotYetImplemented
 
 val triv_expr = Rep_OclTerm.Literal ("true",Rep_OclType.Boolean)
 
-fun lowercase s = let val sl = String.explode s
-		  in
-		      String.implode ((Char.toLower (hd sl))::(tl sl))
-		  end
-
-
 (** transform an xmi ocl expression into a rep ocl term *)
 fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) = 
     Rep_OclTerm.Literal (symbol,find_classifier_type t expression_type)
@@ -139,7 +133,7 @@ fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) =
         val path_of_classifier = Rep_OclType.path_of_OclType classifier_type
         val aend = find_associationend t referredAssociationEnd
         val aend_name = Option.getOpt(#name aend,
-                                      (lowercase o XMI.classifier_name_of o
+                                      (StringHandling.uncapitalize o XMI.classifier_name_of o
                                        find_classifier t) 
                                           (#participant_id aend))
     in Rep_OclTerm.AssociationEndCall 

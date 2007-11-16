@@ -52,7 +52,6 @@ Group is
 
   ../su4sml_core.cm
 
-  stringHandling.sml
   gcg_helper.sml
   tpl_parser.sml
   SM_helper.sml

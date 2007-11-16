@@ -61,6 +61,7 @@ Group is
     ../lib/fxp/src/fxlib.cm
   library.sml
   listeq.sml 
+  stringHandling.sml
   xmi_ocl.sml 
   xmi_datatypes.sml
   xmi_extension_mechanisms.sml

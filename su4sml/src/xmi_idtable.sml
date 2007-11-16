@@ -560,7 +560,7 @@ fun fix_associationend t (assoc_path:Rep_OclType.Path) (aend:XMI.AssociationEnd)
 	val participant_id = #participant_id aend
 	val (cls_type,assocs,assoc,cls,ags)  = find_classifier_entries t participant_id
         val name = Option.getOpt(#name aend,
-				 (lowercase o XMI.classifier_name_of o
+				 (StringHandling.uncapitalize o XMI.classifier_name_of o
 				  find_classifier t) participant_id)
     in 
 	(* add the association to the participant *)

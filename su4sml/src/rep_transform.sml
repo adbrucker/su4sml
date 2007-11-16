@@ -127,12 +127,6 @@ exception NotYetImplemented
  ***********************************)
 val triv_expr = Rep_OclTerm.Literal ("true",Rep_OclType.Boolean)
 
-(* (JD) siehe codegen/stringHandling.sml -> uncapitalize. I will move stringHandling.sml and put this function there. *)
-fun lowercase s = let val sl = String.explode s
-		  in
-		      String.implode ((Char.toLower (hd sl))::(tl sl))
-		  end
-
 (* (JD) -> Rep_Core? *)	
 fun path_of_aend (aend:associationend) =
     #name aend

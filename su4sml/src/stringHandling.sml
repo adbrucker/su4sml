@@ -42,18 +42,21 @@
 (** convenience functions for handling strings. *)
 structure StringHandling =
 struct
-open library
 
 (** returns the string in all caps. *)
 fun toUpper (s:string) = String.map Char.toUpper s
 
-(** returns the uncapitalized string. *)
+(** returns the uncapitalized string. 
+ * Returns the given string with the first letter changed to lower case
+ *)
 fun uncapitalize (s:string) = let val sl = String.explode s
  		              in
  			          String.implode ((Char.toLower (hd sl))::(tl sl))
  		              end
                               
-(** returns the capitalized string. *)
+(** returns the capitalized string. 
+ * Returns the given string with the first letter changed to upper case
+ *)
 fun capitalize (s:string) = let val sl = String.explode s
  		            in
  		                String.implode ((Char.toUpper (hd sl))::(tl sl))
