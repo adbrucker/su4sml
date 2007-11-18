@@ -92,6 +92,7 @@ sig
     (* operations/values for debugging/logging *)
     val trace                   : int -> string -> unit
     val log_level               : int ref
+    val function_calls          : int
     val zero                    : int 
     val high                    : int 
     val medium                  : int 
@@ -130,11 +131,12 @@ exception NoSuchOperationError of string
 				  
 (* Error logging *)
 (* default value *)
-val log_level = ref 5
+val log_level = ref 200
 		
 (* debugging-levels *)
+val function_calls = 5
 val zero = 0
-val high = 5
+val high = 10
 val medium = 20
 val low = 100
 val development = 200
@@ -589,7 +591,8 @@ fun substitute_classifier typ classifier =
 and get_classifier source model =
     let
 	val typ = type_of_term (source)
-	fun class_of_t typ cl = hd (List.filter (fn a => if ((type_of a) = typ) then true else false) cl) 
+	val _ = map (fn a => trace development (string_of_OclType (type_of a) ^"\n") ) model
+	fun class_of_t typ cl = hd (List.filter (fn a => if ((type_of a) = typ) then true else false) cl)
     in
 	case typ of
 	    (* Primitive types of lib *)
@@ -607,7 +610,15 @@ and get_classifier source model =
 	  | OclVoid => class_of_t OclVoid model
 	  | OclAny => class_of_t OclAny model
 	  (* Model types *)
-	  | Classifier (path) => class_of_t (Classifier (path)) model
+	  | Classifier (path) =>
+	    let
+		val _ = trace development ("get_classifier: Classifier ("^(string_of_path path)^")\n")
+		val res = class_of_t (Classifier (path)) model
+		val _ = trace development ("found: "^(string_of_path (name_of res)) ^"\n")
+	    in
+		(*class_of_t (Classifier (path)) model*)
+		res
+	    end
 	  | DummyT => 
 	    let
 		val _ = trace development ("GetClassifierError: DummyT \n")
@@ -899,20 +910,21 @@ fun end_of_recursion classifier =
 fun get_overloaded_methods class op_name ([],_) = raise NoModelReferenced ("in 'get_overloaded_methods' ...\n")
   | get_overloaded_methods class op_name (model as (classifiers,associations)) =
    let
-        val _ = trace low("\n")
-	val ops = operations_of class
-	val _ = trace low("Look for methods for classifier: " ^ string_of_OclType (type_of class) ^ "\n")
-	val ops2 = List.filter (fn a => (if ((#name a) = op_name) then true else false)) ops
-	val _ = trace low("operation name                 : " ^ op_name ^ "  Found " ^ Int.toString (List.length ops2) ^ " method(s) \n")
-	val parent = class_of_parent class classifiers
-	val _ = trace low("Parent class                   : " ^ string_of_OclType (type_of parent) ^ "\n\n")
-	val cl_op = List.map (fn a => (class,a)) ops2
-    in
+       val _ = trace function_calls "get_overloaded_methods\n"
+       val _ = trace low("\n")
+       val ops = operations_of class
+       val _ = trace low("Look for methods for classifier: " ^ string_of_OclType (type_of class) ^ "\n")
+       val ops2 = List.filter (fn a => (if ((#name a) = op_name) then true else false)) ops
+       val _ = trace low("operation name                 : " ^ op_name ^ "  Found " ^ Int.toString (List.length ops2) ^ " method(s) \n")
+       val parent = class_of_parent class classifiers
+       val _ = trace low("Parent class                   : " ^ string_of_OclType (type_of parent) ^ "\n\n")
+       val cl_op = List.map (fn a => (class,a)) ops2
+   in
        if (class = class_of_type OclAny classifiers) 
        then (* end of hierarchie *)
-	   if (List.length ops2 = 0) 
-	   then[]
-	   else[(class,List.hd(ops2))]
+            if (List.length ops2 = 0) 
+	    then[]
+	    else[(class,List.hd(ops2))]
        else 
 	   ( 
 	    if (end_of_recursion class)  
@@ -933,8 +945,12 @@ fun get_overloaded_methods class op_name ([],_) = raise NoModelReferenced ("in '
 fun get_overloaded_attrs_or_assocends class attr_name ([],_) = raise NoModelReferenced ("in 'get_overloaded_attrs' ... \n")
   | get_overloaded_attrs_or_assocends class attr_name (model as (classifiers,associations)) =
    let
-       val _ = trace low ("\n")
+       val _ = trace function_calls ("get_overloaded_attrs_or_assocends\n")
+       val _ = trace low ("attrs\n")
        val attrs = attributes_of class
+       val _ = trace low ("assocends\n")
+       val _ = trace low ("sizes: "^(Int.toString (List.length classifiers))^", "^
+			  (Int.toString( List.length associations))^"\n")
        val assocends = associationends_of associations class
        val _ = trace low ("Look for attributes/assocends : Class: " ^ string_of_OclType (type_of class) ^ " \n")
        val attrs2 = List.filter (fn a => (if ((#name a) = attr_name) then true else false)) attrs
@@ -989,6 +1005,7 @@ fun get_meth source op_name args (model as (classifiers,associations))=
 (* RETURN: OclTerm *)
 fun get_attr_or_assoc source attr_name (model as (classifiers,associations)) =
     let 
+	val _ = trace function_calls "get_attr_or_assoc\n"
 	val _ = trace low ("GET ATTRIBUTES OR ASSOCENDS: source term = " ^ Ocl2String.ocl2string false source ^ "\n")
 	val class = get_classifier source classifiers
 	val attr_or_assocend_list = get_overloaded_attrs_or_assocends class attr_name model

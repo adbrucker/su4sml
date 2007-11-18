@@ -94,6 +94,7 @@ fun node_children (Node ((elem,atts),trees)) = filter_nodes trees
 fun text_children (Node ((elem,atts),trees)) = filter_text trees
   | text_children _ = error "in XmlTree.text_children: argument is a Text-Node"
 
+
 fun optional_value_of string atts = Option.map #2 (List.find (fn (x,_) => x = string) atts)
 
 

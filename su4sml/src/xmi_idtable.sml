@@ -43,6 +43,18 @@ structure Xmi_IDTable =
 struct
 open library
 
+(**
+ * special keys:
+ *    - aends introduced to handle the implicit aend of association 
+ *      classes for their association: 
+ *      (xmiid of the association class)_aend
+ *    - associations split off from their association class:
+ *      (xmiid of the association class)_association
+ * 
+ * 
+ * 
+ * 
+ *)
 datatype HashTableEntry = Package of Rep_OclType.Path
 		        | Type of (Rep_OclType.OclType * 
 				   (*(XMI.AssociationEnd list)* *)
@@ -50,16 +62,16 @@ datatype HashTableEntry = Package of Rep_OclType.Path
 				   (Rep_OclType.Path)*       (* association of an association class *)
 				   XMI.Classifier * 
 				   (XMI.ActivityGraph list)) 
-			| Association of (Rep_OclType.Path *
+			| Association of (Rep_OclType.Path * 
 					 XMI.Association)
                         | Generalization of (string * string) 
 			| Constraint of XMI.Constraint 
 		        | Stereotype of string
 		        | Variable of XMI.VariableDeclaration 
 			| Attribute of Rep_OclType.Path
+			| AssociationEnd of (Rep_OclType.Path *
+					    XMI.AssociationEnd)
 			| Operation of Rep_OclType.Path
-		        | AssociationEnd of (Rep_OclType.Path *
-					     XMI.AssociationEnd)
 			| State of XMI.StateVertex
 			| Transition of XMI.Transition 
 		        | Dependency of XMI.Dependency
@@ -140,19 +152,17 @@ fun find_type t xmiid =
        | _                => raise Option) 
     handle Option => error ("expected Type "^xmiid^" in table (find_type)")
 
-fun find_assocs t xmiid = 
+fun find_assoc t xmiid = 
     (case valOf (HashTable.find t xmiid) 
-      of (Type (c,xs,_,_,_))  => xs
+      of (Association(path,assoc))  => assoc
        | _                => raise Option) 
-    handle Option => error ("expected Type "^xmiid^" in table (find_aends)")
+    handle Option => error ("expected Type "^xmiid^" in table (find_assocs)")
 
-(* FIXME: assoc -> aend *)
-fun find_aends t xmiid =
-    let
-	val assocs = find_assocs xmiid
-    in
-	[] (* dummy *)
-    end
+fun find_aend t xmiid =
+    (case valOf (HashTable.find t xmiid) 
+      of (AssociationEnd(path,aend)) => aend
+       | _                => raise Option) 
+    handle Option => error ("expected AssociationEnd "^xmiid^" in table (find_aend)")
 
 fun find_variable_dec t xmiid =
     (case valOf (HashTable.find t xmiid) 
@@ -182,7 +192,8 @@ fun find_associationend t xmiid  =
       of AssociationEnd (path,ae) => ae
        | _                   => raise Option) 
     handle Option => error ("expected AssociationEnd "^xmiid^" in table")
-		
+
+
 fun path_of_association t xmiid  = 
     (case valOf (HashTable.find t xmiid) 
       of Association (path,ae) => path
@@ -248,9 +259,10 @@ fun filter_bodyconstraint t cs
 		    end) cs
 
 fun find_classifier_entries t xmiid =
+    (trace function_calls "find_classifier_entries\n";
     (case valOf (HashTable.find t xmiid) 
       of Type c => c
-       | _                => raise Option) 
+       | _                => raise Option))
     handle Option => error ("expected Classifier "^xmiid^" in table (in find_classifer_entries)")
 
 fun find_classifier t xmiid =
@@ -258,6 +270,11 @@ fun find_classifier t xmiid =
       of Type (_,_,_,c,_) => c
        | _                => raise Option) 
     handle Option => error ("expected Classifier "^xmiid^" in table (in find_classifer)")
+
+fun exists_classifier t xmiid =
+    (case valOf (HashTable.find t xmiid) 
+      of Type (_,_,_,_,_) => true
+       | _                => false) 
 
 fun find_classifierInState_classifier t cis_id =
     (case valOf (HashTable.find t cis_id)
@@ -365,9 +382,23 @@ fun insert_tagdefinition table (td:XMI.TagDefinition) =
 fun insert_classifierInState table cls_id cis_id =
     HashTable.insert table (cis_id,ClassifierInState cls_id)
 
+(** insert an association into the hashtable *)
+fun insert_association table package_prefix (association:XMI.Association) = 
+    let 
+	val _ = trace function_calls "insert_association\n"
+	val id      = #xmiid association
+	val name    = #name association
+	val path    = if (isSome name) 
+		      then package_prefix@[valOf name]
+		      else package_prefix@["association_"^(next_unique_name table)]
+    in 
+	HashTable.insert table (id,Association(path,association))
+end
+
 (* billk_tag *)
 fun insert_classifier table package_prefix class = 
-    let val id      = XMI.classifier_xmiid_of class
+    let val _ = trace function_calls "insert_classifier\n"
+	val id      = XMI.classifier_xmiid_of class
 	val name    = XMI.classifier_name_of class
 	val path    = package_prefix @ [name]
 	val ocltype = if (package_prefix = ["oclLib"]
@@ -391,12 +422,32 @@ fun insert_classifier table package_prefix class =
 	(* This function is called before the associations are handled, *)
 	(* so we do not have to take care of them now...                *)
 	val assocs = nil 
-	val ac    = nil
+	(* The association denoted by an association class, however, is *)
+	(* known at this time *)
+	val (acAssoc,acPath) = case class of
+				   XMI.AssociationClass c => 
+				   let 
+				       val acAssocName =  name^"_association_"^(next_unique_name table)
+				       val acAssoc = {xmiid = id^"_association",
+						      name = SOME acAssocName,
+						      connection = #connection c}:XMI.Association
+				   in
+				       (acAssoc,package_prefix @[acAssocName])
+				   end
+				 | _ => 
+				   let
+				       val dummy = {xmiid =id,
+						   name = NONE,
+						   connection = []}
+				   in
+				       (dummy,nil)
+				   end
 	val ag    = nil
     in 
-	HashTable.insert table (id,Type (ocltype,assocs,ac,class,ag));
+	HashTable.insert table (id,Type (ocltype,assocs,acPath,class,ag));
 	case class 
-	 of XMI.Class c => (List.app (insert_attribute table path) (#attributes c);
+	 of XMI.Class c => (trace function_calls "insert_classifier: Class\n";
+			    List.app (insert_attribute table path) (#attributes c);
 			    List.app (insert_operation table path) (#operations c);
 			    List.app (insert_classifierInState table id) (#classifierInState c);
 			    ())
@@ -408,64 +459,59 @@ fun insert_classifier table package_prefix class =
 	  | XMI.Set c => (List.app (insert_operation table path) (#operations c); ())
 	  | XMI.Bag c => (List.app (insert_operation table path) (#operations c); ())
 	  | XMI.OrderedSet c => (List.app (insert_operation table path) (#operations c); ())
-	  | XMI.AssociationClass c => (List.app (insert_attribute table path) (#attributes c);   
+	  | XMI.AssociationClass c => (trace function_calls "insert_classifier: AssociationClass\n";
+				       List.app (insert_attribute table path) (#attributes c);   
 				       List.app (insert_operation table path) (#operations c);              
 				       List.app (insert_classifierInState table id) [];
-				       ())
+				       insert_association table package_prefix acAssoc;
+				       ()
+				      )
 	  | _ => ()
     end
 	
-(** insert an association end into the hashtable *)
-fun insert_associationend table (association_prefix:Rep_OclType.Path) (aend:XMI.AssociationEnd) =
-    let
-	val id = #xmiid aend
-	val path = if (isSome (#name aend)) 
-		   then association_prefix@[valOf (#name aend)]
-		   else association_prefix@["associationend_"^(next_unique_name table)]
-    in
-	HashTable.insert table (id,AssociationEnd(path,aend))
-    end
-
-(** insert an association into the hashtable *)
-fun insert_association table package_prefix (association:XMI.Association) = 
-    let 
-	val id      = #xmiid association
-	val name    = #name association
-	val path    = if (isSome name) 
-		      then package_prefix@[valOf name]
-		      else package_prefix@["association_"^(next_unique_name table)]
-    in 
-	(HashTable.insert table (id,Association(path,association));
-	List.app (insert_associationend table path) (#connection association)
-	)
-    end
 
 (* recursively insert mapping of xmi.id's to model elements into Hashtable *)
 fun insert_package table package_prefix (XMI.Package p) =
-    let val full_name = package_prefix @ [#name p]
+    let
+	val _ = trace function_calls "insert_package\n"	
+	val full_name = package_prefix @ [#name p]
     in 
+	trace function_calls "insert_package: generalizations\n";
 	List.app (insert_generalization table)           (#generalizations p);
+	trace function_calls "insert_package: constraints\n";
 	List.app (insert_constraint     table)           (#constraints p);
+	trace function_calls "insert_package: stereotypes\n";
 	List.app (insert_stereotype     table)           (#stereotypes p);
+	trace function_calls "insert_package: classifiers\n";
 	List.app (insert_classifier     table full_name) (#classifiers p);
-	List.app (insert_package        table full_name) (#packages p);
+	trace function_calls "insert_package: associations\n";
 	List.app (insert_association    table full_name) (#associations p);
+	trace function_calls "insert_package: packages\n";
+	List.app (insert_package        table full_name) (#packages p);
+	trace function_calls "insert_package: activity_graphs\n";
 	List.app (insert_activity_graph table)           (#activity_graphs p);
+	trace function_calls "insert_package: dependencies\n";
 	List.app (insert_dependency     table)           (#dependencies p);
+	trace function_calls "insert_package: tag defenitions\n";
 	List.app (insert_tagdefinition  table)           (#tag_definitions p);
+	trace function_calls "insert_package: events\n";
 	List.app (insert_event          table)           (#events p);
+	trace function_calls "insert_package: insert package\n";
 	HashTable.insert table (#xmiid p,Package full_name)
     end 
 
 (* We do not want the name of the model to be part of the package hierarchy, *)
 (* therefore we handle the top-level model seperately                        *)
 fun insert_model table (XMI.Package p) = 
-    let val full_name = nil
+    let 
+	val _ = trace function_calls "insert_model\n"
+	val full_name = nil
     in 
 	List.app (insert_generalization table)           (#generalizations p);
 	List.app (insert_constraint     table)           (#constraints p);
 	List.app (insert_stereotype     table)           (#stereotypes p);
 	List.app (insert_classifier     table full_name) (#classifiers p);
+	List.app (insert_association    table full_name) (#associations p);
 	List.app (insert_package        table full_name) (#packages p);
 	List.app (insert_activity_graph table)           (#activity_graphs p);
 	List.app (insert_dependency     table)           (#dependencies p);
@@ -568,29 +614,44 @@ fun fix_associationend t (assoc_path:Rep_OclType.Path) (aend:XMI.AssociationEnd)
          HashTable.insert t (#xmiid aend, AssociationEnd (List.concat [assoc_path, [name]], aend)))
     end
 
-(* FIXME: handle AssociationClasses *)
-(** add this associationend to all participants *)
-fun fix_association t ({xmiid,name,connection}:XMI.Association) =
-    List.app (fix_associationend t (path_of_association t xmiid)) connection
-
-(** handel association classes *)
-fun fix_associationclasses t (ac as XMI.AssociationClass {xmiid,name,connection,visibility,...})=
+(** 
+ * This handles only regular associations. An association classes belonging association is
+ * handled at insert_classifier
+ * Traverse the list of aends and update all listed classifiers with the path of the current
+ * association.
+ *)
+fun fix_association t (assoc as {xmiid,name,connection}:XMI.Association) =
     let
-	val (cls_type,assocs,assoc,cls,ags)  = find_classifier_entries t xmiid
-        (* FIXME: add a direct querry *)
-	val aend = hd connection
-(*	val association = find_association_of_associationend t (#xmiid aend)*)
-	val assoc_path = Rep_OclType.path_of_OclType (#1 (find_type t xmiid))
+	fun updateTableEntry t pathUpdate typeId =
+	    let
+		val (oclType,associations,association,class,ag) = find_type t typeId
+		(* prefix version refused to work *)
+		fun existsPath assocList = List.exists (fn x => x=pathUpdate) assocList
+		val modifiedAssociations = if(existsPath associations)
+					   then
+					       associations
+					   else
+					       pathUpdate::associations					       					       
+	    in
+		HashTable.insert t (typeId,Type(oclType,modifiedAssociations,association,class,ag))
+	    end
+	val assocPath = find_association_path t xmiid
+	val participantIds = map (#participant_id) connection
     in
-	(List.app (fix_associationend t (assoc_path)) connection;
-	 HashTable.insert t (xmiid,Type (cls_type,assoc_path::assocs,assoc_path,cls,ags));
-	 ()
-	)
+	List.app (updateTableEntry t assocPath) participantIds
     end
-  | fix_associationclasses t _ = error "in fix_associationclasses: AssociationClass expected"
-    
-    
-(** Handel the broken association references *)
+
+
+(** 
+ * Handel the broken association references, meaning update the 
+ * association path list for classes and association classes.
+ * Since classifiers do not store their belonging aends, we traverse the 
+ * associations: 
+ *         We skip the aends and instead process the set of associations. For
+ *         each association, we traverse the connection part and search for the 
+ *         classifier listed as participant_id. Then we simply add the assoc-
+ *         iation path to the found classifier.
+ *)
 fun fix_associations t (XMI.Package p)=
     let
 	val associationclasses = filter (fn (XMI.AssociationClass x) => true
@@ -599,8 +660,7 @@ fun fix_associations t (XMI.Package p)=
 	(* All association ends are stored in associations, so we will 
 	 * traverse them an update affected Classes and AssociationClasses *)
 	 (List.app (fix_associations t) (#packages p);
-	  List.app (fix_association t) (#associations p);
-	  List.app (fix_associationclasses t) associationclasses
+	  List.app (fix_association t) (#associations p)
 	 )
     end
 
@@ -646,6 +706,6 @@ fun insert_assocation t (assoc:XMI.Association) =
 (* recursively transforms all associations in the package p. *)
 fun transform_associations t (XMI.Package p) = 
     (List.app (transform_associations t) (#packages p);
-     List.app (transform_assocation t) (#associations p))
+     List.app (transform_association t) (#associations p))
 *)
 end

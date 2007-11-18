@@ -98,13 +98,13 @@ val testcases = [
     ocl  = prefix^"isp/isp.ocl",
     result = initResult
    }:testcase,
- {
+   {
     name = "Royals and Loyals",
     uml  = prefix^"royals_and_loyals/royals_and_loyals.zargo",
     ocl  = prefix^"royals_and_loyals/royals_and_loyals.ocl",
     result = initResult
    }:testcase,  
- {
+   {
     name = "simple",
     uml  = prefix^"simple/simple.zargo",
     ocl  = prefix^"simple/simple.ocl",
@@ -146,7 +146,7 @@ fun test (tc:testcase) =
 	    handle _ => []
 	val OclParse = if ocl = [] then false else true
 	val (xmi,ocl) = ModelImport.removePackages (xmi,ocl) []
-	    handle _ => (([],[]),[])
+	    handle _ => (([],[]),[]) 
 
 	val _         = print "### Preprocess Context List ###\n"
 	val fixed_ocl = Preprocessor.preprocess_context_list 

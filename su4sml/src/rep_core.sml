@@ -172,7 +172,7 @@ val associationends_of: association list -> Classifier -> associationend list
 val operations_of     : Classifier -> operation list
 val invariant_of      : Classifier -> (string option * Rep_OclTerm.OclTerm) list
 val stereotypes_of    : Classifier -> string list
-val string_of_path    : string list -> string    
+val string_of_path    : Rep_OclType.Path -> string    
 val activity_graphs_of: Classifier -> Rep_ActivityGraph.ActivityGraph list 
 
 val arguments_of_op     : operation -> (string * Rep_OclType.OclType) list
@@ -340,7 +340,7 @@ fun assoc_to_attr (assoc:associationend) = {name = #name assoc,
 *)
 
 (** dummy *)
-fun associationends_of_old cls:associationend list= []
+fun associationends_of_old cls:associationend list = []
 fun connected_classifiers_of_old cls cls_list:Classifier list = cls_list
 
 
@@ -424,25 +424,38 @@ fun aend_to_inv cls_name (aend:associationend) =
     end
 
 
-fun association_to_associationends (associations:association list) (assoc:Path):associationend list=
-    (* FIXME: only return opposite association ends*)
+(* find all association ends, excluding of self_type *)
+fun association_to_associationends (associations:association list) (self_type:OclType) (assoc:Path):associationend list=
     let
-	val assoc = filter (fn {name,...} => name=assoc ) associations
-	val aends = if (List.length assoc) > 1 then error ("in association_to_associationends: non-unique association name")
-		    else #aends (hd assoc)
+	val _ = trace function_calls "association_to_associationends\n"
+	val association = filter (fn {name,...} => name=assoc ) associations
+	val aends = if (List.length association) > 1 
+		    then 
+			error ("in association_to_associationends: non-unique association name: "^
+			       (string_of_path assoc))
+		    else 
+			#aends (hd association)
+	val aends_filtered = List.filter (fn {aend_type,...} => aend_type <> self_type) aends
+	val _ = if (List.length aends_filtered) >1
+		then 
+		    print "association_to_associationends: aends found\n"
+		else
+		    print "association_to_associationends: no aends found\n"
     in
-	aends
+	aends_filtered
     end
 	
-(* billk_tag *)
-(** find the associations belonging to a classifier *)
-fun associationends_of (all_associations:association list) (Class{associations,...}):associationend list= 
-    List.concat (map (association_to_associationends all_associations) associations)
-  | associationends_of all_associations (AssociationClass{associations,association,...}) = 
-    (* association only contains endpoints to the other, pure clases *)
-    List.concat (map (association_to_associationends all_associations) (association::associations))
-  | associationends_of all_associations (Primitive{associations,...}) = 
-    List.concat (map (association_to_associationends all_associations) associations)	
+(** find the associationends belonging to a classifier.
+ * This mean all other associationends from all associations the
+ * classifer is part of. 
+ *)
+fun associationends_of (all_associations:association list) (Class{name,associations,...}):associationend list = 
+    List.concat (map (association_to_associationends all_associations name) associations)
+  | associationends_of all_associations (AssociationClass{name,associations,association,...}) = 
+    (* association only contains endpoints to the other, pure classes *)
+    List.concat (map (association_to_associationends all_associations name) (association::associations))
+  | associationends_of all_associations (Primitive{name,associations,...}) = 
+    List.concat (map (association_to_associationends all_associations name) associations)	
   | associationends_of _ _ = error ("in associationends_of: This classifier has no associationends") (*FIXME: or rather []? *)
 
      
@@ -891,8 +904,9 @@ fun thy_name_of (C as Class{thyname,...})       =
 
 
 
-fun class_of name cl = hd (filter (fn a => if ((name_of a) = name)
+fun class_of (name:Path) (cl:Classifier list):Classifier = hd (filter (fn a => if ((name_of a) = name)
                                            then true else false ) cl )
+    handle _ => error ("class_of: class "^(string_of_path name)^" not found!\n")
 		       
 
 fun parent_of  C cl =  (class_of (parent_name_of C) cl)

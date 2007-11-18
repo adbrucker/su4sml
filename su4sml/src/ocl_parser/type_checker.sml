@@ -50,6 +50,10 @@ sig
     exception TypeCheckerResolveIfError of Rep_OclTerm.OclTerm * string
     exception NotYetSupportedError of string
     exception WrongContextChecked of Context.context
+(*    exception AsSetError of (Rep_OclTerm.OclTerm * string list * int * 
+ * 			     (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list *  Rep_Core.transform_model)
+ *    exception DesugaratorCall of (Rep_OclTerm.OclTerm * string list * int * 
+ *			  (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list * Rep_Core.transform_model) *)
     exception IterateError of string
     exception IterateAccumulatorTypeError of string
     exception IterateTypeMissMatch of string
@@ -178,6 +182,7 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
 	
 (* RETURN: OclTerm (OperationCall/AttributeCall) *)
 fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
+    (trace function_calls "AsSet_desugarator\n";
     if (attr_or_meth = 0) 
     then (* OperationCall *)
 	let
@@ -210,7 +215,7 @@ fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
 		raise NoSuchAttributeError ("Attriubte '" ^ (List.last path) ^ "' does not exist ... \n") 
 	    else 
 		interfere_attrs_or_assocends attrs new_rterm model
-	end
+	end)
 
 (* RETURN: OclTerm (OperationCall/AttributeCall) *)
 fun desugarator rterm path attr_or_meth rargs model = 
@@ -301,7 +306,7 @@ and resolve_OclTerm (Literal (s,typ)) model =
 	  then get_attr_or_assoc rterm (List.last attr_path) model
 	       handle InterferenceError s => AsSet_desugarator rterm (List.tl attr_path) 1 [] model
 	  else
-	       get_attr_or_assoc rterm (List.last attr_path) model
+	      get_attr_or_assoc rterm (List.last attr_path) model
 	      
 	      (*  2-dimensional inheritance of Collection types *)
 	      handle InterferenceError s =>
@@ -653,7 +658,7 @@ end
 (* SOME (Guard (path,name,expr)) *)
 
 (* RETURN: (context option) list *)
-fun check_context_list [] model = [] 
+fun check_context_list [] model = []
   | check_context_list (h::context_list_tail) model  = 
     ((check_context h model
       handle wrongCollectionLiteral (term,mes) =>

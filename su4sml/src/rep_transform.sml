@@ -282,7 +282,13 @@ fun get_associationends (all_assocs:association list) (assoc_path:Path):associat
 
 (* (JD) -> Rep_Core? *)
 fun associationends_of (assoc:association):associationend list =
-    #aends assoc
+    let
+	val _ = print "associationends_of\n"
+	val _ = print ("assocends_of: "^(string_of_path (#name assoc))^"\n")
+	val _ = List.app (print o  name_of_aend) (#aends assoc)
+    in
+	#aends assoc
+    end
 
 fun reachable_set (_:associationend) ([]:associationend list) = error "rep_transform.get_reachable_set: empty source list"
   | reachable_set (target:associationend) ([source]:associationend list) =
@@ -498,7 +504,7 @@ fun transform_association_classes ((classifiers,associations):transform_model):t
 
 
 
-(** Move multiplicities from association ends to classifier constraints.
+(** Move binary multiplicities from association ends to classifier constraints.
  * requires: binary multiplicities
  * generates: constraints
  * removes: binary multiplicities
@@ -516,8 +522,16 @@ fun transform_multiplicities ((classifiers,all_associations):transform_model):tr
 		val b_constr_name = "BinaryAssociation"^b_name
 		val a_constraint = within_aend_multiplicities a [b] a_constr_name
 		val b_constraint = within_aend_multiplicities b [a] b_constr_name
-		val modified_tmp = update_classifiers_with_constraints classifiers a_type [a_constraint]
-		val modified_classifiers = update_classifiers_with_constraints modified_tmp b_type [b_constraint]		   
+		val modified_tmp = if multiplicities_of_aend a = [] 
+				   then 
+				       classifiers
+				   else
+				       update_classifiers_with_constraints classifiers a_type [a_constraint]
+		val modified_classifiers = if multiplicities_of_aend b = []
+					   then 
+					       modified_tmp
+					   else
+					       update_classifiers_with_constraints modified_tmp b_type [b_constraint]		   
 	    in
 		modified_classifiers
 	    end
@@ -582,7 +596,11 @@ fun generate_n_ary_constraint ((association as {name,aends=[a,b],aclass},(all_cl
 		val constr_name = "NAryToBinary"^assoc_name^a_name
 		val constraint = within_aend_multiplicities a_part rest constr_name
 	    in
-		update_classifiers_with_constraints classifiers a_type [constraint]
+		if multiplicities_of_aend a_part = []
+		then
+		    classifiers
+		else
+		    update_classifiers_with_constraints classifiers a_type [constraint]
 	    end
 
 	(* iterate over the participants of the association *)

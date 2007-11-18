@@ -45,6 +45,21 @@ infix |>
 fun (x |> f) = f x;
 
 
+(* minimal tracing support (modifed version of ocl_parser tracing *)
+val log_level = ref 5
+fun trace lev s = if (lev  <= !log_level ) then print(s) else ()
+
+(* debugging-levels *)
+val function_calls = 5
+val function_arguments = 6
+
+val zero = 0
+val high = 10
+val medium = 20
+val low = 100
+val development = 200
+		  
+
 (* HOLOCL_HOME resp. SU4SML_HOME should point to the top-level directory *)
 (* of the corresponding library.  The semantics of UML2CDL_HOME should   *)
 (* probably be fixed                                                     *)

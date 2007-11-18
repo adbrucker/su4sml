@@ -179,7 +179,7 @@ fun mkMultiplicity tree =
            |> get "UML:Multiplicity.range"
            |> map mkRange
     
-fun mkAssociationEnd association  tree = 
+fun mkAssociationEnd association  tree:XMI_Core.AssociationEnd = 
     let val atts = tree |> assert "UML:AssociationEnd" |> attributes
     in 
 	{ xmiid          = atts |> xmiid, 
@@ -202,15 +202,16 @@ fun mkAssociationEnd association  tree =
 
 (* This is a hack to handle the implicit association end to *)
 (* the AssociationClass itself. *) 
-fun mkAssociationEndFromAssociationClass tree =
+fun mkAssociationEndFromAssociationClass association tree :XMI.AssociationEnd =
     let val atts = tree |> assert "UML:AssociationClass" |> attributes
     in 
         {(* xmiids are used as keys in a lookup table. *)
          (* to avoid name-clashes with the xmiid for the *)
-         (* class itsel, we simply add a prefix *) 
-         xmiid          = "associationclass_"^(atts |> xmiid), 
+         (* class itsel, we simply add a suffix *) 
+         xmiid          = (atts |> xmiid)^"_aend", 
          (* rep_parser already takes care of naming the association end *)
 	 name           = NONE,
+	 association    = association,
 	 isNavigable    = true,
 	 ordering       = XMI_DataTypes.Unordered,
 	 aggregation    = XMI_DataTypes.Aggregate,
@@ -241,11 +242,19 @@ fun mkAssociationFromAssociationClass tree =
 
 fun mkAssociation tree = 
     let 
+	val _ = trace function_calls "mkAssociation\n"
 	val atts = tree |> assert "UML:Association" |> attributes
-	val   id = atts |> xmiid    
+	val   id = atts |> xmiid
+	(* FIXME: empty string is returned as (SOME "") instead of NONE *)
+	val name_tmp = atts |> optional_value_of "name"
+	val name = if (isSome name_tmp) andalso ((valOf name_tmp) = "")
+		   then 
+		       NONE
+		   else
+		       name_tmp
     in 
         { xmiid      = id,  
-          name       = atts |> optional_value_of "name",
+          name       = name,
 	  connection = tree |> get_many "UML:Association.connection" 
                             |> map (mkAssociationEnd id)
         }
@@ -406,19 +415,9 @@ and mkVariableDec vtree =
 (* handle IllFormed msg => error ("in mkVariableDec: "^msg)*)
 
     
-(* FIX: Handle AssociationClasses like Associations.     	*)
-(*  	See mkAssociationFromAssociationClass for details.      *)
-(* billk_tag: handle separately *)
 val filterAssociations = filter "UML:Association"
 val filterAssociationClasses = filter "UML:AssociationClass"
 
-fun getAssociations t = (map mkAssociation (filter "UML:Association" t))
-(*                                                           @*)
-(*			(map mkAssociationFromAssociationClass *)
-(*			     (filter "UML:AssociationClass" t))*)
-(*handle _ => error ("Error in getAssociations") *)
-                        
-                        
 fun filterConstraints trees = List.filter (fn x => (tagname o (get_one "UML:Constraint.body")) x 
 						   = "UML15OCL.Expressions.ExpressionInOcl") 
 					  (filter "UML:Constraint" trees)
@@ -798,40 +797,44 @@ fun mkActivityGraph tree =
 (*handle IllFormed msg => error ("in mkActivityGraph: "^msg)*)
     
 fun mkClass atts tree = 
-    XMI.Class 
-        { xmiid              = atts |> xmiid,
-	  name               = atts |> name,
-	  isActive           = atts |> bool_value_of "isActive",
-	  visibility         = atts |> visibility,
-	  isLeaf             = atts |> bool_value_of "isLeaf",
-	  generalizations    = tree |> get "UML:GeneralizableElement.generalization" 
-                                    |> map xmiidref,
-	  attributes         = tree |> get "UML:Classifier.feature"
-				    |> filter "UML:Attribute"
-                                    |> map mkAttribute,
-	  operations         = tree |> get "UML:Classifier.feature"
-				    |> filter "UML:Operation"
-                                    |> map mkOperation,
-	  invariant          = tree |> get "UML:ModelElement.constraint" 
-				    |> map xmiidref,
-	  stereotype         = tree |> get "UML:ModelElement.stereotype" 
-				    |> map xmiidref,
-	  taggedValue        = tree |> get "UML:ModelElement.taggedValue" 
-				    |> map mkTaggedValue,
-	  clientDependency   = tree |> get "UML:ModelElement.clientDependency"
-				    |> map xmiidref,
-	  supplierDependency = tree |> get "UML:ModelElement.supplierDependency"
-				    |> map xmiidref,
-	  classifierInState  = tree |> get "UML:Namespace.ownedElement"
-                                    |> filter "UML:ClassifierInState"
-                                    |> map (xmiid o attributes),
-	  state_machines     = tree |> get "UML:Namespace.ownedElement"
-                                    |> filter "UML:StateMachine"
-                                    |> map mkStateMachine,
-	  activity_graphs    = tree |> get "UML:Namespace.ownedElement" 
-                                    |> filter "UML:ActivityGraph"
-                                    |> map mkActivityGraph 
-        }
+    let
+	val _ = trace function_calls "mkClass\n"
+    in
+	XMI.Class 
+            { xmiid              = atts |> xmiid,
+	      name               = atts |> name,
+	      isActive           = atts |> bool_value_of "isActive",
+	      visibility         = atts |> visibility,
+	      isLeaf             = atts |> bool_value_of "isLeaf",
+	      generalizations    = tree |> get "UML:GeneralizableElement.generalization" 
+					|> map xmiidref,
+	      attributes         = tree |> get "UML:Classifier.feature"
+					|> filter "UML:Attribute"
+					|> map mkAttribute,
+	      operations         = tree |> get "UML:Classifier.feature"
+					|> filter "UML:Operation"
+					|> map mkOperation,
+	      invariant          = tree |> get "UML:ModelElement.constraint" 
+					|> map xmiidref,
+	      stereotype         = tree |> get "UML:ModelElement.stereotype" 
+					|> map xmiidref,
+	      taggedValue        = tree |> get "UML:ModelElement.taggedValue" 
+					|> map mkTaggedValue,
+	      clientDependency   = tree |> get "UML:ModelElement.clientDependency"
+					|> map xmiidref,
+	      supplierDependency = tree |> get "UML:ModelElement.supplierDependency"
+					|> map xmiidref,
+	      classifierInState  = tree |> get "UML:Namespace.ownedElement"
+					|> filter "UML:ClassifierInState"
+					|> map (xmiid o attributes),
+	      state_machines     = tree |> get "UML:Namespace.ownedElement"
+					|> filter "UML:StateMachine"
+					|> map mkStateMachine,
+	      activity_graphs    = tree |> get "UML:Namespace.ownedElement" 
+					|> filter "UML:ActivityGraph"
+					|> map mkActivityGraph 
+            }
+    end
 (*handle IllFormed msg => error ("Error in mkClass "^(name atts)^
 				 ": "^msg)*)
     
@@ -839,6 +842,7 @@ fun mkClass atts tree =
 (* extended to match Rep.AssociationClass *)
 fun mkAssociationClass atts tree =
     let
+	val _ = trace function_calls "mkAssociationClass\n"
 	val id = atts |> xmiid
     in
 	XMI.AssociationClass
@@ -874,8 +878,9 @@ fun mkAssociationClass atts tree =
 	      activity_graphs    = tree |> get "UML:Namespace.ownedElement" 
 					|> filter "UML:ActivityGraph"
 					|> map mkActivityGraph,
-*)	      connection         = tree |> get_many "UML:Association.connection" 
-					|> map (mkAssociationEnd id)
+*)	      connection         = mkAssociationEndFromAssociationClass id tree ::
+				   (tree |> get_many "UML:Association.connection" 
+					 |> map (mkAssociationEnd id))
         }
     end
 

@@ -269,7 +269,7 @@ fun embed_iterator_variables arg_list term = embed_method_arguments arg_list ter
 
 (* For the existing variables in Ocl.
    There is only one (I know, maybe some more).
-   It can be easily extende here 
+   It can be easily extended here 
 *)
 (* RETURN: CollectionPart list  *)
 fun generate_variables_coll_list  ((CollectionItem (term,typ))::tail)  path meth_name model = 
@@ -286,7 +286,10 @@ and generate_variables (Literal (paras)) path meth_name model = Literal (paras)
     (If (generate_variables cond path meth_name model,cond_type,generate_variables then_e path meth_name model,then_type,generate_variables else_e path meth_name model,else_type,res_type))
   | generate_variables (AttributeCall (_,_,["result"],_)) path meth_name model =
     let
+	val _ = trace low ("generate_variable: AttributeCall\n")
+	val _ = List.app (print o (fn x => x^"\n") o string_of_path o name_of ) model
 	val classifier = class_of path model
+	val _ = trace low "classifier found\n"
 	val meth_list = operations_of  classifier
 	val meth = find_operation meth_name meth_list
 	val _ = trace zero ("a result call resolved ..." ^ "\n")
