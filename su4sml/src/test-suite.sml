@@ -60,6 +60,7 @@ type testcase = {
      result : result
 }
 
+exception TestSuiteException of string
 
 val initResult = {
      parse      = false,
@@ -146,26 +147,26 @@ fun test (tc:testcase) =
 	    handle _ => []
 	val OclParse = if ocl = [] then false else true
 	val (xmi,ocl) = ModelImport.removePackages (xmi,ocl) []
-	    handle _ => (([],[]),[]) 
+	    handle _ => (([],[]),[])  
 
 	val _         = print "### Preprocess Context List ###\n"
 	val fixed_ocl = Preprocessor.preprocess_context_list 
 			    ocl ((OclLibrary.oclLib)@(#1 xmi))
-	    handle _ => []
+	    handle _ => []    
 	val OclPreprocess = if fixed_ocl = [] then false else true
 	val _         = print "### Finished Preprocess Context List ###\n\n"	
 			
 	val _         = print "### Type Checking ###\n"
 	val typed_cl  = TypeChecker.check_context_list 
 			    fixed_ocl (((OclLibrary.oclLib)@(#1 xmi)),#2 xmi)
-	    handle _ => []
+	    handle _ => []   
 	val OclTC = if typed_cl = [] then false else true
 	val _         = print "### Finished Type Checking ###\n\n"
 			
 	val _         = print"### Updating Classifier List ###\n"
 	val model     = Update_Model.gen_updated_classifier_list 
 			    typed_cl ((OclLibrary.oclLib)@(#1 xmi))
-	    handle _ => []
+	    handle _ => []   
 	val modelUpdate = if model = [] then false else true
 	val _         = print "### Finished Updating Classifier List ###\n"
 

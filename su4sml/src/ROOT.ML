@@ -40,7 +40,7 @@
 (* $Id$ *)
 
 use "library.sml";
-
+use "stringHandling.sml";
 
 (* ****************************************************** *)
 (* Load the (foreign) fxp-module providing
@@ -53,9 +53,9 @@ OS.FileSys.chDir "compiler";
 
 use "compiler_ext.sig";
 
-val ml_system  = getOpt (OS.Process.getEnv "ML_SYSTEM", "polyml")
+val ml_system  = getOpt (OS.Process.getEnv "ML_SYSTEM", "poly")
 
-val use_wrapper = if (String.isSubstring "polyml" ml_system)
+val use_wrapper = if (String.isSubstring "poly" ml_system)
 		  then (use "../contrib/HashTable.sml"; "polyml.sml")
                   else "smlnj.sml";
 

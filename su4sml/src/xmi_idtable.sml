@@ -323,6 +323,11 @@ fun find_association_path t xmiid =
 					 | _  => raise Option
     handle Option => error ("expected Association "^xmiid^" in table (in find_association_path)")	    
 
+fun find_association_name t xmiid = 
+    case valOf (HashTable.find t xmiid) of (Association (_,{xmiid,name,connection})) => name
+					 | _  => raise Option
+    handle Option => error ("expected Association "^xmiid^" in table (in find_association_name)")
+
 fun insert_constraint table (c:XMI.Constraint) =
     HashTable.insert table (#xmiid c, Constraint c)
 
@@ -388,12 +393,12 @@ fun insert_association table package_prefix (association:XMI.Association) =
 	val _ = trace function_calls "insert_association\n"
 	val id      = #xmiid association
 	val name    = #name association
-	val path    = if (isSome name) 
-		      then package_prefix@[valOf name]
+	val path    = if (isSome name) then package_prefix@[valOf name]
 		      else package_prefix@["association_"^(next_unique_name table)]
     in 
 	HashTable.insert table (id,Association(path,association))
 end
+
 
 (* billk_tag *)
 fun insert_classifier table package_prefix class = 
@@ -412,11 +417,21 @@ fun insert_classifier table package_prefix class =
 			   else if name = "Void"    then Rep_OclType.OclVoid 
 			   else if name = "OclAny"  then Rep_OclType.OclAny
 			   (* now this is really ugly... *)
-			   else if String.isPrefix "Collection(" name then Rep_OclType.Collection (Rep_OclType.Classifier [XMI.classifier_elementtype_of class])
-			   else if String.isPrefix "Sequence("   name then Rep_OclType.Sequence   (Rep_OclType.Classifier [XMI.classifier_elementtype_of class])
-			   else if String.isPrefix "Set("        name then Rep_OclType.Set        (Rep_OclType.Classifier [XMI.classifier_elementtype_of class])
-			   else if String.isPrefix "Bag("        name then Rep_OclType.Bag        (Rep_OclType.Classifier [XMI.classifier_elementtype_of class])
-			   else if String.isPrefix "OrderedSet(" name then Rep_OclType.OrderedSet (Rep_OclType.Classifier [XMI.classifier_elementtype_of class])
+			   else if String.isPrefix "Collection(" name 
+			   then Rep_OclType.Collection (Rep_OclType.Classifier [
+							XMI.classifier_elementtype_of class])
+			   else if String.isPrefix "Sequence("   name 
+			   then Rep_OclType.Sequence   (Rep_OclType.Classifier [
+							XMI.classifier_elementtype_of class])
+			   else if String.isPrefix "Set("        name 
+			   then Rep_OclType.Set        (Rep_OclType.Classifier [
+							XMI.classifier_elementtype_of class])
+			   else if String.isPrefix "Bag("        name 
+			   then Rep_OclType.Bag        (Rep_OclType.Classifier [
+							XMI.classifier_elementtype_of class])
+			   else if String.isPrefix "OrderedSet(" name 
+			   then Rep_OclType.OrderedSet (Rep_OclType.Classifier [
+							XMI.classifier_elementtype_of class])
 			   else error ("didn't recognize ocltype "^name) 
 		      else Rep_OclType.Classifier path
 	(* This function is called before the associations are handled, *)
@@ -432,16 +447,9 @@ fun insert_classifier table package_prefix class =
 						      name = SOME acAssocName,
 						      connection = #connection c}:XMI.Association
 				   in
-				       (acAssoc,package_prefix @[acAssocName])
+				       ([acAssoc],package_prefix @[acAssocName])
 				   end
-				 | _ => 
-				   let
-				       val dummy = {xmiid =id,
-						   name = NONE,
-						   connection = []}
-				   in
-				       (dummy,nil)
-				   end
+				 | _ => ([],[])
 	val ag    = nil
     in 
 	HashTable.insert table (id,Type (ocltype,assocs,acPath,class,ag));
@@ -463,7 +471,7 @@ fun insert_classifier table package_prefix class =
 				       List.app (insert_attribute table path) (#attributes c);   
 				       List.app (insert_operation table path) (#operations c);              
 				       List.app (insert_classifierInState table id) [];
-				       insert_association table package_prefix acAssoc;
+				       insert_association table package_prefix (hd acAssoc);
 				       ()
 				      )
 	  | _ => ()
@@ -615,10 +623,12 @@ fun fix_associationend t (assoc_path:Rep_OclType.Path) (aend:XMI.AssociationEnd)
     end
 
 (** 
- * This handles only regular associations. An association classes belonging association is
- * handled at insert_classifier
- * Traverse the list of aends and update all listed classifiers with the path of the current
- * association.
+ * This handles only regular associations. An association class's belonging
+ * association is handled at insert_classifier. However, the normal classes
+ * that part of that association class's association still need to add the 
+ * association to their list of associations.
+ * Traverse the list of aends and update all listed classifiers with the path
+ * of the current association.
  *)
 fun fix_association t (assoc as {xmiid,name,connection}:XMI.Association) =
     let
@@ -641,6 +651,13 @@ fun fix_association t (assoc as {xmiid,name,connection}:XMI.Association) =
 	List.app (updateTableEntry t assocPath) participantIds
     end
 
+fun fixAssociationFromAsssociationClass table (XMI.AssociationClass{xmiid,
+								    ...}) =
+    let
+	val association = find_association table (xmiid ^ "_association")
+    in
+	fix_association table association
+    end
 
 (** 
  * Handel the broken association references, meaning update the 
@@ -651,16 +668,21 @@ fun fix_association t (assoc as {xmiid,name,connection}:XMI.Association) =
  *         each association, we traverse the connection part and search for the 
  *         classifier listed as participant_id. Then we simply add the assoc-
  *         iation path to the found classifier.
+ * For the classifiers part of an association class's class, no association
+ * construct is present in the package p, while those constructs are already
+ * in the hashtable. To traverse them as well, we extract all association
+ * classes and reconstruct the associations.
  *)
 fun fix_associations t (XMI.Package p)=
     let
-	val associationclasses = filter (fn (XMI.AssociationClass x) => true
+	val associationClasses = filter (fn (XMI.AssociationClass x) => true
 					  | _ => false) (#classifiers p)
     in
 	(* All association ends are stored in associations, so we will 
 	 * traverse them an update affected Classes and AssociationClasses *)
 	 (List.app (fix_associations t) (#packages p);
-	  List.app (fix_association t) (#associations p)
+	  List.app (fix_association t) (#associations p);
+	  List.app (fixAssociationFromAsssociationClass t) associationClasses
 	 )
     end
 

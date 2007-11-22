@@ -46,7 +46,7 @@ fun (x |> f) = f x;
 
 
 (* minimal tracing support (modifed version of ocl_parser tracing *)
-val log_level = ref 5
+val log_level = ref 6
 fun trace lev s = if (lev  <= !log_level ) then print(s) else ()
 
 (* debugging-levels *)

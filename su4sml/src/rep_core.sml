@@ -166,8 +166,7 @@ val parent_interfaces_of : Classifier -> Rep_OclType.OclType list
 val thy_name_of       : Classifier -> string
 val attributes_of     : Classifier -> attribute list
 val associationends_of: association list -> Classifier -> associationend list 
-(* FIXME: dummy workaround for ocl_parser compile error *)
-(*val associationends_of_old: Classifier -> associationend list *)
+val associations_of   : Classifier -> Rep_OclType.Path list 
 
 val operations_of     : Classifier -> operation list
 val invariant_of      : Classifier -> (string option * Rep_OclTerm.OclTerm) list
@@ -189,8 +188,6 @@ val parents_of          : Classifier -> Classifier list -> Rep_OclType.Path list
 val operation_of        : Classifier list -> Rep_OclType.Path -> operation option
 val topsort_cl          : Classifier list -> Classifier list
 val connected_classifiers_of : association list -> Classifier -> Classifier list -> Classifier list
-(* FIXME: dummy workaround for compile error *)
-val connected_classifiers_of_old : Classifier -> Classifier list -> Classifier list
 
 (* billk_tag *)
 (* changed assoc to aend, since associations are now part of the model *)
@@ -339,19 +336,13 @@ fun assoc_to_attr (assoc:associationend) = {name = #name assoc,
 					    init = #init assoc}
 *)
 
-(** dummy *)
-fun associationends_of_old cls:associationend list = []
-fun connected_classifiers_of_old cls cls_list:Classifier list = cls_list
-
-
 fun aend_to_attr (cls_name:string) (aend:associationend):attribute = 
-    {name = cls_name ^ List.last (#name aend),
+    {name = List.last (#name aend),
      attr_type = aend_to_attr_type aend,
      visibility = #visibility aend,
      scope = XMI.InstanceScope,
      stereotypes = nil,
      init = #init aend}
-
 
 
 (* convert a multiplicity range into an invariant of the form *)
@@ -423,31 +414,40 @@ fun aend_to_inv cls_name (aend:associationend) =
        else (SOME inv_name, foldr1 ocl_or range_constraints)
     end
 
+fun associations_of (Class{name,associations,...}) = associations
+  | associations_of (AssociationClass{name,associations,association,...}) = associations  
+  | associations_of (Primitive{name,associations,...}) = associations
 
 (* find all association ends, excluding of self_type *)
 fun association_to_associationends (associations:association list) (self_type:OclType) (assoc:Path):associationend list=
     let
 	val _ = trace function_calls "association_to_associationends\n"
-	val association = filter (fn {name,...} => name=assoc ) associations
-	val aends = if (List.length association) > 1 
+	val _ = trace function_arguments ("assoc: "^(string_of_path assoc)^"\n")
+	val (association::rest) = filter (fn {name,...} => name=assoc ) associations
+	val aends = if rest <> [] 
 		    then 
 			error ("in association_to_associationends: non-unique association name: "^
 			       (string_of_path assoc))
 		    else 
-			#aends (hd association)
-	val aends_filtered = List.filter (fn {aend_type,...} => aend_type <> self_type) aends
-	val _ = if (List.length aends_filtered) >1
+			#aends association
+	val (aendsFiltered,aendsSelf) = List.partition (fn {aend_type,...} => 
+							   aend_type <> self_type) aends
+	val aendsFiltered = if List.length aendsSelf > 1 then aendsFiltered@aendsSelf (* reflexiv *)
+			    else aendsFiltered
+	val _ = if (List.length aendsFiltered) >1
 		then 
 		    print "association_to_associationends: aends found\n"
 		else
 		    print "association_to_associationends: no aends found\n"
     in
-	aends_filtered
+	aendsFiltered
     end
 	
 (** find the associationends belonging to a classifier.
  * This mean all other associationends from all associations the
- * classifer is part of. 
+ * classifer is part of. For association classes, the belonging 
+ * association also needs to be checked.
+ * If the association is reflexiv, all aends will be returned.
  *)
 fun associationends_of (all_associations:association list) (Class{name,associations,...}):associationend list = 
     List.concat (map (association_to_associationends all_associations name) associations)
@@ -459,52 +459,67 @@ fun associationends_of (all_associations:association list) (Class{name,associati
   | associationends_of _ _ = error ("in associationends_of: This classifier has no associationends") (*FIXME: or rather []? *)
 
      
-(** convert association ends into attributes + invariants *)
+(** convert association ends into attributes + invariants 
+ * Associations belonging to an association class have not been modified to
+ * include an additional aend to the association class.
+ *)
 fun normalize (all_associations:association list) (C as (Class {name,parent,attributes,operations,associations,invariant,
-								stereotypes,interfaces,thyname,activity_graphs})):Classifier=
-	       Class {name   = name,
-		      parent = parent,
-	   attributes = (append (map (aend_to_attr (string_of_path (path_of_OclType name))) 
-				     (associationends_of all_associations C)) attributes),
-		      operations = operations,
-	   associations = nil,
-	   invariant = append (map (aend_to_inv (path_of_OclType name)) (associationends_of all_associations C))  
-					  invariant,
-		      stereotypes = stereotypes,
-                      interfaces = interfaces,
-		      thyname = thyname,
-                      activity_graphs=activity_graphs}
+								stereotypes,interfaces,thyname,activity_graphs})):Classifier =
+    let
+	val _ = trace function_calls "normalize: class\n"
+	val _ = trace function_arguments ("number of associations: " ^ (Int.toString (List.length associations )) ^ "\n")
+    in
+	Class {name   = name,
+	       parent = parent (*,
+				attributes = (append (map (aend_to_attr (string_of_path (path_of_OclType name))) 
+							  (associationends_of all_associations C)) attributes)*),
+	       attributes = (append (map (aend_to_attr (List.last (path_of_OclType name))) 
+					 (associationends_of all_associations C)) attributes),
+	       operations = operations,
+	       associations = nil,
+	       invariant = append (map (aend_to_inv (path_of_OclType name)) (associationends_of all_associations C))  
+				  invariant,
+	       stereotypes = stereotypes,
+               interfaces = interfaces,
+	       thyname = thyname,
+               activity_graphs = activity_graphs}
+    end
   | normalize all_associations (AC as (AssociationClass {name,parent,attributes,association,associations,operations,invariant,
-					stereotypes,interfaces,thyname,activity_graphs})) =
+							 stereotypes,interfaces,thyname,activity_graphs})) =
     (* FIXME: how to handle AssociationClass.association? *)
-    AssociationClass {name   = name,
-		      parent = parent,
-		      attributes = append (map (aend_to_attr (string_of_path (path_of_OclType name))) 
-					       (associationends_of all_associations AC)) attributes,
-		      operations = operations,
-		      invariant = append (map (aend_to_inv (path_of_OclType name)) (associationends_of all_associations AC))
-					 invariant,
-		      stereotypes = stereotypes,
-		      interfaces = interfaces,
-		      thyname = thyname,
-		      activity_graphs = activity_graphs,
-		      associations = [],
-		      association = association (* FIXME? *)}
+	let
+	    	val _ = trace function_calls "normalize: associationclass\n"
+		val _ = trace function_arguments ("number of associations: " ^ (Int.toString (List.length associations )) ^ "\n")
+	in
+	    AssociationClass {name   = name,
+			      parent = parent,
+			      attributes = append (map (aend_to_attr (List.last (path_of_OclType name))) 
+						       (associationends_of all_associations AC)) attributes,
+			      operations = operations,
+			      invariant = append (map (aend_to_inv (path_of_OclType name)) (associationends_of all_associations AC))
+						 invariant,
+			      stereotypes = stereotypes,
+			      interfaces = interfaces,
+			      thyname = thyname,
+			      activity_graphs = activity_graphs,
+			      associations = [],
+			      association = [] (* FIXME? *)}
+	end
   | normalize all_associations (Primitive p) =
     (* Primitive's do not have attributes, so we have to convert *)
     (* them into Classes...                                      *)
     if (#associations p) = [] 
     then Primitive p 
     else normalize all_associations (Class {name = #name p, parent = #parent p, attributes=[],
-			   operations = #operations p, invariant = #invariant p,
+					    operations = #operations p, invariant = #invariant p,
 					    associations = #associations p,
-			   stereotypes = #stereotypes p,
-			   interfaces = #interfaces p,
-			   thyname = #thyname p,
-                           activity_graphs=nil})
+					    stereotypes = #stereotypes p,
+					    interfaces = #interfaces p,
+					    thyname = #thyname p,
+					    activity_graphs=nil})
   | normalize all_associations c = c
-
-
+				   
+				   
 fun rm_init_attr (attr:attribute) = {
     name = #name attr,
     attr_type = #attr_type attr,
@@ -570,8 +585,8 @@ fun normalize_init (Class {name,parent,attributes,operations,associations,invari
                       activity_graphs=activity_graphs}
   | normalize_init c = c
 
-fun normalize_ext ((all_classifiers,all_associations):transform_model):transform_model =
-    (map (normalize all_associations) all_classifiers, all_associations)
+fun normalize_ext ((classifiers,associations):transform_model):transform_model =
+    (map (normalize associations) classifiers, associations)
 
 val OclAnyC = Class{name=Rep_OclType.OclAny,parent=NONE,attributes=[],
 			  operations=[], interfaces=[],
@@ -817,16 +832,6 @@ fun attributes_of (Class{attributes,...}) = attributes
          (* error "attributes_of <Primitive> not supported" *)  
   | attributes_of (Template{parameter,classifier}) = attributes_of classifier
 
-(* needed further up -> moved to the beginning
-fun associationends_of (Class{associations,...}):associationend list= 
-    map association_to_associationend associations
-  | associationends_of (AssociationClass{associations,association,...}) = 
-    (* association only contains endpoints to the other, pure clases *)
-    map association_to_associationend (association::associations)
-  | associationends_of (Primitive{associations,...}) = 
-    map association_to_associationend associations
-*)
-
 fun operations_of (Class{operations,...})          = operations
   | operations_of (AssociationClass{operations,...}) = operations
   | operations_of (Interface{operations,...})      = operations
@@ -898,11 +903,6 @@ fun thy_name_of (C as Class{thyname,...})       =
   | thy_name_of (Template _) = error "in Rep.thy_name_of: \
                                      \unsupported argument type Template"
      
-
-
-
-
-
 
 fun class_of (name:Path) (cl:Classifier list):Classifier = hd (filter (fn a => if ((name_of a) = name)
                                            then true else false ) cl )

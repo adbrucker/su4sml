@@ -172,8 +172,8 @@ fun mkRole (C as Rep.Class c) = Rep.string_of_path (Rep.name_of C)
 (* FIXME: handle groups also *)
 fun mkSubject (C as Rep.Class c) = User (Rep.string_of_path (Rep.name_of C))
   | mkSubject _                  = error ("in mkSubject: argument is not a class")
-fun mkPermission cs (c as Rep.Class _) = 
-    let val classifiers = (Rep.connected_classifiers_of_old c cs)
+fun mkPermission (cs,ascs) (c as Rep.Class _) = 
+    let val classifiers = (Rep.connected_classifiers_of ascs c cs)
         val role_classes = List.filter (classifier_has_stereotype "secuml.role") 
                                        classifiers
         val root_classes =   List.filter (fn x => ListEq.overlaps 
@@ -201,12 +201,12 @@ fun mkPermission cs (c as Rep.Class _) =
   | mkPermission _ _ = error "in mkPermission: argument is not a class"
                        
 
-fun mkSubjectAssignment cs (c as (Rep.Class _)) = 
+fun mkSubjectAssignment (cs,ascs) (c as (Rep.Class _)) = 
     let (* FIXME: we just take all roles that are connected to the subject. *)
         (* in principle, we should check the stereotype of the association, *)
         (* but that does not exist in the rep datastructure...              *)  
         val classifiers = List.filter (classifier_has_stereotype "secuml.role")
-                                      (Rep.connected_classifiers_of_old c cs)
+                                      (Rep.connected_classifiers_of ascs c cs)
     in 
         (mkSubject c, map mkRole classifiers)
     end
@@ -369,13 +369,13 @@ fun parse (model as (cs,assocs):Rep.Model) =
 						  cs),
  *)	 (modified_classifiers,modified_assocs),
          { config_type = "SecureUML",
-           permissions = map (mkPermission cs) (filter_permission cs),
+           permissions = map (mkPermission model) (filter_permission cs),
            subjects    = map mkSubject (filter_subject cs),
            roles       = map mkRole (filter_role cs),
            rh          = map (fn x => (Rep.string_of_path (Rep.name_of x),
                                        Rep.string_of_path (Rep.parent_name_of x)))
                              (List.filter classifier_has_parent (filter_role cs)),
-           sa          = map (mkSubjectAssignment cs) (filter_subject cs)})
+           sa          = map (mkSubjectAssignment model) (filter_subject cs)})
     end
     handle ex => (error_msg "in SecureUML.parse: security configuration \
                             \could not be parsed";

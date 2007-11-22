@@ -40,7 +40,7 @@
 (* $Id$ *)
 
 use "gcg_helper.sml";
-use "stringHandling.sml";
+use "../stringHandling.sml";
 
 use "tpl_parser.sml";
 

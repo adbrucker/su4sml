@@ -93,6 +93,7 @@ sig
     val trace                   : int -> string -> unit
     val log_level               : int ref
     val function_calls          : int
+    val function_arguments      : int
     val zero                    : int 
     val high                    : int 
     val medium                  : int 
@@ -131,10 +132,11 @@ exception NoSuchOperationError of string
 				  
 (* Error logging *)
 (* default value *)
-val log_level = ref 200
+val log_level = ref 6
 		
 (* debugging-levels *)
 val function_calls = 5
+val function_arguments = 6
 val zero = 0
 val high = 10
 val medium = 20
@@ -188,6 +190,7 @@ fun find_operation op_name [] = raise NoSuchOperationError ("no such operation")
 (* RETURN: attribute *)
 fun find_attribute attr_name [] = 
     let
+	val _ = trace function_calls "find_attribute\n"
 	val _ = trace low ("Error ... " ^ "\n")
     in
 	raise (NoSuchAttributeError ("Error: no attribute '"^attr_name^" found"))
@@ -195,12 +198,14 @@ fun find_attribute attr_name [] =
   | find_attribute attr_name ((a:attribute)::attribute_list) = 
     if (attr_name = #name a) then 
 	let
+	    val _ = trace function_calls "find_attribute\n"
 	    val _ = trace low ("Attribute found ... " ^ "\n")
 	in 
  	    (a)
 	end
     else
 	let
+	    val _ = trace function_calls "find_attribute\n"
 	    val _ = trace low ("Attribute not found ... " ^ "\n")
 	in
 	    (find_attribute attr_name attribute_list)
@@ -945,21 +950,40 @@ fun get_overloaded_methods class op_name ([],_) = raise NoModelReferenced ("in '
 fun get_overloaded_attrs_or_assocends class attr_name ([],_) = raise NoModelReferenced ("in 'get_overloaded_attrs' ... \n")
   | get_overloaded_attrs_or_assocends class attr_name (model as (classifiers,associations)) =
    let
-       val _ = trace function_calls ("get_overloaded_attrs_or_assocends\n")
-       val _ = trace low ("attrs\n")
+       val _ = trace function_calls ("\nget_overloaded_attrs_or_assocends\n")
+       val _ = trace function_arguments ("class: "^(string_of_path (name_of class))^"\n")
+       val _ = trace function_arguments ("attr_name: "^attr_name^"\n")
+       val _ = trace function_arguments ("class's associations:\n")
+       val _ = map (trace function_arguments o 
+		    (fn name => string_of_path name ^ "\n")) (associations_of class)
+       val _ = trace function_arguments ("class's attributes:\n")
+       val _ = map (trace function_arguments o 
+		    (fn {name,...} => name ^ "\n")) (attributes_of class)
+       val _ = trace function_arguments ("class's operations:\n")
+       val _ = map (trace function_arguments o 
+		    (fn {name,...} => name ^ "\n")) (operations_of class)
+       val _ = trace function_arguments ("associations:\n")
+       val _ = map (trace function_arguments o 
+		    (fn {name,...} => string_of_path name ^"\n")) associations
        val attrs = attributes_of class
-       val _ = trace low ("assocends\n")
-       val _ = trace low ("sizes: "^(Int.toString (List.length classifiers))^", "^
-			  (Int.toString( List.length associations))^"\n")
+       val _ = print "attrs: \n"
+       val _ = map (print o (fn {name,...} => name^"\n")) attrs
        val assocends = associationends_of associations class
+       val _ = trace low ("assocends:\n")
+       val _ = trace low ("sizes: "^(Int.toString (List.length attrs))^", "^
+			  (Int.toString( List.length assocends))^"\n")
        val _ = trace low ("Look for attributes/assocends : Class: " ^ string_of_OclType (type_of class) ^ " \n")
        val attrs2 = List.filter (fn a => (if ((#name a) = attr_name) then true else false)) attrs
        val assocends2 = List.filter (fn {name,...} => (List.last name)=attr_name) assocends
-       val _ = trace low ("Name of attr/assocend         : " ^ attr_name  ^ "   Found " ^ Int.toString (List.length attrs2) ^ " attribute(s), " ^ Int.toString (List.length assocends2) ^  " assocend(s) \n")
+       val _ = trace low ("Name of attr/assocend         : " ^ attr_name  ^ "   Found " ^ Int.toString (List.length attrs2) ^
+			  " attribute(s), " ^ Int.toString (List.length assocends2) ^  " assocend(s) \n")
        val parent = class_of_parent class classifiers
        val _ = trace low ("Parent class                  : " ^ string_of_OclType(type_of parent) ^ "\n\n")
+       val _ = trace low ("Size of attrs2: "^(Int.toString (List.length attrs2))^"\n")
+       val _ = trace low ("Size of assocends2: "^(Int.toString (List.length assocends2))^"\n")	       
        val cl_at = List.map (fn a => (class,SOME(a),NONE)) attrs2
        val cl_as = List.map (fn a => (class,NONE,SOME(a))) assocends2
+       val _ = trace low ("search done\n")
    in
        if (class = class_of_type OclAny classifiers) then
 	   (* end of hierarchie *)

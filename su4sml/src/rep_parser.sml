@@ -273,7 +273,7 @@ fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,ordering
                                "', defaulting to OclVoid"); 
                          Rep_OclType.OclVoid)
     in
-	{name= name,
+	{name = name,
 	 attr_type = if multiplicity = [(1,1)] 
 		     then cls_type
 		     else if ordering = XMI.Ordered then Rep_OclType.Sequence cls_type
@@ -405,7 +405,9 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 				       state_machines}) =
     let 
 	val _ = trace function_calls "transform_classifier: Class\n"
+	val _ = trace function_arguments ("class name: "^ name ^"\n")
         val assocs = find_classifier_associations t xmiid
+	val _ = trace high ("number of associations added: "^(Int.toString (List.length assocs))^"\n")
         val parents = map ((find_classifier_type t) o (find_parent t)) 
 			  generalizations 
 	val filtered_parents   = filter (fn x => x <> Rep_OclType.OclAny) parents
@@ -444,7 +446,10 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 						  supplierDependency,taggedValue}) =
     let 
 	val _ = trace function_calls "transform_classifier: AssociationClass\n"
+	val _ = trace function_arguments ("associationclass name: "^ name ^"\n")
 	val (_,assocs,assoc,_,_) = find_classifier_entries t xmiid
+	val _ = trace high ("number of associations added: "^(Int.toString (List.length assocs))^"\n")
+	val _ = trace high ("ac association found: "^(Bool.toString (assoc <> []))^"\n")
 	val _ = print "associations retrieved\n"
 	val parents = map ((find_classifier_type t) o (find_parent t)) 
 			  generalizations 
@@ -475,7 +480,9 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
   | transform_classifier t (XMI.Primitive {xmiid,name,generalizations,operations,invariant,taggedValue}) =
     let 
 	val _ = trace function_calls "transform_classifier: Primitive\n"
-	val (_,assocs,assoc,_,_) = find_classifier_entries t xmiid
+	val _ = trace function_arguments ("primitive name: "^ name ^"\n")
+	val (_,assocs,_,_,_) = find_classifier_entries t xmiid
+	val _ = trace high ("number of associations added: "^(Int.toString (List.length assocs))^"\n")
 	val checked_invariants = filter_exists t invariant
     in
         Rep.Primitive {name = (* case *) find_classifier_type t xmiid (*of Rep_OclType.Classifier x => x
@@ -549,8 +556,8 @@ fun transformAssociationFromAssociationClass t (XMI.AssociationClass ac) =
 	val connection = #connection ac
 	val id = xmiid^"_association"
 	val association_path = find_association_path t id
-	val _ = print ("transform_association path: "^(string_of_path association_path) ^"\n")
-	val _ = print ("transform_association path length: "^(Int.toString (List.length association_path)) ^"\n")
+	val _ = trace low ("transform_association path: "^(string_of_path association_path) ^"\n")
+	val _ = trace low ("transform_association path length: "^(Int.toString (List.length association_path)) ^"\n")
 	val association_ends = map (transform_aend t association_path) connection
 	val aClass =  SOME (path_of_OclType (find_classifier_type t xmiid))
     in
@@ -783,17 +790,31 @@ fun transformXMI_ext ({classifiers,constraints,packages,
 		val _ = map (print o (fn x => x^"\n")  o string_of_path o name_of) classifiers
 		val _ = print "associations\n"
 		val _ = map (print o (fn x => x^"\n")  o string_of_path o (fn {name,aends,aclass} => name)) associations
+		val _ = print "operations\n"
+		fun printClassifier cls = 
+		    let
+			val _ = print ("output of transformXMI_ext:\n")
+			val _ = print ("classifier: "^ (string_of_path (name_of cls)) ^"\n") 
+
+			val _ = print ("associations: \n")
+			val _ = map (print o(fn x => x ^ "\n") o string_of_path ) (associations_of cls)
+
+			val _ = print ("operations: \n")
+			val _ = map (print o (fn {name,...} => name)) (operations_of cls) 
+		    in
+			print "\n"
+		    end
+		val _ = map printClassifier classifiers
 	    in
+		trace function_calls "\n### transformXMI_ext done\n\n";
 		(classifiers,associations)
 	    end
-
-
     in 
-	print "### transformXMI: populate hash table\n";
+	trace function_calls "### transformXMI: populate hash table\n";
 	insert_model xmiid_table model        (* fill xmi.id table *);
-	print "### transformXMI: fix associations\n";
+	trace function_calls "### transformXMI: fix associations\n";
 	fix_associations xmiid_table model    (* handle associations *);  
-	print "### transformXMI: transform XMI into Rep";
+	trace function_calls "### transformXMI: transform XMI into Rep\n";
         test2 (transform_package xmiid_table model)   (* transform classifiers *)
     end
 
