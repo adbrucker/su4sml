@@ -205,7 +205,10 @@ val update_postcondition  : (string option * Rep_OclTerm.OclTerm) list -> operat
 
 val addInvariant : constraint -> Classifier -> Classifier
 val addOperation : operation  -> Classifier -> Classifier
-     
+   
+
+exception InvalidArguments of string
+  
 end
 
 structure Rep_Core :  REP_CORE = 
@@ -319,6 +322,8 @@ datatype Classifier =
 
 type transform_model = (Classifier list * association list)
 
+exception InvalidArguments of string
+
 (* convert an association end into the corresponding collection type *)
 fun aend_to_attr_type ({name,aend_type,multiplicity,ordered,visibility,init}:associationend) =
     case multiplicity of 
@@ -427,13 +432,14 @@ fun association_to_associationends (associations:association list) (self_type:Oc
     let
 	val _ = trace function_calls "association_to_associationends\n"
 	val _ = trace function_arguments ("assoc: "^(string_of_path assoc)^"\n")
-	val (association::rest) = filter (fn {name,...} => name=assoc ) associations
-	val aends = if rest <> [] 
-		    then 
-			error ("in association_to_associationends: non-unique association name: "^
-			       (string_of_path assoc))
-		    else 
-			#aends association
+	val _ = trace function_arguments "associations in list:\n"
+	val _ = map (trace function_arguments o (fn x => "association path: "^x^"\n") o 
+		     string_of_path o (fn {name,aends,aclass} => name)) associations
+	val association = List.filter (fn {name,aends,aclass} => name = assoc ) associations
+	val aends = case association of
+			[] => raise InvalidArguments "association_to_associationends: no association found\n"
+		      | [{name,aends,aclass}] => aends
+		      | _ =>  raise InvalidArguments "association_to_associationends: more than 1 association found\n"
 	val (aendsFiltered,aendsSelf) = List.partition (fn {aend_type,...} => 
 							   aend_type <> self_type) aends
 	val aendsFiltered = if List.length aendsSelf > 1 then aendsFiltered@aendsSelf (* reflexiv *)
@@ -457,7 +463,14 @@ fun associationends_of (all_associations:association list) (Class{name,associati
     List.concat (map (association_to_associationends all_associations name) associations)
   | associationends_of all_associations (AssociationClass{name,associations,association,...}) = 
     (* association only contains endpoints to the other, pure classes *)
-    List.concat (map (association_to_associationends all_associations name) (association::associations))
+	let
+	    val assocs = if List.exists (fn x => x = association ) associations then
+			     associations
+			 else 
+			     association::associations
+	in
+	    List.concat (map (association_to_associationends all_associations name) assocs)
+	end
   | associationends_of all_associations (Primitive{name,associations,...}) = 
     List.concat (map (association_to_associationends all_associations name) associations)	
   | associationends_of _ _ = error ("in associationends_of: This classifier has no associationends") (*FIXME: or rather []? *)
@@ -472,6 +485,7 @@ fun normalize (all_associations:association list) (C as (Class {name,parent,attr
     let
 	val _ = trace function_calls "normalize: class\n"
 	val _ = trace function_arguments ("number of associations: " ^ (Int.toString (List.length associations )) ^ "\n")
+	val _ = map (trace function_arguments o (fn x => "association path: "^x^"\n") o string_of_path) associations
     in
 	Class {name   = name,
 	       parent = parent (*,

@@ -475,7 +475,8 @@ fun transform_association_class_into_association (AssociationClass {name,associa
 	val (assoc,others) = split_on_association all_associations association
 	val assoc_path = association
 	val assoc_class_path = path_of_OclType name
-	val assoc_class_name = get_short_name assoc_class_path
+	val assoc_class_name = StringHandling.uncapitalize (get_short_name assoc_class_path)
+        (* Outdated: dummy added at Xmi_Parser.mkAssociationClass *)
 	val new_aend= {name = assoc_path@[assoc_class_name] (* FIXME: convention? *), 
 		       aend_type = name (* target of the association is the original AssociationClass *),
 		       multiplicity = [],
@@ -488,7 +489,8 @@ fun transform_association_class_into_association (AssociationClass {name,associa
 									       aclass=NONE}
 	val modified_association = add_aend_to_and_update_association new_aend assoc
     in
-	modified_association::others
+	(*modified_association::others*)
+	assoc::others
     end
   | transform_association_class_into_association (cls,_) = error ("in transform_association_class_into_association: only AssociationClass supported, but "^
 								(short_name_of cls)^" provided")
@@ -663,12 +665,18 @@ fun split_n_ary_association (ac as {name,aends=[],aclass}:association):associati
   | split_n_ary_association (ac as {name,aends,aclass}:association) =
     (* We need to generate the pairs as well as the new names *)
     let
-	val _ = trace function_calls "split_n_ary_associatio\n"
+	val _ = trace function_calls "split_n_ary_association\n"
 	val qualifier = get_qualifier name
 	(* FIXME: update the name paths of all references to the new names *)
-	fun to_association (a,b) = {name=qualifier@[name_of_aend a ^ (name_of_aend b)],
-				    aends=[a,b],
-				    aclass=aclass}
+	fun to_association (a,b) = 
+	    let
+		val a_part = StringHandling.uncapitalize (name_of_aend a)
+		val b_part = StringHandling.uncapitalize (name_of_aend b)
+	    in
+		{name=qualifier@[a_part^"_"^b_part^"_binary_association"],
+		 aends=[a,b],
+		 aclass=aclass}
+	    end
 	(* FIXME: reflexiv parts? *)
 	(* No dupplicates due to symmetry generated *)
 	fun pair source targets = map (fn x => (source,x)) targets
@@ -677,6 +685,7 @@ fun split_n_ary_association (ac as {name,aends=[],aclass}:association):associati
 	  | gen_pairs [x,y] = [(x,y)]
 				  (* pair src with all parts and continue *)
 	  | gen_pairs (src::rest) = pair src rest @ (gen_pairs rest)
+	val _ = print (string_of_path name^" has "^(Int.toString (List.length aends))^"aends\n")
 	val pairs = gen_pairs aends
 	val binary_associations = map to_association pairs
     in
@@ -722,7 +731,7 @@ fun transform_n_ary_associations ((classifiers,associations):transform_model):tr
 (** 
  * Transformations on Classifiers and Associations
  *)
-fun transformClassifiers_ext (model:transform_model):transform_model =
+fun transformClassifiers_ext (model:Rep_Core.transform_model):Rep_Core.transform_model =
     transform_association_classes model |>>  (* split an association classe into a class and an association*)
 (*    transform_qualifier |>>
     transform_aggregation |>>  *)  

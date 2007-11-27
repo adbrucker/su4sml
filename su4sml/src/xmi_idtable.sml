@@ -617,8 +617,11 @@ fun fix_associationend t (assoc_path:Rep_OclType.Path) (aend:XMI.AssociationEnd)
 				 (StringHandling.uncapitalize o XMI.classifier_name_of o
 				  find_classifier t) participant_id)
     in 
-	(* add the association to the participant *)
-	(HashTable.insert t (participant_id, Type (cls_type,assoc_path::assocs,assoc,cls,ags));
+	((if not (List.exists (fn x => x = assoc_path) assocs) then 
+	    (* add the association to the participant *)
+	    (HashTable.insert t (participant_id, Type (cls_type,assoc_path::assocs,assoc,cls,ags)))
+	  else 
+	      ());
          HashTable.insert t (#xmiid aend, AssociationEnd (List.concat [assoc_path, [name]], aend)))
     end
 
