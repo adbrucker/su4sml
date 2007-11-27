@@ -148,6 +148,8 @@ type transform_model = (Classifier list * association list)
 
 val OclAnyC : Classifier
 
+val joinModel           : transform_model -> transform_model -> transform_model
+
 val normalize      : association list -> Classifier -> Classifier
 val normalize_init : Classifier -> Classifier
 val normalize_ext  : transform_model -> transform_model
@@ -172,6 +174,7 @@ val operations_of     : Classifier -> operation list
 val invariant_of      : Classifier -> (string option * Rep_OclTerm.OclTerm) list
 val stereotypes_of    : Classifier -> string list
 val string_of_path    : Rep_OclType.Path -> string    
+val short_name_of_path : Rep_OclType.Path -> string    
 val activity_graphs_of: Classifier -> Rep_ActivityGraph.ActivityGraph list 
 
 val arguments_of_op     : operation -> (string * Rep_OclType.OclType) list
@@ -381,6 +384,7 @@ fun range_to_inv cls_name aend (a,b) =
     end
 
 
+fun short_name_of_path p = (hd o rev) p
 
 
 (* calculate the invariants of an association end:               *)
@@ -389,7 +393,7 @@ fun range_to_inv cls_name aend (a,b) =
 (*    i.e., A.b.a->includes(A)                                   *)
 (*    FIXME: 2. is not implemented yet...                        *)
 fun aend_to_inv cls_name (aend:associationend) =
-    let val inv_name = "multconstraint_for_aend_"^string_of_path (#name aend)
+    let val inv_name = ("multconstraint_for_aend_"^(short_name_of_path (#name aend)))
 	val range_constraints = case (#multiplicity aend) of
 				    [(0,1)] => []
 				  | [(1,1)] => let
@@ -529,6 +533,10 @@ fun rm_init_attr (attr:attribute) = {
     init = NONE
 }:attribute
 
+
+fun joinModel ((a_cl,a_assoc):transform_model)
+	      ((b_cl,b_assoc):transform_model)
+  = (a_cl@b_cl,a_assoc@b_assoc)
 
 fun init_to_inv cls_name (attr:attribute) = 
     case (#init attr) of
@@ -712,6 +720,7 @@ fun name_of (Class{name,...})       = path_of_OclType name
   | name_of (Enumeration{name,...}) = path_of_OclType name
   | name_of (Primitive{name,...})   = path_of_OclType name
   | name_of (Template{classifier,...}) = name_of classifier
+
 
 fun short_name_of C =  case (name_of C)  of
 	[] => error "in Rep.short_name_of: empty type"
