@@ -80,7 +80,7 @@ val testcases = [
     uml  = prefix^"company/company.zargo",
     ocl  = prefix^"company/company.ocl",
     result = initResult
-   }:testcase,
+   }:testcase (*,
    {
     name = "ebank",
     uml  = prefix^"ebank/ebank.zargo",
@@ -135,6 +135,7 @@ val testcases = [
     ocl  = "",
     result = initResult
    }:testcase
+*)
 ]
 
 
@@ -142,9 +143,9 @@ val testcases = [
 fun test (tc:testcase) = 
     let 
 	val xmi = ModelImport.parseUML (#uml tc)
-	    handle _ => ([],[])
+	    handle _ => ([],[]) 
 	val ocl = ModelImport.parseOCL (#ocl tc)
-	    handle _ => []
+	    handle _ => [] 
 	val OclParse = if ocl = [] then false else true
 	val (xmi,ocl) = ModelImport.removePackages (xmi,ocl) []
 	    handle _ => (([],[]),[])  
