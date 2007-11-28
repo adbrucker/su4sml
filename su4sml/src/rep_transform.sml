@@ -450,7 +450,7 @@ fun transform_association_class_into_class (all_associations: association list )
 			 parent = parent,
 			 attributes = attributes,
 			 operations = operations,
-			 associations = associations,
+			 associations = association::associations,
 			 invariant = constraint::invariant,
 			 stereotypes = stereotypes,
 			 interfaces = interfaces,
@@ -478,7 +478,7 @@ fun transform_association_class_into_association (AssociationClass {name,associa
 	val assoc_class_name = StringHandling.uncapitalize (get_short_name assoc_class_path)
         (* Outdated: dummy added at Xmi_Parser.mkAssociationClass *)
 	val new_aend= {name = assoc_path@[assoc_class_name] (* FIXME: convention? *), 
-		       aend_type = name (* target of the association is the original AssociationClass *),
+		       aend_type = name,
 		       multiplicity = [],
 		       visibility = XMI.public (* dummy *),
 		       ordered = false (* dummy *),
@@ -489,8 +489,7 @@ fun transform_association_class_into_association (AssociationClass {name,associa
 									       aclass=NONE}
 	val modified_association = add_aend_to_and_update_association new_aend assoc
     in
-	(*modified_association::others*)
-	assoc::others
+	modified_association::others
     end
   | transform_association_class_into_association (cls,_) = error ("in transform_association_class_into_association: only AssociationClass supported, but "^
 								(short_name_of cls)^" provided")
@@ -656,13 +655,13 @@ fun generate_n_ary_constraints ((classifiers,associations):transform_model):tran
     foldl generate_n_ary_constraint (classifiers,[]) associations
  
 
-fun split_n_ary_association (ac as {name,aends=[],aclass}:association):association list =
+fun split_n_ary_association ({name,aends=[],aclass}:association,(_,_):transform_model):transform_model =
     raise InvalidArguments "split_n_ary_association: no aends\n"
-  | split_n_ary_association (ac as {name,aends=[a],aclass}:association):association list =
+  | split_n_ary_association (ac as {name,aends=[a],aclass},(_,_)) =
     raise InvalidArguments "split_n_ary_association: only 1 aend\n"
-  | split_n_ary_association (ac as {name,aends=[a,b],aclass}:association):association list =
-    [ac]
-  | split_n_ary_association (ac as {name,aends,aclass}:association) =
+  | split_n_ary_association (ac as {name,aends=[a,b],aclass},(all_classifiers,processed_associations)) =
+    (all_classifiers,ac::processed_associations)
+  | split_n_ary_association (ac as {name,aends,aclass},(all_classifiers,processed_associations)) =
     (* We need to generate the pairs as well as the new names *)
     let
 	val _ = trace function_calls "split_n_ary_association\n"
@@ -672,29 +671,105 @@ fun split_n_ary_association (ac as {name,aends=[],aclass}:association):associati
 	    let
 		val a_part = StringHandling.uncapitalize (name_of_aend a)
 		val b_part = StringHandling.uncapitalize (name_of_aend b)
+		val assoc_name = a_part^"_"^b_part^"_binary_association"
+		fun update_assoc_name new_name {name=(quali::assoc::aend),
+					       aend_type,multiplicity,
+					       ordered, visibility, init} =
+		    {name = quali::new_name::aend,
+		     aend_type = aend_type,
+		     multiplicity = multiplicity,
+		     ordered = ordered,
+		     visibility = visibility,
+		     init = init}
+		    
+		val modified_a = update_assoc_name assoc_name a
+		val modified_b = update_assoc_name assoc_name b
 	    in
-		{name=qualifier@[a_part^"_"^b_part^"_binary_association"],
-		 aends=[a,b],
+		{name=qualifier@[assoc_name],
+		 aends=[modified_a,modified_b],
 		 aclass=aclass}
 	    end
 	(* FIXME: reflexiv parts? *)
 	(* No dupplicates due to symmetry generated *)
 	fun pair source targets = map (fn x => (source,x)) targets
-	fun gen_pairs [] = error "in split_n_ary_association.gen_pairs: at least 2 elements needed, 0 provided"
-	  | gen_pairs [x] = error "in split_n_ary_association.gen_pairs: at least 2 elements needed, 1 provided"
+	fun gen_pairs [] = error ("in split_n_ary_association.gen_pairs: at "^
+				  "least 2 elements needed, 0 provided\n")
+	  | gen_pairs [x] = error ("in split_n_ary_association.gen_pairs: at "^
+				   "least 2 elements needed, 1 provided\n")
 	  | gen_pairs [x,y] = [(x,y)]
-				  (* pair src with all parts and continue *)
+	    (* pair src with all parts and continue *)
 	  | gen_pairs (src::rest) = pair src rest @ (gen_pairs rest)
 	val _ = print (string_of_path name^" has "^(Int.toString (List.length aends))^"aends\n")
 	val pairs = gen_pairs aends
 	val binary_associations = map to_association pairs
+	(* update paths in classifiers to the new names *)
+	val new_paths = map (#name) binary_associations
+	fun update_classifier old_path ((a_type,new_paths),classifiers) =
+	    let
+		val (clsses,rem) = List.partition (fn Class{name,...} => 
+						      name = a_type) classifiers
+		fun update old_path new_paths (Class{name,parent,attributes,
+						     operations,associations,
+						     invariant,stereotypes,
+						     interfaces,thyname,
+						     activity_graphs}) =
+		    let
+			val (path,rest) = List.partition (fn x => x = old_path) associations
+			val assocs = if path = [] then
+					 error ("update_classifier.update: target class "^
+						"wasn't part of the association\n")
+				     else if (List.length path > 1) then 
+					 error ("update_classifier.update: target class "^
+						"has multiple references to the association\n")
+				     else new_paths@rest
+		    in
+			Class{name = name,
+			      parent = parent,
+			      attributes = attributes,
+			      operations = operations,
+			      associations = assocs,
+			      invariant = invariant,
+			      stereotypes = stereotypes,
+			      interfaces = interfaces,
+			      thyname = thyname,
+			      activity_graphs = activity_graphs}
+		    end
+		val modified_clsses = map (update old_path new_paths) clsses
+	    in
+		modified_clsses@rem
+	    end
+	val type_pairs = map (fn (x,y) => (type_of_aend x,type_of_aend y)) pairs
+	val typed_paths = ListPair.zip(type_pairs,new_paths)
+        (* group together all path updates belonging to the same type *)
+	fun collect_typed_paths(((a_type,b_type),new_path),updates) =
+	    let
+		fun add_path a_type new_path (paths_list:(OclType * Path list) list) =
+		    let
+			val (match,rest) = List.partition (
+						 fn (some_type,_) => some_type = a_type
+						 )paths_list
+		    in
+			case match of
+			    []       => (a_type,[new_path])::rest
+			  | [(_,xs)] => (a_type,new_path::xs)::rest 
+			  | (x::xs)  => raise InvalidArguments ("update list has non-"^
+								"unique types\n")
+		    end
+		val a_modified_updates = add_path a_type new_path updates
+	    in
+		if a_type = b_type then a_modified_updates
+		else add_path b_type new_path a_modified_updates
+	    end
+	val typed_path_updates = foldl collect_typed_paths [] typed_paths 
+	val modified_classifiers = foldl (update_classifier name) all_classifiers typed_path_updates
     in
-	binary_associations 
+	(modified_classifiers,binary_associations @ processed_associations)
     end
     
 fun split_n_ary_associations ((classifiers,associations):transform_model):transform_model =
     (trace function_calls "split_n_ary_associations\n";
-    (classifiers, List.concat (map split_n_ary_association associations)))
+     foldl split_n_ary_association (classifiers,[]) associations)
+    (*(classifiers, List.concat (map split_n_ary_association associations)))*)
 
 
 (** 

@@ -202,6 +202,7 @@ fun mkAssociationEnd association  tree:XMI_Core.AssociationEnd =
 
 (* This is a hack to handle the implicit association end to *)
 (* the AssociationClass itself. *) 
+(* update: no longer needed *)
 fun mkAssociationEndFromAssociationClass association tree :XMI.AssociationEnd =
     let val atts = tree |> assert "UML:AssociationClass" |> attributes
     in 
@@ -216,7 +217,7 @@ fun mkAssociationEndFromAssociationClass association tree :XMI.AssociationEnd =
 	 ordering       = XMI_DataTypes.Unordered,
 	 aggregation    = XMI_DataTypes.Aggregate,
 	 targetScope    = XMI_DataTypes.InstanceScope,
-	 multiplicity   = [(0,~1)], (* FIX: is this always the correct multiplicity= *)
+	 multiplicity   = [(0,~1)] (* FIX: is this always the correct multiplicity? *),
 	 changeability  = XMI_DataTypes.Changeable, 
 	 visibility     = XMI_DataTypes.public,
 	 participant_id = atts |> xmiid
@@ -878,9 +879,8 @@ fun mkAssociationClass atts tree =
 	      activity_graphs    = tree |> get "UML:Namespace.ownedElement" 
 					|> filter "UML:ActivityGraph"
 					|> map mkActivityGraph,
-*)	      connection         = mkAssociationEndFromAssociationClass id tree ::
-				   (tree |> get_many "UML:Association.connection" 
-					 |> map (mkAssociationEnd id))
+*)	      connection         = tree |> get_many "UML:Association.connection" 
+					 |> map (mkAssociationEnd id)
         }
     end
 
