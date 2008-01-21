@@ -55,32 +55,32 @@ type operation = { name          : string,
 		   visibility    : Visibility	
 				   }     	
 
-type associationend = {name : Rep_OclType.Path (* path_of_association @ [aend_name]*),
-		       aend_type : Rep_OclType.OclType,	 (* participant type *)
-		       multiplicity: (int * int) list,
-		       ordered: bool,
-		       visibility: Visibility,
-		       init: Rep_OclTerm.OclTerm option
-		      }		
+type associationend= {name: Rep_OclType.Path (* pathOfAssociation@[aendName]*),
+		      aend_type : Rep_OclType.OclType (* participant type *),
+		      multiplicity: (int * int) list,
+		      ordered: bool,
+		      visibility: Visibility,
+		      init: Rep_OclTerm.OclTerm option
+		     }		
 
 type attribute = {
      name : string,
      attr_type : Rep_OclType.OclType,
      visibility : Visibility,
      scope: Scope,
-	 stereotypes: string list,
+     stereotypes: string list,
      init : Rep_OclTerm.OclTerm option
 }
 
-type association = { name: Rep_OclType.Path (* path_of_package @ [assoc_name] *),
+type association = { name: Rep_OclType.Path (* pathOfPackage@[assocName] *),
 		     aends: associationend list,
-		     aclass: Rep_OclType.Path option
+		     aclass: Rep_OclType option
 		   }
 
 type constraint = (string option * Rep_OclTerm.OclTerm)
 
 datatype Classifier =  
-	 Class of 
+	Class of 
 	 { name        : Rep_OclType.OclType, 
 	   parent      : Rep_OclType.OclType option,
 	   attributes  : attribute list,
@@ -92,7 +92,7 @@ datatype Classifier =
 	   thyname     : string option,
            activity_graphs : Rep_ActivityGraph.ActivityGraph list
 	  }
-       | AssociationClass of (* billk_tag *)
+ | AssociationClass of (* billk_tag *)
 	 { name        : Rep_OclType.OclType, 
 	   parent      : Rep_OclType.OclType option,
 	   attributes  : attribute list,
@@ -101,9 +101,9 @@ datatype Classifier =
 	   stereotypes : string list,
 	   interfaces  : Rep_OclType.OclType list,
 	   thyname     : string option,
-           activity_graphs    : Rep_ActivityGraph.ActivityGraph list,
-(*	   visibility  : Visibility,
-	   isActive    : bool,
+     activity_graphs    : Rep_ActivityGraph.ActivityGraph list,
+     (*	   visibility  : Visibility,
+	    isActive    : bool,
 	   generalizations    : string list,
 	   taggedValue : TaggedValue list,
 	   clientDependency   : string list,
@@ -197,15 +197,18 @@ val connected_classifiers_of : association list -> Classifier -> Classifier list
 val aend_to_attr_type : associationend -> Rep_OclType.OclType
 
 val update_thyname      : string -> Classifier -> Classifier
-val update_invariant    : (string option * Rep_OclTerm.OclTerm) list -> Classifier -> Classifier
+val update_invariant    : (string option * Rep_OclTerm.OclTerm) list -> 
+                          Classifier -> Classifier
 val update_operations   : operation list -> Classifier -> Classifier 
-
-val update_precondition   : (string option * Rep_OclTerm.OclTerm) list -> operation ->  operation
-val update_postcondition  : (string option * Rep_OclTerm.OclTerm) list -> operation ->  operation
+val update_precondition   : (string option * Rep_OclTerm.OclTerm) list -> 
+                            operation ->  operation
+val update_postcondition  : (string option * Rep_OclTerm.OclTerm) list -> 
+                            operation ->  operation
 
 val addInvariant : constraint -> Classifier -> Classifier
+val addInvariants: constraint list -> Classifier -> Classifier
 val addOperation : operation  -> Classifier -> Classifier
-   
+
 
 exception InvalidArguments of string
   
@@ -249,8 +252,8 @@ type attribute = {
 
 
 type association = { name: Rep_OclType.Path,
-		     aends: associationend list,
-		     aclass: Rep_OclType.Path option
+		                 aends: associationend list,
+		                 aclass: Rep_OclType.Path option
 		   }
 
 type constraint = (string option * Rep_OclTerm.OclTerm)
@@ -1004,36 +1007,100 @@ fun addInvariant inv (Class {name, parent, attributes, operations,
            stereotypes=stereotypes, interfaces=interfaces, 
            thyname=thyname, activity_graphs=activity_graphs}
   | addInvariant inv (AssociationClass {name, parent, attributes, 
-						       operations, associations,
-						       association, invariant,
-						       stereotypes, interfaces, 
-						       thyname, activity_graphs})
-  = AssociationClass {name=name, parent=parent, attributes=attributes, 
-		      operations=operations, associations=associations,
-		      association=association, invariant=inv::invariant, 
-		      stereotypes=stereotypes, interfaces=interfaces, 
-		      thyname=thyname, activity_graphs=activity_graphs}
+						                            operations, associations,
+						                            association, invariant,
+						                            stereotypes, interfaces, 
+						                            thyname, activity_graphs})
+    = AssociationClass {name=name, parent=parent, attributes=attributes, 
+		                    operations=operations, associations=associations,
+		                    association=association, invariant=inv::invariant, 
+		                    stereotypes=stereotypes, interfaces=interfaces, 
+		                    thyname=thyname, activity_graphs=activity_graphs}
   | addInvariant inv (Interface {name, parents, operations,  
-                                                 invariant, stereotypes,  thyname})
+                                 invariant, stereotypes,  thyname})
     = Interface {name=name, parents=parents, operations=operations,
-                 invariant=inv::invariant, stereotypes=stereotypes, thyname=thyname}
+                 invariant=inv::invariant, stereotypes=stereotypes, 
+                 thyname=thyname}
   | addInvariant inv (Enumeration {name, parent, operations,
-                                                   literals, invariant, stereotypes,
-                                                   interfaces, thyname})
-    = Enumeration{name=name, parent=parent, operations=operations,literals=literals,
-                  invariant=inv::invariant, stereotypes=stereotypes,
+                                   literals, invariant, stereotypes,
+                                   interfaces, thyname})
+    = Enumeration{name=name, parent=parent, operations=operations,
+                  literals=literals,invariant=inv::invariant,
+                  stereotypes=stereotypes,
                   interfaces=interfaces, thyname=thyname}
   | addInvariant inv (Primitive {name, parent, operations, 
-                                                 associations, invariant, 
-                                                 stereotypes, interfaces, thyname})
+                                 associations, invariant, 
+                                 stereotypes, interfaces, thyname})
     = Primitive{name=name, parent=parent, operations=operations, 
                 associations=associations, invariant=inv::invariant, 
-                stereotypes=stereotypes, interfaces=interfaces, thyname=thyname}
+                stereotypes=stereotypes, interfaces=interfaces, 
+                thyname=thyname}
   | addInvariant inv (Template {parameter, classifier}) 
     = Template { parameter=parameter, 
                  classifier=addInvariant inv classifier
                }
-      
+fun addInvariants invs (Class {name, parent, attributes, operations, 
+                               associations, invariant, stereotypes, 
+                               interfaces, thyname, activity_graphs}) =
+    Class {name=name, 
+           parent=parent, 
+           attributes=attributes, 
+           operations=operations, 
+           associations=associations, 
+           invariant=invs@invariant, 
+           stereotypes=stereotypes, 
+           interfaces=interfaces, 
+           thyname=thyname, 
+           activity_graphs=activity_graphs}
+  | addInvariant invs (AssociationClass {name, parent, attributes, 
+						                             operations, associations,
+						                             association, invariant,
+						                             stereotypes, interfaces, 
+						                             thyname, activity_graphs}) =
+    AssociationClass {name=name, 
+                      parent=parent, 
+                      attributes=attributes, 
+		                  operations=operations, 
+                      associations=associations,
+		                  association=association, 
+                      invariant=invs@invariant, 
+		                  stereotypes=stereotypes, 
+                      interfaces=interfaces, 
+		                  thyname=thyname, 
+                      activity_graphs=activity_graphs}
+  | addInvariant invs (Interface {name, parents, operations,  
+                                  invariant, stereotypes,  thyname}) =
+    Interface {name=name, 
+               parents=parents, 
+               operations=operations,
+               invariant=inv@invariant, 
+               stereotypes=stereotypes, 
+               thyname=thyname}
+  | addInvariant invs (Enumeration {name, parent, operations,
+                                    literals, invariant, stereotypes,
+                                    interfaces, thyname}) =
+    Enumeration{name=name, 
+                parent=parent, 
+                operations=operations,
+                literals=literals,
+                invariant=inv::invariant,
+                stereotypes=stereotypes,
+                interfaces=interfaces, 
+                thyname=thyname}
+  | addInvariant invs (Primitive {name, parent, operations, 
+                                  associations, invariant, 
+                                  stereotypes, interfaces, thyname}) =
+    Primitive{name=name, 
+              parent=parent, 
+              operations=operations, 
+              associations=associations, 
+              invariant=invs@invariant, 
+              stereotypes=stereotypes, 
+              interfaces=interfaces, 
+              thyname=thyname}
+  | addInvariant invs (Template {parameter, classifier})  =
+    Template {parameter=parameter, 
+              classifier=addInvariants invs classifier}              
 
 (** adds an operation to a classifier. *)
 fun addOperation oper (Class {name, parent, attributes, operations, 

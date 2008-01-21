@@ -184,12 +184,12 @@ struct
 open Rep_OclType
 
 datatype OclTerm = 
-	 Literal            of string * OclType              (* Literal with type  *)
+	 Literal  of string * OclType              (* Literal with type  *)
        | CollectionLiteral  of CollectionPart list * OclType (* content with type  *)
-       | If                 of OclTerm * OclType             (* condition          *)
-			       * OclTerm * OclType           (* then               *)
-			       * OclTerm * OclType           (* else               *)
-			       * OclType                     (* result type        *)
+       | If       of OclTerm * OclType             (* condition          *)
+		     * OclTerm * OclType           (* then               *)
+		     * OclTerm * OclType           (* else               *)
+		     * OclType                     (* result type        *)
        | AssociationEndCall of OclTerm * OclType             (* source             *)
 			       * Path                        (* assoc.-enc         *)
 			       * OclType                     (* result type        *)
@@ -269,8 +269,8 @@ fun ocl_opcall source f args t  = OperationCall (source, type_of source, f,
                                                  map (fn x => (x,type_of x)) args,
                                                  t)
 fun ocl_attcall source att t    = AttributeCall (source, type_of source, att, t)
-fun ocl_aendcall source aend t  = AssociationEndCall (source, type_of source, aend,
-                                                      t)
+fun ocl_aendcall source aend t  = AssociationEndCall (source, type_of source, 
+                                                      aend, t)
 fun ocl_opwithtype source f t s = OperationWithType (source, type_of source, f,
                                                      t, s)
                                                     
@@ -361,15 +361,15 @@ fun ocl_collect source var body = Iterator ("collect", [(var,type_of source)],
                                             Bag (type_of body))
                                   
 (* source::Collection/Set/..., variables:: Variable list , body:: expression to be evaluated *)
-(* body must be Boolean *)
+(* body must evaluate to Boolean *)
 fun ocl_forAll (source:OclTerm) (variables:OclTerm list) (body:OclTerm) = 
     let
-	fun strip_var (Variable(name,var_type)) = (name,var_type)
+	    fun strip_var (Variable(name,var_type)) = (name,var_type)
     in
-	Iterator ("forAll", map strip_var variables,
-    		  source, type_of source,
-		  body, type_of body,
-		  Bag (type_of body))
+	    Iterator ("forAll", map strip_var variables,
+    		        source, type_of source,
+		            body, type_of body,
+		            Bag (type_of body))
     end
 
 fun ocl_select (source:OclTerm) (Variable variable) (body:OclTerm) = Iterator ("select", [variable],

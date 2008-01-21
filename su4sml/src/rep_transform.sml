@@ -60,6 +60,11 @@
 signature REP_TRANSFORM =
 sig
 
+datatype transformFlag = BinaryAssociationsOnly
+type modelTransformation = Rep_Core.transform_model * transformFlag list
+			   -> Rep_Core.transform_model * transformFlag list
+
+
 (* (JD) maybe not all of the following functions need to be exported.
  * e.g., generate_pairs, ...
  *)
@@ -69,29 +74,88 @@ val transformClassifiers     : Rep_Core.transform_model -> Rep.Classifier list
 val transformFile            : string -> Rep.Model
 
 (* transforms *)
-val transform_association_classes: Rep_Core.transform_model -> Rep_Core.transform_model (* split an association classe into a class and an association*)
-val transform_qualifier          : Rep_Core.transform_model -> Rep_Core.transform_model
-val transform_aggregation        : Rep_Core.transform_model -> Rep_Core.transform_model
-val transform_n_ary_associations : Rep_Core.transform_model -> Rep_Core.transform_model (* remove n-ary associations *)
-val transform_multiplicities     : Rep_Core.transform_model -> Rep_Core.transform_model (* remove multiplicities *)
+val transform_association_classes: Rep_Core.transform_model -> 
+		Rep_Core.transform_model (* split an association classe into a class and an association*)
+val transform_qualifiers : Rep_Core.transform_model -> Rep_Core.transform_model
+val transform_aggregation: Rep_Core.transform_model -> Rep_Core.transform_model
+val transform_n_ary_associations : Rep_Core.transform_model -> 
+		Rep_Core.transform_model (* remove n-ary associations *)
+val transform_multiplicities : Rep_Core.transform_model -> 
+		Rep_Core.transform_model (* remove multiplicities *)
 
 (* helper functions *)
+(**
+ * returns the path of an association end. The path of an association end
+ * is <path_of_association>@[<name_of_aend>].
+ * @params {aend}
+ * @param aend association end
+ * @return path of association end
+ *)
 val path_of_aend   : Rep_Core.associationend -> Rep_OclType.Path
+(**
+ * returns the type of the classifier this association end belongs to.
+ * @params {aend}
+ * @param aend association end
+ * @return type of the classifier at the association end
+ *)
 val type_of_aend   : Rep_Core.associationend -> Rep_OclType.OclType
+(**
+ * returns the association this association end belongs to.
+ * @params {aend}
+ * @param aend association end
+ * @return the path of the enclosing association
+ *)
 val association_of_aend : Rep_Core.associationend -> Rep_OclType.Path
+(**
+ * returns the name of the association end.  The name of the association
+ * end is the last part of the association end's path.
+ * @params {aend}
+ * @param aend association end
+ * @return name of the association end as string.
+ *)
 val name_of_aend   : Rep_Core.associationend -> string
+(**
+ * returns the list of specified multiplicities for this association end.
+ * @params {aend}
+ * @param aend association end
+ * @return the list of multiplicities of this association end. If there are
+ * no multiplicities, an empty list is returned.
+ *)
 val multiplicities_of_aend :  Rep_Core.associationend -> (int*int) list
-
+(**
+ * returns the qualifying part of the (fully) qualified name.
+ * @params {qualifiedName}
+ * @param qualifiedName path denoting a name
+ * @return all but the last part of qualifiedName
+ *)
 val get_qualifier  : Rep_OclType.Path -> Rep_OclType.Path
+(**
+ * returns the last part of the (fully) qualified name.
+ * @params {qualifiedName}
+ * @param qualifiedName path denoting a name
+ * @return the last part of qualifiedName
+ *)
 val get_short_name : Rep_OclType.Path -> string
+(**
+ * Remove all multiplicities from the association
+ * @params {assoc}
+ * @param assoc association
+ * @return assoc with all multiplicities removed
+ *)
+val stripMultiplicities : Rep_Core.association -> Rep_Core.association
 val generate_pairs : 'a list -> ('a * 'a) list (* including symmetry *)
-val update_classifier_with_constraint : Rep_Core.constraint -> Rep_Core.Classifier -> Rep_Core.Classifier
+val update_classifier_with_constraint : Rep_Core.constraint -> 
+		Rep_Core.Classifier -> Rep_Core.Classifier
 (* single: exactly 1 match *)
 val update_classifiers_single : Rep_Core.Classifier list -> Rep_OclType.OclType -> (Rep_Core.Classifier -> Rep_Core.Classifier) -> Rep_Core.Classifier list
-val update_classifiers_with_constraints: Rep_Core.Classifier list -> Rep_OclType.OclType -> Rep_Core.constraint  list -> Rep_Core.Classifier list
-
-val get_association : Rep_Core.association list -> Rep_OclType.Path -> Rep_Core.association
-val split_on_association: Rep_Core.association list -> Rep_OclType.Path -> Rep_Core.association * Rep_Core.association list
+val updateClassifiersWithConstraints: Rep_Core.Classifier list -> 
+				      Rep_OclType.OclType -> 
+				      Rep_Core.constraint  list -> 
+				      Rep_Core.Classifier list
+val get_association : Rep_Core.association list -> Rep_OclType.Path -> 
+		Rep_Core.association
+val split_on_association: Rep_Core.association list -> Rep_OclType.Path -> 
+		Rep_Core.association * Rep_Core.association list
 (* only one of the below will remain *)
 val get_other_associationends: Rep_Core.association list -> Rep_OclType.Path -> Rep_OclType.OclType -> Rep_Core.associationend list
 val get_other_associationends_alt : Rep_Core.association list -> Rep_OclType.OclType -> Rep_OclType.Path -> Rep_Core.associationend list
@@ -112,7 +176,11 @@ end
 structure Rep_Transform:REP_TRANSFORM =
 struct
 
+datatype transformFlag = BinaryAssociationsOnly
+type modelTransformation = Rep_Core.transform_model * transformFlag list
+			   -> Rep_Core.transform_model * transformFlag list
 open library
+open Transform_Library
 open Rep_OclTerm
 open Rep_OclType
 open Rep_OclHelper
@@ -127,7 +195,7 @@ exception InvalidArguments of string
 
 (***********************************
  ******** Usefull functions ********
- ***********************************)
+§ ***********************************)
 val triv_expr = Rep_OclTerm.Literal ("true",Rep_OclType.Boolean)
 
 (* (JD) -> Rep_Core? *)	
@@ -150,6 +218,9 @@ fun association_of_aend (aend:associationend) =
 fun name_of_aend (aend:associationend):string =
     List.last (#name aend)
 
+fun package_of_association {name=package@[assoc],aends,aclass} =
+    package
+
 (* (JD) -> Rep_Core? *)	
 fun multiplicities_of_aend (aend:associationend):(int*int)list =
     #multiplicity aend
@@ -159,12 +230,31 @@ fun multiplicities_of_aend (aend:associationend):(int*int)list =
 fun get_qualifier (path:Path):Path =
     List.take (path,List.length path - 1)
 
+fun short_name_of_aend {name,aend_type,...}:string =
+    List.last name
+
 (* (JD) -> Rep_OclType? *)
 fun get_short_name (path:Path):string =
     List.last path
 
+fun stripMultiplicities ({name,aends,aclass}:association):association =
+    let
+      fun handleAend {name,aend_type,multiplicity,visibility,
+                      ordered,init} =
+	  {name=name,
+	   aend_type=aend_type,
+	   multiplicity=[],
+	   visibility=visibility,
+	   ordered=ordered,
+	   init=init}
+    in
+      {name   = name,
+       aends  = map handleAend aends,
+       aclass = aclass}
+    end
+
 fun generate_pairs [] =
-    error "in generate_pairs: argument list is empty" (* or simply return []? *)
+  error "in generate_pairs: argument list is empty" (* or simply return []? *)
   | generate_pairs [a] =
     [(a,a)]
   | generate_pairs [a,b] =
@@ -178,8 +268,9 @@ fun generate_pairs [] =
 	pairs@rev_pairs@(generate_pairs xs)
     end
 
-fun update_classifier_with_constraint constraint (Class {name,parent,attributes,operations,associations,
-							 invariant,stereotypes,interfaces,thyname,activity_graphs}) =
+fun update_classifier_with_constraint constraint (Class{name,parent,attributes,
+    operations,associations,invariant,stereotypes,interfaces,thyname,
+    activity_graphs}) =
     Class {name = name,
 	   parent = parent,
 	   attributes = attributes,
@@ -190,8 +281,9 @@ fun update_classifier_with_constraint constraint (Class {name,parent,attributes,
 	   interfaces = interfaces,
 	   thyname = thyname,
 	   activity_graphs = activity_graphs}
-  | update_classifier_with_constraint constraint (AssociationClass {name,parent,attributes,operations,associations,association,
-								    invariant,stereotypes,interfaces,thyname,activity_graphs})=
+  | update_classifier_with_constraint constraint (AssociationClass {name,parent,
+    attributes,operations,associations,association,invariant,stereotypes,
+    interfaces,thyname,activity_graphs}) =
     AssociationClass {name = name,
 		      parent = parent,
 		      attributes = attributes,
@@ -203,14 +295,16 @@ fun update_classifier_with_constraint constraint (Class {name,parent,attributes,
 		      interfaces = interfaces,
 		      thyname = thyname,
 		      activity_graphs = activity_graphs}
-  | update_classifier_with_constraint constraint (Interface {name,parents,operations,stereotypes,invariant,thyname}) =
+  | update_classifier_with_constraint constraint (Interface {name,parents,
+    operations,stereotypes,invariant,thyname}) =
     Interface {name=name,
 	       parents=parents,
 	       operations=operations,
 	       stereotypes=stereotypes,
 	       invariant=constraint::invariant,
 	       thyname=thyname} 
-  | update_classifier_with_constraint constraint (Enumeration {name,parent,operations,literals,invariant,stereotypes,interfaces,thyname}) = 
+  | update_classifier_with_constraint constraint (Enumeration {name,parent,
+    operations,literals,invariant,stereotypes,interfaces,thyname}) = 
      Enumeration {name = name,
 		  parent = parent,
 		  operations = operations,
@@ -219,7 +313,8 @@ fun update_classifier_with_constraint constraint (Class {name,parent,attributes,
 		  stereotypes = stereotypes,
 		  interfaces = interfaces,
 		  thyname = thyname}
-  | update_classifier_with_constraint constraint (Primitive {name,parent,operations,associations,invariant,stereotypes,interfaces,thyname}) = 
+  | update_classifier_with_constraint constraint (Primitive {name,parent,
+    operations,associations,invariant,stereotypes,interfaces,thyname}) = 
     Primitive{name = name,
 	      parent = parent,
 	      operations = operations,
@@ -228,50 +323,61 @@ fun update_classifier_with_constraint constraint (Class {name,parent,attributes,
 	      stereotypes = stereotypes,
 	      interfaces = interfaces,
 	      thyname = thyname} 
-  | update_classifier_with_constraint constraint (Template {parameter,classifier}) = 
+  | update_classifier_with_constraint constraint (Template {parameter,
+							    classifier}) = 
     Template{parameter=parameter,
-	     classifier = update_classifier_with_constraint constraint classifier} (* sensible? *)
+	     classifier = update_classifier_with_constraint 
+			      constraint classifier} (* sensible? *)
 
-fun update_classifiers_single (all_classifiers:Classifier list) (classifier:OclType) (update:Classifier -> Classifier) :Classifier list= 
-    let
-	val (match,rest) = List.partition (fn (Class {name,...}) => name=classifier
-					    | (AssociationClass {name,...}) =>  name=classifier
-					    | (Interface {name,...}) =>  name=classifier
-					    | (Enumeration {name,...}) =>  name=classifier
-					    | (Primitive {name,...}) =>  name=classifier
-					    | _ => false ) all_classifiers
-    in
-	case match of 
-	    [x] => (update x)::rest
-	  | []  => error "in update_classifiers_single: no match found"
-	  | _   => error "in update_classifiers_single: more than 1 match found"
-    end
-
-fun update_classifiers_with_constraints (all_classifiers:Classifier list) (classifier:OclType) (con::constraints:constraint list) :Classifier list =
-    let
-	val modified_clsses = update_classifiers_single all_classifiers classifier (update_classifier_with_constraint con)
-    in
-	update_classifiers_with_constraints modified_clsses classifier constraints
-    end
+fun update_classifiers_single (all_classifiers:Classifier list) 
+    (classifier:OclType) (update:Classifier -> Classifier) :Classifier list= 
+  let
+    val (match,rest) = List.partition 
+			   (fn (Class {name,...}) => name=classifier
+			     | (AssociationClass {name,...}) =>  name=classifier
+			     | (Interface {name,...}) =>  name=classifier
+			     | (Enumeration {name,...}) =>  name=classifier
+			     | (Primitive {name,...}) =>  name=classifier
+			     | _ => false ) all_classifiers
+  in
+      case match of 
+	  [x] => (update x)::rest
+	| []  => error "in update_classifiers_single: no match found"
+	| _   => error "in update_classifiers_single: more than 1 match found"
+  end
+							    
+fun update_classifiers_with_constraints (all_classifiers:Classifier list) 
+  (classifier:OclType) (con::constraints:constraint list) :Classifier list =
+  let
+    val modified_clsses = update_classifiers_single all_classifiers classifier
+					(update_classifier_with_constraint con)
+  in
+      update_classifiers_with_constraints modified_clsses classifier 
+					  constraints
+  end
   | update_classifiers_with_constraints all_classifiers _ [] = all_classifiers
     
-fun get_association (all_assocs: Rep_Core.association list) (assoc_path:Path): association =
-    let
-    	val assoc = filter (fn {name,...}=> name=assoc_path) all_assocs
-    in	
-	case assoc of [x] => x
-			  | []  => error "in get_association: no match found"
-			  | _   => error "in get_association: more than 1 match found"
-    end
-
-fun get_other_associationends (all_assocs:association list) (assoc_path:Path) (cls_type:Rep_OclType.OclType):associationend list = 
-    let
-	fun all_others ({aend_type,...}:associationend) = (collection_type_of_OclType aend_type) <> cls_type
-	val association = get_association all_assocs assoc_path
-	val aends = filter all_others (#aends association)
-    in
-	aends
-    end
+fun get_association (all_assocs: Rep_Core.association list) (assoc_path:Path):
+    association =
+  let
+    val assoc = filter (fn {name,...}=> name=assoc_path) all_assocs
+  in
+    case assoc of 
+	[x] => x
+      | []  => error "in get_association: no match found"
+      | _   => error "in get_association: more than 1 match found"
+  end
+  
+fun get_other_associationends (all_assocs:association list) (assoc_path:Path)
+  (cls_type:Rep_OclType.OclType):associationend list = 
+  let
+    fun all_others ({aend_type,...}:associationend) = 
+	(collection_type_of_OclType aend_type) <> cls_type
+    val association = get_association all_assocs assoc_path
+    val aends = filter all_others (#aends association)
+  in
+      aends
+  end
 
 (** a simple wrap for get_other_associationends *)
 fun get_other_associationends_alt (all_assocs:association list) (cls_type:Rep_OclType.OclType) (assoc_path:Path):associationend list = 
@@ -313,91 +419,95 @@ fun reachable_set (_:associationend) ([]:associationend list) = error "rep_trans
 
 
 fun within_bounds (set:Rep_OclTerm.OclTerm) ((lower,upper):int*int):Rep_OclTerm.OclTerm =
-    let 
-	val size = ocl_size set
-	val lower_lit = Literal (Int.toString lower,Integer)
-	val upper_lit = Literal (Int.toString upper,Integer)
-	val lower_bound = ocl_geq size lower_lit
-	val upper_bound = ocl_leq size upper_lit
-    in
-	ocl_and lower_bound upper_bound
-    end
-fun within_aend_multiplicities (target:associationend) (sources:associationend list) (name:string):constraint =
-    let
-	val _ = trace function_calls "within_aend_multiplicities\n"
-	val tgt_multiplicities = multiplicities_of_aend target
-	val tgt_name = name_of_aend target
-	val tgt_type = type_of_aend target
-	val (variables,set) = reachable_set target sources
-	val constr_body = ocl_or_all (map (within_bounds set) tgt_multiplicities)
-	val tgt_variable = Variable(tgt_name,tgt_type)
-	val allInstances = ocl_allInstances tgt_variable
-	val constr_complete = ocl_forAll allInstances variables constr_body 
-	val constraint = (SOME name,constr_complete)
-    in
-	constraint
-    end
+  let 
+    val size = ocl_size set
+    val lower_lit = Literal (Int.toString lower,Integer)
+    val upper_lit = Literal (Int.toString upper,Integer)
+    val lower_bound = ocl_geq size lower_lit
+    val upper_bound = ocl_leq size upper_lit
+  in
+    ocl_and lower_bound upper_bound
+  end
+
+fun withinAendMultiplicities targetAend sourceAends name =
+  let
+    val _ = trace function_calls "withinAendMultiplicities\n"
+    val tgt_multiplicities = multiplicities_of_aend target
+    val tgt_name = name_of_aend target
+    val tgt_type = type_of_aend target
+    val (variables,set) = reachable_set target sources
+    val constr_body = ocl_or_all (map (within_bounds set) tgt_multiplicities)
+    val tgt_variable = Variable(tgt_name,tgt_type)
+    val allInstances = ocl_allInstances tgt_variable
+    val constr_complete = ocl_forAll allInstances variables constr_body 
+    val constraint = (SOME name,constr_complete)
+  in
+    constraint
+  end
 
 fun injective_constraint (source_path:Path) (source_type:OclType) (targets:associationend list) (name:string):constraint =
-    let
-	val source_name = get_short_name source_path
-	val src_var = Variable(source_name,source_type)
-	fun role_bounds src_var aend  = 
-	    let
-		val name = path_of_aend aend
-		val aend_type = type_of_aend aend
-		val set = ocl_aendcall src_var  name aend_type
-		val size = ocl_size set
-		val bounds = ocl_eq size (Literal("1",Integer))
-	    in
-		bounds
-	    end
-	fun role_equals src_var src2_var aend =
-	    let
-		val name = path_of_aend aend
-		val aend_type = type_of_aend aend
-		val set = ocl_aendcall src_var  name aend_type
-		val size = ocl_size set
-		val match = ocl_eq size (Literal("1",Integer))
-	    in
-		match
-	    end
-	val roles = map (role_bounds src_var) targets
-	val roles_part =  ocl_and_all roles
-	val allInstances = ocl_allInstances src_var
-	val src_var2 = Variable(source_name^"2",source_type)
-	val matches = map (role_equals src_var src_var2) targets
-	val matches_anded = ocl_and_all roles
-	val matches_equal = ocl_eq src_var src_var2
-	val matches_imp = ocl_implies matches_anded matches_equal
-	val allInstances2 = ocl_allInstances src_var2
-	val matches_part = ocl_forAll allInstances2 [src_var2] matches_imp
-	val constr_body = ocl_and roles_part matches_part
-	val constr_complete = ocl_forAll allInstances [src_var] constr_body
-	val constraint = (SOME name,constr_complete)
-    in
-	constraint
-    end
-
+  let
+    val source_name = get_short_name source_path
+    val src_var = Variable(source_name,source_type)
+    fun role_bounds src_var aend  = 
+      let
+	val name = path_of_aend aend
+	val aend_type = type_of_aend aend
+	val set = ocl_aendcall src_var  name aend_type
+	val size = ocl_size set
+	val bounds = ocl_eq size (Literal("1",Integer))
+      in
+	bounds
+      end
+    fun role_equals src_var src2_var aend =
+      let
+	val name = path_of_aend aend
+	val aend_type = type_of_aend aend
+	val set = ocl_aendcall src_var  name aend_type
+	val size = ocl_size set
+	val match = ocl_eq size (Literal("1",Integer))
+      in
+	match
+      end
+    val roles = map (role_bounds src_var) targets
+    val roles_part =  ocl_and_all roles
+    val allInstances = ocl_allInstances src_var
+    val src_var2 = Variable(source_name^"2",source_type)
+    val matches = map (role_equals src_var src_var2) targets
+    val matches_anded = ocl_and_all roles
+    val matches_equal = ocl_eq src_var src_var2
+    val matches_imp = ocl_implies matches_anded matches_equal
+    val allInstances2 = ocl_allInstances src_var2
+    val matches_part = ocl_forAll allInstances2 [src_var2] matches_imp
+    val constr_body = ocl_and roles_part matches_part
+    val constr_complete = ocl_forAll allInstances [src_var] constr_body
+  in
+    (SOME name,constr_complete)
+  end
+  
 fun split_on_association (associations:association list) (path:Path): (association * association list) =
-    let
-	fun belonging_association tgt {name,aends,aclass} =  tgt = name
-	val ([assoc],others) = List.partition (belonging_association path) associations
-    in
-	(assoc, others)
-    end
+  let
+    fun belonging_association tgt {name,aends,aclass} =  tgt = name
+    val ([assoc],others) = List.partition (belonging_association path) 
+                                          associations
+  in
+    (assoc, others)
+  end
 
 
 (****************************
  ******** Transforms ********
  ****************************)
 
-(** Remove qualifiers
+(**
+ * 
+ * Remove qualifiers
  * requires: qualifier
  * generates: constraint, AssociationClass
  * removes: qualifier
  *)
-fun transform_qualifier ((all_classifiers,all_associations):transform_model):transform_model = 
+fun transform_qualifiers ((all_classifiers,all_associations):transform_model):
+    transform_model = 
     (all_classifiers,all_associations) (*dummy*)
 
 (** Remove aggregations
@@ -409,395 +519,249 @@ fun transform_aggregation ((all_classifiers,all_associations):transform_model):t
     (all_classifiers,all_associations) (*dummy*)
 
 
-(** Transform an AssociationClass into a Class
- * Each association class instance is associated with excatly one instance of the association it is 
- * attached to. Therefore, a simple (1,1) multiplicity isn't suffiecient, as it doesn't guarantee
- * that the association class is referenced only once. Since the 'perspective' is switched from
- * "generate_n_ary_constraint" from below, the constraint reflects this. For {A,X_1,...X_n}, A the 
- * association class as regular class, X_i the old association participants:
- * Constraint:  A.role_X_i == 1, for all X_i 
- *              A'.role_X_i == A.role_X_i, for all X_i implies A' == A
- * 
- * In OCL, this is:
- * context A inv:
- *   A.allInstances->forAll(a:A| a.role_X_1 = 1 and ... and a.role_X_n = 1 and
- *          A.allInstances->forAll(a2:A|a2.role_X_1=a.role_X_1 and ... a2.role_X_1=a.role_X_n implies a2=a )
- *   )
- * 
- * Since the name of the resulting class equals the original association class name/path/type,
- * paths referencing the original association class needn't be updated.
- * 
+(*****************************************************************************)
+(*****************************************************************************)
+(**** update *****************************************************************)
+(*****************************************************************************)
+
+
+
+(** 
+ * Transform an AssociationClass into a Class
+ * Strip the association class related information from the association class
+ * and turn it into a regular class. Constraints, etc are handled elsewhere;
+ * this is purely a conversion function. 
+ *
  * requires: AssociationClass
- * generates: Class, constraint
+ * generates: Class
  * removes: AssociationClass
  *)
-fun transform_association_class_into_class (all_associations: association list )
-    (Rep_Core.AssociationClass {name,parent,attributes,operations,
-				associations,association,invariant,
-				stereotypes,interfaces,thyname,activity_graphs})
-    : Rep_Core.Classifier = 
-    let
-	val _ = trace function_calls "transform_association_class_into_class\n"
-	val (assoc,others) = split_on_association all_associations association
-	val assoc_class_path = path_of_OclType name
-	val assoc_class_name = get_short_name assoc_class_path
-	val constr_name = "InjectiveAssociationClass"^assoc_class_name
-	val src_path =  assoc_class_path
-	val src_type = name
-	val constraint = injective_constraint src_path src_type (associationends_of assoc) constr_name
-    in
-	Rep_Core.Class { name = name,
-			 parent = parent,
-			 attributes = attributes,
-			 operations = operations,
-			 associations = association::associations,
-			 invariant = constraint::invariant,
-			 stereotypes = stereotypes,
-			 interfaces = interfaces,
-			 thyname = thyname,
-			 activity_graphs = activity_graphs}
-    end
-  | transform_association_class_into_class _ cls = error ("in transform_association_class_into_class: only AssociationClass supported, "^
-							  (short_name_of cls)^" provided")
+fun transformAssociationClassIntoClass (AssociationClass 
+                                            {name,parent,attributes,operations,
+				             associations,association,
+                                             invariant,stereotypes,interfaces,
+                                             thyname,activity_graphs}) =
+    (trace function_calls "transformAssociationClassIntoClass\n",
+     Class { name = name,
+	     parent = parent,
+	     attributes = attributes,
+	     operations = operations,
+	     associations = associations,
+	     invariant = constraint::invariant,
+	     stereotypes = stereotypes,
+	     interfaces = interfaces,
+	     thyname = thyname,
+	     activity_graphs = activity_graphs})
 
-(** Transform an Association Class into an Association.
- * Add the association class to the belonging association. All constraints are handled in 
- * "transform_association_class_into_class", so no special treatment is required here.
- * 
- * requires: AssociationClass 
- * generates: association
- * removes: 
- *)
-fun transform_association_class_into_association (AssociationClass {name,association,...}, 
-						  all_associations:association list):Rep_Core.association list =
-    let
-	val _ = trace function_calls "transform_association_class_into_association\n"
-	val (assoc,others) = split_on_association all_associations association
-	val assoc_path = association
-	val assoc_class_path = path_of_OclType name
-	val assoc_class_name = StringHandling.uncapitalize (get_short_name assoc_class_path)
-        (* Outdated: dummy added at Xmi_Parser.mkAssociationClass *)
-	val new_aend= {name = assoc_path@[assoc_class_name] (* FIXME: convention? *), 
-		       aend_type = name,
-		       multiplicity = [],
-		       visibility = XMI.public (* dummy *),
-		       ordered = false (* dummy *),
-		       init = NONE (* dummy *)
-		      }:Rep_Core.associationend
-	fun add_aend_to_and_update_association (new_aend:associationend) {name,aends,aclass} = {name=name,
-									       aends=new_aend::aends,
-									       aclass=NONE}
-	val modified_association = add_aend_to_and_update_association new_aend assoc
-    in
-	modified_association::others
-    end
-  | transform_association_class_into_association (cls,_) = error ("in transform_association_class_into_association: only AssociationClass supported, but "^
-								(short_name_of cls)^" provided")
-
-(** Transform an AssociationClass into a Class and an Association
+(** 
+ * Transform an AssociationClass into a Class and an Association
  * requires: AssociationClass
  * generates: Class, Association, constraint
  * removes: AssociationClass
  *)
-fun transform_association_classes ((classifiers,associations):transform_model):transform_model =
+fun transformAssociationClasses (allClassifiers,allAssociations) =
     let
-	val _ = trace function_calls "transform_association_classes\n"
-	val (association_classes,other_classifiers) = 
-	    List.partition (fn (Rep_Core.AssociationClass x) => true
-			     | _                             => false)  classifiers
-	val new_classifiers = map (transform_association_class_into_class associations) association_classes
-	val modified_associations = foldl transform_association_class_into_association associations association_classes
+      val _ = trace function_calls "transformAssociationClasses\n"
+      fun transformAssociationClass ({name,aends,aclass=SOME aClass},
+                                     (classifiers,procAssocs)) =
+          let 
+            val ([dummy],rem) = List.partition (fn x => name_of x = aClass) 
+                                               classifiers
+          in
+            generalTransfromNAryAssociation dummy ({name,aends,NONE},
+                                                   (rem,procAssocs)) 
+          end         
+          
+      fun stripAcAssoc ({name,aends,aclass=SOME aClass},classifiers) =
+          let
+            val (ac,rem) = List.partition (fn x => name_of x = aClass) classifiers
+          in
+            transformAssociationClassIntoClass ac ::rem
+          end
+
+      val (acAssocs,rem) = List.partition isPureAcAssoc allAssociations
+      val modifiedClassifiers = foldl stripAcAssoc allClassifiers acAssocs
+      val (modifiedClassifiers,modifiedAssociations) = 
+          foldl transformAssociationClass (modifiedClassifiers,[]) acAssocs
     in
-	(new_classifiers @ other_classifiers,
-	 modified_associations)
+      (modifiedClassifiers,modifiedAssociations@rem)
     end
 
-
-
-(** Move binary multiplicities from association ends to classifier constraints.
- * requires: binary associations
- * generates: constraints
- * removes: binary association multiplicities
+fun transformNAryAssociation (association,(classifiers,procAssocs)) =
+    generalTransfromNAryAssociation (newDummyClass o package_of_association
+                                                         association)
+                                    (association,(classifiers,procAssocs)) 
+                                    
+(** 
+ * Process an association: add the dummy class, generate the matching-
+ * constraint and update the classifiers with that constraint.
  *)
-fun transform_multiplicities ((classifiers,all_associations):transform_model):transform_model =
+fun generalTransfromNAryAssociation dummy (association as {name,aends,NONE},
+			                   (classifiers,processedAssocs)) =
     let
-	fun add_multiplicity_constraints (({name,aends=[],aclass},classifiers):association * Classifier list):Classifier list =
-	    raise InvalidArguments "transform_multiplicities: asociation has no aends\n" 
-	  | add_multiplicity_constraints ({name,aends=[a],aclass},classifiers) =
-	    raise InvalidArguments "transform_multiplicities: asociation has only 1 aend\n"
-	  | add_multiplicity_constraints (assoc as {name,aends=[a,b],aclass},classifiers) =
-	    let
-		val _ = trace function_calls "add_multiplicity_constraints\n"
-		val a_type = type_of_aend a
-		val b_type = type_of_aend b
-		val a_name = name_of_aend a
-		val b_name = name_of_aend b
-		val a_constr_name = "BinaryAssociation"^a_name
-		val b_constr_name = "BinaryAssociation"^b_name
-		val modified_tmp = if multiplicities_of_aend a = [] 
-				   then 
-				       classifiers
-				   else
-				       let
-					   val a_constraint = within_aend_multiplicities a [b] a_constr_name
-				       in
-					   update_classifiers_with_constraints classifiers a_type [a_constraint]
-				       end
-		val modified_classifiers = if multiplicities_of_aend b = []
-					   then 
-					       modified_tmp
-					   else
-					       let
-						  val b_constraint = within_aend_multiplicities b [a] b_constr_name
-					       in 
-						   update_classifiers_with_constraints modified_tmp b_type [b_constraint]		   
-					       end
-	    in
-		modified_classifiers
-	    end
-	fun strip_multiplicities ({name,aends,aclass}:association):association =
-	    let
-		fun handle_aend ({name,aend_type,multiplicity,visibility,ordered,init}):associationend =
-		    {name=name,
-		     aend_type=aend_type,
-		     multiplicity=[],
-		     visibility=XMI.public (* dummy *),
-		     ordered=ordered,
-		     init=init}
-		val modified_aends = map handle_aend aends
-	    in
-		{name   = name,
-		 aends  = modified_aends,
-		 aclass = aclass}
-	    end
-	 
-	(* add the constraints to the classifiers *)
-	val modified_classifiers = foldl add_multiplicity_constraints classifiers all_associations
-	(* update the associationends *)
-	val modified_associations = map strip_multiplicities all_associations
+      val _ = trace function_calls "transformNAryAssociation\n"
+      fun modifyClassifiers ((assoc,classifier),classifiers) =
+          let
+            val ([cls],rem) = partition (fn x => name_of x = name_of 
+                                                                 classifier)
+                                        classifiers
+          in
+            modifyAssociationsOfClassifier [assoc] [association] cls ::rem
+          end
+
+      fun consistency [] ref [] [] [] = []
+        | consistency (source::xs) ref (selfAend::ys) (roles::zs) 
+                      (refRoles::us) =
+          consistencyOclConstraint source ref selfAend roles refRoles ::
+          (consistency xs ref ys zs us)
+
+      fun addOcl ((classifier,ocls), classifiers) =
+          let
+            val ([cls],rem) = partition (fn x => classifier = x) classifiers
+          in
+            addInvariants ocls cls :: rem
+          end
+
+      fun matchClassifiers oppRefAends (cls,role) =
+          matchClassifier oppRefAends cls role
+          
+       (* extract participants/members and form associations *)
+      val (assocMembers,rem) = matchClassifierAtAend classifiers aends
+      val (binaryAssocs,oppRefAends) = binaryAssociations dummy assocMembers 
+                                                          aends
+      val (clsses,roleNames, oppAends, splitAssocs) = splitNAryAssociation 
+                                                          association
+                                                          assocMembers
+      val assocMemberPairs = zip binaryAssocs assocMembers
+      val splitMemberPairs = zip splitAssocs assocMembers
+
+      (* update association membership info in classifiers *)
+      val modifiedClassifiers = foldl modifyClassifiers classifiers 
+                                      (assocMemberPairs@splitMemeberPairs)
+      val dummy = modifyAssociationsOfClassifier binaryAssocs [] dummy
+
+      (* generate and add OCL constraints *)
+      val uniquenessOCL = uniquenessOclConstraint dummy binaryAssocs
+      val selfAends = matchClassifiers oppRefAends (zip clsses roleNames)
+      val refRoles = map (matchAends oppRefAends) oppAends
+      val namedConsistencyOCLs = consistency clsses dummy selfAends oppAends 
+                                             refRoles 
+      val multiplicitiesOCL = 
+          multiplicityOclConstraint dummy (map multiplicity_of_aend aends) 
+                                    binaryAssocs
+      val dummy = addInvariants (uniquenessOCL::multiplicitiesOCL) dummy
+      val modifiedClassifiers = foldl addOcl modifiedClassifiers 
+                                      namedConsistencyOCLs   
+
+      (* update references to removed associations *)
+      (*val modifiedClassifiers = TODO *)
     in
-	(modified_classifiers, modified_associations)
+      (dummy::modifiedClassifiers, binaryAssocs@splitAssocs@processedAssocs)
     end
-	
-	
-(** Process an association, add it to the processed list and update the relevant classifier invariants.
- * For each association end, generate the matching-constraint and add it to the classifier.
- * 
- * {A,X_1,...,X_n} are the participants of an association, where A is the type the multiplicity is
- * handled for. There are always at least 2 elements.
- * The semantics of n-ary associations is, that if the X_i are fixed and A may vary, the size of the
- * resulting set is within the multiplicities specified. That set is the intersection of the As 
- * associated to each X_i.
- * Constraint:  X_1.role_A intersect X_2.role_A .... intersect X_n.role_A == set
- *              loweri <= set.size <= upperi, for all multiplicity pairs i of A
- * 
- * In OCL, this is:
- * context A inv:
- *   let set(x_1:X_1,...,x_n:X_n) : Set(A) = x_n.role_A->intersection(x_(n-1).role_A->intersection(...(x_1.role_A)...)) 
- *   let bounds(lower:Interger,upper:Integer,x_1:X_1,..,x_n:X_n): Boolean = 
- *                            set(x1,..,xn).size >= lower and set(x1,..,xn).size <= upper 
- *   in
- *   A.allInstances->forAll(a:A,x1:X_1,...,xn:X_n| bounds(a.lower_1,a.upper_1,..) or ... or bounds(a.lower_n,a.upper_n,...))
- * 
- * FIXME: Exact Let syntax? Currently no Let used.
+
+(** 
+ * We need OCL constraints and an additional dummy class to handle the broken
+ * relationship. The problem is fixing a particular association instance, as
+ * OCL navigation doesn't allow fixing more than one variable of an association
+ * tuple. Therefore, a dummy class is added to preserve association instances
+ * and allow multiplicity restrictions.
+ *
+ * requires: "pure" n-ary associations, i.e. no association class.
+ * generates: constraints, binary associations, dummy class
+ * removes: n-ary associations
  *)
-fun generate_n_ary_constraint ((association as {name,aends=[],aclass},(all_classifiers,processed_assocs)) 
-			       :(association * transform_model)): transform_model = 
-    raise InvalidArguments "generate_n_ary_constraint: no aends\n" 
-  | generate_n_ary_constraint ((association as {name,aends=[a],aclass},(all_classifiers,processed_assocs)) 
-			       :(association * transform_model)): transform_model = 
-    raise InvalidArguments "generate_n_ary_constraint: only 1 aend\n"
-  | generate_n_ary_constraint ((association as {name,aends=[a,b],aclass},(all_classifiers,processed_assocs))
-			     :(association * transform_model)): transform_model = 
-    (all_classifiers,association::processed_assocs)
-  | generate_n_ary_constraint ((association as {name,aends,aclass},(all_classifiers,processed_assocs))
-			     :(association * transform_model)) :transform_model = 
+fun transformNAryAssociations (allClassifiers,allAssociations) =
     let
-	val _ = trace function_calls "generate_n_ary_constraint\n"
-	(** generate the constraint and update all classifiers *)
-	fun n_ary_local_part classifiers a_part rest =
-	    let
-		val a_type =  type_of_aend a_part
-		val assoc_name = string_of_path (association_of_aend a_part)
-		val a_name = name_of_aend a_part
-		val constr_name = "NAryToBinary"^assoc_name^a_name
-	    in
-		if multiplicities_of_aend a_part = []
-		then
-		    classifiers
-		else
-		    let
-			val constraint = within_aend_multiplicities a_part rest constr_name
-		    in
-			update_classifiers_with_constraints classifiers a_type [constraint]
-		    end
-	    end
-
-	(* iterate over the participants of the association *)
-	fun process_assoc classifiers done [] = classifiers
-	  | process_assoc classifiers done (x::xs) = 
-	    let
-		val rest = done@xs
-		val modified_clsses = n_ary_local_part classifiers  x rest (* || rest || >= 2 *)
-	    in
-		process_assoc modified_clsses (x::done) xs
-	    end
-
-	val modified_classifiers = process_assoc all_classifiers [] aends  (* || aends || > 2 *)
+      val _ = trace function_calls "transform_n_ary_associations\n"
+      val (nAryAssocs,rem) = partition isPureNAryAssoc allAssociations
+      val (modifiedClassifiers,modifiedAssociations) =
+          foldl transformNAryAssociation (allClassifiers,[]) nAryAssocs
     in
-	(modified_classifiers, association::processed_assocs)
+      (modifiedClassifiers,modifiedAssociations@rem)
     end
-
-(* traverse the set of associations, generate the necessary constraints and update the classifiers *)
-(* accordingly *)
-fun generate_n_ary_constraints ((classifiers,associations):transform_model):transform_model =
-    (* using fold for commulative transformation *)
-    foldl generate_n_ary_constraint (classifiers,[]) associations
- 
-
-fun split_n_ary_association ({name,aends=[],aclass}:association,(_,_):transform_model):transform_model =
-    raise InvalidArguments "split_n_ary_association: no aends\n"
-  | split_n_ary_association (ac as {name,aends=[a],aclass},(_,_)) =
-    raise InvalidArguments "split_n_ary_association: only 1 aend\n"
-  | split_n_ary_association (ac as {name,aends=[a,b],aclass},(all_classifiers,processed_associations)) =
-    (all_classifiers,ac::processed_associations)
-  | split_n_ary_association (ac as {name,aends,aclass},(all_classifiers,processed_associations)) =
-    (* We need to generate the pairs as well as the new names *)
-    let
-	val _ = trace function_calls "split_n_ary_association\n"
-	val qualifier = get_qualifier name
-	(* FIXME: update the name paths of all references to the new names *)
-	fun to_association (a,b) = 
-	    let
-		val a_part = StringHandling.uncapitalize (name_of_aend a)
-		val b_part = StringHandling.uncapitalize (name_of_aend b)
-		val assoc_name = a_part^"_"^b_part^"_binary_association"
-		fun update_assoc_name new_name {name=(quali::assoc::aend),
-					       aend_type,multiplicity,
-					       ordered, visibility, init} =
-		    {name = quali::new_name::aend,
-		     aend_type = aend_type,
-		     multiplicity = multiplicity,
-		     ordered = ordered,
-		     visibility = visibility,
-		     init = init}
-		    
-		val modified_a = update_assoc_name assoc_name a
-		val modified_b = update_assoc_name assoc_name b
-	    in
-		{name=qualifier@[assoc_name],
-		 aends=[modified_a,modified_b],
-		 aclass=aclass}
-	    end
-	(* FIXME: reflexiv parts? *)
-	(* No dupplicates due to symmetry generated *)
-	fun pair source targets = map (fn x => (source,x)) targets
-	fun gen_pairs [] = error ("in split_n_ary_association.gen_pairs: at "^
-				  "least 2 elements needed, 0 provided\n")
-	  | gen_pairs [x] = error ("in split_n_ary_association.gen_pairs: at "^
-				   "least 2 elements needed, 1 provided\n")
-	  | gen_pairs [x,y] = [(x,y)]
-	    (* pair src with all parts and continue *)
-	  | gen_pairs (src::rest) = pair src rest @ (gen_pairs rest)
-	val _ = print (string_of_path name^" has "^(Int.toString (List.length aends))^"aends\n")
-	val pairs = gen_pairs aends
-	val binary_associations = map to_association pairs
-	(* update paths in classifiers to the new names *)
-	val new_paths = map (#name) binary_associations
-	fun update_classifier old_path ((a_type,new_paths),classifiers) =
-	    let
-		val (clsses,rem) = List.partition (fn Class{name,...} => 
-						      name = a_type) classifiers
-		fun update old_path new_paths (Class{name,parent,attributes,
-						     operations,associations,
-						     invariant,stereotypes,
-						     interfaces,thyname,
-						     activity_graphs}) =
-		    let
-			val (path,rest) = List.partition (fn x => x = old_path) associations
-			val assocs = if path = [] then
-					 error ("update_classifier.update: target class "^
-						"wasn't part of the association\n")
-				     else if (List.length path > 1) then 
-					 error ("update_classifier.update: target class "^
-						"has multiple references to the association\n")
-				     else new_paths@rest
-		    in
-			Class{name = name,
-			      parent = parent,
-			      attributes = attributes,
-			      operations = operations,
-			      associations = assocs,
-			      invariant = invariant,
-			      stereotypes = stereotypes,
-			      interfaces = interfaces,
-			      thyname = thyname,
-			      activity_graphs = activity_graphs}
-		    end
-		val modified_clsses = map (update old_path new_paths) clsses
-	    in
-		modified_clsses@rem
-	    end
-	val type_pairs = map (fn (x,y) => (type_of_aend x,type_of_aend y)) pairs
-	val typed_paths = ListPair.zip(type_pairs,new_paths)
-        (* group together all path updates belonging to the same type *)
-	fun collect_typed_paths(((a_type,b_type),new_path),updates) =
-	    let
-		fun add_path a_type new_path (paths_list:(OclType * Path list) list) =
-		    let
-			val (match,rest) = List.partition (
-						 fn (some_type,_) => some_type = a_type
-						 )paths_list
-		    in
-			case match of
-			    []       => (a_type,[new_path])::rest
-			  | [(_,xs)] => (a_type,new_path::xs)::rest 
-			  | (x::xs)  => raise InvalidArguments ("update list has non-"^
-								"unique types\n")
-		    end
-		val a_modified_updates = add_path a_type new_path updates
-	    in
-		if a_type = b_type then a_modified_updates
-		else add_path b_type new_path a_modified_updates
-	    end
-	val typed_path_updates = foldl collect_typed_paths [] typed_paths 
-	val modified_classifiers = foldl (update_classifier name) all_classifiers typed_path_updates
-    in
-	(modified_classifiers,binary_associations @ processed_associations)
-    end
-    
-fun split_n_ary_associations ((classifiers,associations):transform_model):transform_model =
-    (trace function_calls "split_n_ary_associations\n";
-     foldl split_n_ary_association (classifiers,[]) associations)
-    (*(classifiers, List.concat (map split_n_ary_association associations)))*)
 
 
 (** 
- * We need to add OCL constraints to handle the broken relationship.
- * The problem is, that when splitting an n-ary association into it's
- * components, the matching of the now 'local' associations is lost. 
- * For instance, participants A and B are associated to participant C
- * with mulitplicity 2..3.                                           
- * 1. After the splitting, A may point to 2 instances, while B points
- *    to 3 instances.                                                
- * 2. Even if the cardinalities agree, A and B may point to different
- *    instances of C.
- * 3. The cardinalities are per association, not an absolute barrier. 
- *    This means A may be associated to 2..3 Cs several times, provided
- *    they form separate association instances.
- * Instead of having every participant re-check the same constraints,
- * each participant will only validate it's own multiplicity boundary.
- *
- * requires: n-ary associations
- * generates: constraints, binary associations
- * removes: n-ary associations
+ * Move multiplicities from association ends to classifier constraints.
+ * requires: "pure" binary associations, i.e. no qualifiers, aggregation, 
+ *           association classes, etc.
+ * generates: constraints
+ * removes: binary association multiplicities
  *)
-fun transform_n_ary_associations ((classifiers,associations):transform_model):transform_model =
-    generate_n_ary_constraints (classifiers,associations) |>>   (* pack the association bindings into constraints and update the classifiers *)
-    split_n_ary_associations                                    (* n-ary -> binary *)
 
+fun transformMultiplicities (allClassifiers,allAssociations) =
+    let
+      val _ = trace function_calls "transformMultiplicities\n"
+      fun withinBound selfVar targetType role (low,high)=
+          let
+            val returnType = Bag targetType
+            val aendCallSize = ocl_size (ocl_aendcall selfVar role returnType)
+            val lowTerm = ocl_geq aendCallSize low
+            val highTerm = ocl_leq aendCallSize high
+          in
+            ocl_or lowTerm highTerm
+          end
+          
+      fun binaryConstraint sourceType targetType role multis name =
+          let
+            val selfVar = self sourceType
+            val orTerms = map withinBound selfVar targetType role multis
+            val term = ocl_and_all orTerms
+          in
+            (SOME name, term)
+          end
+          
+      fun addMultiplicityConstraints (assoc as {name,aends=[a,b],NONE},
+                                      localClassifiers) =
+          let
+	    val _ = trace function_calls "addMultiplicityConstraints\n"
+	    val aType = type_of_aend a
+	    val bType = type_of_aend b
+            val aPath = path_of_aend a
+            val bPath = path_of_aend b
+	    val aName = name_of_aend a
+	    val bName = name_of_aend b
+	    val aConstrName = "BinaryMultiplicity"^a_name
+	    val bConstrName = "BinaryMultiplicity"^b_name
+	    val modifiedTmp = 
+                (case (multiplicities_of_aend a) of 
+                   []     => localClassifiers
+                 | multis => 
+                   let
+		     val aConstraint = binaryConstraint aType bType bPath 
+                                                        multis aConstrName
+		   in
+		     updateClassifiersWithConstraints classifiers aType 
+                                                      [aConstraint]
+		   end)
+	    val modifiedClassifiers = 
+                (case (multiplicities_of_aend b) of
+                   []     => modifiedTmp
+                 | multis =>
+		   let
+		     val bConstraint = binaryConstraint bType aType aPath
+                                                        multis bConstrName
+		   in 
+		     updateClassifiersWithConstraints modifiedTmp bType 
+                                                      [bConstraint]
+		   end)
+	  in
+	    modifiedClassifiers
+	  end
+          
+      (* filter the valid associations *)
+      val (binaryAssociations,rem) = partition isPureBinAssoc allAssociations
 
-
+      (* add the constraints to the classifiers *)
+      val modifiedClassifiers = foldl addMultiplicityConstraints 
+                                      allClassifiers binaryAssociations
+      
+      (* update the associationends *)
+      val modifiedAssociations = map stripMultiplicities binaryAssociations
+    in
+      (modifiedClassifiers, modifiedAssociations@rem)
+    end
+        
 (*******************************
  ******** Control part  ********
  *******************************)
@@ -806,12 +770,18 @@ fun transform_n_ary_associations ((classifiers,associations):transform_model):tr
 (** 
  * Transformations on Classifiers and Associations
  *)
-fun transformClassifiers_ext (model:Rep_Core.transform_model):Rep_Core.transform_model =
-    transform_association_classes model |>>  (* split an association classe into a class and an association*)
-(*    transform_qualifier |>>
-    transform_aggregation |>>  *)  
-    transform_n_ary_associations |>>         (* remove n-ary associations *)
-    transform_multiplicities              (* remove multiplicities *)
+fun transformClassifiersExt (model:Rep_Core.transform_model):Rep_Core.transform_model =
+  (* remove qualifiers *)
+  transformQualifiers model |>>
+  (* remove multiplicities *)
+  transformMultiplicities |>>
+  
+  (** At this point, only n-ary associations without multiplicities and 
+   * possibly with an associacation class are left. *)
+  (* remove association classes *)
+  transformAssociationClasses |>>
+  (* remove n-ary associations *)  
+  transformNAryAssociations
 
 fun transformClassifiers (model:transform_model):Rep.Classifier list =
     fst (transformClassifiers_ext model) (* return classifiers *)
@@ -830,8 +800,8 @@ exception FileNotFound of string
 fun printStackTrace e =
     let val ss = CompilerExt.exnHistory e
     in
-        print_stderr ("uncaught exception " ^ (General.exnMessage e) ^ " at:\n");
-        app (fn s => print_stderr ("\t" ^ s ^ "\n")) ss
+      print_stderr ("uncaught exception " ^ (General.exnMessage e) ^ " at:\n");
+      app (fn s => print_stderr ("\t" ^ s ^ "\n")) ss
     end
 
 

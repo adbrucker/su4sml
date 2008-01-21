@@ -46,6 +46,9 @@ struct
 (** returns the string in all caps. *)
 fun toUpper (s:string) = String.map Char.toUpper s
 
+(** returns the string in all non-caps. *)
+fun toLower (s:string) = String.map Char.toLower s
+
 (** returns the uncapitalized string. 
  * Returns the given string with the first letter changed to lower case
  *)
