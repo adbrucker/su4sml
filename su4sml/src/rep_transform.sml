@@ -568,7 +568,7 @@ fun transformAssociationClasses (allClassifiers,allAssociations) =
             val ([dummy],rem) = List.partition (fn x => name_of x = aClass) 
                                                classifiers
           in
-            generalTransfromNAryAssociation dummy ({name,aends,NONE},
+            generalTransfromNAryAssociation dummy ({name=name,aends=aends,aclass=NONE},
                                                    (rem,procAssocs)) 
           end         
           

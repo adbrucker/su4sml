@@ -78,13 +78,14 @@ val isPureNAryAssoc: Rep_Core.association -> bool
 val isPureBinAssoc : Rep_Core.association -> bool
 
 
-end
 
-open library
-open StringHandling
+end
 
 structure Transform_Library:TRANSFORM_LIBRARY =
 struct
+
+open library
+open StringHandling
 
 fun isPureBinAssoc (_,[a,b],NONE) =
     let
@@ -97,12 +98,12 @@ fun isPureBinAssoc (_,[a,b],NONE) =
 
 fun addAssociations newAssocs associations =
     let
-    in
+    in associations
     end
 
 fun removeAssociations oldAssocs associations =
     let
-    in
+    in associations
     end
 
 fun modifyAssociationOfClassifier newAssociations olAssociations 
@@ -170,7 +171,7 @@ fun quantifyForAll variables body =
 
 fun uniquenessOclConstraint source associations =
     let
-      fun assocAendCalls self iter {_,aends,_} = 
+      fun assocAendCalls self iter {aends,...} = 
           let
             val [{name,aend_type,...}] = filter (fn x => type_of_aend x =/=
                                                           type_of self) aends
@@ -206,13 +207,13 @@ fun binaryAssociations source targets =
                      multiplicity=[],
                      ordered=false,
                      visibility=public,
-                     init=NONE,},
+                     init=NONE},
                     {name=assocName:: (short_name_of target),
                      aend_type=type_of target,
                      multiplicity=[(1,1)],
                      ordered=false,
                      visibility=public,
-                     init=NONE,
+                     init=NONE}
                     ],
                     aclass=NONE}
           end
@@ -393,7 +394,7 @@ fun binaryAssociations source targets aends =
                       multiplicity=[],
                       ordered=false,
                       visibility=public,
-                      init=NONE,},
+                      init=NONE},
                      {name=assocName:: (short_name_of target),
                       aend_type=type_of target,
                       multiplicity=[(1,1)],

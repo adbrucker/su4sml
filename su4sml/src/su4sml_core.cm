@@ -84,6 +84,7 @@ Group is
   xmi_idtable.sml
   ocl2string.sml
   rep_parser.sml
+  transform_library.sml
   rep_transform.sml 
   mds.sig
   component_uml.sml

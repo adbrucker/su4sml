@@ -74,7 +74,7 @@ type attribute = {
 
 type association = { name: Rep_OclType.Path (* pathOfPackage@[assocName] *),
 		     aends: associationend list,
-		     aclass: Rep_OclType option
+		     aclass: Rep_OclType.Path option
 		   }
 
 type constraint = (string option * Rep_OclTerm.OclTerm)
@@ -1052,7 +1052,7 @@ fun addInvariants invs (Class {name, parent, attributes, operations,
            interfaces=interfaces, 
            thyname=thyname, 
            activity_graphs=activity_graphs}
-  | addInvariant invs (AssociationClass {name, parent, attributes, 
+  | addInvariants invs (AssociationClass {name, parent, attributes, 
 						                             operations, associations,
 						                             association, invariant,
 						                             stereotypes, interfaces, 
@@ -1068,26 +1068,26 @@ fun addInvariants invs (Class {name, parent, attributes, operations,
                       interfaces=interfaces, 
 		                  thyname=thyname, 
                       activity_graphs=activity_graphs}
-  | addInvariant invs (Interface {name, parents, operations,  
+  | addInvariants invs (Interface {name, parents, operations,  
                                   invariant, stereotypes,  thyname}) =
     Interface {name=name, 
                parents=parents, 
                operations=operations,
-               invariant=inv@invariant, 
+               invariant=invs@invariant, 
                stereotypes=stereotypes, 
                thyname=thyname}
-  | addInvariant invs (Enumeration {name, parent, operations,
+  | addInvariants invs (Enumeration {name, parent, operations,
                                     literals, invariant, stereotypes,
                                     interfaces, thyname}) =
     Enumeration{name=name, 
                 parent=parent, 
                 operations=operations,
                 literals=literals,
-                invariant=inv::invariant,
+                invariant=invs@invariant,
                 stereotypes=stereotypes,
                 interfaces=interfaces, 
                 thyname=thyname}
-  | addInvariant invs (Primitive {name, parent, operations, 
+  | addInvariants invs (Primitive {name, parent, operations, 
                                   associations, invariant, 
                                   stereotypes, interfaces, thyname}) =
     Primitive{name=name, 
@@ -1098,7 +1098,7 @@ fun addInvariants invs (Class {name, parent, attributes, operations,
               stereotypes=stereotypes, 
               interfaces=interfaces, 
               thyname=thyname}
-  | addInvariant invs (Template {parameter, classifier})  =
+  | addInvariants invs (Template {parameter, classifier})  =
     Template {parameter=parameter, 
               classifier=addInvariants invs classifier}              
 
