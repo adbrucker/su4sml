@@ -68,27 +68,27 @@ sig
 include REP_OCL_TYPE
 
 datatype OclTerm = 
-	 Literal            of string * OclType              (* Literal with type  *)
-       | CollectionLiteral  of CollectionPart list * OclType (* content with type  *)
-       | If                 of OclTerm * OclType             (* condition          *)
-			       * OclTerm * OclType           (* then               *)
-			       * OclTerm * OclType           (* else               *)
-			       * OclType                     (* result type        *)
+	       Literal of string * OclType              (* Literal with type  *)
+       | CollectionLiteral of CollectionPart list * OclType (* content with type  *)
+       | If of OclTerm * OclType             (* condition          *)
+			         * OclTerm * OclType           (* then               *)
+			         * OclTerm * OclType           (* else               *)
+			         * OclType                     (* result type        *)
        | AssociationEndCall of OclTerm * OclType             (* source             *)
-			       * Path                        (* assoc.-enc         *)
-			       * OclType                     (* result type        *)
-       | AttributeCall      of OclTerm * OclType             (* source             *)
-			       * Path                        (* attribute          *)
-			       * OclType                     (* result type        *)
-       | OperationCall      of OclTerm * OclType             (* source             *)
-			       * Path                        (* operation          *)
-			       * (OclTerm * OclType) list    (* parameters         *)
-			       * OclType                     (* result tupe        *)
+			                         * Path                        (* assoc.-enc         *)
+			                         * OclType                     (* result type        *)
+       | AttributeCall of OclTerm * OclType             (* source             *)
+			                    * Path                        (* attribute          *)
+			                    * OclType                     (* result type        *)
+       | OperationCall of OclTerm * OclType             (* source             *)
+			                    * Path                        (* operation          *)
+			                    * (OclTerm * OclType) list    (* parameters         *)
+			                    * OclType                     (* result tupe        *)
        | OperationWithType  of OclTerm * OclType             (* source             *)
-			       * string * OclType            (* type parameter     *)
+			                         * string * OclType            (* type parameter     *)
 			       * OclType                     (* result type        *)
-       | Variable           of string * OclType              (* name with type     *)
-       | Let                of string * OclType              (* variable           *)
+       | Variable of string * OclType (* name with type     *)
+       | Let      of string * OclType (* variable           *)
 			       * OclTerm * OclType           (* rhs                *)
 			       * OclTerm * OclType           (* in                 *)
        | Iterate            of (string * OclType) list       (* iterator variables *)
@@ -372,11 +372,18 @@ fun ocl_forAll (source:OclTerm) (variables:OclTerm list) (body:OclTerm) =
 		            Bag (type_of body))
     end
 
-fun ocl_select (source:OclTerm) (Variable variable) (body:OclTerm) = Iterator ("select", [variable],
-									       source, type_of source,
-									       body, type_of body,
-									       Bag (type_of body))
-                                  
+fun ocl_select (source:OclTerm) (Variable variable) (body:OclTerm) = 
+    Iterator ("select", [variable],
+							source, type_of source,
+							body, type_of body,
+							Set (type_of body))
+    
+fun ocl_exists (source:OclTerm) (Variable variable) (body:OclTerm) = 
+    Iterator ("exists", [variable],
+							source, type_of source,
+							body, type_of body,
+							Set (type_of body))
+    
 fun atpre exp = ocl_opcall exp ["oclLib","OclAny","atPre"] nil (type_of exp)
 
 end

@@ -92,6 +92,8 @@ val transform_multiplicities : Rep_Core.transform_model ->
  * @return path of association end
  *)
 val path_of_aend   : Rep_Core.associationend -> Rep_OclType.Path
+
+val role_of_aend   : Rep_Core.associationend -> string
 (**
  * returns the type of the classifier this association end belongs to.
  * @params {aend}
@@ -201,6 +203,9 @@ val triv_expr = Rep_OclTerm.Literal ("true",Rep_OclType.Boolean)
 (* (JD) -> Rep_Core? *)	
 fun path_of_aend (aend:associationend) =
     #name aend
+
+fun role_of_aend (aend:associationend) =
+    List.first o #name aend
 
 (* (JD) -> Rep_Core? *)	
 fun type_of_aend (aend:associationend) =
