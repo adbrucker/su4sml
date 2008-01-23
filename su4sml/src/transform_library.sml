@@ -107,6 +107,14 @@ val uid: int ref
 val path_of_aend: Rep_Core.associationend -> Rep_OclType.Path
 val role_of_aend: Rep_Core.associationend -> string
 val type_of_aend: Rep_Core.associationend -> Rep_OclType.OclType
+val association_of_aend: Rep_Core.associationend -> Rep_OclType.Path
+val package_of_aend: Rep_Core.associationend -> Rep_OclType.Path
+val name_of_association: Rep_Core.association -> Rep_OclType.Path
+val package_of_association: Rep_Core.association -> Rep_OclType.Path
+val variableFromAend: Rep_Core.associationend -> Rep_OclTerm.OclTerm
+val variableFromClassifier: Rep_Core.Classifier -> Rep_OclTerm.OclTerm
+val quantifyForAll: Rep_OclTerm.OclTerm list -> Rep_OclTerm.OclTerm ->
+                    Rep_OclTerm.OclTerm
 
 exception InvalidArguments of string
 end
@@ -146,18 +154,15 @@ fun association_of_aend {name,aend_type,...} =
 fun package_of_aend {name,aend_type,...} =
     List.take(name, List.length name - 2)
 
-fun name_of_association {name,aends,aclass} =
-    name
+fun name_of_association {name,aends,aclass} = name
 
 fun package_of_association {name,aends,aclass} =
     List.take(name, List.length name - 1)
 
 (* (JD) -> Rep_Core? *)	
-fun multiplicities_of_aend (aend:associationend):(int*int)list =
-    #multiplicity aend
+fun multiplicities_of_aend {aend_type,multiplicity,...} =  multiplicity
 
-fun short_name_of_aend {name,aend_type,...}:string =
-    List.last name
+fun short_name_of_aend {name,aend_type,...} = List.last name
 
 
 fun quantifyForAll variables body =
@@ -321,7 +326,7 @@ fun binaryAssociations source targets aends=
         | order pairs ({name=refName,aend_type,...}::aends) =
           let
             val ([oppAend],rem) = List.partition (fn (_,{name=oppAendName,
-                                                       aend_type,...}) => 
+                                                       aend_type,...}:Rep_Core.associationend) => 
                                                    oppAendName = refName) pairs
           in
             oppAend :: (order rem aends)
@@ -427,7 +432,8 @@ fun splitNAryAssociation (association as {name as (qualifier::assocName),
           end
 
       fun iterate done [] = []
-        | iterate done ((aend as {name,aend_type,...})::xs) =
+        | iterate done ((aend as {name,aend_type,multiplicity,ordered,
+                        visibility,init})::xs) =
           let
             fun makeAssoc (sourceAend as {name,aend_type,...})
                           {name=targetName,aend_type=targetType,...} =
