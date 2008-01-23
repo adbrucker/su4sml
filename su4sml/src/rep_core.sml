@@ -44,25 +44,27 @@ signature REP_CORE =
 sig
 type Scope
 type Visibility
-type operation = { name          : string,	
-		   precondition  : (string option * Rep_OclTerm.OclTerm) list,
-		   postcondition : (string option * Rep_OclTerm.OclTerm) list,
-		   body          : (string option * Rep_OclTerm.OclTerm) list,
-		   arguments     : (string * Rep_OclType.OclType) list,
-		   result        : Rep_OclType.OclType,
-		   isQuery       : bool,
-		   scope         : Scope,
-		   visibility    : Visibility	
-				   }     	
+type operation = { 
+     name          : string,	
+     precondition  : (string option * Rep_OclTerm.OclTerm) list,
+     postcondition : (string option * Rep_OclTerm.OclTerm) list,
+     body          : (string option * Rep_OclTerm.OclTerm) list,
+     arguments     : (string * Rep_OclType.OclType) list,
+     result        : Rep_OclType.OclType,
+     isQuery       : bool,
+     scope         : Scope,
+     visibility    : Visibility	
+}     	
 
-type associationend= {name: Rep_OclType.Path (* pathOfAssociation@[aendName]*),
-		      aend_type : Rep_OclType.OclType (* participant type *),
-		      multiplicity: (int * int) list,
-		      ordered: bool,
-		      visibility: Visibility,
-		      init: Rep_OclTerm.OclTerm option
-		     }		
-
+type associationend= {
+     name: Rep_OclType.Path (* pathOfAssociation@[aendName]*),
+     aend_type : Rep_OclType.OclType (* participant type *),
+     multiplicity: (int * int) list,
+     ordered: bool,
+     visibility: Visibility,
+     init: Rep_OclTerm.OclTerm option
+}		
+     
 type attribute = {
      name : string,
      attr_type : Rep_OclType.OclType,
@@ -72,16 +74,17 @@ type attribute = {
      init : Rep_OclTerm.OclTerm option
 }
 
-type association = { name: Rep_OclType.Path (* pathOfPackage@[assocName] *),
-		     aends: associationend list,
-		     aclass: Rep_OclType.Path option
-		   }
-
+type association = { 
+     name: Rep_OclType.Path (* pathOfPackage@[assocName] *),
+     aends: associationend list,
+     aclass: Rep_OclType.Path option
+}
+                   
 type constraint = (string option * Rep_OclTerm.OclTerm)
-
+                  
 datatype Classifier =  
-	Class of 
-	 { name        : Rep_OclType.OclType, 
+	 Class of 
+         { name        : Rep_OclType.OclType, 
 	   parent      : Rep_OclType.OclType option,
 	   attributes  : attribute list,
 	   operations  : operation list,
@@ -91,8 +94,8 @@ datatype Classifier =
 	   interfaces  : Rep_OclType.OclType list,
 	   thyname     : string option,
            activity_graphs : Rep_ActivityGraph.ActivityGraph list
-	  }
- | AssociationClass of (* billk_tag *)
+	 }
+       | AssociationClass of
 	 { name        : Rep_OclType.OclType, 
 	   parent      : Rep_OclType.OclType option,
 	   attributes  : attribute list,
@@ -101,25 +104,19 @@ datatype Classifier =
 	   stereotypes : string list,
 	   interfaces  : Rep_OclType.OclType list,
 	   thyname     : string option,
-     activity_graphs    : Rep_ActivityGraph.ActivityGraph list,
-     (*	   visibility  : Visibility,
-	    isActive    : bool,
-	   generalizations    : string list,
-	   taggedValue : TaggedValue list,
-	   clientDependency   : string list,
-	   supplierDependency : string list,
-*)	   associations: Rep_OclType.Path list,
+           activity_graphs    : Rep_ActivityGraph.ActivityGraph list,
+           associations: Rep_OclType.Path list,
 	   association: Rep_OclType.Path
 	 } 
-       | Interface of               (* not supported yet *)
+       | Interface (* not supported yet *) of
 	 { name        : Rep_OclType.OclType,
 	   parents     : Rep_OclType.OclType list, 
 	   operations  : operation list,
 	   stereotypes : string list,
 	   invariant   : (string option * Rep_OclTerm.OclTerm) list,
 	   thyname     : string option
-	  }
-       | Enumeration of (* not really supported yet? *)
+	 }
+       | Enumeration (* not really supported yet? *) of
 	 { name        : Rep_OclType.OclType,
 	   parent      : Rep_OclType.OclType option,
 	   operations  : operation list,
@@ -128,8 +125,8 @@ datatype Classifier =
 	   stereotypes : string list,
 	   interfaces  : Rep_OclType.OclType list,
 	   thyname     : string option
-	  }
-       | Primitive of (* not really supported yet *)
+	 }
+       | Primitive (* not really supported yet *) of
 	 { name        : Rep_OclType.OclType,
 	   parent      : Rep_OclType.OclType option,
 	   operations  : operation list,
@@ -138,7 +135,7 @@ datatype Classifier =
 	   stereotypes : string list,
 	   interfaces  : Rep_OclType.OclType list,
 	   thyname     : string option
-	  }
+	 }
        | Template of 
 	 { parameter   : Rep_OclType.OclType,
 	   classifier  : Classifier
@@ -148,7 +145,7 @@ type transform_model = (Classifier list * association list)
 
 val OclAnyC : Classifier
 
-val joinModel           : transform_model -> transform_model -> transform_model
+val joinModel      : transform_model -> transform_model -> transform_model
 
 val normalize      : association list -> Classifier -> Classifier
 val normalize_init : Classifier -> Classifier
@@ -192,8 +189,6 @@ val operation_of        : Classifier list -> Rep_OclType.Path -> operation optio
 val topsort_cl          : Classifier list -> Classifier list
 val connected_classifiers_of : association list -> Classifier -> Classifier list -> Classifier list
 
-(* billk_tag *)
-(* changed assoc to aend, since associations are now part of the model *)
 val aend_to_attr_type : associationend -> Rep_OclType.OclType
 
 val update_thyname      : string -> Classifier -> Classifier
@@ -222,15 +217,17 @@ open Rep_OclType
 type Visibility = XMI_DataTypes.VisibilityKind
 type Scope      = XMI_DataTypes.ScopeKind
 
-type operation = { name          : string,	
-		   precondition  : (string option * Rep_OclTerm.OclTerm) list,
-		   postcondition : (string option * Rep_OclTerm.OclTerm) list,
-		   body : (string option * Rep_OclTerm.OclTerm) list,
-		   arguments     : (string * Rep_OclType.OclType) list,
-		   result        : Rep_OclType.OclType,
-		   isQuery       : bool,
-		   visibility    : Visibility,
-                   scope         : Scope }     
+type operation = { 
+     name          : string,	
+     precondition  : (string option * Rep_OclTerm.OclTerm) list,
+     postcondition : (string option * Rep_OclTerm.OclTerm) list,
+     body : (string option * Rep_OclTerm.OclTerm) list,
+     arguments     : (string * Rep_OclType.OclType) list,
+     result        : Rep_OclType.OclType,
+     isQuery       : bool,
+     visibility    : Visibility,
+     scope         : Scope 
+}     
 
 type associationend = {
      name         : Rep_OclType.Path,
@@ -251,10 +248,11 @@ type attribute = {
 }
 
 
-type association = { name: Rep_OclType.Path,
-		                 aends: associationend list,
-		                 aclass: Rep_OclType.Path option
-		   }
+type association = { 
+     name: Rep_OclType.Path,
+     aends: associationend list,
+     aclass: Rep_OclType.Path option
+}
 
 type constraint = (string option * Rep_OclTerm.OclTerm)
 
@@ -271,7 +269,7 @@ datatype Classifier =
 	   thyname     : string option,
            activity_graphs : Rep_ActivityGraph.ActivityGraph list
 	  }
-      | AssociationClass of (* billk_tag *)
+      | AssociationClass of
 	 { name        : Rep_OclType.OclType, 
 	   parent      : Rep_OclType.OclType option,
 	   attributes  : attribute list,
@@ -281,13 +279,7 @@ datatype Classifier =
 	   interfaces  : Rep_OclType.OclType list,
 	   thyname     : string option,
            activity_graphs    : Rep_ActivityGraph.ActivityGraph list,
-(*	   visibility  : Visibility,
-	   isActive    : bool, 
-	   generalizations    : string list,
-	   taggedValue : TaggedValue list,
-	   clientDependency   : string list,
-	   supplierDependency : string list,
-*)	   associations: Rep_OclType.Path list,
+	   associations: Rep_OclType.Path list,
 	   association: Rep_OclType.Path
 	 }
        | Interface of               (* not supported yet *)

@@ -51,6 +51,7 @@ sig
 		         | Collection of OclType
 		         | Classifier of Path | OclVoid | DummyT | TemplateParameter of string
 
+    val short_name_of_OclType: OclType -> string
     val path_of_OclType   : OclType -> Path
     val collection_type_of_OclType : OclType -> OclType
     val string_of_OclType : OclType -> string	
@@ -159,10 +160,12 @@ fun collection_type_of_OclType (Set t)        = t
 
 fun string_of_OclType t = string_of_OclType' "." t
 
-
 fun path_of_OclType (Classifier p) = p
   | path_of_OclType (TemplateParameter p) = [] (* FIXME *)
   | path_of_OclType x = ["oclLib",string_of_OclType x]
+
+fun short_name_of_OclType t = (List.last o path_of_OclType) t
+
 
 (** Convert OclType to a string with :: in between *)
 fun string_of_OclType_colon t = string_of_OclType' "::" t

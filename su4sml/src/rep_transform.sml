@@ -131,13 +131,7 @@ val multiplicities_of_aend :  Rep_Core.associationend -> (int*int) list
  * @return all but the last part of qualifiedName
  *)
 val get_qualifier  : Rep_OclType.Path -> Rep_OclType.Path
-(**
- * returns the last part of the (fully) qualified name.
- * @params {qualifiedName}
- * @param qualifiedName path denoting a name
- * @return the last part of qualifiedName
- *)
-val get_short_name : Rep_OclType.Path -> string
+
 (**
  * Remove all multiplicities from the association
  * @params {assoc}
@@ -199,44 +193,6 @@ exception InvalidArguments of string
  ******** Usefull functions ********
 § ***********************************)
 val triv_expr = Rep_OclTerm.Literal ("true",Rep_OclType.Boolean)
-
-(* (JD) -> Rep_Core? *)	
-fun path_of_aend (aend:associationend) =
-    #name aend
-
-fun role_of_aend (aend:associationend) =
-    List.first o #name aend
-
-(* (JD) -> Rep_Core? *)	
-fun type_of_aend (aend:associationend) =
-    #aend_type aend
-
-(* (JD) -> Rep_Core? *)	
-fun association_of_aend (aend:associationend) =
-    let 
-	val name = #name aend
-    in
-	List.take(name, (List.length name)-1)
-    end
-
-(* (JD) -> Rep_Core? *)	
-fun name_of_aend (aend:associationend):string =
-    List.last (#name aend)
-
-fun package_of_association {name=package@[assoc],aends,aclass} =
-    package
-
-(* (JD) -> Rep_Core? *)	
-fun multiplicities_of_aend (aend:associationend):(int*int)list =
-    #multiplicity aend
-
-(** chop-off the last part of the path *)	  
-(* (JD) -> Rep_OclType? *)
-fun get_qualifier (path:Path):Path =
-    List.take (path,List.length path - 1)
-
-fun short_name_of_aend {name,aend_type,...}:string =
-    List.last name
 
 (* (JD) -> Rep_OclType? *)
 fun get_short_name (path:Path):string =
