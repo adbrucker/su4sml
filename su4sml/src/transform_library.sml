@@ -18,8 +18,14 @@ val uniquenessOclConstraint : Rep_Core.Classifier ->
  * @params {source,multis,binaryAssocs}
  *)
 val multiplicityOclConstraint: Rep_Core.Classifier -> (int*int) list list ->
-                               Rep_Core.association list -> 
+                               Rep_Core.associationend list -> 
                                Rep_Core.constraint list
+val consistencyOclConstraint: Rep_Core.Classifier ->
+                              Rep_Core.Classifier -> 
+                              Rep_Core.associationend -> 
+                              Rep_Core.associationend list -> 
+                              Rep_Core.associationend list ->
+                              (Rep_Core.Classifier * Rep_Core.constraint list)
 
 (**
  * @params {association,assocMembers}
@@ -60,9 +66,14 @@ val matchAends: Rep_Core.associationend list ->
 (**
  * 
  *)
-val matchClassifiers: Rep_Core.associationend list -> 
-                      (Rep_Core.Classifier * string) list
-                      -> Rep_Core.associationend list
+val matchAendsAtClassifier: Rep_Core.associationend list -> 
+                              (Rep_Core.Classifier * string) list
+                              -> Rep_Core.associationend list
+
+val matchClassifiersAtAend: Rep_Core.associationend list ->
+                            Rep_Core.Classifier list ->
+                            (Rep_Core.Classifier list * 
+                             Rep_Core.Classifier list )
 
 (**
  * Form binary associations between
@@ -102,12 +113,77 @@ val isPureNAryAssoc: Rep_Core.association -> bool
  *)
 val isPureBinAssoc : Rep_Core.association -> bool
 
+(**
+ * returns the path of an association end. The path of an association end
+ * is <path_of_association>@[<name_of_aend>].
+ * @params {aend}
+ * @param aend association end
+ * @return path of association end
+ *)
+val path_of_aend   : Rep_Core.associationend -> Rep_OclType.Path
+
+val role_of_aend   : Rep_Core.associationend -> string
+(**
+ * returns the type of the classifier this association end belongs to.
+ * @params {aend}
+ * @param aend association end
+ * @return type of the classifier at the association end
+ *)
+val type_of_aend   : Rep_Core.associationend -> Rep_OclType.OclType
+(**
+ * returns the association this association end belongs to.
+ * @params {aend}
+ * @param aend association end
+ * @return the path of the enclosing association
+ *)
+val association_of_aend : Rep_Core.associationend -> Rep_OclType.Path
+(**
+ * returns the name of the association end.  The name of the association
+ * end is the last part of the association end's path.
+ * @params {aend}
+ * @param aend association end
+ * @return name of the association end as string.
+ *)
+val name_of_aend   : Rep_Core.associationend -> string
+(**
+ * returns the list of specified multiplicities for this association end.
+ * @params {aend}
+ * @param aend association end
+ * @return the list of multiplicities of this association end. If there are
+ * no multiplicities, an empty list is returned.
+ *)
+val multiplicities_of_aend :  Rep_Core.associationend -> (int*int) list
+
+(**
+ * Remove all multiplicities from the association
+ * @params {assoc}
+ * @param assoc association
+ * @return assoc with all multiplicities removed
+ *)
+val stripMultiplicities : Rep_Core.association -> Rep_Core.association
+(* result: (Variable list , OCL expression for set intersection)*)
+val reachableSet  : Rep_Core.associationend -> Rep_Core.associationend list -> (Rep_OclTerm.OclTerm list * Rep_OclTerm.OclTerm)
+
+
+
+val modifyAssociationsOfClassifier: Rep_Core.association list -> 
+                                    Rep_Core.association list ->
+                                    Rep_Core.Classifier -> Rep_Core.Classifier
+
+
+val withinBounds  : Rep_OclTerm.OclTerm -> (int*int) -> Rep_OclTerm.OclTerm
+val withinAendMultiplicities  : Rep_Core.associationend -> Rep_Core.associationend list -> string -> Rep_Core.constraint
+val injectiveConstraint : Rep_OclType.Path -> Rep_OclType.OclType -> Rep_Core.associationend list -> string -> Rep_Core.constraint
+val updateClassifiersWithConstraints: Rep_Core.Classifier list -> 
+				      Rep_OclType.OclType -> 
+				      Rep_Core.constraint  list -> 
+				      Rep_Core.Classifier list
+
+
+
 val uid: int ref
 
-val path_of_aend: Rep_Core.associationend -> Rep_OclType.Path
-val role_of_aend: Rep_Core.associationend -> string
-val type_of_aend: Rep_Core.associationend -> Rep_OclType.OclType
-val association_of_aend: Rep_Core.associationend -> Rep_OclType.Path
+val multiplicity_of_aend: Rep_Core.associationend -> (int * int) list
 val package_of_aend: Rep_Core.associationend -> Rep_OclType.Path
 val name_of_association: Rep_Core.association -> Rep_OclType.Path
 val package_of_association: Rep_Core.association -> Rep_OclType.Path
@@ -124,11 +200,8 @@ structure Transform_Library:TRANSFORM_LIBRARY =
 struct
 
 open library
-open ListPair
-open List
 open StringHandling
 open Rep_OclTerm
-open Rep_OclType
 open Rep_OclHelper
 open Rep_Core
 
@@ -138,31 +211,56 @@ val uid = ref 0
 
 fun nextUid () =  (uid := !uid + 1; "_S"^(Int.toString (!uid)))
 
+fun get_short_name (path:Path):string =
+    List.last path
+
+fun stripMultiplicities ({name,aends,aclass}:association):association =
+    let
+      fun handleAend {name,aend_type,multiplicity,visibility,
+                      ordered,init} =
+	  {name=name,
+	   aend_type=aend_type,
+	   multiplicity=[],
+	   visibility=visibility,
+	   ordered=ordered,
+	   init=init}
+    in
+      {name   = name,
+       aends  = map handleAend aends,
+       aclass = aclass}
+    end
+
+fun multiplicity_of_aend ({aend_type,multiplicity,...}:associationend) = 
+    multiplicity
 
 (* (JD) -> Rep_Core? *)	
-fun path_of_aend {name,aend_type,...} = name
+fun path_of_aend ({name,aend_type,...}:associationend) = name
+fun name_of_aend ({name,aend_type,...}:associationend) = 
+    short_name_of_path name
 
-fun role_of_aend {name,aend_type,...} = List.last name
+fun role_of_aend ({name,aend_type,...}:associationend) = List.last name
 
 (* (JD) -> Rep_Core? *)	
-fun type_of_aend {name,aend_type,...} = aend_type
+fun type_of_aend ({name,aend_type,...}:associationend) = aend_type
 
 (* (JD) -> Rep_Core? *)	
-fun association_of_aend {name,aend_type,...} =
+fun association_of_aend ({name,aend_type,...}:associationend) =
 	  List.take(name, (List.length name)-1)
 
-fun package_of_aend {name,aend_type,...} =
+fun package_of_aend ({name,aend_type,...}:associationend) =
     List.take(name, List.length name - 2)
 
-fun name_of_association {name,aends,aclass} = name
+fun name_of_association ({name,aends,aclass}:association) = name
 
-fun package_of_association {name,aends,aclass} =
+fun package_of_association ({name,aends,aclass}:association) =
     List.take(name, List.length name - 1)
 
 (* (JD) -> Rep_Core? *)	
-fun multiplicities_of_aend {aend_type,multiplicity,...} =  multiplicity
+fun multiplicities_of_aend ({aend_type,multiplicity,...}:associationend) = 
+    multiplicity
 
-fun short_name_of_aend {name,aend_type,...} = List.last name
+fun short_name_of_aend ({name,aend_type,...}:associationend) = 
+    short_name_of_path name
 
 
 fun quantifyForAll variables body =
@@ -213,7 +311,103 @@ fun removeAssociations oldAssocs associations =
       associations (* FIXME *)
     end
 
-fun modifyAssociationsOfClassifier newAssociations oldAssociations 
+fun updateClassifiersWithConstraints classifiers oclType constraints = 
+    let
+      val (match,rem) = List.partition (fn cls => type_of cls = oclType) 
+                                       classifiers
+    in
+      map (addInvariants constraints) match @ rem
+    end
+
+fun reachableSet (_:associationend) ([]:associationend list) = 
+    error "rep_transform.get_reachableSet: empty source list"
+  | reachableSet (target:associationend) ([source]:associationend list) =
+    let
+      val src_var = Variable(name_of_aend source ,type_of_aend source)
+    in
+      ([src_var], ocl_aendcall src_var (path_of_aend target) 
+                               (type_of_aend target))
+    end
+  | reachableSet (target:associationend) (source::rest) =
+    let
+      val (old_vars,intermediate) = reachableSet target rest
+      val src_var = Variable(name_of_aend source ,type_of_aend source)
+      val new_set = ocl_aendcall src_var (path_of_aend target) 
+                                 (type_of_aend target)
+    in
+      (src_var::old_vars ,ocl_intersection_set new_set intermediate)
+    end
+    
+    
+fun withinBounds (set:Rep_OclTerm.OclTerm) ((lower,upper):int*int):Rep_OclTerm.OclTerm =
+  let 
+    val size = ocl_size set
+    val lower_lit = Literal (Int.toString lower,Integer)
+    val upper_lit = Literal (Int.toString upper,Integer)
+    val lower_bound = ocl_geq size lower_lit
+    val upper_bound = ocl_leq size upper_lit
+  in
+    ocl_and lower_bound upper_bound
+  end
+
+fun withinAendMultiplicities targetAend sourceAends name =
+  let
+    val _ = trace function_calls "withinAendMultiplicities\n"
+    val tgtMultiplicities = multiplicities_of_aend targetAend
+    val tgtName = name_of_aend targetAend
+    val tgtType = type_of_aend targetAend
+    val (variables,set) = reachableSet targetAend sourceAends
+    val constrBody = ocl_or_all (map (withinBounds set) tgtMultiplicities)
+    val tgtVariable = Variable(tgtName^nextUid (),tgtType)
+    val allInstances = ocl_allInstances tgtVariable
+    val constrComplete = ocl_forAll allInstances variables constrBody 
+    val constraint = (SOME name,constrComplete)
+  in
+    constraint
+  end
+
+fun injectiveConstraint (source_path:Path) (source_type:OclType) (targets:associationend list) (name:string):constraint =
+  let
+    val source_name = get_short_name source_path
+    val src_var = Variable(source_name,source_type)
+    fun role_bounds src_var aend  = 
+      let
+	val name = path_of_aend aend
+	val aend_type = type_of_aend aend
+	val set = ocl_aendcall src_var  name aend_type
+	val size = ocl_size set
+	val bounds = ocl_eq size (Literal("1",Integer))
+      in
+	bounds
+      end
+    fun role_equals src_var src2_var aend =
+      let
+	val name = path_of_aend aend
+	val aend_type = type_of_aend aend
+	val set = ocl_aendcall src_var  name aend_type
+	val size = ocl_size set
+	val match = ocl_eq size (Literal("1",Integer))
+      in
+	match
+      end
+    val roles = map (role_bounds src_var) targets
+    val roles_part =  ocl_and_all roles
+    val allInstances = ocl_allInstances src_var
+    val src_var2 = Variable(source_name^"2",source_type)
+    val matches = map (role_equals src_var src_var2) targets
+    val matches_anded = ocl_and_all roles
+    val matches_equal = ocl_eq src_var src_var2
+    val matches_imp = ocl_implies matches_anded matches_equal
+    val allInstances2 = ocl_allInstances src_var2
+    val matches_part = ocl_forAll allInstances2 [src_var2] matches_imp
+    val constr_body = ocl_and roles_part matches_part
+    val constr_complete = ocl_forAll allInstances [src_var] constr_body
+  in
+    (SOME name,constr_complete)
+  end
+
+fun modifyAssociationsOfClassifier (newAssociations:association list) 
+                                   (oldAssociations:association list)
                                    (Class{name,parent,attributes,
                                           operations,associations,invariant,
                                           stereotypes,interfaces,thyname,
@@ -266,12 +460,13 @@ fun modifyAssociationsOfClassifier newAssociations oldAssociations
 	             interfaces=interfaces,
 	             thyname=thyname}
     	
-fun uniquenessOclConstraint source associations =
+fun uniquenessOclConstraint (source:Classifier) (associations:association list) =
     let
-      fun assocAendCalls (self:OclTerm) iter {name,aends,aclass} = 
+      fun assocAendCalls (self:OclTerm) (iter:OclTerm) {name,aends,aclass} = 
           let
-            val [{name,aend_type,...}] = filter (fn {aend_type,...} => 
-                                                    aend_type <> Rep_OclHelper.type_of self)
+            val [{name,aend_type,...}] = filter (fn {aend_type,name,multiplicity,ordered,visibility,init} =>
+                                                    Rep_OclHelper.type_of self
+                                                    <> aend_type)
                                                 aends
             val selfCall = ocl_aendcall self name (Collection aend_type)
             val iterCall = ocl_aendcall iter name (Collection aend_type)
@@ -291,12 +486,12 @@ fun uniquenessOclConstraint source associations =
     end
 
 
-fun binaryAssociations source targets aends=
+fun binaryAssociations (source:Classifier) (targets:Classifier list) aends=
     let
       val _ = trace function_calls "binaryAssociations\n"
       fun generateAssociation target =
           let
-            val assocName =  package_of_aend source @
+            val assocName =  package_of source @
                              ["BinaryAssoc"^nextUid ()]
             val oppAend = {name=assocName@[short_name_of target],
                            aend_type=type_of target,
@@ -323,11 +518,12 @@ fun binaryAssociations source targets aends=
         | order (x::xs) [] = 
           raise InvalidArguments ("binaryAssociations.order:"^
                                   "arguments don't agree\n")
-        | order pairs ({name=refName,aend_type,...}::aends) =
+        | order pairs ({name=refName,aend_type,multiplicity,ordered,init,visibility}::aends) =
           let
             val ([oppAend],rem) = List.partition (fn (_,{name=oppAendName,
-                                                       aend_type,...}:Rep_Core.associationend) => 
-                                                   oppAendName = refName) pairs
+                                                         aend_type,multiplicity,ordered,visibility,init}) => 
+                                                     oppAendName = refName)
+                                                 pairs
           in
             oppAend :: (order rem aends)
           end
@@ -335,25 +531,25 @@ fun binaryAssociations source targets aends=
 
       val pairs = map generateAssociation targets
     in
-      unzip (order pairs aends)
+      ListPair.unzip (order pairs aends)
     end
 
-fun variableFromAend {name,aend_type,...} =
+fun variableFromAend ({name,aend_type,...}:associationend) =
     Variable (toLower (short_name_of_path name)^nextUid (),aend_type)
 
-fun variableFromClassifier cls =
+fun variableFromClassifier (cls:Classifier) =
     Variable (toLower (short_name_of cls)^nextUid () ,type_of cls)
 
-fun roleToAend source {name,aend_type,...} =
+fun roleToAend source ({name,aend_type,...}:associationend) =
     ocl_aendcall source name (Collection aend_type)
 
-fun fixAends source aends =
+fun fixAends source (aends:associationend list) =
     let
       fun equal (a,b) = ocl_eq a b
 
       val vars = map variableFromAend aends
       val roles = map (roleToAend source) aends
-      val body = ocl_and_all (map equal (zip (roles,vars)))
+      val body = ocl_and_all (map equal (ListPair.zip (roles,vars)))
       val sourceType = Rep_OclHelper.type_of source
       val ocl = ocl_select (ocl_allInstances 
                                 (Literal (short_name_of_OclType sourceType,
@@ -363,7 +559,7 @@ fun fixAends source aends =
       (ocl,vars)
     end
 
-fun multiplicityOclConstraint source multis binaryAssocs =
+fun multiplicityOclConstraint source multis oppAends =
     let
       val _ = trace function_calls "multiplicityOclConstraint\n"
       fun bound set (low,high) =
@@ -382,15 +578,18 @@ fun multiplicityOclConstraint source multis binaryAssocs =
 
       val selfVar = self (type_of source)
     in
-      iterate selfVar multis [] binaryAssocs
+      iterate selfVar multis [] oppAends
     end
 
 fun consistencyOclConstraint source reference selfAend roles refRoles =
     let
       val _ = trace function_calls "consistencyOclConstraint\n"
-      fun implies selfVar refVar {name=selfPath,aend_type=selfType,...} 
-                  ((role as {name=newPath,aend_type=newType,...}),
-                   {name=refPath,aend_type=refType,...}) =
+      fun implies selfVar refVar {name=selfPath,aend_type=selfType,
+                                  multiplicity,init,visibility,ordered} 
+                  ((role as {name=newPath,aend_type=newType,ordered=ord2,
+                             init=init2,multiplicity=mult2,visibility=vis2}),
+                   {name=refPath,aend_type=refType,multiplicity=multi3,
+                    init=init3,visibility=vis3,ordered=ord3}) =
           let
             val var = variableFromAend role
             val refVarType = Rep_OclHelper.type_of refVar
@@ -413,30 +612,33 @@ fun consistencyOclConstraint source reference selfAend roles refRoles =
       val refVar = variableFromClassifier reference
 
     in
-      (source, map (implies selfVar refVar selfAend ) (zip (roles,refRoles)))
+      (source, map (implies selfVar refVar selfAend ) 
+                   (ListPair.zip (roles,refRoles)))
     end
 
-fun splitNAryAssociation (association as {name as (qualifier::assocName),
+fun splitNAryAssociation (association as {name=qualifier::assocName,
                                           aends,aclass}) classifiers =
     let
       val _ = trace function_calls "splitNAryAssociation\n"
-      fun updateClassifier ((clsType,newPaths),classifiers) =
+      fun updateClassifier ((clsType,newAssocs),classifiers) =
           let
-	          val ([cls],rem) = List.partition (fn x => type_of x = clsType )
-					                                   classifiers
-	          val modifiedCls = modifyAssociationsOfClassifier newPaths 
+	    val ([cls],rem) = List.partition (fn x => type_of x = clsType )
+					     classifiers
+	    val modifiedCls = modifyAssociationsOfClassifier newAssocs 
                                                              [association]
                                                              cls
           in
-	          modifiedCls::rem
+	    modifiedCls::rem
           end
-
+          
       fun iterate done [] = []
         | iterate done ((aend as {name,aend_type,multiplicity,ordered,
-                        visibility,init})::xs) =
+                                  visibility,init})::xs) =
           let
-            fun makeAssoc (sourceAend as {name,aend_type,...})
-                          {name=targetName,aend_type=targetType,...} =
+            fun makeAssoc (sourceAend as {name,aend_type,multiplicity,init,
+                                          ordered,visibility})
+                          {name=targetName,aend_type=targetType,init=init2,
+                           ordered=ord2,multiplicity=mult2,visibility=vis2} =
                 let
                   val assocPath = package_of_aend sourceAend
                   val assocName = short_name_of_path (association_of_aend
@@ -462,9 +664,9 @@ fun splitNAryAssociation (association as {name as (qualifier::assocName),
                   (oppAend,binaryAssoc)
                 end
 
-            val (oppAends,binaryAssocs) = unzip (map (makeAssoc aend) 
-                                                     (done@xs))
-            val role = short_name_of name
+            val (oppAends,binaryAssocs) = ListPair.unzip (map (makeAssoc aend) 
+                                                              (done@xs))
+            val role = short_name_of_path name
           in
             (aend_type,role,oppAends,binaryAssocs)::
             (iterate (aend::done) xs)
@@ -478,9 +680,8 @@ fun splitNAryAssociation (association as {name as (qualifier::assocName),
                                   "arguments don't agree\n")
         | order pairs (cls::clsses) =
           let
-            val ([oppAend],rem) = List.partition (fn (oppCls,_,_,_) => 
-                                                   name_of oppCls = 
-                                                   name_of cls) 
+            val ([oppAend],rem) = List.partition (fn (oppType,_,_,_) => 
+                                                     type_of cls = oppType) 
                                                pairs
           in
             oppAend :: (order rem clsses)
@@ -498,39 +699,55 @@ fun splitNAryAssociation (association as {name as (qualifier::assocName),
 
       (* generate new associations *)
       val pairs = iterate [] aends
-      val (clsses,roleNames,oppAends,splitAssocs) = unzip4 (order pairs 
+      val (types,roleNames,oppAends,splitAssocs) = unzip4 (order pairs 
                                                                   classifiers)
 
       (* update associations in classifiers to the new names *)
       val modifiedClassifiers = foldl updateClassifier classifiers 
-                                      (zip (map type_of clsses,
-                                            map getPaths splitAssocs))
+                                      (ListPair.zip (types,splitAssocs))
     in
       (modifiedClassifiers, roleNames, oppAends, splitAssocs)
     end
   
 (* target type and role name is unqiue, even with reflexive links *)
-fun matchAends oppRefAends oppAends =
+fun matchAends (oppRefAends:associationend list) oppAends =
     let
-      fun findMatch {aend_type=oppAendType,name=oppName,...} =
-          hd (List.filter (fn {aend_type=refAendType,name=refName,
-                               ...} => oppAendType = refAendType andalso 
-                                       List.last oppName = List.last refName)
+      fun findMatch {aend_type=oppAendType,name=oppName,multiplicity,init,
+                     ordered,visibility}  =
+          hd (List.filter (fn {aend_type=refAendType,name=refName,ordered,
+                               visibility,init,multiplicity} => 
+                              oppAendType = refAendType andalso 
+                              List.last oppName = List.last refName)
                           oppRefAends)
     in
-      map findMatch  oppAends
+      map findMatch oppAends
     end
 
-        
-(* target type and role name is still unqiue for classifiers and role *)
-fun matchClassifiers oppRefAends pairs =
+fun matchClassifiersAtAend aends classifiers =
     let
-      fun matchClassifier (cls,role) =
-          hd (filter (fn {aend_type,name,...} => 
+      fun match {name,aend_type,ordered,init,multiplicity,visibility} =
+          hd (List.filter (fn cls => type_of cls = aend_type) 
+                          classifiers)
+
+      fun remove (cls,classifiers) =
+          #2 (List.partition (fn x => type_of x = type_of cls) classifiers)
+
+      val matched = map match aends
+      val rem = foldl remove classifiers matched
+    in
+      (matched,rem)
+    end
+       
+(* target type and role name is still unqiue for classifiers and role *)
+fun matchAendsAtClassifier oppRefAends pairs =
+    let
+      fun matchAend (cls,role) =
+          hd (filter (fn {aend_type,name,multiplicity,init,
+                          ordered,visibility} => 
                          type_of cls = aend_type andalso
                          role = short_name_of_path name) oppRefAends)
     in
-       map matchClassifier  pairs
+       map matchAend  pairs
     end
     
 
