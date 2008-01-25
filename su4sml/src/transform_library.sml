@@ -102,7 +102,7 @@ val fixAends: Rep_OclTerm.OclTerm -> Rep_Core.associationend list
               -> (Rep_OclTerm.OclTerm * Rep_OclTerm.OclTerm list)
 
 val isPureNAryAssoc: Rep_Core.association -> bool
-
+val isPureAcAssoc: Rep_Core.association -> bool
 (**
  * returns true iif assoc is purely a binary association, without any 
  * additional adornments, such as aggregation, qualifier, association class, 
@@ -286,6 +286,8 @@ fun isPureBinAssoc {name,aends=[a,b],aclass=NONE} =
   | isPureBinAssoc _ = false
 
 fun isPureNAryAssoc _ = false (*FIXME*)
+
+fun isPureAcAssoc _ = false (*FIXME*)
 
 fun newDummyClass package =
     Class{name=Classifier (package@["Dummy"^ nextUid ()]),
@@ -486,7 +488,8 @@ fun uniquenessOclConstraint (source:Classifier) (associations:association list) 
     end
 
 
-fun binaryAssociations (source:Classifier) (targets:Classifier list) aends=
+fun binaryAssociations (source:Classifier) (targets:Classifier list) aends: 
+  (association list * associationend list)=
     let
       val _ = trace function_calls "binaryAssociations\n"
       fun generateAssociation target =
@@ -498,7 +501,7 @@ fun binaryAssociations (source:Classifier) (targets:Classifier list) aends=
                            multiplicity=[(1,1)],
                            ordered=false,
                            visibility=XMI_DataTypes.public,
-                           init=NONE}
+                           init=NONE}:associationend
           in
             ({name= assocName,
               aends=[{name=assocName@ [short_name_of source],
@@ -518,10 +521,14 @@ fun binaryAssociations (source:Classifier) (targets:Classifier list) aends=
         | order (x::xs) [] = 
           raise InvalidArguments ("binaryAssociations.order:"^
                                   "arguments don't agree\n")
-        | order pairs ({name=refName,aend_type,multiplicity,ordered,init,visibility}::aends) =
+        | order pairs ({name=refName,aend_type,multiplicity,
+                        ordered,init,visibility}::aends) =
           let
-            val ([oppAend],rem) = List.partition (fn (_,{name=oppAendName,
-                                                         aend_type,multiplicity,ordered,visibility,init}) => 
+            val ([oppAend],rem) = List.partition (fn (_,
+                                                      {name=oppAendName,
+                                                       aend_type,multiplicity,
+                                                       ordered,visibility,
+                                                       init}) => 
                                                      oppAendName = refName)
                                                  pairs
           in

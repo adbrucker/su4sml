@@ -74,7 +74,7 @@ val transformFile            : string -> Rep.Model
 
 (* transforms *)
 val transformAssociationClasses: Rep_Core.transform_model -> 
-		Rep_Core.transform_model (* split an association classe into a class and an association*)
+		                 Rep_Core.transform_model  
 val transformQualifiers : Rep_Core.transform_model -> Rep_Core.transform_model
 val transformAggregation: Rep_Core.transform_model -> Rep_Core.transform_model
 val transformNAryAssociations : Rep_Core.transform_model -> 
@@ -108,8 +108,6 @@ datatype transformFlag = BinaryAssociationsOnly
 type modelTransformation = Rep_Core.transform_model * transformFlag list
 			   -> Rep_Core.transform_model * transformFlag list
 
-open List
-open ListPair
 open library
 open Transform_Library
 open Rep_OclTerm
@@ -217,20 +215,19 @@ fun transformAggregation (allClassifiers,allAssociations) =
  *)
 fun transformAssociationClassIntoClass (AssociationClass 
                                             {name,parent,attributes,operations,
-				                                     associations,association,
+				             associations,association,
                                              invariant,stereotypes,interfaces,
                                              thyname,activity_graphs}) =
-    (trace function_calls "transformAssociationClassIntoClass\n",
      Class { name = name,
-	           parent = parent,
-	           attributes = attributes,
-	           operations = operations,
-	           associations = associations,
-	           invariant = invariant,
-	           stereotypes = stereotypes,
-	           interfaces = interfaces,
-	           thyname = thyname,
-	           activity_graphs = activity_graphs})
+	     parent = parent,
+	     attributes = attributes,
+	     operations = operations,
+	     associations = associations,
+	     invariant = invariant,
+	     stereotypes = stereotypes,
+	     interfaces = interfaces,
+	     thyname = thyname,
+	     activity_graphs = activity_graphs}
         
 (** 
  * Process an association: add the dummy class, generate the matching-
@@ -238,14 +235,14 @@ fun transformAssociationClassIntoClass (AssociationClass
  *)
 fun generalTransfromNAryAssociation dummy (association as {name,aends,
                                                            aclass=NONE},
-			                                     (classifiers,processedAssocs)) =
+			                   (classifiers,processedAssocs)) =
     let
       val _ = trace function_calls "transformNAryAssociation\n"
       fun modifyClassifier ((assocs,classifier),classifiers) =
           let
-            val ([cls],rem) = partition (fn x => name_of x = name_of 
-                                                                 classifier)
-                                        classifiers
+            val ([cls],rem) = List.partition (fn x => name_of x = 
+                                                      name_of classifier)
+                                             classifiers
           in
             modifyAssociationsOfClassifier assocs [association] cls ::rem
           end
@@ -258,7 +255,8 @@ fun generalTransfromNAryAssociation dummy (association as {name,aends,
 
       fun addOcl ((classifier,ocls), classifiers) =
           let
-            val ([cls],rem) = partition (fn x => classifier = x) classifiers
+            val ([cls],rem) = List.partition (fn x => classifier = x) 
+                                             classifiers
           in
             addInvariants ocls cls :: rem
           end
@@ -270,8 +268,9 @@ fun generalTransfromNAryAssociation dummy (association as {name,aends,
       val (clsses,roleNames, oppAends, splitAssocs) = splitNAryAssociation 
                                                           association
                                                           assocMembers
-      val assocMemberPairs = zip (map (fn x => [x]) binaryAssocs,assocMembers)
-      val splitMemberPairs = zip (splitAssocs,assocMembers)
+      val assocMemberPairs = ListPair.zip (map (fn x => [x]) binaryAssocs,
+                                           assocMembers)
+      val splitMemberPairs = ListPair.zip (splitAssocs,assocMembers)
 
       (* update association membership info in classifiers *)
       val modifiedClassifiers = foldl modifyClassifier classifiers 
@@ -280,7 +279,8 @@ fun generalTransfromNAryAssociation dummy (association as {name,aends,
 
       (* generate and add OCL constraints *)
       val uniquenessOCL = uniquenessOclConstraint dummy binaryAssocs
-      val selfAends = matchAends oppRefAends (zip (clsses,roleNames))
+      val selfAends = matchAendsAtClassifier oppRefAends 
+                                             (ListPair.zip (clsses,roleNames))
       val refRoles = map (matchAends oppRefAends) oppAends
       val namedConsistencyOCLs = consistency clsses dummy selfAends oppAends 
                                              refRoles 
@@ -294,7 +294,8 @@ fun generalTransfromNAryAssociation dummy (association as {name,aends,
       (* update references to removed associations *)
       (*val modifiedClassifiers = TODO *)
     in
-      (dummy::modifiedClassifiers, binaryAssocs@splitAssocs@processedAssocs)
+      (dummy::modifiedClassifiers, binaryAssocs@(List.concat splitAssocs)@
+                                   processedAssocs)
     end
 
 (** 
@@ -319,8 +320,8 @@ fun transformAssociationClasses (allClassifiers,allAssociations) =
           
       fun stripAcAssoc ({name,aends,aclass=SOME aClass},classifiers) =
           let
-            val (ac,rem) = List.partition (fn x => name_of x = aClass) 
-                                          classifiers
+            val ([ac],rem) = List.partition (fn x => name_of x = aClass) 
+                                            classifiers
           in
             transformAssociationClassIntoClass ac ::rem
           end
@@ -353,7 +354,7 @@ fun transformNAryAssociations (allClassifiers,allAssociations) =
               (newDummyClass (package_of_association association))
               (association,(classifiers,procAssocs)) 
 
-      val (nAryAssocs,rem) = partition isPureNAryAssoc allAssociations
+      val (nAryAssocs,rem) = List.partition isPureNAryAssoc allAssociations
       val (modifiedClassifiers,modifiedAssociations) =
           foldl transformNAryAssociation (allClassifiers,[]) nAryAssocs
     in
@@ -376,8 +377,10 @@ fun transformMultiplicities (allClassifiers,allAssociations) =
           let
             val returnType = Bag targetType
             val aendCallSize = ocl_size (ocl_aendcall selfVar role returnType)
-            val lowTerm = ocl_geq aendCallSize low
-            val highTerm = ocl_leq aendCallSize high
+            val lowTerm = ocl_geq aendCallSize (Literal(Int.toString low, 
+                                                        Integer))
+            val highTerm = ocl_leq aendCallSize (Literal(Int.toString high,
+                                                         Integer))
           in
             ocl_or lowTerm highTerm
           end
@@ -385,7 +388,7 @@ fun transformMultiplicities (allClassifiers,allAssociations) =
       fun binaryConstraint sourceType targetType role multis name =
           let
             val selfVar = self sourceType
-            val orTerms = map withinBound selfVar targetType role multis
+            val orTerms = map (withinBound selfVar targetType role) multis
             val term = ocl_and_all orTerms
           in
             (SOME name, term)
@@ -408,26 +411,27 @@ fun transformMultiplicities (allClassifiers,allAssociations) =
                    []     => localClassifiers
                  | multis => 
                    let
-		                 val aConstraint = binaryConstraint aType bType bPath 
+		     val aConstraint = binaryConstraint aType bType bPath 
                                                         multis aConstrName
-		               in
-		                 updateClassifiersWithConstraints localClassifiers aType 
+		   in
+		     updateClassifiersWithConstraints localClassifiers aType 
                                                       [aConstraint]
-		               end)
+		   end)
 	          val modifiedClassifiers = 
-                (case (multiplicities_of_aend b) of
-                   []     => modifiedTmp
-                 | multis =>
-		               let
-		                 val bConstraint = binaryConstraint bType aType aPath
-                                                        multis bConstrName
-		               in 
-		                 updateClassifiersWithConstraints modifiedTmp bType 
-                                                      [bConstraint]
-		               end)
-	        in
-	          modifiedClassifiers
-	        end
+                      (case (multiplicities_of_aend b) of
+                         []     => modifiedTmp
+                       | multis =>
+		         let
+		           val bConstraint = binaryConstraint bType aType 
+                                                              aPath multis 
+                                                              bConstrName
+		         in 
+		           updateClassifiersWithConstraints modifiedTmp bType 
+                                                            [bConstraint]
+		         end)
+	  in
+	    modifiedClassifiers
+	  end
               
       (* filter the valid associations *)
       val (binaryAssociations,rem) = List.partition isPureBinAssoc 
