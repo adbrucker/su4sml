@@ -127,11 +127,11 @@ fun ordering atts =
 fun aggregation atts = 
     let val att = optional_value_of "aggregation" atts 
     in
-	case att of SOME "none"      => XMI.NoAggregation
-		  | SOME "aggregate" => XMI.Aggregate
-		  | SOME "composite" => XMI.Composite
-		  | NONE             => XMI.NoAggregation
-		  | SOME x => unknown_attribute_value atts "aggregation" x
+	    (case att of SOME "none"      => XMI.NoAggregation
+		             | SOME "aggregate" => XMI.Aggregate
+		             | SOME "composite" => XMI.Composite
+		             | NONE             => XMI.NoAggregation
+		             | SOME x => unknown_attribute_value atts "aggregation" x)
     end 
 
 fun changeability atts = 
@@ -173,30 +173,268 @@ fun mkRange tree =
     in 
         (int_value_of "lower" atts, int_value_of "upper" atts)
     end
-    
+
 fun mkMultiplicity tree = 
     assert "UML:Multiplicity" tree
            |> get "UML:Multiplicity.range"
            |> map mkRange
+
+(* find the xmi.idref attribute of an element pointed to by name *)
+fun xmiidref_to name tree = tree |> get_one name
+                                 |> xmiidref
+
+(* find the type of an OCl sub-expression *)
+fun expression_type tree = tree |> xmiidref_to "OCL.Expressions.OclExpression.type" 
+    handle _ => "DummyT"
+(* hack: return a reference to a dummy*)
+(* type if the real type is not found *)
+
+(* this is a hack. This will still throw an exception in xmi2mdr, because the  *)
+(* expression_type should be the xmiid of oclLib.Boolean, which we do not know *)
+val triv_expr = XMI.LiteralExp {symbol = "true", 
+				expression_type = "bool" }
+                
+(* FIX: this is only a dummy implementation *)
+fun mkCollectionLiteralPart x = (xmiidref x)
+                                
+fun mkLiteralExp string tree = 
+    XMI.LiteralExp 
+        { symbol          = tree |> attributes |> value_of string,
+	        expression_type = tree |> expression_type 
+        }
     
+fun mkOCLExpression (tree as Node(("UML15OCL.Expressions.BooleanLiteralExp",
+                                   atts),_)) =
+    mkLiteralExp "booleanSymbol" tree
+  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.IntegerLiteralExp",
+                                   atts),_)) =
+    mkLiteralExp "integerSymbol" tree
+  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.StringLiteralExp",
+                                   atts),_)) = 
+    mkLiteralExp  "stringSymbol" tree
+  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.RealLiteralExp",
+                                   atts),_)) = 
+    mkLiteralExp "realSymbol" tree
+  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.CollectionLiteralExp",
+                                   atts),_))
+    = XMI.CollectionLiteralExp 
+          { parts = nil, 
+  (* map mkCollectionLiteralPart (follow "OCL.Expressions.\
+                                         \CollectionLiteralExp.parts" trees),*)
+	              expression_type = tree |> expression_type 
+          }
+  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.OperationCallExp",
+                                   atts),_))
+    = XMI.OperationCallExp 
+	        { source    = (tree |> get_one "OCL.Expressions.\
+                                         \PropertyCallExp.source"
+                              |> mkOCLExpression)
+     (* This hack is necessary to support TYPE::allInstances() as parsed *)
+            (* by dresden-ocl. *)
+            handle ex => 
+                   XMI.LiteralExp
+                       { symbol = "",
+                         expression_type = tree |> get_one "OCL.Expressions.\
+                                                           \FeatureCallExp.\
+                                                           \srcType"
+                                                |> xmiidref
+                       },
+	          arguments = tree |> get "OCL.Expressions.OperationCallExp.arguments"
+                             |> map mkOCLExpression,
+	          referredOperation = tree |> xmiidref_to "OCL.Expressions.\
+                                                    \OperationCallExp.\
+                                                    \referredOperation",
+	          expression_type   = tree |> expression_type 
+          }
+  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.OclOperationWith\
+                                   \TypeArgExp",atts),_))
+    = XMI.OperationWithTypeArgExp
+	        { source       = tree |> get_one "OCL.Expressions.PropertyCallExp.\
+                                           \source"
+                                |> mkOCLExpression,
+	          name         = atts |> name,
+	          typeArgument = tree |> xmiidref_to "OCL.Expressions.OclOperation\
+                                               \WithTypeArgExp.typeArgument",
+	          expression_type = tree |> expression_type 
+          }
+  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.AttributeCallExp",
+                                   atts),_))
+    = XMI.AttributeCallExp 
+	        { source            = tree |> get_one "OCL.Expressions.PropertyCall\
+                                                \Exp.source"
+                                     |> mkOCLExpression,
+	          referredAttribute = tree |> xmiidref_to "OCL.Expressions.Attribute\
+                                                    \CallExp.referred\
+                                                    \Attribute",
+	          expression_type   = tree |> expression_type 
+          }
+  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.AssociationEndCall\
+                                   \Exp",atts),_))
+    = XMI.AssociationEndCallExp 
+	        { source = tree |> get_one "OCL.Expressions.PropertyCallExp.source"
+                          |> mkOCLExpression,
+	          referredAssociationEnd  = tree |> xmiidref_to 
+			                                     "OCL.Expressions.AssociationEndCall\
+                                           \Exp.referredAssociationEnd",
+	          expression_type         = tree |> expression_type 
+          }
+  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.AssociationClassCall\
+                                   \Exp",atts),_))
+    =  error ("AssociationClassCallExp is not yet implemented"^some_id tree)
+  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.VariableExp",atts),_))
+    = XMI.VariableExp 
+          { referredVariable = tree |> xmiidref_to
+				                            "OCL.Expressions.VariableExp.referred\
+                                    \Variable",
+	          expression_type  = tree |> expression_type 
+          }
+  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.IfExp",atts),_))
+    = XMI.IfExp 
+          { condition       = tree |> get_one "OCL.Expressions.IfExp.condition"
+                                   |> mkOCLExpression,
+	          thenExpression  = tree |> get_one "OCL.Expressions.IfExp.then\
+                                              \Expression"
+                                   |> mkOCLExpression,
+	          elseExpression  = tree |> get_one "OCL.Expressions.IfExp.else\
+                                              \Expression"
+                                   |> mkOCLExpression,
+	          expression_type = tree |> expression_type }
+  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.LetExp",atts),_)) 
+    = XMI.LetExp 
+	        { variable =  let val vard = tree |> get_one "OCL.Expressions.Let\
+                                                       \Exp.variable"
+                          val atts = vard |> attributes
+                        in 
+                          { xmiid            = atts |> xmiid,
+			                      name             = atts |> name, 
+			                      declaration_type = vard |> xmiidref_to 
+				                                            "OCL.Expressions.Variable\
+                                                    \Declaration.type",
+			                      init = vard |> get_one
+                                        "OCL.Expressions.VariableDeclaration.\
+                                        \initExpression"
+                                        |> mkOCLExpression
+                                        |> SOME
+                          }
+                        end,
+	          inExpression    = tree |> get_one "OCL.Expressions.LetExp.in"
+                                   |> mkOCLExpression,
+	          expression_type = tree |> expression_type 
+          }
+  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.IterateExp",atts),_))
+    = XMI.IterateExp 
+          { result    = tree |> get_one "OCL.Expressions.IterateExp.result"
+                             |> mkVariableDec,
+	          iterators = tree |> get_many "OCL.Expressions.LoopExp.iterators" 
+                             |> map mkVariableDec,
+	          body      = tree |> get_one "OCL.Expressions.LoopExp.body"
+                             |> mkOCLExpression,
+	          source    = tree |> get_one "OCL.Expressions.PropertyCallExp.\
+                                        \source"
+                             |> mkOCLExpression,
+	          expression_type = tree |> expression_type 
+          }
+  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.IteratorExp",atts),_)) 
+    = XMI.IteratorExp 
+          { name      = atts |> name,
+	          iterators = tree |> get_many "OCL.Expressions.LoopExp.iterators" 
+                             |> map mkVariableDec,
+	          body      = tree |> get_one "OCL.Expressions.LoopExp.body"
+                             |> mkOCLExpression,
+	          source    = tree |> get_one "OCL.Expressions.PropertyCallExp.source"
+                             |> mkOCLExpression,
+	          expression_type = tree |> expression_type 
+          }	  
+  | mkOCLExpression tree = 
+    error ("unknown OCLExpression type \""^(tagname tree)^"\""^some_id tree^
+           ".")
+and mkVariableDec vtree = 
+    let val atts = vtree |> assert "UML15OCL.Expressions.VariableDeclaration"
+                         |> attributes 
+    in
+	    { xmiid = atts |> xmiid,
+	      name  = atts |> name,
+	      init  = vtree |> get_optional "OCL.Expressions.VariableDeclaration.\
+                                      \initExpression"
+                      |> map_optional mkOCLExpression,
+	      declaration_type = vtree |> get_one "OCL.Expressions.Variable\
+                                            \Declaration.type" 
+                                 |> xmiidref 
+	    }
+    end
+        (* handle IllFormed msg => error ("in mkVariableDec: "^msg)*)
+ 
+fun mkTaggedValue tree =
+    let val atts = tree |> assert "UML:TaggedValue" |> attributes
+    in
+        { xmiid    = atts |> xmiid,
+          dataValue= tree |> find_child "UML:TaggedValue.dataValue"
+                          |> children 
+                          |> map text
+                          |> String.concat,
+          tag_type = tree |> get_one "UML:TaggedValue.type"
+                          |> assert "UML:TagDefinition"
+                          |> xmiidref
+	}
+    end
+(*handle IllFormed msg => error ("in mkTaggedValue: "^msg)*)
+
+fun mkAttribute tree = 
+    let val atts = tree |> assert "UML:Attribute" |> attributes
+    in
+	{ xmiid         = atts |> xmiid,
+	  name          = atts |> name,
+	  visibility    = atts |> visibility,
+	  changeability = atts |> changeability,
+	  ordering      = atts |> ordering, 
+	  initialValue  = tree |> get_optional "UML:Attribute.initialValue"
+                         |> map_optional (get_optional 
+                                              "OCL.Expressions.\
+                                              \ExpressionInOcl.bodyExpression")
+                         |> Option.join
+                         |> map_optional mkOCLExpression,
+	  type_id       = tree |> get_optional "UML:StructuralFeature.type"
+                         |> map_optional xmiidref
+                         |> get_optional_or_default "",
+	  multiplicity  = tree |> get_optional "UML:StructuralFeature.multiplicity" 
+                         |> map_optional mkMultiplicity
+                         |> get_optional_or_default [(1,1)],
+	  targetScope   = atts |> target_scope,
+	  ownerScope    = atts |> owner_scope,
+	  stereotype    = tree |> get "UML:ModelElement.stereotype"
+                         |> map xmiidref ,
+	  taggedValue   = tree |> get "UML:ModelElement.taggedValue" 
+                         |> map mkTaggedValue 
+  }
+    end
+(*handle IllFormed msg => error ("in mkAttribute: "^msg)*)
+
+fun mkQualifier tree =
+    get_maybe "UML:Attribute" tree
+              |> map mkAttribute
+
 fun mkAssociationEnd association  tree:XMI_Core.AssociationEnd = 
     let val atts = tree |> assert "UML:AssociationEnd" |> attributes
     in 
-	{ xmiid          = atts |> xmiid, 
-	  name           = atts |> optional_value_of "name", 
-	  association    = association,
-	  isNavigable    = atts |> bool_value_of "isNavigable" ,
-	  ordering       = atts |> ordering,
-	  aggregation    = atts |> aggregation,
-	  targetScope    = atts |> target_scope,
-	  multiplicity   = tree |> get_optional "UML:AssociationEnd.multiplicity"  
-                                |> map_optional mkMultiplicity
-                                |> get_optional_or_default [(0,~1)],
-	  changeability  = atts |> changeability, 
-	  visibility     = atts |> visibility,
-	  participant_id = tree |> get_one "UML:AssociationEnd.participant"
-                                |> xmiidref
-        }
+	    { xmiid          = atts |> xmiid, 
+	      name           = atts |> optional_value_of "name", 
+	      association    = association,
+	      isNavigable    = atts |> bool_value_of "isNavigable" ,
+	      ordering       = atts |> ordering,
+	      aggregation    = atts |> aggregation,
+	      targetScope    = atts |> target_scope,
+	      multiplicity   = tree |> get_optional "UML:AssociationEnd.\
+                                              \multiplicity"  
+                              |> map_optional mkMultiplicity
+                              |> get_optional_or_default [(0,~1)],
+	      changeability  = atts |> changeability, 
+        qualifier      = tree |> get_optional "UML.AssociationEnd.qualifier"
+                              |> map_optional mkQualifier
+                              |> get_optional_or_default [],
+	      visibility     = atts |> visibility,
+	      participant_id = tree |> get_one "UML:AssociationEnd.participant"
+                              |> xmiidref
+      }
     end
 (*handle IllFormed msg => error ("in mkAssociationEnd: "^msg)*)
 
@@ -211,17 +449,18 @@ fun mkAssociationEndFromAssociationClass association tree :XMI.AssociationEnd =
          (* class itsel, we simply add a suffix *) 
          xmiid          = (atts |> xmiid)^"_aend", 
          (* rep_parser already takes care of naming the association end *)
-	 name           = NONE,
-	 association    = association,
-	 isNavigable    = true,
-	 ordering       = XMI_DataTypes.Unordered,
-	 aggregation    = XMI_DataTypes.Aggregate,
-	 targetScope    = XMI_DataTypes.InstanceScope,
-	 multiplicity   = [(0,~1)] (* FIX: is this always the correct multiplicity? *),
-	 changeability  = XMI_DataTypes.Changeable, 
-	 visibility     = XMI_DataTypes.public,
-	 participant_id = atts |> xmiid
-	}
+	           name           = NONE,
+	       association    = association,
+	       isNavigable    = true,
+	       ordering       = XMI_DataTypes.Unordered,
+	       aggregation    = XMI_DataTypes.Aggregate,
+	       targetScope    = XMI_DataTypes.InstanceScope,
+	       multiplicity   = [(0,~1)] (* FIX: is this always the correct multiplicity? *),
+         qualifier      = [],
+	       changeability  = XMI_DataTypes.Changeable, 
+	       visibility     = XMI_DataTypes.public,
+	       participant_id = atts |> xmiid
+	      }
     end
 
 (* FIX: this is a hack to handle AssociationClasses.                 *)
@@ -243,178 +482,22 @@ fun mkAssociationFromAssociationClass tree =
 
 fun mkAssociation tree = 
     let 
-	val _ = trace function_calls "mkAssociation\n"
-	val atts = tree |> assert "UML:Association" |> attributes
-	val   id = atts |> xmiid
-	(* FIXME: empty string is returned as (SOME "") instead of NONE *)
-	val name_tmp = atts |> optional_value_of "name"
-	val name = if (isSome name_tmp) andalso ((valOf name_tmp) = "")
-		   then 
-		       NONE
-		   else
-		       name_tmp
+	    val _ = trace function_calls "mkAssociation\n"
+	    val atts = tree |> assert "UML:Association" |> attributes
+	    val   id = atts |> xmiid
+	    (* FIXME: empty string is returned as (SOME "") instead of NONE *)
+	    val name_tmp = atts |> optional_value_of "name"
+	    val name = if (isSome name_tmp) andalso ((valOf name_tmp) = "")
+		             then NONE
+		             else name_tmp
     in 
-        { xmiid      = id,  
-          name       = name,
-	  connection = tree |> get_many "UML:Association.connection" 
-                            |> map (mkAssociationEnd id)
-        }
+      { xmiid      = id,  
+        name       = name,
+	      connection = tree |> get_many "UML:Association.connection" 
+                          |> map (mkAssociationEnd id)
+      }
     end
 (* handle IllFormed msg => error ("in mkAssociation: "^msg)*)
-    
-(* find the xmi.idref attribute of an element pointed to by name *)
-fun xmiidref_to name tree = tree |> get_one name
-                                 |> xmiidref
-
-(* find the type of an OCl sub-expression *)
-fun expression_type tree = tree |> xmiidref_to "OCL.Expressions.OclExpression.type" 
-    handle _ => "DummyT"
-(* hack: return a reference to a dummy*)
-(* type if the real type is not found *)
-
-(* this is a hack. This will still throw an exception in xmi2mdr, because the  *)
-(* expression_type should be the xmiid of oclLib.Boolean, which we do not know *)
-val triv_expr = XMI.LiteralExp {symbol = "true", 
-				expression_type = "bool" }
-                
-(* FIX: this is only a dummy implementation *)
-fun mkCollectionLiteralPart x = (xmiidref x)
-                                
-fun mkLiteralExp string tree = XMI.LiteralExp 
-                                   { symbol          = tree |> attributes |> value_of string,
-	                             expression_type = tree |> expression_type 
-                                   }
-
-fun mkOCLExpression (tree as Node(("UML15OCL.Expressions.BooleanLiteralExp",atts),_)) =
-    mkLiteralExp "booleanSymbol" tree
-  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.IntegerLiteralExp",atts),_)) =
-    mkLiteralExp "integerSymbol" tree
-  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.StringLiteralExp",atts),_)) = 
-    mkLiteralExp  "stringSymbol" tree
-  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.RealLiteralExp",atts),_)) = 
-    mkLiteralExp "realSymbol" tree
-  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.CollectionLiteralExp",atts),_))
-    = XMI.CollectionLiteralExp 
-          { parts = nil, 
-            (* map mkCollectionLiteralPart (follow "OCL.Expressions.CollectionLiteralExp.parts" trees), *)
-	    expression_type = tree |> expression_type 
-          }
-  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.OperationCallExp",atts),_))
-    = XMI.OperationCallExp 
-	  { source    = (tree |> get_one "OCL.Expressions.PropertyCallExp.source"
-                              |> mkOCLExpression)
-            (* This hack is necessary to support TYPE::allInstances() as parsed *)
-            (* by dresden-ocl. *)
-            handle ex => 
-                   XMI.LiteralExp
-                       { symbol = "",
-                         expression_type = tree |> get_one "OCL.Expressions.FeatureCallExp.srcType"
-                                                |> xmiidref
-                       },
-	    arguments = tree |> get "OCL.Expressions.OperationCallExp.arguments"
-                             |> map mkOCLExpression,
-	    referredOperation = tree |> xmiidref_to "OCL.Expressions.OperationCallExp.referredOperation",
-	    expression_type   = tree |> expression_type 
-          }
-  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.OclOperationWithTypeArgExp",atts),_))
-    = XMI.OperationWithTypeArgExp
-	  { source       = tree |> get_one "OCL.Expressions.PropertyCallExp.source"
-                                |> mkOCLExpression,
-	    name         = atts |> name,
-	    typeArgument = tree |> xmiidref_to "OCL.Expressions.OclOperationWithTypeArgExp.typeArgument",
-	    expression_type = tree |> expression_type 
-          }
-  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.AttributeCallExp",atts),_))
-    = XMI.AttributeCallExp 
-	  { source            = tree |> get_one "OCL.Expressions.PropertyCallExp.source"
-                                     |> mkOCLExpression,
-	    referredAttribute = tree |> xmiidref_to 
-			             "OCL.Expressions.AttributeCallExp.referredAttribute",
-	    expression_type   = tree |> expression_type 
-          }
-  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.AssociationEndCallExp",atts),_))
-    = XMI.AssociationEndCallExp 
-	  { source = tree |> get_one "OCL.Expressions.PropertyCallExp.source"
-                          |> mkOCLExpression,
-	    referredAssociationEnd  = tree |> xmiidref_to 
-			                   "OCL.Expressions.AssociationEndCallExp.referredAssociationEnd",
-	    expression_type         = tree |> expression_type 
-          }
-  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.AssociationClassCallExp",atts),_))
-    =  error ("AssociationClassCallExp is not yet implemented"^some_id tree)
-  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.VariableExp",atts),_))
-    = XMI.VariableExp 
-          { referredVariable = tree |> xmiidref_to
-				    "OCL.Expressions.VariableExp.referredVariable",
-	    expression_type  = tree |> expression_type 
-          }
-  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.IfExp",atts),_))
-    = XMI.IfExp 
-          { condition       = tree |> get_one "OCL.Expressions.IfExp.condition"
-                                   |> mkOCLExpression,
-	    thenExpression  = tree |> get_one "OCL.Expressions.IfExp.thenExpression"
-                                   |> mkOCLExpression,
-	    elseExpression  = tree |> get_one "OCL.Expressions.IfExp.elseExpression"
-                                   |> mkOCLExpression,
-	    expression_type = tree |> expression_type }
-  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.LetExp",atts),_)) 
-    = XMI.LetExp 
-	  { variable =  let val vard = tree |> get_one "OCL.Expressions.LetExp.variable"
-                            val atts = vard |> attributes
-                        in 
-                            { xmiid            = atts |> xmiid,
-			      name             = atts |> name, 
-			      declaration_type = vard |> xmiidref_to 
-				                      "OCL.Expressions.VariableDeclaration.type",
-			      init = vard |> get_one
-                                          "OCL.Expressions.VariableDeclaration.initExpression"
-                                          |> mkOCLExpression
-                                          |> SOME
-                            }
-                        end,
-	    inExpression    = tree |> get_one "OCL.Expressions.LetExp.in"
-                                   |> mkOCLExpression,
-	    expression_type = tree |> expression_type 
-          }
-  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.IterateExp",atts),_))
-    = XMI.IterateExp 
-          { result    = tree |> get_one "OCL.Expressions.IterateExp.result"
-                             |> mkVariableDec,
-	    iterators = tree |> get_many "OCL.Expressions.LoopExp.iterators" 
-                             |> map mkVariableDec,
-	    body      = tree |> get_one "OCL.Expressions.LoopExp.body"
-                             |> mkOCLExpression,
-	    source    = tree |> get_one "OCL.Expressions.PropertyCallExp.source"
-                             |> mkOCLExpression,
-	    expression_type = tree |> expression_type 
-          }
-  | mkOCLExpression (tree as Node(("UML15OCL.Expressions.IteratorExp",atts),_)) 
-    = XMI.IteratorExp 
-          { name      = atts |> name,
-	    iterators = tree |> get_many "OCL.Expressions.LoopExp.iterators" 
-                             |> map mkVariableDec,
-	    body      = tree |> get_one "OCL.Expressions.LoopExp.body"
-                             |> mkOCLExpression,
-	    source    = tree |> get_one "OCL.Expressions.PropertyCallExp.source"
-                             |> mkOCLExpression,
-	    expression_type = tree |> expression_type 
-          }	  
-  | mkOCLExpression tree = 
-    error ("unknown OCLExpression type \""^(tagname tree)^"\""^some_id tree^".")
-and mkVariableDec vtree = 
-    let val atts = vtree |> assert "UML15OCL.Expressions.VariableDeclaration"
-                         |> attributes 
-    in
-	{ xmiid = atts |> xmiid,
-	  name  = atts |> name,
-	  init  = vtree |> get_optional "OCL.Expressions.VariableDeclaration.initExpression"
-                        |> map_optional mkOCLExpression,
-	  declaration_type = vtree |> get_one "OCL.Expressions.VariableDeclaration.type" 
-                                   |> xmiidref 
-	}
-    end
-(* handle IllFormed msg => error ("in mkVariableDec: "^msg)*)
-
     
 val filterAssociations = filter "UML:Association"
 val filterAssociationClasses = filter "UML:AssociationClass"
@@ -511,50 +594,6 @@ fun mkOperation tree =
 	}
     end
 (*handle IllFormed msg =>  error ("in mkOperation: "^msg)*)
-
-
-fun mkTaggedValue tree =
-    let val atts = tree |> assert "UML:TaggedValue" |> attributes
-    in
-        { xmiid    = atts |> xmiid,
-          dataValue= tree |> find_child "UML:TaggedValue.dataValue"
-                          |> children 
-                          |> map text
-                          |> String.concat,
-          tag_type = tree |> get_one "UML:TaggedValue.type"
-                          |> assert "UML:TagDefinition"
-                          |> xmiidref
-	}
-    end
-(*handle IllFormed msg => error ("in mkTaggedValue: "^msg)*)
-
-fun mkAttribute tree = 
-    let val atts = tree |> assert "UML:Attribute" |> attributes
-    in
-	{ xmiid         = atts |> xmiid,
-	  name          = atts |> name,
-	  visibility    = atts |> visibility,
-	  changeability = atts |> changeability,
-	  ordering      = atts |> ordering, 
-	  initialValue  = tree |> get_optional "UML:Attribute.initialValue"
-                               |> map_optional (get_optional "OCL.Expressions.ExpressionInOcl.bodyExpression")
-                               |> Option.join
-                               |> map_optional mkOCLExpression,
-	  type_id       = tree |> get_optional "UML:StructuralFeature.type"
-                               |> map_optional xmiidref
-                               |> get_optional_or_default "",
-	  multiplicity  = tree |> get_optional "UML:StructuralFeature.multiplicity" 
-                               |> map_optional mkMultiplicity
-                               |> get_optional_or_default [(1,1)],
-	  targetScope   = atts |> target_scope,
-	  ownerScope    = atts |> owner_scope,
-	  stereotype    = tree |> get "UML:ModelElement.stereotype"
-                               |> map xmiidref ,
-	  taggedValue   = tree |> get "UML:ModelElement.taggedValue" 
-                               |> map mkTaggedValue 
-        }
-    end
-(*handle IllFormed msg => error ("in mkAttribute: "^msg)*)
 
 fun mkTagDefinition tree =
     let val atts = tree |> assert "UML:TagDefinition" |> attributes

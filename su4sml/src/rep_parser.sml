@@ -207,62 +207,69 @@ fun transform_bodyconstraint result_type t ({xmiid,name,body,...}:XMI.Constraint
 	val body = transform_expression t body
 	val body_type = result_type
     in 
-	(SOME "body",Rep_OclTerm.OperationCall (result, result_type,
-						equal,[(body,body_type)],
-						Rep_OclType.Boolean))
+      (SOME "body",Rep_OclTerm.OperationCall (result, result_type,
+					      equal,[(body,body_type)],
+					      Rep_OclType.Boolean))
     end
     handle ex => (print ("Warning: in RepParser.transform_bodyconstraint: \
-                         \Could not parse Constraint: "^General.exnMessage ex^"\n"^
+                         \Could not parse Constraint: "^
+                         General.exnMessage ex^"\n"^
                          "using the trivial constraint 'true' instead");
                   (NONE, triv_expr))
-
+                 
 fun transform_parameter t {xmiid,name,kind,type_id} =
     (name, find_classifier_type t type_id
            handle _ => (warn ("no type found for parameter '"^name^
                               "', defaulting to OclVoid"); 
                         Rep_OclType.OclVoid)
     )
-
+    
 fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
 			   constraints,ownerScope} =
-    let val result_type   = case filter (fn x => #kind x = XMI.Return) parameter
-                             of []      => (warn ("no return type found for operation '"^name^
-                                                  "', defaulting to OclVoid"); 
-                                            Rep_OclType.OclVoid)
-                              | [x]     => (find_classifier_type t (#type_id x)
-                                            handle _ => (warn ("return parameter for operation '"^name^
-                                                               "' has no declared type, defaulting to OclVoid"); 
-                                                         Rep_OclType.OclVoid))
-                              | x::y::_ => let val ret_type = find_classifier_type t (#type_id x)
-                                                   handle _ => (warn ("return parameter for operation '"^name^
-                                                                      "' has no declared type, defaulting to OclVoid"); 
-                                                                Rep_OclType.OclVoid)
-                                           in 
-                                               (warn ("operation '"^name^
-                                                  "' has multiple return parameters. Using only '"^
-                                                      (Rep_OclType.string_of_OclType ret_type)^"'.");
-                                                ret_type)
-                                           end
-
-	val checked_constraints = filter_exists t constraints
+    let val result_type   = (
+            case filter (fn x => #kind x = XMI.Return) parameter
+             of []      => (warn ("no return type found for operation '"^name^
+                                  "', defaulting to OclVoid"); 
+                            Rep_OclType.OclVoid)
+              | [x]     => (find_classifier_type t (#type_id x)
+                            handle _ => (warn ("return parameter for \
+                                               \operation '"^name^
+                                               "' has no declared type, \
+                                               \defaulting to OclVoid"); 
+                                         Rep_OclType.OclVoid))
+              | x::y::_ => 
+                let 
+                  val ret_type = find_classifier_type t (#type_id x)
+                      handle _ => (warn ("return parameter for operation '"
+                                         ^name^"' has no declared type, \
+                                               \defaulting to OclVoid"); 
+                                   Rep_OclType.OclVoid)
+                in 
+                  (warn ("operation '"^name^
+                         "' has multiple return parameters. Using only '"^
+                         (Rep_OclType.string_of_OclType ret_type)^"'.");
+                   ret_type)
+                end)
+                            
+      val checked_constraints = filter_exists t constraints
     in
-	{name=name,
-	 arguments = (map (transform_parameter t)
-			  (filter (fn x => #kind x <> XMI.Return) parameter)),
-	 precondition = (map ((transform_constraint t) o (find_constraint t)) 
-			     (filter_precondition t checked_constraints)),
-	 postcondition = List.concat [map ((transform_constraint t) o 
-					   (find_constraint t))
-					  (filter_postcondition t constraints), 
-				      map ((transform_bodyconstraint result_type t) o
-					   (find_constraint t))
-					  (filter_bodyconstraint t checked_constraints)],
-	 result = result_type,
-	 body = [],
-	 visibility = visibility,
-	 scope = ownerScope,
-	 isQuery = isQuery      (* FIX *)
-	}
+      {name=name,
+       arguments = (map (transform_parameter t)
+			(filter (fn x => #kind x <> XMI.Return) parameter)),
+       precondition = (map ((transform_constraint t) o (find_constraint t)) 
+			   (filter_precondition t checked_constraints)),
+       postcondition = List.concat 
+                           [map ((transform_constraint t)o(find_constraint t))
+				(filter_postcondition t constraints), 
+			    map ((transform_bodyconstraint result_type t) o 
+                                 (find_constraint t))
+				(filter_bodyconstraint t checked_constraints)],
+       result = result_type,
+       body = [],
+       visibility = visibility,
+       scope = ownerScope,
+       isQuery = isQuery      (* FIX *)
+      }
     end
     
 
@@ -285,39 +292,35 @@ fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,ordering
 	}
     end
 
-(* old    
-fun transform_aend t ({xmiid,name,ordering,multiplicity,participant_id,
-		       isNavigable,aggregation,changeability,visibility,targetScope})
-  = {name         = Option.getOpt(name,
-				  (lowercase o XMI.classifier_name_of o
-				   find_classifier t) participant_id),
-     aend_type    = find_classifier_type t participant_id,
-     multiplicity = multiplicity,
-     ordered      = if ordering = XMI.Ordered then true else false,
-     visibility   = visibility,
-     init         = NONE (* FIX *)
-    }
-*)
-fun transform_aend t assoc_path ({xmiid,name,association,ordering,multiplicity,participant_id,
-				 isNavigable,aggregation,changeability,visibility,targetScope}:XMI.AssociationEnd):Rep.associationend =
+fun transform_aend t assocPath ({xmiid,name,association,ordering,multiplicity,
+                                 participant_id,isNavigable,aggregation,
+                                 qualifier,changeability,visibility,
+                                 targetScope}:XMI.AssociationEnd):
+    (Rep.associationend * (string * Rep.attribute list)) =
     let
-	val participant = find_classifier t participant_id
-	val participant_type = find_classifier_type t participant_id
-	val participant_name = XMI.classifier_name_of participant
-   	val aend_path = if (isSome name) 
-			then assoc_path@[valOf name]
-			else assoc_path@[StringHandling.uncapitalize participant_name]
-
+      val participant = find_classifier t participant_id
+      val participantType = find_classifier_type t participant_id
+      val role = if (isSome name) then valOf name
+		 else 
+                   let
+                     val participantName = XMI.classifier_name_of participant
+                   in
+                     StringHandling.uncapitalize participantName
+                   end
+      val aendPath = assocPath@[role]
+                     
     in
-	{name         = aend_path,
-	 aend_type    = participant_type,
-	 multiplicity = multiplicity,
-	 ordered      = if ordering = XMI.Ordered then true else false,
-	 visibility   = visibility,
-	 init         = NONE (* FIXME *)
-	}:associationend
+      ({name         = aendPath,
+        aend_type    = participantType,
+        multiplicity = multiplicity,
+        ordered      = if ordering = XMI.Ordered then true else false,
+        visibility   = visibility,
+        init         = NONE (* FIXME *)
+       }:associationend,
+       (role, map (transform_attribute t) qualifier)
+      )
     end
-
+    
 val filter_named_aends  = List.filter (fn {name=SOME _,...}:XMI.AssociationEnd => true
 					| _ => false)
 
@@ -533,214 +536,74 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
     end
   | transform_classifier t (_) = error "Not supported Classifier type found."
 			               
-(* billk_tag *)
+
 (** transform an XMI.Association into a Rep.association *)
-fun transform_association t ({xmiid,name,connection}:XMI.Association):Rep.association =
+fun transform_association t ({xmiid,name,connection}:XMI.Association):
+    Rep.association =
     let 
-	val _ = trace function_calls "transform_association\n"
-	val _ = trace function_arguments ("transform_association xmiid: "^xmiid^"\n")
-	val association_path = find_association_path t xmiid
-	val _ = print ("transform_association path: "^(string_of_path association_path) ^"\n")
-	val _ = print ("transform_association path length: "^(Int.toString (List.length association_path)) ^"\n")
-	val association_ends = map (transform_aend t association_path) connection
+      val _ = trace function_calls "transform_association\n"
+      val _ = trace function_arguments ("transform_association xmiid: "
+                                        ^xmiid^"\n")
+      val associationPath = find_association_path t xmiid
+      val _ = print ("transform_association path: "^(string_of_path 
+                                                         associationPath)^
+                     "\n")
+      val _ = print ("transform_association path length: "^
+                     (Int.toString (List.length associationPath)) ^"\n")
+      val (associationEnds,qualifierPairs) = 
+          ListPair.unzip (map (transform_aend t associationPath) connection)
     in
-	{name = association_path (* path_of_association *),
-	 aends = association_ends,
-	 aclass = NONE (* regular association *)}
+      {name = associationPath (* path_of_association *),
+       aends = associationEnds,
+       qualifiers = qualifierPairs,
+       aclass = NONE (* regular association *)}
     end
 
-fun transformAssociationFromAssociationClass t (XMI.AssociationClass ac) =
+fun transformAssociationFromAssociationClass t (XMI.AssociationClass 
+                                                    {xmiid,connection,...}):
+    Rep.association =
     let
-	val _ = trace function_calls "transformAssociationFromAassociationClass\n"
-	val xmiid = #xmiid ac
-	val connection = #connection ac
-	val id = xmiid^"_association"
-	val association_path = find_association_path t id
-	val _ = trace low ("transform_association path: "^(string_of_path association_path) ^"\n")
-	val _ = trace low ("transform_association path length: "^(Int.toString (List.length association_path)) ^"\n")
-	val association_ends = map (transform_aend t association_path) connection
-	val aClass =  SOME (path_of_OclType (find_classifier_type t xmiid))
+      val _ = trace function_calls "transformAssociationFromAassociation\
+                                   \Class\n"
+      val id = xmiid^"_association"
+      val associationPath = find_association_path t id
+      val _ = trace low ("transform_association path: "^
+                         (string_of_path associationPath)^"\n")
+      val _ = trace low ("transform_association path length: "^
+                         (Int.toString (List.length associationPath)) ^"\n")
+      val (associationEnds,qualifierPairs) = 
+          ListPair.unzip (map (transform_aend t associationPath) connection)
+      val aClass =  SOME (path_of_OclType (find_classifier_type t xmiid))
     in
-	{name = association_path (* path_of_association *),
-	 aends = association_ends,
-	 aclass = aClass}
+      {name = associationPath (* path_of_association *),
+       aends = associationEnds,
+       qualifiers = qualifierPairs,
+       aclass = aClass}:Rep.association
     end
 
 (** recursively transform all classes in the package. *)
-fun transform_package t (XMI.Package p) :transform_model=
-    let (* we do not transform the ocl library *)
-        val _ = trace function_calls "transform_package\n"
-	val filteredPackages = 
-	    filter (fn (XMI.Package x) => 
-		       ((#name x <> "oclLib") andalso (#name x <> "UML_OCL")))
-		   (#packages p)
-	val aClasses = filter (fn (XMI.AssociationClass _ ) => true 
-				| _ => false ) (#classifiers p)
-	val local_associations = map (transform_association t) (#associations p) @
-				 (map (transformAssociationFromAssociationClass t) aClasses)
-	val local_classifiers = map (transform_classifier t) (#classifiers p)
-	val (res_classifiers,res_associations) = ListPair.unzip (map (transform_package t) filteredPackages)
-	val associations = local_associations @ (List.concat res_associations)
-	val classifiers =local_classifiers @ (List.concat res_classifiers)
+fun transform_package t (XMI.Package p) :transform_model =
+    let 
+      (* we do not transform the ocl library *)
+      val _ = trace function_calls "transform_package\n"
+      val filteredPackages = 
+          filter (fn (XMI.Package x) => 
+		     ((#name x <> "oclLib") andalso (#name x <> "UML_OCL")))
+		 (#packages p)
+      val aClasses = filter (fn (XMI.AssociationClass _ ) => true 
+			      | _ => false ) (#classifiers p)
+      val local_associations = 
+          map (transform_association t) (#associations p) @
+	  (map (transformAssociationFromAssociationClass t) aClasses)
+      val local_classifiers = map (transform_classifier t) (#classifiers p)
+      val (res_classifiers,res_associations) = 
+          ListPair.unzip (map (transform_package t) filteredPackages)
+      val associations = local_associations @ (List.concat res_associations)
+      val classifiers =local_classifiers @ (List.concat res_classifiers)
     in 
-	(classifiers, associations )
+      (classifiers, associations )
     end
-
-
-(***********************
-(* billk_tag *)
-(* recursively transforms all associations in the package p. *)
-fun transform_associations t (XMI.Package p) = 
-    (List.app (transform_associations t) (#packages p);
-     List.app (transform_assocation t) (#associations p);
-     List.app (transform_associationclass_as_association t)
-	      (List.filter (fn (XMI.AssociationClass x) => true
-			     | _                        => false)
-			   (#classifiers p))
-    )
-
-(* billk_tag *)
-(* The new class retains the original xmi-id. *)
-fun transform_association_class_into_class table (XMI.AssociationClass ac) =
-    XMI.Class { xmiid = #xmiid ac,
-		name = #name ac,
-		isActive = #isActive ac,
-		visibility = #visibility ac,
-		isLeaf = #isLeaf ac,
-		generalizations = #generalizations ac,
-		attributes = #attributes ac,
-		operations = #operations ac,
-		invariant = #invariant ac,
-		stereotype = #stereotype ac,
-		taggedValue = #taggedValue ac,
-		clientDependency = #clientDependency ac,
-		supplierDependency = #supplierDependency ac,
-		classifierInState = [], (* FIXME: better dummy? *)
-		activity_graphs = [], (* FIXME: better dummy? *)
-		state_machines = []} (* FIXME: better dummy? *)
-
-(* billk_tag *)
-fun transform_association_class_into_association table (XMI.AssociationClass ac) =
-    let
-        val new_aend= {xmiid = #xmiid ac ^ "0",
-		       name = SOME (#name ac),
-		       isNavigable = true,
-		       ordering = XMI.Unordered,
-		       aggregation = XMI.NoAggregation, 
-		       targetScope = XMI.InstanceScope,
-		       multiplicity = [(1,1)], (* injective *)
-		       changeability = XMI.Changeable,
-		       visibility = #visibility ac,
-		       participant_id = #xmiid ac  (* the new class retains the id *)
-		      }:XMI.AssociationEnd
-    in
-	{xmiid = #xmiid ac ^ "1", 
-	 name = NONE, (* FIXME: proper value? *)
-	 connection = new_aend :: (#connection ac)}:XMI.Association
-    end
-
-(* billk_tag *)
-fun transform_association_classes table (XMI.Package p) =
-    let
-	val (association_classes,other_classifiers) = List.partition (fn (XMI.AssociationClass x) => true
-							       | _                        => false) 
-							     (#classifiers p)
-    in
-	XMI.Package {xmiid = #xmiid p,
-		     name = #name p,
-		     visibility = #visibility p,
-		     packages = map (transform_association_classes table) (#packages p),
-		     classifiers = map (transform_association_class_into_class table) association_classes @ other_classifiers ,
-		     state_machines = #state_machines p,
-		     activity_graphs = #activity_graphs p,
-		     associations =  map (transform_association_class_into_association table) association_classes @ (#associations p),
-		     generalizations = #generalizations p,
-		     constraints = #constraints p,
-		     stereotypes = #stereotypes p,
-		     dependencies = #dependencies p,
-		     tag_definitions = #tag_definitions p,
-		     stereotype = #stereotype p,
-		     taggedValue = #taggedValue p,
-		     events = #events p}
-    end
-
-(* billk_tag *)
-(* multiplicities -> constraints *)
-fun transform_multiplicities table (XMI.Package p) =
-    XMI.Package {xmiid = #xmiid p,
-		 name = #name p,
-		 visibility = #visibility p,
-		 packages = #packages p,
-		 classifiers = #classifiers p,
-		 state_machines = #state_machines p,
-		 activity_graphs = #activity_graphs p,
-		 associations =  map (transform_association_multiplicities table) (#associations p),
-		 generalizations = #generalizations p,
-		 constraints = #constraints p,
-		 stereotypes = #stereotypes p,
-		 dependencies = #dependencies p,
-		 tag_definitions = #tag_definitions p,
-		 stereotype = #stereotype p,
-		 taggedValue = #taggedValue p,
-		 events = #events p}
-
-
-fun add_constraint_to_class table (Rep_Core.Class cls) (name:string option,constr:OclTerm) =
-    let
-	val cls_type = find_classifier_type table (#xmiid cls)
-	val aends = find_aends table (#xmiid cls)
-	val agraphs = find_activity_graph_of table (#xmiid cls)
-	val modified_cls = {xmiid = #xmiid cls,
-			    name = #name cls,
-			    isActive = #isActive cls,
-			    visibility = #visibility cls,
-			    isLeaf = #isLeaf cls,
-			    generalizations = #generalizations cls,
-			    attributes = #attributes cls,
-			    operations = #operations cls,
-			    invariant =(name,constr)::(#invariant cls) ,
-			    stereotype = #stereotype cls,
-			    taggedValue = #taggedValue cls,
-			    clientDependency = #clientDependency cls,
-			    supplierDependency = #supplierDependency cls,
-			    classifierInState = #classifierInState cls,
-			    activity_graphs = #activity_graphs cls,
-			    state_machines = #state_machines cls}
-    in
-	HashTable.insert table (#xmiid cls,Type (cls_type,aends,modified_cls,agraphs))
-    end
-
-fun generate_n_ary_constraint table (ac:XMI.Association) = 
-    let
-	(* use side-effects to manipulate the table *)
-	val association_xmiids = map #xmiid (#connection ac)
-	val classifiers = map (find_classifier table) association_xmiids
-	val multiplicities = map #multiplicity (#connection ac)
-	fun generate_local_match_constraint others (XMI.Class cls)=
-	    let
-		val aend = name_of classifier
-		val var = Rep_OclTerm.Variable ("n"^(#xmiid cls), type_of cls)
-		fun get_collection cls = ocl_aendcall var aend (Collection (Classifier (name_of classifier)))
-		fun collection_equality coll1 coll2 = ocl_and (ocl_includes coll1 coll2) (ocl_includes coll2 coll1)
-		val sample = get_collection (head others)
-		fun append_match (current,partial_expression) = ocl_and partial_expression (collection_equality sample (get_collection current))
-		fun match_ocl_expression = foldr1 append_match (tail others)
-		fun nest_allInstances (current, partial:OclTerm):OclTerm = ocl_forAll (ocl_allInstances current) ("n"^(#xmiid current)) partial
-	    in
-		foldr nest_allInstances  match_ocl_expression others
-	    end
-	(* multipliciteis are handled when they are removed later on *)
-        fun iterate_over_connection done (cls::todo)=
-	    ( add_constraint_to_class table cls (generate_local_match_constraint (done@todo) cls);
-	      iterate_over_connection (cls::done) todo;
-	      ())
-	    | iterate_over_connection done []=  ()
-	    
-    in
-	ac
-    end
-
-*********)
+        
 
 (** transform a UML model into a list of Rep classes.              
  *
@@ -756,66 +619,70 @@ fun generate_n_ary_constraint table (ac:XMI.Association) =
  * 3. traverse again, transforming all remaining model elements,   
  *    i.e., classes with their operations, attributes,             
  *    constraints, etc                                             *)
-fun transformXMI_ext ({classifiers,constraints,packages,
-		       stereotypes,variable_declarations,state_machines, activity_graphs}):transform_model=
-    let val (xmiid_table: (string,HashTableEntry) HashTable.hash_table) =
-	    HashTable.mkTable (HashString.hashString, (op =)) (101, Option)
-	(* hack: insert a dummy type into the table *)
-	val _ = HashTable.insert xmiid_table ("DummyT",
-                                              Type (Rep_OclType.DummyT,
-                                                    nil,
-						    nil,
-                                                    XMI.Primitive{name="DummyT",
-                                                                  xmiid="DummyT",
-                                                                  operations=[],
-                                                                  generalizations=[],
-                                                                  invariant=[],
-																  taggedValue=[]},
-                                                    nil))
-	val _ = HashTable.insert xmiid_table ("-1",UniqueName(123456)) (* arbitrary startnumber *)
-	(* for some reasons, there are model elements outside of the top-level *) 
-	(* model the xmi-file. So we have to handle them here seperately:      *)
-	val _ = map (insert_classifier xmiid_table nil) classifiers
-	val _ = map (insert_constraint xmiid_table) constraints
-	val _ = map (insert_stereotype xmiid_table) stereotypes
-	val _ = map (insert_variable_dec xmiid_table) variable_declarations
-	(* "hd packages" is supposed to be the first model in the xmi-file *)
-	val model = hd packages
-
-
-	fun test2 (classifiers,associations) =
-	    let
-		val _ = print "test2\n"
-		val _ = print "classifiers\n"
-		val _ = map (print o (fn x => x^"\n")  o string_of_path o name_of) classifiers
-		val _ = print "associations\n"
-		val _ = map (print o (fn x => x^"\n")  o string_of_path o (fn {name,aends,aclass} => name)) associations
-		val _ = print "operations\n"
-		fun printClassifier cls = 
-		    let
-			val _ = print ("output of transformXMI_ext:\n")
-			val _ = print ("classifier: "^ (string_of_path (name_of cls)) ^"\n") 
-
-			val _ = print ("associations: \n")
-			val _ = map (print o(fn x => x ^ "\n") o string_of_path ) (associations_of cls)
-
-			val _ = print ("operations: \n")
-			val _ = map (print o (fn {name,...} => name)) (operations_of cls) 
-		    in
-			print "\n"
-		    end
-		val _ = map printClassifier classifiers
-	    in
-		trace function_calls "\n### transformXMI_ext done\n\n";
-		(classifiers,associations)
-	    end
+fun transformXMI_ext ({classifiers,constraints,packages,stereotypes,
+                       variable_declarations,state_machines, 
+                       activity_graphs}):transform_model =
+    let 
+      val (xmiid_table: (string,HashTableEntry) HashTable.hash_table) =
+	  HashTable.mkTable (HashString.hashString, (op =)) (101, Option)
+      (* hack: insert a dummy type into the table *)
+      val _ = HashTable.insert xmiid_table 
+                               ("DummyT",
+                                Type (Rep_OclType.DummyT,nil,nil,
+                                      XMI.Primitive{name="DummyT",
+                                                    xmiid="DummyT",
+                                                    operations=[],
+                                                    generalizations=[],
+                                                    invariant=[],
+						    taggedValue=[]},
+                                      nil))
+     (* arbitrary startnumber *)
+      val _ = HashTable.insert xmiid_table ("-1",UniqueName(123456))
+     (* for some reasons, there are model elements outside of the top-level *)      (* model the xmi-file. So we have to handle them here seperately:      *)
+      val _ = map (insert_classifier xmiid_table nil) classifiers
+      val _ = map (insert_constraint xmiid_table) constraints
+      val _ = map (insert_stereotype xmiid_table) stereotypes
+      val _ = map (insert_variable_dec xmiid_table) variable_declarations
+      (* "hd packages" is supposed to be the first model in the xmi-file *)
+      val model = hd packages
+                  
+      fun test2 (classifiers,associations) =
+	  let
+	    val _ = print "test2\n"
+	    val _ = print "classifiers\n"
+	    val _ = map (print o (fn x => x^"\n")  o string_of_path o name_of) 
+                        classifiers
+	    val _ = print "associations\n"
+	    val _ = map (print o (fn x => x^"\n")  o string_of_path o 
+                         (fn {name,aends,qualifiers,aclass} => name)) 
+                        associations
+	    val _ = print "operations\n"
+	    fun printClassifier cls = 
+		let
+		  val _ = print ("output of transformXMI_ext:\n")
+		  val _ = print ("classifier: "^ (string_of_path (name_of cls))
+                                 ^"\n") 
+		  val _ = print ("associations: \n")
+		  val _ = map (print o(fn x => x ^ "\n") o string_of_path ) 
+                              (associations_of cls)
+		  val _ = print ("operations: \n")
+		  val _ = map (print o (fn {name,...} => name)) 
+                              (operations_of cls) 
+		in
+		  print "\n"
+		end
+	    val _ = map printClassifier classifiers
+	  in
+	    trace function_calls "\n### transformXMI_ext done\n\n";
+	    (classifiers,associations)
+	  end
     in 
-	trace function_calls "### transformXMI: populate hash table\n";
-	insert_model xmiid_table model        (* fill xmi.id table *);
-	trace function_calls "### transformXMI: fix associations\n";
-	fix_associations xmiid_table model    (* handle associations *);  
-	trace function_calls "### transformXMI: transform XMI into Rep\n";
-        test2 (transform_package xmiid_table model)   (* transform classifiers *)
+      trace function_calls "### transformXMI: populate hash table\n";
+      insert_model xmiid_table model        (* fill xmi.id table *);
+      trace function_calls "### transformXMI: fix associations\n";
+      fix_associations xmiid_table model    (* handle associations *);  
+      trace function_calls "### transformXMI: transform XMI into Rep\n";
+      test2 (transform_package xmiid_table model) (* transform classifiers *)
     end
 
 fun transformXMI x:Classifier list = fst (transformXMI_ext x)

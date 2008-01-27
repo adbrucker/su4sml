@@ -56,23 +56,24 @@ structure XmlTreeHelper : sig
     val exists      : string -> XmlTree.Tree list -> bool
     val has_child   : string -> XmlTree.Tree -> bool
     val value_of    : string -> XmlTree.Attribute list -> string 
-    (*     val follow      : string -> XmlTree.Tree list -> XmlTree.Tree list *)
-    (*     val followM     : string -> XmlTree.Tree list -> XmlTree.Tree list  *)
-    (* val skipM       : string -> XmlTree.Tree -> XmlTree.Tree list *)
+(*  val follow      : string -> XmlTree.Tree list -> XmlTree.Tree list *)
+(*  val followM     : string -> XmlTree.Tree list -> XmlTree.Tree list  *)
+(*  val skipM       : string -> XmlTree.Tree -> XmlTree.Tree list *)
     val assert      : string -> XmlTree.Tree -> XmlTree.Tree
     val is          : XmlTree.Tree * string -> bool
-    (*    val follow_all  : string -> XmlTree.Tree list -> XmlTree.Tree list list *)
-                                               
-    (*    val apply_on    : string -> (Attribute list -> 'a) -> XmlTree.Tree -> 'a*)
+(*  val follow_all  : string -> XmlTree.Tree list -> XmlTree.Tree list list *)
+(*  val apply_on    : string -> (Attribute list -> 'a) -> XmlTree.Tree -> 'a*)
     val some_id : XmlTree.Tree -> string
     val some_id': XmlTree.Attribute list -> string 
 end =
-struct 
+struct
+ 
 open library
 open XmlTree
+
 infix 1 |>
-fun filter string trees = List.filter (fn x => string = tagname x) 
-				      trees
+
+fun filter string trees = List.filter (fn x => string = tagname x) trees
 
 fun filter_children string tree = filter string (node_children tree)
 				      

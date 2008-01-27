@@ -241,12 +241,14 @@ type Set        = Collection
 type Bag        = Collection
 type OrderedSet = Collection
 
-type Enumeration = { xmiid : string,
-		     name : string,
-		     operations: Operation list,
-		     generalizations: string list,
-		     literals: string list, (* names of literals *)
-		     invariant: string list}
+type Enumeration = {
+     xmiid : string,
+		 name : string,
+		 operations: Operation list,
+		 generalizations: string list,
+		 literals: string list (* names of literals *),
+		 invariant: string list
+}
 		   
 type Void = {xmiid: string,
 	     name : string }
@@ -259,17 +261,20 @@ type Void = {xmiid: string,
  *                stereotypes <<association>>, <<global>>, <<local>>, 
  *                            <<parameter>>, <<self>>
  * --------------------------------------------------------------------------*)
-type AssociationEnd = { xmiid : string,
-			name : string option,
-			association: string (* xmiid of enclosing association *),
-			isNavigable: bool,
-			ordering : OrderingKind,
-			aggregation : AggregationKind,
-			targetScope: ScopeKind,
-			multiplicity : Multiplicity,
-			changeability: ChangeableKind,
-			visibility : VisibilityKind,
-			participant_id : string (* xmi.idref to class *) }
+type AssociationEnd = { 
+     xmiid : string,
+		 name : string option,
+		 association: string (* xmiid of enclosing association *),
+		 isNavigable: bool,
+		 ordering : OrderingKind,
+		 aggregation : AggregationKind,
+		 targetScope: ScopeKind,
+		 multiplicity : Multiplicity,
+		 changeability: ChangeableKind,
+     qualifier: Attribute list,
+		 visibility : VisibilityKind,
+		 participant_id : string (* xmi.idref to class *)
+}
 			 
 (* from UML 1.5 Core: --------------------------------------------------------
  * An association defines a semantic relationship between classifiers. 

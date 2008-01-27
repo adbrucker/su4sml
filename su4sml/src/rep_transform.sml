@@ -234,8 +234,9 @@ fun transformAssociationClassIntoClass (AssociationClass
  * constraint and update the classifiers with that constraint.
  *)
 fun generalTransfromNAryAssociation dummy (association as {name,aends,
+                                                           qualifiers=[],
                                                            aclass=NONE},
-			                   (classifiers,processedAssocs)) =
+			                                     (classifiers,processedAssocs)) =
     let
       val _ = trace function_calls "transformNAryAssociation\n"
       fun modifyClassifier ((assocs,classifier),classifiers) =
@@ -307,18 +308,20 @@ fun generalTransfromNAryAssociation dummy (association as {name,aends,
 fun transformAssociationClasses (allClassifiers,allAssociations) =
     let
       val _ = trace function_calls "transformAssociationClasses\n"
-      fun transformAssociationClass ({name,aends,aclass=SOME aClass},
+      fun transformAssociationClass ({name,aends,qualifiers=[],
+                                      aclass=SOME aClass},
                                      (classifiers,procAssocs)) =
           let 
             val ([dummy],rem) = List.partition (fn x => name_of x = aClass) 
                                                classifiers
           in
             generalTransfromNAryAssociation dummy ({name=name,aends=aends,
-                                                    aclass=NONE},
+                                                    qualifiers=[],aclass=NONE},
                                                    (rem,procAssocs)) 
           end         
           
-      fun stripAcAssoc ({name,aends,aclass=SOME aClass},classifiers) =
+      fun stripAcAssoc ({name,aends,qualifiers,aclass=SOME aClass},
+                        classifiers) =
           let
             val ([ac],rem) = List.partition (fn x => name_of x = aClass) 
                                             classifiers
@@ -394,7 +397,8 @@ fun transformMultiplicities (allClassifiers,allAssociations) =
             (SOME name, term)
           end
           
-      fun addMultiplicityConstraints (assoc as {name,aends=[a,b],aclass=NONE},
+      fun addMultiplicityConstraints (assoc as {name,aends=[a,b],qualifiers=[],
+                                                aclass=NONE},
                                       localClassifiers) =
           let
 	          val _ = trace function_calls "addMultiplicityConstraints\n"
@@ -411,27 +415,27 @@ fun transformMultiplicities (allClassifiers,allAssociations) =
                    []     => localClassifiers
                  | multis => 
                    let
-		     val aConstraint = binaryConstraint aType bType bPath 
+		                 val aConstraint = binaryConstraint aType bType bPath 
                                                         multis aConstrName
-		   in
-		     updateClassifiersWithConstraints localClassifiers aType 
+		               in
+		                 updateClassifiersWithConstraints localClassifiers aType 
                                                       [aConstraint]
-		   end)
+		               end)
 	          val modifiedClassifiers = 
-                      (case (multiplicities_of_aend b) of
-                         []     => modifiedTmp
-                       | multis =>
-		         let
-		           val bConstraint = binaryConstraint bType aType 
-                                                              aPath multis 
-                                                              bConstrName
-		         in 
-		           updateClassifiersWithConstraints modifiedTmp bType 
-                                                            [bConstraint]
-		         end)
-	  in
-	    modifiedClassifiers
-	  end
+                (case (multiplicities_of_aend b) of
+                   []     => modifiedTmp
+                 | multis =>
+		               let
+		                 val bConstraint = binaryConstraint bType aType 
+                                                        aPath multis 
+                                                        bConstrName
+		               in 
+		                 updateClassifiersWithConstraints modifiedTmp bType 
+                                                      [bConstraint]
+		               end)
+	        in
+	          modifiedClassifiers
+	        end
               
       (* filter the valid associations *)
       val (binaryAssociations,rem) = List.partition isPureBinAssoc 

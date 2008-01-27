@@ -80,7 +80,7 @@ val testcases = [
     uml  = prefix^"company/company.zargo",
     ocl  = prefix^"company/company.ocl",
     result = initResult
-   }:testcase (*,
+   }:testcase,
    {
     name = "ebank",
     uml  = prefix^"ebank/ebank.zargo",
@@ -135,7 +135,6 @@ val testcases = [
     ocl  = "",
     result = initResult
    }:testcase
-*)
 ]
 
 

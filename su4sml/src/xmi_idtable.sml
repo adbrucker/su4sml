@@ -663,74 +663,30 @@ fun fixAssociationFromAsssociationClass table (XMI.AssociationClass{xmiid,
     end
 
 (** 
- * Handel the broken association references, meaning update the 
+ * Handel the broken association references, meaning updating the 
  * association path list for classes and association classes.
  * Since classifiers do not store their belonging aends, we traverse the 
  * associations: 
  *         We skip the aends and instead process the set of associations. For
- *         each association, we traverse the connection part and search for the 
- *         classifier listed as participant_id. Then we simply add the assoc-
- *         iation path to the found classifier.
+ *         each association, we traverse the connection part and search for 
+ *         the classifier listed as participant_id. Then we simply add the 
+ *         association path to the found classifier.
  * For the classifiers part of an association class's class, no association
  * construct is present in the package p, while those constructs are already
  * in the hashtable. To traverse them as well, we extract all association
  * classes and reconstruct the associations.
  *)
-fun fix_associations t (XMI.Package p)=
+fun fix_associations t (XMI.Package p) =
     let
-	val associationClasses = filter (fn (XMI.AssociationClass x) => true
-					  | _ => false) (#classifiers p)
+	    val associationClasses = filter (fn (XMI.AssociationClass x) => true
+					                              | _ => false) (#classifiers p)
     in
-	(* All association ends are stored in associations, so we will 
-	 * traverse them an update affected Classes and AssociationClasses *)
-	 (List.app (fix_associations t) (#packages p);
-	  List.app (fix_association t) (#associations p);
-	  List.app (fixAssociationFromAsssociationClass t) associationClasses
-	 )
+	    (* All association ends are stored in associations, so we will 
+	     * traverse them an update affected Classes and AssociationClasses *)
+	     (List.app (fix_associations t) (#packages p);
+	      List.app (fix_association t) (#associations p);
+	      List.app (fixAssociationFromAsssociationClass t) associationClasses)
     end
 
 
-(* billk_tag *)
-(* old: *)
-(** 
- * split an association into association ends, and put the association ends 
- * ends into the xmi.id table under the corresponding (i.e., opposite)      
- * classifier.                                                              
- * 1. split the association into a list of two (or more) association ends   
- * 2. pair each association end with the participant_id's of all other      
- *    association ends: when a class is a participant in an association,    
- *    this association end is a feature of all _other_ participants in the  
- *    association                                                           
- * 3. insert the mapping xmi.id of class to association end into the        
- *    hashtable                                                             
- * 4. insert mapping xmi.id of association end to path into the hashtable 
- *)
-(* orig:
-fun insert_assocation t (assoc:XMI.Association) =
-    let	val aends = #connection assoc
-	fun all_others x xs = List.filter 
-				  (fn (y:XMI.AssociationEnd) => y <> x) xs
-	fun pair_with ae aes = 
-	    map (fn (x:XMI.AssociationEnd) => (#participant_id x, ae)) aes
-	val mappings = List.concat (map (fn x => pair_with x (all_others x aends)) aends)
-	fun add_aend_to_type (id,ae) = 
-		if not (Option.isSome (HashTable.find t id)) then () else 
-	    let val type_of_id  = find_classifier_type t id
-		val cls_of_id   = find_classifier t id
-		val aends_of_id = ae::(find_aends t id)
-		val ags_of_id   = find_activity_graph_of t id
-	    in 
-		(HashTable.insert t (id,Type (type_of_id,aends_of_id,cls_of_id,ags_of_id));
-		 HashTable.insert t (#xmiid ae, AssociationEnd ae))
-	    end
-    in 
-        List.app add_aend_to_type mappings
-    end
-
-
-(* recursively transforms all associations in the package p. *)
-fun transform_associations t (XMI.Package p) = 
-    (List.app (transform_associations t) (#packages p);
-     List.app (transform_association t) (#associations p))
-*)
 end

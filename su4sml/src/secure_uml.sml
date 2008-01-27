@@ -271,10 +271,13 @@ fun assocConnectsToSecureUml cs (a:Rep.associationend) =
  *)
 fun removeSecureUmlAends (Rep.Class {name=class_name,...},(assocs,removed_assocs)):(Rep.association list * Rep.association list) = 
     let
-	fun remove_aend ({name,aclass,aends}:Rep.association):Rep.association = 
+	fun remove_aend ({name,aclass,qualifiers,aends}:Rep.association):
+      Rep.association = 
 	    {name = name,
 	     aclass = aclass,
-	     aends = filter (fn {aend_type,...} => not (aend_type = class_name)) aends
+       qualifiers=qualifiers,
+	     aends = filter (fn {aend_type,...} => not (aend_type = class_name)) 
+                      aends
 	    }
 	fun non_emtpy ({aends,...}:Rep.association) = List.length aends >= 2 (* FIXME: reflexive association -> 2 aends? *)
 	val reduced_assocs = map remove_aend assocs
@@ -282,14 +285,19 @@ fun removeSecureUmlAends (Rep.Class {name=class_name,...},(assocs,removed_assocs
     in
 	(modified_assocs,newly_removed_assocs @ removed_assocs)
     end
-  | removeSecureUmlAends (Rep.AssociationClass {name=class_name,...},(assocs,removed_assocs)):(Rep.association list * Rep.association list) = 
+  | removeSecureUmlAends (Rep.AssociationClass {name=class_name,...},
+                          (assocs,removed_assocs)):
+    (Rep.association list * Rep.association list) = 
     let
-	fun remove_aend ({name,aclass,aends}:Rep.association):Rep.association = 
-	    {name = name,
-	     aclass = aclass,
-	     aends = filter (fn {aend_type,...} => not (aend_type = class_name)) aends
-	    }
-	fun non_emtpy ({aends,...}:Rep.association) = List.length aends >= 2 (* FIXME: reflexive association -> 2 aends? *)
+	    fun remove_aend ({name,aclass,qualifiers,aends}:Rep.association):
+          Rep.association = 
+	        {name = name,
+	         aclass = aclass,
+           qualifiers=qualifiers,
+	         aends = filter (fn {aend_type,...} => not (aend_type = class_name))
+                          aends
+	        }
+	    fun non_emtpy ({aends,...}:Rep.association) = List.length aends >= 2 (* FIXME: reflexive association -> 2 aends? *)
 	val reduced_assocs = map remove_aend assocs
 	val (modified_assocs,newly_removed_assocs) = List.partition non_emtpy reduced_assocs
 	(* FIXME: proper handling for aclass? *)
@@ -313,24 +321,28 @@ fun parse (model as (cs,assocs):Rep.Model) =
 	(* remove classes with SecureUML stereotypes from the association list
 	 * and update affected classes if the association ceases to exist 
 	 *)
-	fun updateClassifierAssociations rem_assocs (Rep.Class {name, parent, attributes, operations,
-								associations, invariant, stereotypes,
-								interfaces, thyname, activity_graphs}) =
+	fun updateClassifierAssociations rem_assocs (Rep.Class 
+                                                   {name,parent,attributes,
+                                                    operations,associations,
+                                                    invariant, stereotypes,
+								                                    interfaces, thyname, 
+                                                    activity_graphs}) =
 	    let
-		val assoc_names = map (fn {name,aends,aclass} => name) rem_assocs
-		fun non_emtpy path = not (List.exists (fn aname => aname = path) assoc_names)
-    in 
-		Rep.Class {name = name, 
-			   parent = parent, 
-			   attributes = attributes, 
-			   operations = operations,
-			   associations = filter non_emtpy associations, 
-			   invariant = invariant, 
-			   stereotypes = stereotypes,
-			   interfaces = interfaces, 
-			   thyname = thyname, 
-			   activity_graphs = activity_graphs
-			  }
+		    val assoc_names = map (fn {name,aends,qualifiers,aclass} => name) 
+                              rem_assocs
+		    fun non_emtpy path = not (List.exists (fn aname => aname = path) 
+                                              assoc_names)
+      in 
+		    Rep.Class {name = name, 
+			             parent = parent, 
+			             attributes = attributes, 
+			             operations = operations,
+			             associations = filter non_emtpy associations, 
+			             invariant = invariant, 
+			             stereotypes = stereotypes,
+			             interfaces = interfaces, 
+			             thyname = thyname, 
+			             activity_graphs = activity_graphs}
 	    end
 	  | updateClassifierAssociations rem_assocs (Rep.AssociationClass {name, parent, attributes, 
 									   operations, associations, 
@@ -338,8 +350,10 @@ fun parse (model as (cs,assocs):Rep.Model) =
 									   stereotypes, interfaces, 
 									   thyname, activity_graphs}) =
 	    let
-		val assoc_names = map (fn {name,aends,aclass} => name) rem_assocs
-		fun non_emtpy path = not (List.exists (fn aname => aname = path) assoc_names)
+		    val assoc_names = map (fn {name,aends,qualifiers,aclass} => name)
+                              rem_assocs
+		    fun non_emtpy path = not (List.exists (fn aname => aname = path) 
+                                              assoc_names)
 	    in
 		Rep.AssociationClass {name = name, 
 				      parent = parent, 
@@ -355,27 +369,31 @@ fun parse (model as (cs,assocs):Rep.Model) =
 			  }
 	    end
 	    
-	val (modified_assocs,removed_assocs) = case secureumlstereotypes of [] => (assocs,[])
-									  | xs => foldl removeSecureUmlAends (assocs,[]) xs
-	val modified_classifiers = case removed_assocs of [] => non_secureumlstereotypes
-							| xs => map (updateClassifierAssociations xs) non_secureumlstereotypes
+	val (modified_assocs,removed_assocs) = 
+      (case secureumlstereotypes of 
+         [] => (assocs,[])
+			 | xs => foldl removeSecureUmlAends (assocs,[]) xs)
+	val modified_classifiers = 
+      (case removed_assocs of 
+         [] => non_secureumlstereotypes
+			 | xs => map (updateClassifierAssociations xs) non_secureumlstereotypes)
     in 
-        (
-(*	 map (removeSecureUmlAends cs)
-			 (List.filter (classifier_has_no_stereotype ["secuml.permission",
-														 "secuml.role",
-														 "secuml.subject",
-														 "secuml.actiontype"]) 
-						  cs),
- *)	 (modified_classifiers,modified_assocs),
-         { config_type = "SecureUML",
-           permissions = map (mkPermission model) (filter_permission cs),
-           subjects    = map mkSubject (filter_subject cs),
-           roles       = map mkRole (filter_role cs),
-           rh          = map (fn x => (Rep.string_of_path (Rep.name_of x),
-                                       Rep.string_of_path (Rep.parent_name_of x)))
-                             (List.filter classifier_has_parent (filter_role cs)),
-           sa          = map (mkSubjectAssignment model) (filter_subject cs)})
+      (
+       (*	 map (removeSecureUmlAends cs)
+			         (List.filter (classifier_has_no_stereotype ["secuml.permission",
+														                               "secuml.role",
+														                               "secuml.subject",
+														                               "secuml.actiontype"]) 
+						                cs),
+        *)	 (modified_classifiers,modified_assocs),
+       { config_type = "SecureUML",
+         permissions = map (mkPermission model) (filter_permission cs),
+         subjects    = map mkSubject (filter_subject cs),
+         roles       = map mkRole (filter_role cs),
+         rh          = map (fn x => (Rep.string_of_path (Rep.name_of x),
+                                     Rep.string_of_path (Rep.parent_name_of x)))
+                           (List.filter classifier_has_parent (filter_role cs)),
+         sa          = map (mkSubjectAssignment model) (filter_subject cs)})
     end
     handle ex => (error_msg "in SecureUML.parse: security configuration \
                             \could not be parsed";

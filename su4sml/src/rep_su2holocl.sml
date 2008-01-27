@@ -283,60 +283,65 @@ fun create_secured {name, body,precondition, postcondition, arguments, result,
  * generates constructors, destructors, setters, getters, and "secured" operations. 
  *)
 fun add_operations c = 
-    let val self_type = Classifier (name_of c) 
-        val res = result (Classifier (name_of c))
-        val constructor = {name="new",
-                           precondition=nil,
-                           (* post: result.oclIsNew() and result->modiefiedOnly() *)
-                           postcondition=[(SOME "generated_constructor",
-                                           ocl_and (ocl_isNew (result self_type))
-                                                   (ocl_modifiedOnly (ocl_set [res] (self_type))))
-                                          ],
-			   body = [],
-                           arguments=nil,
-                           result=Classifier (name_of c),
-                           isQuery=false,
-                           scope=ClassifierScope,
-                           visibility=public}
-        val destructor  = {name="delete",
-                           precondition=nil,
-			   body=nil,
-                           (* post: self.oclIsUndefined() and self@pre->modifiedOnly() *)
-                           postcondition=[(SOME "generated_destructor",
-                                           ocl_and (ocl_isUndefined (self self_type))
-                                                   (ocl_modifiedOnly 
-                                                        (ocl_set [atpre (self self_type)] 
-                                                                 self_type)))
-                                         ],
-                           arguments=nil,
-                           result=OclVoid,
-                           isQuery=false,
-                           scope=InstanceScope,
-                           visibility=public}
-        val getters = map (create_getter c) (attributes_of c)
-        val setters = map (create_setter c) (attributes_of c)
-        val sec_ops = map create_secured (operations_of c)
-        val generated_ops = [constructor,destructor]@getters@setters@sec_ops  
+    let 
+      val self_type = Classifier (name_of c) 
+      val res = result (Classifier (name_of c))
+      val constructor = 
+          {name="new",
+           precondition=nil,
+           (* post: result.oclIsNew() and result->modiefiedOnly() *)
+           postcondition=[(SOME "generated_constructor",
+                           ocl_and (ocl_isNew (result self_type))
+                                   (ocl_modifiedOnly (ocl_set [res]
+                                                              (self_type))))
+                         ],
+			     body = [],
+           arguments=nil,
+           result=Classifier (name_of c),
+           isQuery=false,
+           scope=ClassifierScope,
+           visibility=public}
+      val destructor  = 
+          {name="delete",
+           precondition=nil,
+			     body=nil,
+           (* post: self.oclIsUndefined() and self@pre->modifiedOnly() *)
+           postcondition=[(SOME "generated_destructor",
+                           ocl_and (ocl_isUndefined (self self_type))
+                                   (ocl_modifiedOnly 
+                                        (ocl_set [atpre (self self_type)] 
+                                                 self_type)))
+                         ],
+           arguments=nil,
+           result=OclVoid,
+           isQuery=false,
+           scope=InstanceScope,
+           visibility=public}
+      val getters = map (create_getter c) (attributes_of c)
+      val setters = map (create_setter c) (attributes_of c)
+      val sec_ops = map create_secured (operations_of c)
+      val generated_ops = [constructor,destructor]@getters@setters@sec_ops  
     in 
-        List.foldl (uncurry addOperation) c generated_ops 
+      List.foldl (uncurry addOperation) c generated_ops 
     end
-                       
+        
 
-(* billk_tag: associationend -> path + associations *)
+    
 val identity_role_association =
     {name=["AuthorizationEnvironment","IdentityRoleAssociation"],
      aends=[{name=["AuthorizationEnvironment","Association","identity"],
-	     aend_type=Classifier ["AuthorizationEnvironment","Identity"],
-	     init=NONE,
-	     multiplicity=[(0,~1)],
-	     ordered=false,
-	     visibility=public},
-	    {name=["AuthorizationEnvironment","Association","roles"],
-	     aend_type=Classifier ["AuthorizationEnvironment","Role"],
-	     init=NONE,multiplicity=[(0,~1)],
-	     ordered=false,
-	     visibility=public}
-	   ],
+	           aend_type=Classifier ["AuthorizationEnvironment","Identity"],
+	           init=NONE,
+	           multiplicity=[(0,~1)],
+	           ordered=false,
+	           visibility=public},
+	          {name=["AuthorizationEnvironment","Association","roles"],
+	           aend_type=Classifier ["AuthorizationEnvironment","Role"],
+	           init=NONE,multiplicity=[(0,~1)],
+	           ordered=false,
+	           visibility=public}
+	         ],
+     qualifiers=[],
      aclass=NONE}
     
 val identity_principal_association =
@@ -353,34 +358,40 @@ val identity_principal_association =
 	     ordered=false,
 	     visibility=public}
 	   ],
+     qualifiers=[],
      aclass=NONE}
     
 val context_principal_association =
     {name=["AuthorizationEnvironment","ContextPrincipalAssociation"],
-     aends=[{name=["AuthorizationEnvironment","ContextPrincipalAssociation","principal"],
-	     aend_type=Classifier ["AuthorizationEnvironment","Principal"],
-	     init=NONE,
-	     multiplicity=[(1,1)],
-	     ordered=false,
-	     visibility=public},
-	    {name=["AuthorizationEnvironment","ContextPrincipalAssociation","context"],
-	     aend_type=Classifier ["AuthorizationEnvironment","Context"],
-	     init=NONE,
-	     multiplicity=[(0,~1)],
-	     ordered=false,
-	     visibility=public}
-	   ],
+     aends=[{name=["AuthorizationEnvironment","ContextPrincipalAssociation",
+                   "principal"],
+	           aend_type=Classifier ["AuthorizationEnvironment","Principal"],
+	           init=NONE,
+	           multiplicity=[(1,1)],
+	           ordered=false,
+	           visibility=public},
+	          {name=["AuthorizationEnvironment","ContextPrincipalAssociation",
+                   "context"],
+	           aend_type=Classifier ["AuthorizationEnvironment","Context"],
+	           init=NONE,
+	           multiplicity=[(0,~1)],
+	           ordered=false,
+	           visibility=public}
+	         ],
+     qualifiers=[],
      aclass=NONE}
-
+    
 val role =    
     Class {activity_graphs=[],
-(*           associationends=[{aend_type=Classifier
-                                           ["AuthorizationEnvironment","Identity"],
-                             init=NONE,multiplicity=[(0,~1)],
-                             name="identity",
-                             ordered=false,
-                             visibility=public}],
- *)        associations=[["AuthorizationEnvironment","IdentityRoleAssociation"]],
+           (* associationends=[{aend_type=Classifier
+                                    ["AuthorizationEnvironment","Identity"],
+                                init=NONE,multiplicity=[(0,~1)],
+                                name="identity",
+                                ordered=false,
+                                visibility=public}],
+            *)
+            associations=[["AuthorizationEnvironment",
+                           "IdentityRoleAssociation"]],
            attributes=[{attr_type=String,
                         init=NONE,name="name",
                         scope=InstanceScope,
@@ -543,12 +554,16 @@ fun create_sec_postconds sc c = c
 
 fun transform (model:Rep.Model,sc) =
     let
-        val transformed_design_model = (map add_operations (#1 model),#2 model)
-        val transformed_model = create_sec_postconds sc transformed_design_model 
-        val auth_env          = map (normalize (#2 transformed_model)) (define_roles sc::define_role_hierarchy sc::static_auth_env) 
+      val transformedDesignModel = (map add_operations (#1 model),#2 model)
+      val transformedModel = create_sec_postconds sc transformedDesignModel 
+      val authEnv = map (normalize (#2 transformedModel)) 
+                        (define_roles sc::define_role_hierarchy sc::
+                         static_auth_env) 
     in
-         ((#1 transformed_model) @ auth_env,identity_role_association::identity_principal_association::
-				       context_principal_association::(#2 transformed_model))
+      ((#1 transformedModel) @ authEnv,identity_role_association::
+                                       identity_principal_association::
+				                               context_principal_association::
+                                       (#2 transformedModel))
     end
     
 end 
