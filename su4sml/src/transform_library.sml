@@ -29,7 +29,10 @@ val consistencyOclConstraint: Rep_Core.Classifier ->
 
 (**
  * Works through the list of classifiers and updates uses of oldAssoc
- * to the appropriate association in newAssocs.
+ * to the appropriate association in newAssocs. This function only handles
+ * the case where the classifiers aren't changed, i.e. source type, target type
+ * and role remain the same. The qualifier transformation is not covered, for
+ * instance.
  *
  * @params {classifiers,(oldAssoc,newAssocs)}
  * @param classifiers
@@ -223,6 +226,9 @@ val updateClassifiersWithConstraints: Rep_Core.Classifier list ->
 
 val uid: int ref
 
+val aend_of_association: Rep.association -> Rep_OclType.Path ->
+                         Rep.associationend
+val aends_of_association: Rep.association -> Rep.associationend list
 val qualifier_of_path :Rep_OclType.Path -> Rep_OclType.Path
 val name_of_attribute : Rep.attribute -> string
 val addAttribute : Rep.Classifier -> Rep.attribute -> Rep.Classifier
@@ -280,6 +286,8 @@ fun stripMultiplicities ({name,aends,qualifiers,aclass}:association):
 fun multiplicity_of_aend ({aend_type,multiplicity,...}:associationend) = 
     multiplicity
 
+fun aends_of_association {name,aends,qualifiers,aclass} = aends
+
 (* (JD) -> Rep_Core? *)	
 fun path_of_aend ({name,aend_type,...}:associationend) = name
 fun name_of_aend ({name,aend_type,...}:associationend) = 
@@ -293,6 +301,14 @@ fun type_of_aend ({name,aend_type,...}:associationend) = aend_type
 (* (JD) -> Rep_Core? *)	
 fun association_of_aend ({name,aend_type,...}:associationend) =
 	  List.take(name, (List.length name)-1)
+
+fun aend_of_association {name,aends,qualifiers,aclass} path =
+    let 
+      val [aend] = List.filter (fn ({name,aend_type,...}:associationend) => 
+                                   name=path) aends
+    in
+      aend
+    end
 
 fun package_of_aend ({name,aend_type,...}:associationend) =
     List.take(name, List.length name - 2)
@@ -416,11 +432,144 @@ fun removeAssociations oldAssocs associations =
       foldl removeAssoc associations oldAssocs
     end
 
+(* FIXME: CollectionParts? *)
 fun updateAssociationReferences classifiers [] = classifiers
-  | updateAssociationReferences classifiers ((oldAssoc,newAssocs)::rem) =
+  | updateAssociationReferences classifiers updates =
     let
+      fun matchAend source target role [a as {name,aend_type,multiplicity,
+                                              ordered,init,visibility},
+                                        b as {name=name2,aend_type=aend_type2,
+                                              ...}] =
+          (* binary association only *)
+          (short_name_of_path name = role andalso aend_type = target andalso
+           aend_type2 = source) orelse (matchAend source target role [b,a])
+          
+      fun selectAend source target role [a as {name,aend_type,multiplicity,
+                                              ordered,init,visibility},
+                                        b as {name=name2,aend_type=aend_type2,
+                                              ...}]:associationend =
+          (* binary association only *)
+          if short_name_of_path name = role andalso aend_type = target 
+             andalso aend_type2 = source then a
+          else b
+
+      fun findNewPath oldAssoc newAssocs source path =
+          let
+            val role = short_name_of_path path
+            val {aend_type,...}= aend_of_association oldAssoc path
+            val sourceType = if is_Collection source 
+                             then collection_type_of_OclType source
+                             else source
+            val [[a,b]] = 
+                List.filter (matchAend sourceType aend_type role)
+                            (map aends_of_association newAssocs)
+            val {name=newPath,...}:associationend = selectAend sourceType aend_type role [a,b]
+          in
+            newPath
+          end
+
+      fun traverseOcl oldAssoc newAssocs (If(cond,condType,thenn,thennType,
+                                             elsee,elseeType,resultType))=
+          If(traverseOcl oldAssoc newAssocs cond,condType,
+             traverseOcl oldAssoc newAssocs thenn,thennType,
+             traverseOcl oldAssoc newAssocs elsee,elseeType,
+             resultType)
+        | traverseOcl (oldAssoc as{name,aends,qualifiers,aclass}) newAssocs
+                      (AssociationEndCall(source,sourceType,path,
+                                          resultType)) =
+          let
+            (* match path and resultType to the correct newAssocs *)
+            val newPath = if qualifier_of_path path <> name then path
+                          else findNewPath oldAssoc newAssocs sourceType path
+          in
+            AssociationEndCall(traverseOcl oldAssoc newAssocs source,
+                               sourceType,newPath,resultType)
+          end
+        | traverseOcl oldAssoc newAssocs (AttributeCall(source,sourceType,
+                                         path,resultType)) =
+          AttributeCall(traverseOcl oldAssoc newAssocs source,sourceType,
+                        path,resultType)
+        | traverseOcl oldAssoc newAssocs (OperationCall(source,sourceType,
+                                                        path,parameters,
+                                                        resultType)) =
+          let
+            fun handleParameters (term,termType) = 
+                (traverseOcl oldAssoc newAssocs term,termType)
+          in
+            OperationCall(traverseOcl oldAssoc newAssocs source,sourceType,
+                          path,map handleParameters parameters,resultType)
+          end
+        | traverseOcl oldAssoc newAssocs (OperationWithType(source,sourceType,
+                                                            var,varType,
+                                                            resulType)) =
+          OperationWithType(traverseOcl oldAssoc newAssocs source,sourceType,
+                            var,varType,resulType)
+        | traverseOcl oldAssoc newAssocs (Let(name,nameType,rhs,rhsType,body,
+                                              bodyType)) =
+          Let(name,nameType,
+              traverseOcl oldAssoc newAssocs rhs,rhsType,
+              traverseOcl oldAssoc newAssocs body,bodyType)
+        | traverseOcl oldAssoc newAssocs (Iterate (vars,name,nameType,nameTerm,
+                                                   source,sourceType,body,
+                                                   bodyType,resultType)) =
+          Iterate (vars,
+                   name,nameType,traverseOcl oldAssoc newAssocs nameTerm,
+                   traverseOcl oldAssoc newAssocs source,sourceType,
+                   traverseOcl oldAssoc newAssocs body,bodyType,
+                   resultType)
+        | traverseOcl oldAssoc newAssocs (Iterator (name,vars,source,
+                                                    sourceType,body,bodyType,
+                                                    resultType)) =
+          Iterator (name,vars,
+                    traverseOcl oldAssoc newAssocs source, sourceType,
+                    traverseOcl oldAssoc newAssocs body,bodyType,
+                    resultType)
+        | traverseOcl oldAssoc newAssocs x = x
+      
+      fun handleConstraint oldAssoc newAssocs (name,term) =
+          (name,traverseOcl oldAssoc newAssocs term)
+
+      fun modifyClassifier oldAssoc newAssocs (Class{name,parent,attributes,
+                                                     operations,associations,
+                                                     invariant,stereotypes,
+                                                     interfaces,thyname,
+                                                     activity_graphs}) =
+          Class{name=name,
+                parent=parent,
+                attributes=attributes,
+                operations=operations,
+                associations= associations,
+                invariant=map (handleConstraint oldAssoc newAssocs) invariant,
+                stereotypes=stereotypes,
+                interfaces=interfaces,
+                thyname=thyname,
+                activity_graphs=activity_graphs}
+        | modifyClassifier oldAssoc newAssocs (AssociationClass
+                                                   {name,parent,attributes,
+                                                    operations,associations,
+                                                    invariant,association,
+                                                    stereotypes,interfaces,
+                                                    thyname,activity_graphs}) =
+          AssociationClass{name=name,
+                           parent=parent,
+                           attributes=attributes,
+                           operations=operations,
+                           associations= associations,
+                           association=association,
+                           invariant=map (handleConstraint oldAssoc newAssocs) 
+                                         invariant,
+                           stereotypes=stereotypes,
+                           interfaces=interfaces,
+                           thyname=thyname,
+                           activity_graphs=activity_graphs}
+        | modifyClassifier oldAssoc newAssocs (Template{parameter,classifier})=
+          Template{parameter=parameter,
+                   classifier=modifyClassifier oldAssoc newAssocs classifier}
+                                               
+      fun updateReferences ((oldAssoc,newAssocs),tmpClassifiers) =
+          map (modifyClassifier oldAssoc newAssocs) tmpClassifiers
     in
-      classifiers (*FIXME*)
+      foldl updateReferences classifiers updates
     end
 
 fun updateClassifiersWithConstraints classifiers oclType constraints = 
