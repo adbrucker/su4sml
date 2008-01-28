@@ -92,6 +92,10 @@ val matchClassifiersAtAend: Rep_Core.associationend list ->
                              Rep_Core.Classifier list )
 
 (**
+ *)
+val binaryAssociations : Rep.Classifier -> Rep.Classifier list ->
+                         (Rep.association list * Rep.associationend list)
+(**
  * Form binary associations between
  * @params {source,targets,aends}
  * @param source one of the ends for each of the binary associations
@@ -102,10 +106,9 @@ val matchClassifiersAtAend: Rep_Core.associationend list ->
  *              supplied aends and denote the new association ends
  * @returns (binaryAssocs,oppRefAends)
  *)
-val binaryAssociations: Rep_Core.Classifier -> Rep_Core.Classifier list -> 
-                        Rep_Core.associationend list -> 
-                        (Rep_Core.association list * 
-                         Rep_Core.associationend list)
+val orderedBinaryAssociations: Rep.Classifier -> Rep.Classifier list -> 
+                               Rep.associationend list -> 
+                               (Rep.association list * Rep.associationend list)
 
 val nextUid: unit -> string
 (**
@@ -114,10 +117,30 @@ val nextUid: unit -> string
  *)
 val newDummyClass: Rep_OclType.Path -> Rep_Core.Classifier
 
+(**
+ * Generate a new Class for the given package and having the given name.
+ * @params {package, name}
+ * @param package the packgae the new class should belong to
+ * @param name the name of the new class. Will be suffixed to ensure 
+ *             uniqueness
+ * @return returns a new class for the given package having a unique name
+ *                 starting with the given name
+ *)
+val newNamedClass: Rep_OclType.Path -> string -> Rep_Core.Classifier
+
 val fixAends: Rep_OclTerm.OclTerm -> Rep_Core.associationend list 
               -> (Rep_OclTerm.OclTerm * Rep_OclTerm.OclTerm list)
 
 val isPureNAryAssoc: Rep_Core.association -> bool
+
+(**
+ * For filtering pure qualified associations. At the moment, only binary
+ * associations are handled.
+ * @params {association}
+ * @param association test association for being purely qualified, meaning
+ *        no other adornments, such as aggregation, partitioning, etc
+ * @return true iff the association is purely qualified
+ *)
 val isPureQualifier: Rep_Core.association -> bool
 val isPureAcAssoc: Rep_Core.association -> bool
 (**
@@ -200,8 +223,13 @@ val updateClassifiersWithConstraints: Rep_Core.Classifier list ->
 
 val uid: int ref
 
+val qualifier_of_path :Rep_OclType.Path -> Rep_OclType.Path
+val name_of_attribute : Rep.attribute -> string
+val addAttribute : Rep.Classifier -> Rep.attribute -> Rep.Classifier
+val addAttributes : Rep.Classifier -> Rep.attribute list -> Rep.Classifier
 val multiplicity_of_aend: Rep_Core.associationend -> (int * int) list
 val package_of_aend: Rep_Core.associationend -> Rep_OclType.Path
+val path_of_association:Rep.association -> Rep_OclType.Path
 val name_of_association: Rep_Core.association -> Rep_OclType.Path
 val package_of_association: Rep_Core.association -> Rep_OclType.Path
 val variableFromAend: Rep_Core.associationend -> Rep_OclTerm.OclTerm
@@ -270,9 +298,12 @@ fun package_of_aend ({name,aend_type,...}:associationend) =
     List.take(name, List.length name - 2)
 
 fun name_of_association ({name,aends,qualifiers,aclass}:association) = name
+fun path_of_association assoc = name_of_association assoc
 
 fun package_of_association ({name,aends,qualifiers,aclass}:association) =
     List.take(name, List.length name - 1)
+
+fun qualifier_of_path path = List.take(path, List.length path - 1)
 
 (* (JD) -> Rep_Core? *)	
 fun multiplicities_of_aend ({aend_type,multiplicity,...}:associationend) = 
@@ -281,6 +312,41 @@ fun multiplicities_of_aend ({aend_type,multiplicity,...}:associationend) =
 fun short_name_of_aend ({name,aend_type,...}:associationend) = 
     short_name_of_path name
 
+fun name_of_attribute ({name,...}:attribute) = name
+
+fun addAttributes (Class {name,parent,attributes,operations,associations,
+                        invariant,stereotypes,interfaces,thyname,
+                        activity_graphs}) newAttributes =
+    Class {name=name,
+           parent=parent,
+           attributes=newAttributes@attributes,
+           operations=operations,
+           associations=associations,
+           invariant=invariant,
+           stereotypes=stereotypes,
+           interfaces=interfaces,
+           thyname=thyname,
+           activity_graphs=activity_graphs}
+  | addAttributes (AssociationClass {name,parent,attributes,operations,
+                                   associations,association,invariant,
+                                   stereotypes,interfaces,thyname,
+                                   activity_graphs}) newAttributes =
+    AssociationClass {name=name,
+                      parent=parent,
+                      attributes=newAttributes@attributes,
+                      operations=operations,
+                      associations=associations,
+                      association=association,
+                      invariant=invariant,
+                      stereotypes=stereotypes,
+                      interfaces=interfaces,
+                      thyname=thyname,
+                      activity_graphs=activity_graphs}
+  | addAttributes (Template {parameter,classifier}) newAttributes= 
+    Template {parameter=parameter,
+              classifier=addAttributes classifier newAttributes}
+    
+fun addAttribute classifier attribute = addAttributes classifier [attribute]
 
 fun quantifyForAll variables body =
     let
@@ -302,7 +368,7 @@ fun isPureNAryAssoc {name,aends,qualifiers=[],aclass=NONE} =
     List.length aends > 1 
   | isPureNAryAssoc _ = false
 
-fun isPureQualifier {name,aends,qualifiers,aclass=NONE} = 
+fun isPureQualifier {name,aends=[a,b],qualifiers,aclass=NONE} = 
     List.length qualifiers > 1
   | isPureQualifier _ = false
                         
@@ -322,16 +388,32 @@ fun newDummyClass package =
           thyname=NONE,
           activity_graphs=[]}
 
-fun addAssociations newAssocs associations =
-    let
-    in 
-      associations (* FIXME *)
-    end
+fun newNamedClass package name =
+    Class{name=Classifier (package@[name^ nextUid ()]),
+          parent=NONE,
+          attributes=[],
+          operations=[],
+          associations=[],
+          invariant=[],
+          stereotypes=[],
+          interfaces=[],
+          thyname=NONE,
+          activity_graphs=[]}
 
+fun addAssociations (newAssocs:Path list) (associations:Path list) =
+    let
+      fun replaceAssoc (newAssoc:Path,oldAssociations:Path list) =
+          newAssoc ::(List.filter (fn x => x <> newAssoc) oldAssociations)
+    in 
+      foldl replaceAssoc associations newAssocs
+    end
+    
 fun removeAssociations oldAssocs associations =
     let
+      fun removeAssoc (oldAssoc,oldAssociations) =
+          List.filter (fn x => x <> oldAssoc) oldAssociations
     in 
-      associations (* FIXME *)
+      foldl removeAssoc associations oldAssocs
     end
 
 fun updateAssociationReferences classifiers [] = classifiers
@@ -396,45 +478,47 @@ fun withinAendMultiplicities targetAend sourceAends name =
     constraint
   end
 
-fun injectiveConstraint (source_path:Path) (source_type:OclType) (targets:associationend list) (name:string):constraint =
-  let
-    val source_name = get_short_name source_path
-    val src_var = Variable(source_name,source_type)
-    fun role_bounds src_var aend  = 
-      let
-	val name = path_of_aend aend
-	val aend_type = type_of_aend aend
-	val set = ocl_aendcall src_var  name aend_type
-	val size = ocl_size set
-	val bounds = ocl_eq size (Literal("1",Integer))
-      in
-	bounds
-      end
-    fun role_equals src_var src2_var aend =
-      let
-	val name = path_of_aend aend
-	val aend_type = type_of_aend aend
-	val set = ocl_aendcall src_var  name aend_type
-	val size = ocl_size set
-	val match = ocl_eq size (Literal("1",Integer))
-      in
-	match
-      end
-    val roles = map (role_bounds src_var) targets
-    val roles_part =  ocl_and_all roles
-    val allInstances = ocl_allInstances src_var
-    val src_var2 = Variable(source_name^"2",source_type)
-    val matches = map (role_equals src_var src_var2) targets
-    val matches_anded = ocl_and_all roles
-    val matches_equal = ocl_eq src_var src_var2
-    val matches_imp = ocl_implies matches_anded matches_equal
-    val allInstances2 = ocl_allInstances src_var2
-    val matches_part = ocl_forAll allInstances2 [src_var2] matches_imp
-    val constr_body = ocl_and roles_part matches_part
-    val constr_complete = ocl_forAll allInstances [src_var] constr_body
-  in
-    (SOME name,constr_complete)
-  end
+fun injectiveConstraint (source_path:Path) (source_type:OclType) 
+                        (targets:associationend list) (name:string):
+    constraint =
+    let
+      val source_name = get_short_name source_path
+      val src_var = Variable(source_name,source_type)
+      fun role_bounds src_var aend  = 
+          let
+	          val name = path_of_aend aend
+	          val aend_type = type_of_aend aend
+	          val set = ocl_aendcall src_var  name aend_type
+	          val size = ocl_size set
+	          val bounds = ocl_eq size (Literal("1",Integer))
+          in
+	          bounds
+          end
+      fun role_equals src_var src2_var aend =
+          let
+	          val name = path_of_aend aend
+	          val aend_type = type_of_aend aend
+	          val set = ocl_aendcall src_var  name aend_type
+	          val size = ocl_size set
+	          val match = ocl_eq size (Literal("1",Integer))
+          in
+	          match
+          end
+      val roles = map (role_bounds src_var) targets
+      val roles_part =  ocl_and_all roles
+      val allInstances = ocl_allInstances src_var
+      val src_var2 = Variable(source_name^"2",source_type)
+      val matches = map (role_equals src_var src_var2) targets
+      val matches_anded = ocl_and_all roles
+      val matches_equal = ocl_eq src_var src_var2
+      val matches_imp = ocl_implies matches_anded matches_equal
+      val allInstances2 = ocl_allInstances src_var2
+      val matches_part = ocl_forAll allInstances2 [src_var2] matches_imp
+      val constr_body = ocl_and roles_part matches_part
+      val constr_complete = ocl_forAll allInstances [src_var] constr_body
+    in
+      (SOME name,constr_complete)
+    end
 
 fun modifyAssociationsOfClassifier (newAssociations:association list) 
                                    (oldAssociations:association list)
@@ -446,9 +530,11 @@ fun modifyAssociationsOfClassifier (newAssociations:association list)
           parent=parent,
           attributes=attributes,
           operations=operations,
-          associations= addAssociations newAssociations (removeAssociations
-                                                             oldAssociations
-                                                             associations),
+          associations= addAssociations 
+                        (map path_of_association newAssociations) 
+                        (removeAssociations 
+                             (map path_of_association oldAssociations)
+                             associations),
           invariant=invariant,
           stereotypes=stereotypes,
           interfaces=interfaces,
@@ -464,9 +550,11 @@ fun modifyAssociationsOfClassifier (newAssociations:association list)
                      parent=parent,
                      attributes=attributes,
                      operations=operations,
-                     associations= addAssociations newAssociations 
-                                   (removeAssociations oldAssociations
-                                                       associations),
+                     associations= addAssociations 
+                                   (map path_of_association newAssociations) 
+                                   (removeAssociations 
+                                        (map path_of_association 
+                                             oldAssociations) associations),
                      association=association,
                      invariant=invariant,
                      stereotypes=stereotypes,
@@ -482,9 +570,11 @@ fun modifyAssociationsOfClassifier (newAssociations:association list)
     Primitive {name=name,
 	             parent=parent,
 	             operations=operations,
-	             associations= addAssociations newAssociations 
-                             (removeAssociations oldAssociations
-                                                 associations),
+	             associations= addAssociations 
+                             (map path_of_association newAssociations) 
+                             (removeAssociations 
+                                  (map path_of_association oldAssociations)
+                                  associations),
 	             invariant=invariant,
 	             stereotypes=stereotypes,
 	             interfaces=interfaces,
@@ -516,8 +606,8 @@ fun uniquenessOclConstraint (source:Classifier) (associations:association list) 
       (SOME "Uniqueness", constr)
     end
 
-fun binaryAssociations (source:Classifier) (targets:Classifier list) aends: 
-  (association list * associationend list)=
+fun binaryAssociations (source:Classifier) (targets:Classifier list):
+    (association list * associationend list)=
     let
       val _ = trace function_calls "binaryAssociations\n"
       fun generateAssociation target: (association * associationend)=
@@ -544,6 +634,16 @@ fun binaryAssociations (source:Classifier) (targets:Classifier list) aends:
              oppAend)
           end
 
+      val pairs = map generateAssociation targets
+    in
+      ListPair.unzip pairs
+    end
+
+fun orderedBinaryAssociations (source:Classifier) (targets:Classifier list) 
+                              aends: (association list * associationend list)=
+    let
+      val _ = trace function_calls "orderedBinaryAssociations\n"
+
       fun order [] (x::xs) = 
           raise InvalidArguments ("binaryAssociations.order:"^
                                   "arguments don't agree\n")
@@ -565,11 +665,9 @@ fun binaryAssociations (source:Classifier) (targets:Classifier list) aends:
           end
           
 
-      val pairs:(association * associationend) list = 
-          map generateAssociation targets
-      val orderedPairs:(association * associationend) list  = order pairs aends
+      val pairList = binaryAssociations source targets
     in
-      ListPair.unzip orderedPairs: (association list * associationend list)
+      ListPair.unzip (order (ListPair.zip pairList) aends)
     end
 
 fun variableFromAend ({name,aend_type,...}:associationend) =

@@ -167,7 +167,8 @@ fun associationends_of (assoc:association):associationend list =
     let
 	val _ = print "associationends_of\n"
 	val _ = print ("assocends_of: "^(string_of_path (#name assoc))^"\n")
-	val _ = List.app (print o (fn x => x ^"\n") o name_of_aend) (#aends assoc)
+	val _ = List.app (print o (fn x => x ^"\n") o name_of_aend) 
+                         (#aends assoc)
     in
 	#aends assoc
     end
@@ -176,16 +177,6 @@ fun associationends_of (assoc:association):associationend list =
  ******** Transforms ********
  ****************************)
 
-(**
- * 
- * Remove qualifiers
- * requires: qualifier
- * generates: constraint, AssociationClass
- * removes: qualifier
- *)
-fun transformQualifiers ((all_classifiers,all_associations):transform_model):
-    transform_model = 
-    (all_classifiers,all_associations) (*dummy*)
 
 (** Remove aggregations
  * requires: aggregation
@@ -196,11 +187,85 @@ fun transformAggregation (allClassifiers,allAssociations) =
     (allClassifiers,allAssociations) (*dummy*)
 
 
-(*****************************************************************************)
-(*****************************************************************************)
-(**** update *****************************************************************)
-(*****************************************************************************)
+(**
+ * 
+ * Remove qualifiers
+ * requires: qualified binary associations
+ * generates: constraints, binary associations
+ * removes: qualifiers
+ *)
+fun transformQualifiers ((allClassifiers,allAssociations):transform_model):
+    transform_model =
+    let
+      val _ = trace function_calls "transformQualifiers\n"
+      fun handleQualifier assocPath (role,attributes) =
+          let
+            fun addAttrPair (cls,attr) = addAttribute cls attr
+                                   
+            val package = qualifier_of_path assocPath      
+            val dummy = newDummyClass package
+            val newClasses = map (newNamedClass package) 
+                                 (map name_of_attribute attributes)
+            val newClasses = map addAttrPair (ListPair.zip(newClasses,
+                                                           attributes))
+            val (newBinaryAssocs,newOppAends) = binaryAssociations dummy 
+                                                                   newClasses
+          in
+            (role,dummy, newClasses, newBinaryAssocs)
+          end
+              
+      (* this way, in case of a binary to nary transition *)
+      fun updateAend ((role,dummy,newClasses,newBinaryAssocs),
+                      ({name,aends,qualifiers,aclass},collectedAssocs,
+                       collectedClassifiers)) =
+          let
+            fun modAend newType {name,aend_type,multiplicity,ordered,
+                                 init,visibility} =
+                {name=name,
+                 aend_type=newType,
+                 multiplicity=multiplicity,
+                 ordered=ordered,
+                 visibility=visibility,
+                 init=init}
+                
+            val ([aend],rem) =
+                List.partition (fn {name=aendName,aend_type,...} =>
+                                   aendName = (name@[role])) aends
+            val modifiedAends = modAend (type_of dummy) aend :: rem
+          in
+            ({name=name,
+              aends=modifiedAends,
+              qualifiers=[],
+              aclass=aclass},
+             newBinaryAssocs@collectedAssocs,
+             dummy::newClasses@collectedClassifiers)
+          end
+          
+      fun removeQualifiers (assoc as {name=assocPath,aends,qualifiers,aclass}:
+                          association,
+                            (classifiers,associations)):
+          (Classifier list * association list) =
+          let
+            (* generate the new classes and assocs for possibly both
+             * aend ends *)
+            val qualiTouple = map (handleQualifier assocPath) qualifiers
+            (* update the original aend to point to the new dummy class,
+             * possibly at both ends *)
+            val (modifiedAssoc, newAssocs, newClassifiers) =
+                foldl updateAend (assoc,[],classifiers) qualiTouple
+            (* update all references to the original qualified pairs *)
+            val modifiedClassifiers = newClassifiers@classifiers 
+                    (*update newClassifiers@classifiers... FIXME *)
+          in
+            (modifiedClassifiers, modifiedAssoc::newAssocs@associations)
+          end
 
+      val (qualified, rem) = List.partition isPureQualifier allAssociations
+      val (modifiedClassifiers, modifiedAssociations) =
+          foldl removeQualifiers (allClassifiers,[]) qualified
+    in
+      (modifiedClassifiers, modifiedAssociations@rem)
+    end
 
 
 (** 
@@ -264,8 +329,9 @@ fun generalTransfromNAryAssociation dummy (association as {name,aends,
 
        (* extract participants/members and form associations *)
       val (assocMembers,rem) = matchClassifiersAtAend aends classifiers
-      val (binaryAssocs,oppRefAends) = binaryAssociations dummy assocMembers 
-                                                          aends
+      val (binaryAssocs,oppRefAends) = orderedBinaryAssociations dummy 
+                                                                 assocMembers 
+                                                                 aends
       val (clsses,roleNames, oppAends, splitAssocs) = splitNAryAssociation 
                                                           association
                                                           assocMembers
