@@ -1,0 +1,20 @@
+SHELL:
+
+INPUT:	use "test-setup.sml"
+
+            {aend_type=Classifier ["AbstractSimpleChair02","Participant"],
+             init=NONE,multiplicity=[(0,~1)],
+             name=["AbstractSimpleChair02","association_123465",
+                   "participants"],ordered=false,visibility=public}],
+     name=["AbstractSimpleChair02","association_123465"]}])
+  : Classifier list * association list
+val x = () : unit
+val y =
+  {description="refine from package oclLib to package oclLib",generator=fn,
+   name="refine"} : constraint
+REFINE MODEL ...
+shitCHECK SYNTAX ... 
+
+uncaught exception GetClassifierError
+  raised at: ocl_parser/library.sml:645.9-645.86
+

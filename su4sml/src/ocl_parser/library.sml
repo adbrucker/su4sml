@@ -43,12 +43,12 @@ signature EXT_LIBRARY =
 sig
 
     (* operations with parents *)
-    val class_of_parent         : Rep_Core.Classifier -> Rep_Core.Classifier list -> Rep_Core.Classifier
+    val class_of_parent         : Rep_Core.Classifier -> Rep_Core.transform_model -> Rep_Core.Classifier
     val type_of_parent          : Rep_Core.Classifier -> Rep_OclType.OclType
-    
+    val type_of_parents         : Rep_Core.Classifier -> Rep_Core.transform_model -> Rep_OclType.OclType list    
     (* classifiers and packages *) 
-    val class_of_type           : Rep_OclType.OclType -> Rep_Core.Classifier list -> Rep_Core.Classifier
-    val get_classifier          : Rep_OclTerm.OclTerm -> Rep_Core.Classifier list -> Rep_Core.Classifier
+    val class_of_type           : Rep_OclType.OclType -> Rep_Core.transform_model -> Rep_Core.Classifier
+    val get_classifier          : Rep_OclTerm.OclTerm -> Rep_Core.transform_model -> Rep_Core.Classifier
     val package_of_template_parameter : Rep_OclType.OclType -> string list
 
     (* operations for types *)
@@ -95,6 +95,7 @@ sig
     val function_calls          : int
     val function_arguments      : int
     val zero                    : int 
+    val exce                    : int
     val high                    : int 
     val medium                  : int 
     val low                     : int 
@@ -110,15 +111,17 @@ sig
     exception NoSuchAttributeError of string
     exception NoSuchAssociationEndError of string
     exception NoSuchOperationError of string
-
+    exception NoParentForDatatype of string
 end
 structure Ext_Library:EXT_LIBRARY =
 struct
         
+open Rep
 open Rep_Core
 open Rep_OclType
 open Rep_OclTerm
 open OclLibrary
+open XMI_DataTypes
      
 exception InterferenceError of string
 exception TemplateInstantiationError of string
@@ -129,6 +132,7 @@ exception NoCollectionTypeError of OclType
 exception NoSuchAttributeError of string
 exception NoSuchAssociationEndError of string
 exception NoSuchOperationError of string
+exception NoParentForDatatype of string
 				  
 (* Error logging *)
 (* default value *)
@@ -138,6 +142,7 @@ val log_level = ref 6
 val function_calls = 5
 val function_arguments = 6
 val zero = 0
+val exce = 0
 val high = 10
 val medium = 20
 val low = 100
@@ -277,6 +282,7 @@ fun type_of_term (Literal (s,typ)) = typ
   | type_of_term (OperationWithType (_,_,_,_,res_typ)) = res_typ
   | type_of_term (Let (_,_,_,_,_,res_typ)) = res_typ
   | type_of_term (Iterate (_,_,_,_,_,_,_,_,res_typ)) = res_typ
+  | type_of_term (Predicate (_,_,_,_)) = Boolean
 
 fun type_of_CollPart (CollectionItem (term,typ)) = typ
   | type_of_CollPart (CollectionRange (term1,term2,typ)) = typ
@@ -547,6 +553,7 @@ fun substitute_operations typ [] = []
 	 result = res,
 	 visibility = #visibility oper,
 	 isQuery = #isQuery oper,
+	 stereotypes = #stereotypes oper, 
 	 scope = #scope oper
 	 }:operation)::(substitute_operations typ tail)
     end
@@ -585,7 +592,9 @@ fun substitute_classifier typ classifier =
 	      interfaces = [],
 	      (* a template's thyname is NONE *)
 	      thyname = NONE,
-	      (* a template has no activity_graphs *)
+	      (* a template's visibility is public *)
+	      visibility = public:Rep_Core.Visibility,
+              (* a template has no activity_graphs *)
 	      activity_graphs = []
 	})
     end
@@ -593,32 +602,33 @@ fun substitute_classifier typ classifier =
 
 
 (* RETURN: Classifer *)
-and get_classifier source model =
+and get_classifier source (c:Classifier list, a:association list) =
     let
 	val typ = type_of_term (source)
-	val _ = map (fn a => trace development (string_of_OclType (type_of a) ^"\n") ) model
-	fun class_of_t typ cl = hd (List.filter (fn a => if ((type_of a) = typ) then true else false) cl)
+	val _ = map (fn a => trace development (string_of_OclType (type_of a) ^ "\n")) c
+	fun class_of_t typ m = 
+	    hd (List.filter (fn a => if ((type_of a) = typ) then true else false) m)
     in
 	case typ of
 	    (* Primitive types of lib *)
-	    Boolean => class_of_t Boolean model
-	  | Integer => class_of_t Integer model
-	  | Real => class_of_t Real model
-	  | String => class_of_t String model
+	    Boolean => class_of_t Boolean c
+	  | Integer => class_of_t Integer c
+	  | Real => class_of_t Real c
+	  | String => class_of_t String c
 	  (* Template types of lib *)
-	  | Sequence (T) => templ_of (Sequence(TemplateParameter "T")) T model
-	  | Set (T) => templ_of (Set(TemplateParameter "T")) T model
-	  | OrderedSet (T) => templ_of (OrderedSet(TemplateParameter "T")) T model
-	  | Bag (T) => templ_of (Bag(TemplateParameter "T")) T model
-	  | Collection (T) => templ_of (Collection(TemplateParameter "T")) T model
+	  | Sequence (T) => templ_of (Sequence(TemplateParameter "T")) T c
+	  | Set (T) => templ_of (Set(TemplateParameter "T")) T c
+	  | OrderedSet (T) => templ_of (OrderedSet(TemplateParameter "T")) T c
+	  | Bag (T) => templ_of (Bag(TemplateParameter "T")) T c
+	  | Collection (T) => templ_of (Collection(TemplateParameter "T")) T c
 	  (* Class types of lib *)
-	  | OclVoid => class_of_t OclVoid model
-	  | OclAny => class_of_t OclAny model
+	  | OclVoid => class_of_t OclVoid c
+	  | OclAny => class_of_t OclAny c
 	  (* Model types *)
 	  | Classifier (path) =>
 	    let
 		val _ = trace development ("get_classifier: Classifier ("^(string_of_path path)^")\n")
-		val res = class_of_t (Classifier (path)) model
+		val res = class_of_t (Classifier (path)) c
 		val _ = trace development ("found: "^(string_of_path (name_of res)) ^"\n")
 	    in
 		(*class_of_t (Classifier (path)) model*)
@@ -662,7 +672,7 @@ and templ_of temp_typ para_typ [] = raise TemplateInstantiationError ("Error dur
 	templ_of temp_typ para_typ tail
     end
 
-and class_of_type typ model = 
+and class_of_type typ (model:Rep_Core.transform_model) = 
     get_classifier (Variable ("x",typ)) model
 
 (* RETURN: Boolean *)
@@ -705,8 +715,8 @@ fun conforms_to_up _ OclAny (_:Rep_Core.transform_model) = true
     end
   | conforms_to_up typ1 typ2  (model as(classifiers,associations)) = 
     let
-	val class = class_of_type typ1 classifiers
-	val parents_types = type_of_parents (class) classifiers
+	val class = class_of_type typ1 model
+	val parents_types = type_of_parents (class) model
 	val _ = trace low ("conforms_to_up:  ... \n")
     in
 	member (typ2) (parents_types)
@@ -735,7 +745,7 @@ and upcast (term,typ) =
 	OperationWithType (term,type_of_term term,"oclIsTypeOf",typ,typ)
 
 (* RETURN: OclType list *)
-and type_of_parents (Primitive {parent,...}) model =
+and type_of_parents (Primitive {parent,...}) (model:Rep_Core.transform_model) =
     (    
      case parent of 
 	 NONE => [OclAny]
@@ -762,22 +772,23 @@ and type_of_parents (Primitive {parent,...}) model =
 
 
 (* RETURN: Classifier *)
-fun class_of_parent (Class {parent,...}) clist = 
+fun class_of_parent (Class {parent,...}) (model:Rep_Core.transform_model) = 
     (case parent of
-	 NONE => get_classifier (Variable ("x",OclAny)) clist
-       | SOME (others) => get_classifier (Variable ("x",others)) clist 
+	 NONE => get_classifier (Variable ("x",OclAny)) model
+       | SOME (others) => get_classifier (Variable ("x",others)) model 
     )
-  | class_of_parent (AssociationClass {parent,...}) clist = 
+  | class_of_parent (AssociationClass {parent,...}) model = 
     (case parent of
-	 NONE => get_classifier (Variable ("x",OclAny)) clist
-       | SOME (others) => get_classifier (Variable ("x",others)) clist 
+	 NONE => get_classifier (Variable ("x",OclAny)) model
+       | SOME (others) => get_classifier (Variable ("x",others)) model 
     )
-  | class_of_parent (Primitive {parent,...}) clist = 
+
+  | class_of_parent (Primitive {parent,...}) model = 
     (case parent of
-	 NONE => class_of_type OclAny clist
-       | SOME (others) => class_of_type  others clist
+	 NONE => class_of_type OclAny model
+       | SOME (others) => class_of_type  others model
     )
-  | class_of_parent (Interface {parents,...}) clist =
+  | class_of_parent (Interface {parents,...}) model = 
     (* TODO: change API *)
     (*  
      (case (List.last (parents)) of 
@@ -785,9 +796,8 @@ fun class_of_parent (Class {parent,...}) clist =
 	| SOME (others) => class_of_type others clist
      )
      *)
-    class_of_type (List.hd parents) clist
-  | class_of_parent c (h::tail) = class_of_parent c tail 
- 
+    class_of_type (List.hd parents) model
+  | class_of_parent c model = raise NoParentForDatatype "No Parent for this type of Classifier"
 
 (* RETURN: Boolean *)
 fun args_interfereable [] [] model = true
@@ -921,11 +931,11 @@ fun get_overloaded_methods class op_name ([],_) = raise NoModelReferenced ("in '
        val _ = trace low("Look for methods for classifier: " ^ string_of_OclType (type_of class) ^ "\n")
        val ops2 = List.filter (fn a => (if ((#name a) = op_name) then true else false)) ops
        val _ = trace low("operation name                 : " ^ op_name ^ "  Found " ^ Int.toString (List.length ops2) ^ " method(s) \n")
-       val parent = class_of_parent class classifiers
+       val parent = class_of_parent class model
        val _ = trace low("Parent class                   : " ^ string_of_OclType (type_of parent) ^ "\n\n")
        val cl_op = List.map (fn a => (class,a)) ops2
    in
-       if (class = class_of_type OclAny classifiers) 
+       if (class = class_of_type OclAny model) 
        then (* end of hierarchie *)
             if (List.length ops2 = 0) 
 	    then[]
@@ -977,7 +987,7 @@ fun get_overloaded_attrs_or_assocends class attr_name ([],_) = raise NoModelRefe
        val assocends2 = List.filter (fn {name,...} => (List.last name)=attr_name) assocends
        val _ = trace low ("Name of attr/assocend         : " ^ attr_name  ^ "   Found " ^ Int.toString (List.length attrs2) ^
 			  " attribute(s), " ^ Int.toString (List.length assocends2) ^  " assocend(s) \n")
-       val parent = class_of_parent class classifiers
+       val parent = class_of_parent class model
        val _ = trace low ("Parent class                  : " ^ string_of_OclType(type_of parent) ^ "\n\n")
        val _ = trace low ("Size of attrs2: "^(Int.toString (List.length attrs2))^"\n")
        val _ = trace low ("Size of assocends2: "^(Int.toString (List.length assocends2))^"\n")	       
@@ -985,7 +995,7 @@ fun get_overloaded_attrs_or_assocends class attr_name ([],_) = raise NoModelRefe
        val cl_as = List.map (fn a => (class,NONE,SOME(a))) assocends2
        val _ = trace low ("search done\n")
    in
-       if (class = class_of_type OclAny classifiers) then
+       if (class = class_of_type OclAny model) then
 	   (* end of hierarchie *)
 	   if (List.length attrs2 = 0) 
 	   then if (List.length assocends2 = 0) 
@@ -1019,7 +1029,7 @@ fun get_meth source op_name args (model as (classifiers,associations))=
     (* object type *)
     let
 	val _ = trace low ("Type of Classifier : " ^ string_of_OclType (type_of_term source ) ^ "\n")
-	val class = get_classifier source classifiers
+	val class = get_classifier source model
 	val meth_list = get_overloaded_methods class op_name model
 	val _ = trace low ("overloaded methods found: " ^ Int.toString (List.length meth_list) ^ "\n")
     in
@@ -1031,7 +1041,7 @@ fun get_attr_or_assoc source attr_name (model as (classifiers,associations)) =
     let 
 	val _ = trace function_calls "get_attr_or_assoc\n"
 	val _ = trace low ("GET ATTRIBUTES OR ASSOCENDS: source term = " ^ Ocl2String.ocl2string false source ^ "\n")
-	val class = get_classifier source classifiers
+	val class = get_classifier source model
 	val attr_or_assocend_list = get_overloaded_attrs_or_assocends class attr_name model
 	val _ = trace low ("overloaded attributes/associationends found: " ^ Int.toString (List.length attr_or_assocend_list) ^ "\n")
     in

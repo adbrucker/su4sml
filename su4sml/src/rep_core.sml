@@ -53,6 +53,7 @@ type operation = {
      result        : Rep_OclType.OclType,
      isQuery       : bool,
      scope         : Scope,
+		   stereotypes    : string list,
      visibility    : Visibility	
 }     	
 
@@ -94,6 +95,7 @@ datatype Classifier =
 	   stereotypes : string list,
 	   interfaces  : Rep_OclType.OclType list,
 	   thyname     : string option,
+	   visibility  : Visibility,
            activity_graphs : Rep_ActivityGraph.ActivityGraph list
 	 }
        | AssociationClass of
@@ -107,6 +109,7 @@ datatype Classifier =
 	   thyname     : string option,
            activity_graphs    : Rep_ActivityGraph.ActivityGraph list,
            associations: Rep_OclType.Path list,
+	   visibility  : Visibility,
 	   association: Rep_OclType.Path
 	 } 
        | Interface (* not supported yet *) of
@@ -205,6 +208,10 @@ val addInvariant : constraint -> Classifier -> Classifier
 val addInvariants: constraint list -> Classifier -> Classifier
 val addOperation : operation  -> Classifier -> Classifier
 
+(* visibility *)
+val is_visible_cl       : Classifier -> bool
+val is_visible_op       : operation -> bool
+val is_visible_attr     : attribute -> bool
 
 exception InvalidArguments of string
   
@@ -214,6 +221,7 @@ structure Rep_Core :  REP_CORE =
 struct
 open library
 open Rep_OclType
+open XMI_DataTypes
 
 type Visibility = XMI_DataTypes.VisibilityKind
 type Scope      = XMI_DataTypes.ScopeKind
@@ -222,13 +230,14 @@ type operation = {
      name          : string,	
      precondition  : (string option * Rep_OclTerm.OclTerm) list,
      postcondition : (string option * Rep_OclTerm.OclTerm) list,
-     body : (string option * Rep_OclTerm.OclTerm) list,
+     body          : (string option * Rep_OclTerm.OclTerm) list,
      arguments     : (string * Rep_OclType.OclType) list,
      result        : Rep_OclType.OclType,
      isQuery       : bool,
-     visibility    : Visibility,
-     scope         : Scope 
-}     
+     scope         : Scope,
+		   stereotypes    : string list,
+     visibility    : Visibility	
+}     	
 
 type associationend = {
      name         : Rep_OclType.Path,
@@ -269,6 +278,7 @@ datatype Classifier =
 	   stereotypes : string list,
 	   interfaces  : Rep_OclType.OclType list,
 	   thyname     : string option,
+	   visibility  : Visibility,
            activity_graphs : Rep_ActivityGraph.ActivityGraph list
 	  }
       | AssociationClass of
@@ -282,6 +292,7 @@ datatype Classifier =
 	   thyname     : string option,
            activity_graphs    : Rep_ActivityGraph.ActivityGraph list,
 	   associations: Rep_OclType.Path list,
+	   visibility  : Visibility,
 	   association: Rep_OclType.Path
 	 }
        | Interface of               (* not supported yet *)
@@ -491,7 +502,7 @@ fun associationends_of (all_associations:association list)
 fun normalize (all_associations:association list) 
               (C as (Class {name,parent,attributes,operations,associations,
                             invariant,stereotypes,interfaces,thyname,
-                            activity_graphs})):Classifier =
+                            visibility,activity_graphs})):Classifier =
     let
       val _ = trace function_calls "normalize: class\n"
       val _ = trace function_arguments 
@@ -516,13 +527,14 @@ fun normalize (all_associations:association list)
 	     stereotypes = stereotypes,
              interfaces = interfaces,
 	     thyname = thyname,
+	     visibility = visibility,
              activity_graphs = activity_graphs}
     end
   | normalize all_associations (AC as (AssociationClass 
                                            {name,parent,attributes,association,
                                             associations,operations,invariant,
                                             stereotypes,interfaces,
-                                            thyname,activity_graphs})) =
+                                            thyname,visibility, activity_graphs})) =
     (* FIXME: how to handle AssociationClass.association? *)
 	let
 	  val _ = trace function_calls "normalize: associationclass\n"
@@ -546,6 +558,7 @@ fun normalize (all_associations:association list)
 	  thyname = thyname,
 	  activity_graphs = activity_graphs,
 	  associations = [],
+	  visibility=visibility,
 	  association = [] (* FIXME? *)}
 	end
   | normalize all_associations (Primitive p) =
@@ -561,6 +574,7 @@ fun normalize (all_associations:association list)
 					     stereotypes = (#stereotypes p),
 					     interfaces = (#interfaces p),
 					     thyname = (#thyname p),
+					     visibility = public,
 					     activity_graphs=[]})
   | normalize all_associations c = c
 				   
@@ -610,7 +624,7 @@ fun init_to_inv cls_name (attr:attribute) =
 
 fun normalize_init (Class {name,parent,attributes,operations,
                            associations,invariant,
-		           stereotypes,interfaces,thyname,activity_graphs}) =
+		           stereotypes,interfaces,thyname,visibility,activity_graphs}) =
     Class {name   = name,
 	   parent = parent,
 	   attributes = (map rm_init_attr attributes),
@@ -622,11 +636,12 @@ fun normalize_init (Class {name,parent,attributes,operations,
 	   stereotypes = stereotypes,
            interfaces = interfaces,
 	   thyname = thyname,
+	   visibility=visibility,
            activity_graphs=activity_graphs}
   | normalize_init (AssociationClass {name,parent,attributes,operations,
                                       associations,association,
 				      invariant,stereotypes,interfaces,
-                                      thyname,activity_graphs}) =
+                                      thyname,visibility,activity_graphs}) =
     AssociationClass {name   = name,
 		      parent = parent,
 		      attributes = (map rm_init_attr attributes),
@@ -638,6 +653,7 @@ fun normalize_init (Class {name,parent,attributes,operations,
                                               attributes)  invariant,
 		      stereotypes = stereotypes,
                       interfaces = interfaces,
+		      visibility=visibility,
 		      thyname = thyname,
                       activity_graphs=activity_graphs}
   | normalize_init c = c
@@ -649,11 +665,13 @@ val OclAnyC = Class{name=Rep_OclType.OclAny,parent=NONE,attributes=[],
 		    operations=[], interfaces=[],
 		    invariant=[],stereotypes=[], associations=[],
 		    thyname=NONE,
+		    visibility = public,
                     activity_graphs=nil}
               
 val OclAnyAC = AssociationClass{name=Rep_OclType.OclAny,parent=NONE,
                                 attributes=[],operations=[], interfaces=[],
 			        invariant=[],stereotypes=[], associations=[],
+				visibility = public,
 			        association= []:Path (*FIXME: sensible dummy*),
 			        thyname=NONE, activity_graphs=nil}
 		   
@@ -665,7 +683,7 @@ fun string_of_path (path:Rep_OclType.Path) =
              
 fun update_thyname tname (Class{name,parent,attributes,operations,invariant,
                                 stereotypes,interfaces,associations,
-                                activity_graphs,...}) =
+                                visibility,activity_graphs,...}) =
     Class{name=name,
           parent=parent,
           attributes=attributes,
@@ -675,11 +693,12 @@ fun update_thyname tname (Class{name,parent,attributes,operations,invariant,
           stereotypes=stereotypes,
           interfaces=interfaces,
           thyname=(SOME tname),
+	  visibility=visibility,
           activity_graphs=activity_graphs }
   | update_thyname tname (AssociationClass{name,parent,attributes,operations,
                                            invariant,stereotypes,interfaces,
                                            associations,association,
-                                           activity_graphs,...}) =
+                                           visibility,activity_graphs,...}) =
     AssociationClass{name=name,
                      parent=parent,
                      attributes=attributes,
@@ -690,6 +709,7 @@ fun update_thyname tname (Class{name,parent,attributes,operations,invariant,
                      stereotypes=stereotypes,
 		     interfaces=interfaces,
                      thyname=(SOME tname),
+		     visibility=visibility,
                      activity_graphs=activity_graphs }
   | update_thyname tname (Interface{name,parents,operations,stereotypes,
                                     invariant,...})  =
@@ -724,7 +744,7 @@ fun update_thyname tname (Class{name,parent,attributes,operations,invariant,
 
 fun update_invariant invariant' (Class{name,parent,attributes,operations,
                                        invariant,stereotypes,interfaces,
-                                       associations,activity_graphs,thyname}) =
+                                       associations,visibility,activity_graphs,thyname}) =
     Class{name=name,
           parent=parent,
           attributes=attributes,
@@ -734,12 +754,13 @@ fun update_invariant invariant' (Class{name,parent,attributes,operations,
           stereotypes=stereotypes,
           interfaces=interfaces,
           thyname=thyname,
+	  visibility=visibility,
           activity_graphs=activity_graphs }
   | update_invariant invariant' (AssociationClass{name,parent,attributes,
                                                   operations,invariant,
                                                   stereotypes,interfaces,
                                                   association,associations,
-                                                  activity_graphs,thyname}) =
+                                                  visibility,activity_graphs,thyname}) =
     AssociationClass{name=name,
                      parent=parent,
                      attributes=attributes,
@@ -750,6 +771,7 @@ fun update_invariant invariant' (Class{name,parent,attributes,operations,
 		     stereotypes=stereotypes,
                      interfaces=interfaces,
                      thyname=thyname,
+		     visibility=visibility,
                      activity_graphs=activity_graphs }
   | update_invariant invariant' (Interface{name,parents,operations,stereotypes,
                                            invariant,thyname})  =
@@ -788,7 +810,7 @@ fun update_invariant invariant' (Class{name,parent,attributes,operations,
 fun update_operations operations' (Class{name,parent,attributes,invariant,
                                          operations,stereotypes,interfaces,
                                          associations,activity_graphs,
-                                         thyname}) =
+                                         visibility,thyname}) =
     Class{name=name,
           parent=parent,
           attributes=attributes,
@@ -797,12 +819,14 @@ fun update_operations operations' (Class{name,parent,attributes,invariant,
           operations=operations',
           stereotypes=stereotypes,
           interfaces=interfaces,
+	  visibility=visibility,
           thyname=thyname,
           activity_graphs=activity_graphs }
   | update_operations operations' (AssociationClass{name,parent,attributes,
                                                     invariant,operations,
                                                     stereotypes,interfaces,
                                                     associations,association,
+						    visibility,
                                                     activity_graphs,thyname}) =
     AssociationClass{name=name,
                      parent=parent,
@@ -813,6 +837,7 @@ fun update_operations operations' (Class{name,parent,attributes,invariant,
                      operations=operations',
                      stereotypes=stereotypes,
 		     interfaces=interfaces,
+		     visibility=visibility,
                      thyname=thyname,
                      activity_graphs=activity_graphs }
   | update_operations operations' (Interface{name,parents,invariant,
@@ -850,7 +875,7 @@ fun update_operations operations' (Class{name,parent,attributes,invariant,
      
       
 fun update_precondition pre' ({name,precondition,postcondition,body,arguments,
-                               result,isQuery,scope,visibility}:operation) =
+                               result,isQuery,scope,stereotypes,visibility}:operation) =
     {name=name,
      precondition=pre',
      postcondition=postcondition,
@@ -859,11 +884,12 @@ fun update_precondition pre' ({name,precondition,postcondition,body,arguments,
      result=result,
      isQuery=isQuery,
      scope=scope,
-     visibility=visibility}:operation
+     visibility=visibility,
+     stereotypes=stereotypes}:operation
 
 fun update_postcondition post' ({name,precondition,postcondition,body,
                                  arguments,result,isQuery,scope,
-                                 visibility}:operation) =
+                                stereotypes, visibility}:operation) =
     {name=name,
      precondition=precondition,
      postcondition=post',
@@ -872,7 +898,8 @@ fun update_postcondition post' ({name,precondition,postcondition,body,
      result=result,
      isQuery=isQuery,
      scope=scope,
-     visibility=visibility}:operation
+     visibility=visibility,
+     stereotypes=stereotypes}:operation
 
       
       
@@ -1126,6 +1153,19 @@ fun operation_of cl fq_name =
 			       then true else false ) operations ))
     end	
         
+fun is_visible_cl (Class {visibility,...}) =
+    if (visibility = public) then true else false
+  | is_visible_cl (AssociationClass {visibility,...}) =
+    if (visibility = public) then true else false
+  | is_visible_cl x = true
+
+
+fun is_visible_op ({visibility,...}:operation) =
+    if (visibility = public) then true else false
+
+fun is_visible_attr ({visibility,...}:attribute) = 
+    if (visibility = public) then true else false
+
 (* topological sort of class lists *)
 fun topsort_cl cl =
     let 
@@ -1185,22 +1225,23 @@ fun connected_classifiers_of (all_associations:association list)
  *)
 fun addInvariant inv (Class {name, parent, attributes, operations, 
                              associations, invariant, stereotypes, 
-                             interfaces, thyname, activity_graphs}) =
+                             interfaces, thyname, visibility,
+			     activity_graphs}) =
     Class {name=name, parent=parent, attributes=attributes, 
            operations=operations, 
            associations=associations, invariant=inv::invariant, 
            stereotypes=stereotypes, interfaces=interfaces, 
-           thyname=thyname, activity_graphs=activity_graphs}
+           thyname=thyname, visibility=visibility,activity_graphs=activity_graphs}
   | addInvariant inv (AssociationClass {name, parent, attributes, 
 					operations, associations,
 					association, invariant,
 					stereotypes, interfaces, 
-					thyname, activity_graphs}) =
+					thyname, visibility,activity_graphs}) =
     AssociationClass {name=name, parent=parent, attributes=attributes, 
 		      operations=operations, associations=associations,
 		      association=association, invariant=inv::invariant, 
 		      stereotypes=stereotypes, interfaces=interfaces, 
-		      thyname=thyname, activity_graphs=activity_graphs}
+		      thyname=thyname, visibility=visibility,activity_graphs=activity_graphs}
   | addInvariant inv (Interface {name, parents, operations,  
                                  invariant, stereotypes,  thyname}) =
     Interface {name=name, parents=parents, operations=operations,
@@ -1226,7 +1267,7 @@ fun addInvariant inv (Class {name, parent, attributes, operations,
 
 fun addInvariants invs (Class {name, parent, attributes, operations, 
                                associations, invariant, stereotypes, 
-                               interfaces, thyname, activity_graphs}) =
+                               interfaces, thyname, visibility,activity_graphs}) =
     Class {name=name, 
            parent=parent, 
            attributes=attributes, 
@@ -1234,6 +1275,7 @@ fun addInvariants invs (Class {name, parent, attributes, operations,
            associations=associations, 
            invariant=invs@invariant, 
            stereotypes=stereotypes, 
+	   visibility=visibility,
            interfaces=interfaces, 
            thyname=thyname, 
            activity_graphs=activity_graphs}
@@ -1241,7 +1283,7 @@ fun addInvariants invs (Class {name, parent, attributes, operations,
 					  operations, associations,
 					  association, invariant,
 					  stereotypes, interfaces, 
-					  thyname, activity_graphs}) =
+					  thyname, visibility, activity_graphs}) =
     AssociationClass {name=name, 
                       parent=parent, 
                       attributes=attributes, 
@@ -1250,6 +1292,7 @@ fun addInvariants invs (Class {name, parent, attributes, operations,
 		      association=association, 
                       invariant=invs@invariant, 
 		      stereotypes=stereotypes, 
+		      visibility=visibility,
                       interfaces=interfaces, 
 		      thyname=thyname, 
                       activity_graphs=activity_graphs}
@@ -1290,21 +1333,23 @@ fun addInvariants invs (Class {name, parent, attributes, operations,
 (** adds an operation to a classifier. *)
 fun addOperation oper (Class {name, parent, attributes, operations, 
                               associations, invariant, stereotypes, 
-                              interfaces, thyname, activity_graphs})
+                              interfaces, thyname, visibility,activity_graphs})
   = Class {name=name, parent=parent, attributes=attributes, 
            operations=oper::operations, 
            associations=associations, invariant=invariant, 
            stereotypes=stereotypes, interfaces=interfaces, 
+	   visibility=visibility,
            thyname=thyname, activity_graphs=activity_graphs}
   | addOperation oper (AssociationClass {name, parent, attributes, 
 					 operations, associations, 
 					 association, invariant,
 					 stereotypes, interfaces,
-					 thyname, activity_graphs})
+					 thyname, visibility,activity_graphs})
     = AssociationClass {name=name, parent=parent, attributes=attributes, 
 		        operations=oper::operations, associations=associations,
 		        association=association, invariant=invariant, 
-		        stereotypes=stereotypes, interfaces=interfaces, 
+		        stereotypes=stereotypes, interfaces=interfaces,
+			visibility=visibility,
 		        thyname=thyname, activity_graphs=activity_graphs}
   | addOperation  oper (Interface {name, parents, operations,  
                                    invariant, stereotypes,  thyname})

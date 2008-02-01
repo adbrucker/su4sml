@@ -288,6 +288,7 @@ and generate_variables (Literal (paras)) path meth_name model = Literal (paras)
     let
 	val _ = trace low ("generate_variable: AttributeCall\n")
 	val _ = List.app (print o (fn x => x^"\n") o string_of_path o name_of ) model
+	(* val classifier = obsolete_obsolete_class_of path model *)
 	val classifier = class_of path model
 	val _ = trace low "classifier found\n"
 	val meth_list = operations_of  classifier
@@ -400,7 +401,7 @@ fun preprocess_context (Cond (path,op_name,op_sign,result_type,cond,pre_name,exp
 	val vexpr = generate_variables expr path op_name model
 	val _ = trace zero ("Variable 'result' embeded ... \n")
 	(* embed method arguments *)
-	val class = class_of_type  (Classifier (path)) model
+	val class = class_of_type  (Classifier (path)) (model,[])
 	val prfx  = package_of class
 	val prefixed_op_sign = List.map (fn (a,b) => (a,prefix_type prfx  b)) op_sign
 	val prefixed_result_type = prefix_type prfx result_type

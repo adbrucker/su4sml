@@ -245,17 +245,18 @@ fun update_aends (Rep.Class { name, parent,attributes,operations,associations,
     end
 *)
 fun update_assocs (Rep.Class { name, parent,attributes,operations,associations,
-			      invariant, stereotypes,interfaces,thyname,activity_graphs}) assocs = 
+			      invariant,stereotypes,interfaces,thyname,visibility,activity_graphs}) assocs = 
     Rep.Class {name=name, parent=parent, attributes=attributes,
 	       operations=operations, associations=assocs,
 	       invariant=invariant, stereotypes=stereotypes,
 	       interfaces=interfaces, thyname=thyname,
+	       visibility=visibility,
 	       activity_graphs=activity_graphs}
   | update_assocs (Rep.AssociationClass { name, parent,attributes,operations,associations,association,
-					  invariant, stereotypes,interfaces,thyname,activity_graphs}) assocs = 
+					  invariant, stereotypes,interfaces,thyname,visibility,activity_graphs}) assocs = 
     Rep.AssociationClass {name=name, parent=parent, attributes=attributes,
 			  operations=operations, associations=assocs,association=association,
-			  invariant=invariant, stereotypes=stereotypes,
+			  invariant=invariant, stereotypes=stereotypes,visibility=visibility,
 			  interfaces=interfaces, thyname=thyname,
 			  activity_graphs=activity_graphs}
 	
@@ -321,12 +322,10 @@ fun parse (model as (cs,assocs):Rep.Model) =
 	(* remove classes with SecureUML stereotypes from the association list
 	 * and update affected classes if the association ceases to exist 
 	 *)
-	fun updateClassifierAssociations rem_assocs (Rep.Class 
-                                                   {name,parent,attributes,
-                                                    operations,associations,
-                                                    invariant, stereotypes,
-								                                    interfaces, thyname, 
-                                                    activity_graphs}) =
+	fun updateClassifierAssociations rem_assocs (Rep.Class {name, parent, attributes, operations,
+								associations, invariant, stereotypes,
+								interfaces, thyname,visibility,activity_graphs}) =
+
 	    let
 		    val assoc_names = map (fn {name,aends,qualifiers,aclass} => name) 
                               rem_assocs
@@ -342,11 +341,13 @@ fun parse (model as (cs,assocs):Rep.Model) =
 			             stereotypes = stereotypes,
 			             interfaces = interfaces, 
 			             thyname = thyname, 
+			   visibility = visibility,
+
 			             activity_graphs = activity_graphs}
 	    end
 	  | updateClassifierAssociations rem_assocs (Rep.AssociationClass {name, parent, attributes, 
 									   operations, associations, 
-									   association, invariant, 
+									   association, invariant,visibility, 
 									   stereotypes, interfaces, 
 									   thyname, activity_graphs}) =
 	    let
@@ -364,10 +365,11 @@ fun parse (model as (cs,assocs):Rep.Model) =
 				      invariant = invariant, 
 				      stereotypes = stereotypes,
 				      interfaces = interfaces, 
+				      visibility = visibility,
 				      thyname = thyname, 
 				      activity_graphs = activity_graphs
 			  }
-	    end
+	    end 
 	    
 	val (modified_assocs,removed_assocs) = 
       (case secureumlstereotypes of 

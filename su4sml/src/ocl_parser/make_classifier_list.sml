@@ -52,7 +52,7 @@ sig
     val add_postcondition          : string * string option * Rep_OclTerm.OclTerm -> Rep_Core.operation list -> Rep_Core.operation list
     val add_body                   : string * string option * Rep_OclTerm.OclTerm -> Rep_Core.operation list -> Rep_Core.operation list
     val add_attribute              : string * Rep_OclTerm.OclTerm -> Rep_Core.attribute list -> Rep_Core.attribute list
-    val context_to_classifier      : Context.context -> Rep_Core.Classifier list -> Rep_Core.Classifier
+    val context_to_classifier      : Context.context -> Rep_Core.transform_model -> Rep_Core.Classifier
     val merge_classifier           : Rep_Core.Classifier -> Rep_Core.Classifier list -> Rep_Core.Classifier list
     val gen_updated_classifier_list: (Context.context option) list -> Rep_Core.Classifier list -> Rep_Core.Classifier list
 end
@@ -87,6 +87,7 @@ fun add_precondition (op_name,cond_name,term) ((oper: operation)::operations_tai
        result = #result oper,
        isQuery = #isQuery oper,
        visibility = #visibility oper,
+       stereotypes = #stereotypes oper,
        scope = #scope oper})
      ::(operations_tail)
  else
@@ -102,6 +103,7 @@ fun add_postcondition (op_name,cond_name,term) ((oper: operation)::operations_ta
        arguments = #arguments oper,
        result = #result oper,
        isQuery = #isQuery oper,
+       stereotypes = #stereotypes oper,
        visibility = #visibility oper,
        scope = #scope oper})
      ::(operations_tail)
@@ -118,6 +120,7 @@ fun add_body (op_name,cond_name,term) ((oper: operation)::operations_tail) =
        arguments = #arguments oper,
        result = #result oper,
        isQuery = #isQuery oper,
+       stereotypes = #stereotypes oper,
        visibility = #visibility oper,
        scope = #scope oper})
      ::(operations_tail)
@@ -172,7 +175,7 @@ fun context_to_classifier (Inv (path,string_opt,term)) model =
     in
 	(
 	 case c of
-	     (Class {name,parent,attributes,operations,associations,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
+	     (Class {name,parent,attributes,operations,associations,visibility,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
 	     Class 
 		 {
 		  name = name,
@@ -184,9 +187,10 @@ fun context_to_classifier (Inv (path,string_opt,term)) model =
 		  stereotypes = stereotypes,
 		  invariant = invariant@[(string_opt,term)],
 		  thyname = thyname,
+		  visibility = visibility,
  		  activity_graphs = activity_graphs
 		 }
-	   | (AssociationClass {name,parent,attributes,operations,associations,association,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
+	   | (AssociationClass {name,visibility,parent,attributes,operations,associations,association,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
 	     AssociationClass 
 		 {
 		  name = name,
@@ -196,6 +200,7 @@ fun context_to_classifier (Inv (path,string_opt,term)) model =
 		  associations = associations,
 		  association = association,
 		  interfaces = interfaces,
+		  visibility = visibility,
 		  stereotypes = stereotypes,
 		  invariant = invariant@[(string_opt,term)],
 		  thyname = thyname,
@@ -223,7 +228,7 @@ fun context_to_classifier (Inv (path,string_opt,term)) model =
      in
 	 (
 	  case c of
-	      (Class {name,parent,attributes,operations,associations,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
+	      (Class {name,parent,attributes,visibility,operations,associations,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
 	      (
 	       case attrorassoc of 
 		   init => 
@@ -235,6 +240,7 @@ fun context_to_classifier (Inv (path,string_opt,term)) model =
 			associations = associations,
 			interfaces = interfaces,
 			stereotypes = stereotypes,
+			visibility = visibility,
 			invariant = invariant,
 			thyname = thyname,
  			activity_graphs = activity_graphs
@@ -242,7 +248,7 @@ fun context_to_classifier (Inv (path,string_opt,term)) model =
 		 | derive => raise NotYetSupportedError ("derive not yet supported ... sorry" ^ "\n")
 		 | def => raise NotYetSupportedError ("def not yet supported ... sorry" ^ "\n")
 	      )
-	    | (AssociationClass {name,parent,attributes,operations,associations,association,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
+	    | (AssociationClass {name,parent,visibility,attributes,operations,associations,association,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
 	      (
 	       case attrorassoc of 
 		   init => 
@@ -252,6 +258,7 @@ fun context_to_classifier (Inv (path,string_opt,term)) model =
 			parent = parent,
 			attributes = add_attribute (List.last path,term) (attributes),
 			operations = operations,
+			visibility = visibility,
 			associations = associations,
 			association = association,
 			interfaces = interfaces,
@@ -276,11 +283,12 @@ fun context_to_classifier (Inv (path,string_opt,term)) model =
     in
 	(
 	 case c of
-	     (Class {name,parent,attributes,operations,associations,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
+	     (Class {name,parent,attributes,visibility,operations,associations,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
 	     Class 
 		 {
 		  name = name,
 		  parent = parent,
+		  visibility = visibility,
 		  attributes = attributes,
 		  operations = add_operations cond_type (op_name,cond_name,term) operations,
 		  associations = associations,
@@ -290,11 +298,12 @@ fun context_to_classifier (Inv (path,string_opt,term)) model =
 		  thyname = thyname,
  		  activity_graphs = activity_graphs
 		  }
-	   | (AssociationClass {name,parent,attributes,operations,associations,association,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
+	   | (AssociationClass {name,visibility,parent,attributes,operations,associations,association,interfaces,stereotypes,invariant,thyname,activity_graphs}) =>
 	     AssociationClass 
 		 {
 		  name = name,
 		  parent = parent,
+		  visibility = visibility,
 		  attributes = attributes,
 		  operations = add_operations cond_type (op_name,cond_name,term) operations,
 		  associations = associations,
@@ -327,13 +336,13 @@ fun merge_classifier classifier (h::classifier_list_tail) =
       (classifier)::(classifier_list_tail)
   else
       (* take next classifier *)  
-      h::(merge_classifier classifier classifier_list_tail)
+      h::(merge_classifier classifier (classifier_list_tail))
 
 (* RETURN: Classifier list *)
 fun gen_updated_classifier_list [] model = model
 | gen_updated_classifier_list  (SOME(h)::context_list_tail) model  =
   let
-      val updated_classifier = context_to_classifier h model
+      val updated_classifier = context_to_classifier h (model,[])
   in
       gen_updated_classifier_list context_list_tail (merge_classifier updated_classifier model)
       handle AlreadyInitValueError (attr_path,term,mes) =>

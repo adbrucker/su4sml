@@ -332,13 +332,14 @@ fun name_of_attribute ({name,...}:attribute) = name
 
 fun addAttributes (Class {name,parent,attributes,operations,associations,
                         invariant,stereotypes,interfaces,thyname,
-                        activity_graphs}) newAttributes =
+                        activity_graphs,visibility}) newAttributes =
     Class {name=name,
            parent=parent,
            attributes=newAttributes@attributes,
            operations=operations,
            associations=associations,
            invariant=invariant,
+           visibility=visibility,
            stereotypes=stereotypes,
            interfaces=interfaces,
            thyname=thyname,
@@ -346,7 +347,7 @@ fun addAttributes (Class {name,parent,attributes,operations,associations,
   | addAttributes (AssociationClass {name,parent,attributes,operations,
                                    associations,association,invariant,
                                    stereotypes,interfaces,thyname,
-                                   activity_graphs}) newAttributes =
+                                   visibility,activity_graphs}) newAttributes =
     AssociationClass {name=name,
                       parent=parent,
                       attributes=newAttributes@attributes,
@@ -357,6 +358,7 @@ fun addAttributes (Class {name,parent,attributes,operations,associations,
                       stereotypes=stereotypes,
                       interfaces=interfaces,
                       thyname=thyname,
+		      visibility=visibility,
                       activity_graphs=activity_graphs}
   | addAttributes (Template {parameter,classifier}) newAttributes= 
     Template {parameter=parameter,
@@ -400,7 +402,8 @@ fun newDummyClass package =
           associations=[],
           invariant=[],
           stereotypes=[],
-          interfaces=[],
+          visibility=XMI.private,
+           interfaces=[],
           thyname=NONE,
           activity_graphs=[]}
 
@@ -410,6 +413,7 @@ fun newNamedClass package name =
           attributes=[],
           operations=[],
           associations=[],
+          visibility=XMI.private,
           invariant=[],
           stereotypes=[],
           interfaces=[],
@@ -533,11 +537,12 @@ fun updateAssociationReferences classifiers [] = classifiers
                                                      operations,associations,
                                                      invariant,stereotypes,
                                                      interfaces,thyname,
-                                                     activity_graphs}) =
+                                                     visibility,activity_graphs}) =
           Class{name=name,
                 parent=parent,
                 attributes=attributes,
                 operations=operations,
+		visibility=visibility,
                 associations= associations,
                 invariant=map (handleConstraint oldAssoc newAssocs) invariant,
                 stereotypes=stereotypes,
@@ -549,11 +554,12 @@ fun updateAssociationReferences classifiers [] = classifiers
                                                     operations,associations,
                                                     invariant,association,
                                                     stereotypes,interfaces,
-                                                    thyname,activity_graphs}) =
+                                                    visibility,thyname,activity_graphs}) =
           AssociationClass{name=name,
                            parent=parent,
                            attributes=attributes,
                            operations=operations,
+			   visibility=visibility,
                            associations= associations,
                            association=association,
                            invariant=map (handleConstraint oldAssoc newAssocs) 
@@ -674,7 +680,7 @@ fun modifyAssociationsOfClassifier (newAssociations:association list)
                                    (Class{name,parent,attributes,
                                           operations,associations,invariant,
                                           stereotypes,interfaces,thyname,
-                                          activity_graphs}) =
+                                          visibility,activity_graphs}) =
     Class{name=name,
           parent=parent,
           attributes=attributes,
@@ -686,6 +692,7 @@ fun modifyAssociationsOfClassifier (newAssociations:association list)
                              associations),
           invariant=invariant,
           stereotypes=stereotypes,
+		     visibility=visibility,
           interfaces=interfaces,
           thyname=thyname,
           activity_graphs=activity_graphs}
@@ -694,7 +701,7 @@ fun modifyAssociationsOfClassifier (newAssociations:association list)
                                                      operations,associations,
                                                      invariant,association,
                                                      stereotypes,interfaces,
-                                                     thyname,activity_graphs}) =
+                                                     visibility,thyname,activity_graphs}) =
     AssociationClass{name=name,
                      parent=parent,
                      attributes=attributes,
@@ -709,6 +716,7 @@ fun modifyAssociationsOfClassifier (newAssociations:association list)
                      stereotypes=stereotypes,
                      interfaces=interfaces,
                      thyname=thyname,
+		     visibility=visibility,
                      activity_graphs=activity_graphs}
     
   | modifyAssociationsOfClassifier newAssociations oldAssociations 

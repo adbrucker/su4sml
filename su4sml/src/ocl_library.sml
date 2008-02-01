@@ -51,6 +51,8 @@ structure OclLibrary : OCL_LIBRARY=
 struct
 open Rep_Core
 open Rep_OclType
+open XMI_DataTypes
+
 val OclLibPackage="oclLib"
 
 
@@ -60,7 +62,8 @@ val oclLib =
 	  parameter = TemplateParameter "T",
           classifier = Class
 			   {
-			    interfaces=[],attributes=[],
+			    interfaces=[],
+			    attributes=[],
 			    associations=[],
 			    activity_graphs=[],
 			    invariant=[],
@@ -74,7 +77,8 @@ val oclLib =
 			     precondition=[],
 			     result=Integer,
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,
+			     stereotypes=[]
 			    },
 			    {
 			     arguments=[],
@@ -84,7 +88,8 @@ val oclLib =
 			     precondition=[],
 			     result=Boolean,
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,
+			     stereotypes=[]
 			    },
 			    {
 			     arguments=[],
@@ -94,7 +99,8 @@ val oclLib =
 			     precondition=[],
 			     result=Integer,
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,
+			     stereotypes=[]
 			    },
 			    {
 			     arguments=[],
@@ -104,7 +110,8 @@ val oclLib =
 			     precondition=[],
 			     result=Boolean,
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,
+			     stereotypes=[]
 			    },
 			    {
 			     arguments=[("s",Sequence(TemplateParameter "T"))],
@@ -114,7 +121,8 @@ val oclLib =
 			     precondition=[],
 			     result=Boolean,
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,
+			     stereotypes=[]
 			    },
 			    {
 			     arguments=[("s",Sequence(TemplateParameter "T"))],
@@ -124,7 +132,8 @@ val oclLib =
 			     precondition=[],
 			     result=Boolean,
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,
+			     stereotypes=[]
 			    },
 			    {
 			     arguments=[("s",Sequence(TemplateParameter "T"))],
@@ -134,7 +143,8 @@ val oclLib =
 			     precondition=[],
 			     result=Boolean,
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,
+			     stereotypes=[]
 			    },
 			    {
 			     arguments=[("s",Sequence(TemplateParameter "T"))],
@@ -144,7 +154,7 @@ val oclLib =
 			     precondition=[],
 			     result=Boolean,
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("s",Sequence(TemplateParameter "T"))],
@@ -154,7 +164,7 @@ val oclLib =
 			     precondition=[],
 			     result=Boolean,
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("s",Sequence(TemplateParameter "T"))],
@@ -164,7 +174,7 @@ val oclLib =
 			     precondition=[],
 			     result=Boolean,
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("s",Sequence(TemplateParameter "T"))],
@@ -174,7 +184,7 @@ val oclLib =
 			     precondition=[],
 			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[],
@@ -184,7 +194,7 @@ val oclLib =
 			     precondition=[],
 			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("object", TemplateParameter "T")],
@@ -194,7 +204,7 @@ val oclLib =
 			     precondition=[],
 			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("object",TemplateParameter "T")],
@@ -204,7 +214,7 @@ val oclLib =
 			     precondition=[],
 			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("index",Integer),
@@ -214,7 +224,7 @@ val oclLib =
 			     precondition=[],
 			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("lower",Integer),
@@ -224,7 +234,7 @@ val oclLib =
 			     precondition=[],
 			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("i",Integer)],
@@ -234,7 +244,7 @@ val oclLib =
 			     precondition=[],
 			     result=TemplateParameter "T",
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("obj",TemplateParameter "T")],
@@ -244,7 +254,7 @@ val oclLib =
 			     precondition=[],
 			     result=Integer,
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[],
@@ -254,7 +264,7 @@ val oclLib =
 			     precondition=[],
 			     result=TemplateParameter "T",
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[],
@@ -264,7 +274,7 @@ val oclLib =
 			     precondition=[],
 			     result=TemplateParameter "T",
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("object",TemplateParameter "T")],
@@ -274,7 +284,7 @@ val oclLib =
 			     precondition=[],
 			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("object",TemplateParameter "T")],
@@ -284,7 +294,7 @@ val oclLib =
 			     precondition=[],
 			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[],
@@ -294,7 +304,7 @@ val oclLib =
 			     precondition=[],
 			     result=Set(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[],
@@ -304,7 +314,7 @@ val oclLib =
 			     precondition=[],
 			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[],
@@ -314,9 +324,11 @@ val oclLib =
 			     precondition=[],
 			     result=Bag(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,
+			     stereotypes=[]
 			    }],
 			    parent= NONE,
+			    visibility=public,
 			    stereotypes=[],
 			    thyname=NONE
 			   }: Rep_Core.Classifier
@@ -331,6 +343,7 @@ val oclLib =
 			    activity_graphs=[],
 			    interfaces=[],
 			    invariant=[],
+			    visibility=XMI.public,
 			    name=Bag (TemplateParameter "T"),
 			    operations=[
 			    {
@@ -340,7 +353,7 @@ val oclLib =
 			     precondition=[],
 			     result=Boolean,
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			      arguments=[],
@@ -350,7 +363,7 @@ val oclLib =
 			      precondition=[],
 			      result=Integer,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			    {
 			      arguments=[],
@@ -360,7 +373,7 @@ val oclLib =
 			      precondition=[],
 			      result=Boolean,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			    {
 			      arguments=[],
@@ -370,7 +383,7 @@ val oclLib =
 			      precondition=[],
 			      result=Boolean,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			    {
 			     arguments=[("bag",Bag(TemplateParameter "T"))],
@@ -380,7 +393,7 @@ val oclLib =
 			     precondition=[],
 			     result=Boolean,
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("bag",Bag(TemplateParameter "T"))],
@@ -390,7 +403,7 @@ val oclLib =
 			     precondition=[],
 			     result=Boolean,
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("bag",Bag(TemplateParameter "T"))],
@@ -400,7 +413,7 @@ val oclLib =
 			     precondition=[],
 			     result=Boolean,
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("bag",Bag(TemplateParameter "T"))],
@@ -410,7 +423,7 @@ val oclLib =
 			     precondition=[],
 			     result=Boolean,
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("bag",Bag(TemplateParameter "T"))],
@@ -420,7 +433,7 @@ val oclLib =
 			     precondition=[],
 			     result=Boolean,
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("bag",Bag(TemplateParameter "T"))],
@@ -430,7 +443,7 @@ val oclLib =
 			     precondition=[],
 			     result=Bag(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("bag",Bag(TemplateParameter "T"))],
@@ -440,7 +453,7 @@ val oclLib =
 			     precondition=[],
 			     result=Bag(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("set",Set(TemplateParameter "T"))],
@@ -450,7 +463,7 @@ val oclLib =
 			     precondition=[],
 			     result=Set(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("object",TemplateParameter "T")],
@@ -460,7 +473,7 @@ val oclLib =
 			     precondition=[],
 			     result=Bag(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("object",TemplateParameter "T")],
@@ -470,7 +483,7 @@ val oclLib =
 			     precondition=[],
 			     result=Bag(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[("object",TemplateParameter "T")],
@@ -480,7 +493,7 @@ val oclLib =
 			     precondition=[],
 			     result=Integer,
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[],
@@ -490,7 +503,7 @@ val oclLib =
 			     precondition=[],
 			     result=Bag(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[],
@@ -500,7 +513,7 @@ val oclLib =
 			     precondition=[],
 			     result=Set(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[],
@@ -510,7 +523,7 @@ val oclLib =
 			     precondition=[],
 			     result=Sequence(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public
+			     visibility=XMI.public,stereotypes=[]
 			    },
 			    {
 			     arguments=[],
@@ -520,7 +533,7 @@ val oclLib =
 			     precondition=[],
 			     result=Bag(TemplateParameter "T"),
 			     scope=XMI.InstanceScope,
-			     visibility=XMI.public}],
+			     visibility=XMI.public,stereotypes=[]}],
 			    parent=NONE,
 			    stereotypes=[],
 			    thyname=NONE
@@ -534,6 +547,7 @@ val oclLib =
 			     attributes=[],
 			     associations=[],
 			     activity_graphs=[],
+			     visibility=public,
 			     interfaces=[],invariant=[],
 			     name=Set (TemplateParameter "T"),
 			     operations=[
@@ -545,7 +559,7 @@ val oclLib =
 			      precondition=[],
 			      result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[],
@@ -555,7 +569,7 @@ val oclLib =
 			      precondition=[],
 			      result=Boolean,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[],
@@ -565,7 +579,7 @@ val oclLib =
 			      precondition=[],
 			      result=Integer,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("bag",Bag(TemplateParameter "T"))],
@@ -575,7 +589,7 @@ val oclLib =
 			      precondition=[],
 			      result=Bag(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("s",Set(TemplateParameter "T"))],
@@ -585,7 +599,7 @@ val oclLib =
 			      precondition=[],
 			      result=Boolean,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("s",Set(TemplateParameter "T"))],
@@ -595,7 +609,7 @@ val oclLib =
 			      precondition=[],
 			      result=Boolean,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 {
 			      arguments=[],
@@ -605,7 +619,7 @@ val oclLib =
 			      precondition=[],
 			      result=Boolean,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("s",Set(TemplateParameter "T"))],
@@ -615,7 +629,7 @@ val oclLib =
 			      precondition=[],
 			      result=Boolean,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("s",Set(TemplateParameter "T"))],
@@ -625,7 +639,7 @@ val oclLib =
 			      precondition=[],
 			      result=Boolean,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("s",Set(TemplateParameter "T"))],
@@ -635,7 +649,7 @@ val oclLib =
 			      precondition=[],
 			      result=Boolean,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("s",Set(TemplateParameter "T"))],
@@ -645,7 +659,7 @@ val oclLib =
 			      precondition=[],
 			      result=Boolean,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("s",Set(TemplateParameter "T"))],
@@ -655,7 +669,7 @@ val oclLib =
 			      precondition=[],
 			      result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("bag",Bag(TemplateParameter "T"))],
@@ -665,7 +679,7 @@ val oclLib =
 			      precondition=[],
 			      result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("s",Set(TemplateParameter "T"))],
@@ -675,7 +689,7 @@ val oclLib =
 			      precondition=[],
 			      result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("object",TemplateParameter "T")],
@@ -685,7 +699,7 @@ val oclLib =
 			      precondition=[],
 			      result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("object",TemplateParameter "T")],
@@ -695,7 +709,7 @@ val oclLib =
 			      precondition=[],
 			      result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("s",Set(TemplateParameter "T"))],
@@ -705,7 +719,7 @@ val oclLib =
 			      precondition=[],
 			      result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("object",TemplateParameter "T")],
@@ -715,7 +729,7 @@ val oclLib =
 			      precondition=[],
 			      result=Integer,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[],
@@ -725,7 +739,7 @@ val oclLib =
 			      precondition=[],
 			      result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[],
@@ -735,7 +749,7 @@ val oclLib =
 			      precondition=[],
 			      result=Set(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[],
@@ -745,7 +759,7 @@ val oclLib =
 			      precondition=[],
 			      result=Sequence(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 
 			     {
@@ -756,7 +770,7 @@ val oclLib =
 			      precondition=[],
 			      result=Bag(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 
 			     {
@@ -767,7 +781,7 @@ val oclLib =
 			      precondition=[],
 			      result=Bag(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public}],
+			      visibility=XMI.public,stereotypes=[]}],
 			     parent=NONE,
 			     stereotypes=[],
 			     thyname=NONE
@@ -780,6 +794,7 @@ val oclLib =
 			     attributes=[],
 			     associations=[],
 			     activity_graphs=[],
+			     visibility=public,
 			     interfaces=[],
 			     invariant=[],
 			     name=OrderedSet (TemplateParameter "T"),
@@ -792,7 +807,7 @@ val oclLib =
 			      precondition=[],
 			      result=OrderedSet(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[],
@@ -802,7 +817,7 @@ val oclLib =
 			      precondition=[],
 			      result=Boolean,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[],
@@ -812,7 +827,7 @@ val oclLib =
 			      precondition=[],
 			      result=Integer,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("bag",Bag(TemplateParameter "T"))],
@@ -822,7 +837,7 @@ val oclLib =
 			      precondition=[],
 			      result=Bag(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("s",OrderedSet(TemplateParameter "T"))],
@@ -831,7 +846,7 @@ val oclLib =
 			      precondition=[],
 			      result=Boolean,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("s",OrderedSet(TemplateParameter "T"))],
@@ -841,7 +856,7 @@ val oclLib =
 			      precondition=[],
 			      result=Boolean,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 {
 			      arguments=[],
@@ -851,7 +866,7 @@ val oclLib =
 			      precondition=[],
 			      result=Boolean,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("s",OrderedSet(TemplateParameter "T"))],
@@ -860,7 +875,7 @@ val oclLib =
 			      precondition=[],
 			      result=Boolean,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("s",OrderedSet(TemplateParameter "T"))],
@@ -870,7 +885,7 @@ val oclLib =
 			      precondition=[],
 			      result=Boolean,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("s",OrderedSet(TemplateParameter "T"))],
@@ -880,7 +895,7 @@ val oclLib =
 			      precondition=[],
 			      result=Boolean,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 
 			     {
@@ -891,7 +906,7 @@ val oclLib =
 			      precondition=[],
 			      result=Boolean,
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("s",OrderedSet(TemplateParameter "T"))],
@@ -901,7 +916,7 @@ val oclLib =
 			      precondition=[],
 			      result=OrderedSet(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("bag",Bag(TemplateParameter "T"))],
@@ -911,7 +926,7 @@ val oclLib =
 			      precondition=[],
 			      result=OrderedSet(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("s",OrderedSet(TemplateParameter "T"))],
@@ -921,60 +936,60 @@ val oclLib =
 			      precondition=[],
 			      result=OrderedSet(TemplateParameter "T"),
 			      scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("object",TemplateParameter "T")],
 			      isQuery=true,name="including",body=[],postcondition=[],
 			      precondition=[],result=Set(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("object",TemplateParameter "T")],
 			      isQuery=true,name="excluding",body=[],postcondition=[],
 			      precondition=[],result=Set(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("s",OrderedSet(TemplateParameter "T"))],
 			      isQuery=true,name="symmetricDifference",body=[],postcondition=[],
 			      precondition=[],result=Set(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("object",TemplateParameter "T")],
 			      isQuery=true,name="count",body=[],postcondition=[],precondition=[],
 			      result=Integer,scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[],isQuery=true,name="flatten",body=[],postcondition=[],
 			      precondition=[],result=Set(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[],isQuery=true,name="asSet",body=[],postcondition=[],
 			      precondition=[],result=Set(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[],isQuery=true,name="asSequence",
 			      body=[],postcondition=[],precondition=[],
 			      result=Sequence(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 			     },
 
 			     {
 			      arguments=[],isQuery=true,name="asBag",body=[],postcondition=[],
 			      precondition=[],result=Bag(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 			     },
 
 			     {
 			      arguments=[("oset",OrderedSet(TemplateParameter "T"))],
 			      isQuery=true,name="union",body=[],postcondition=[],precondition=[],
 			      result=Bag(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public}],parent=NONE,
+			      scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]}],parent=NONE,
 			     stereotypes=[],thyname=NONE
 			    }: Rep_Core.Classifier
 	 },
@@ -985,71 +1000,72 @@ val oclLib =
 			    {
 			     attributes=[],
 			     associations=[],
-			     activity_graphs=[],	  
+			     activity_graphs=[],
+			     visibility=public,
 			     interfaces=[],invariant=[],name=Collection(TemplateParameter "T"),
 			     operations=[
 			     {
 			      arguments=[],isQuery=true,name="size",body=[],postcondition=[],
 			      precondition=[],result=Integer,
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[],isQuery=true,name="modifiedOnly",
 			      body=[],postcondition=[],precondition=[],
 			      result=Boolean,scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("object",TemplateParameter "T")],
 			      isQuery=true,name="includes",body=[],postcondition=[],
 			      precondition=[],result=Boolean,
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("object",TemplateParameter "T")],
 			      isQuery=true,name="excludes",body=[],postcondition=[],
 			      precondition=[],result=Boolean,
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("object",TemplateParameter "T")],
 			      isQuery=true,name="count",body=[],postcondition=[],precondition=[],
 			      result=Integer,scope=XMI.InstanceScope,
-			      visibility=XMI.public
+			      visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("c",Collection(TemplateParameter "T"))],
 			      isQuery=true,name="includesAll",body=[],postcondition=[],
 			      precondition=[],result=Boolean,
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("c",Collection(TemplateParameter "T"))],
 			      isQuery=true,name="excludesAll",body=[],postcondition=[],
 			      precondition=[],result=Boolean,
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[],isQuery=true,name="isEmpty",body=[],postcondition=[],
 			      precondition=[],result=Boolean,
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[],isQuery=true,name="notEmpty",body=[],postcondition=[],
 			      precondition=[],result=Boolean,
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[],isQuery=true,name="sum",body=[],postcondition=[],
 			      precondition=[],result=Integer,
-			      scope=XMI.InstanceScope,visibility=XMI.public
+			      scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 			     },
 			     {
 			      arguments=[("c2",
 					  Collection(TemplateParameter "T"))],
 			      isQuery=true,name="product",body=[],postcondition=[],
 			      precondition=[],result=Set(TemplateParameter "T"),
-			      scope=XMI.InstanceScope,visibility=XMI.public}],parent=NONE,
+			      scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]}],parent=NONE,
 			     stereotypes=[],thyname=NONE
 			    }: Rep_Core.Classifier
 	 },
@@ -1064,6 +1080,7 @@ val oclLib =
 	  operations=[],
 	  parent= SOME OclAny,
 	  stereotypes=[],
+	  visibility=public,
 	  thyname=NONE
 	 },
 
@@ -1075,71 +1092,71 @@ val oclLib =
 	   arguments=[("object",OclAny)],
            isQuery=true,name="=",body=[],postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("object",OclAny)],
            isQuery=true,name="==",body=[],postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("object",OclAny)],
            isQuery=true,name="~=",body=[],postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("object",OclAny)],
            isQuery=true,name="~==",body=[],postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("object",OclAny)],
            isQuery=true,name="~=~",body=[],postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("object",OclAny)],
            isQuery=true,name="~==~",body=[],postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("object",OclAny)],
            isQuery=true,name="<>",body=[],postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[],isQuery=true,name="oclIsNew",body=[],postcondition=[],
            precondition=[],result=Boolean,
-           scope=XMI.InstanceScope,visibility=XMI.public
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[],isQuery=true,name="oclIsUndefined",
            body=[],postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[],isQuery=true,name="atPre",body=[],postcondition=[],
            precondition=[],result=OclAny,
-           scope=XMI.InstanceScope,visibility=XMI.public
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("statename",Classifier ["OclState"])],
            isQuery=true,name="oclIsInState",body=[],postcondition=[],
            precondition=[],result=Boolean,
-           scope=XMI.InstanceScope,visibility=XMI.public
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[],isQuery=true,name="allInstances",
            body=[],postcondition=[],precondition=[],
            result=Set(OclAny),
-           scope=XMI.ClassifierScope,visibility=XMI.public}],parent=NONE,
+           scope=XMI.ClassifierScope,visibility=XMI.public,stereotypes=[]}],parent=NONE,
 	  stereotypes=[],thyname=NONE
 	 },
      Primitive
@@ -1149,41 +1166,41 @@ val oclLib =
 	  {
 	   arguments=[],isQuery=true,name="size",body=[],postcondition=[],
            precondition=[],result=Integer,
-           scope=XMI.InstanceScope,visibility=XMI.public
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("s",String)],
            isQuery=true,name="concat",body=[],postcondition=[],
            precondition=[],result=String,
-           scope=XMI.InstanceScope,visibility=XMI.public
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("lower",Integer),
 		      ("upper",Integer)],
            isQuery=true,name="substring",body=[],postcondition=[],
            precondition=[],result=String,
-           scope=XMI.InstanceScope,visibility=XMI.public
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[],isQuery=true,name="toInteger",
            body=[],postcondition=[],precondition=[],
            result=Integer,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[],isQuery=true,name="toReal",body=[],postcondition=[],
            precondition=[],result=Real,
-           scope=XMI.InstanceScope,visibility=XMI.public
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[],isQuery=true,name="toUpper",body=[],postcondition=[],
            precondition=[],result=String,
-           scope=XMI.InstanceScope,visibility=XMI.public
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[],isQuery=true,name="toLower",body=[],postcondition=[],
            precondition=[],result=String,
-           scope=XMI.InstanceScope,visibility=XMI.public}],
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]}],
 	  parent= SOME OclAny,
 	  stereotypes=[],
 	  thyname=NONE
@@ -1196,66 +1213,66 @@ val oclLib =
 	   arguments=[("b",Boolean)],
            isQuery=true,name="or",body=[],postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("b",Boolean)],
            isQuery=true,name="xor",body=[],postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("b",Boolean)],
            isQuery=true,name="and",body=[],postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("b",Boolean)],
            isQuery=true,name="implies",body=[],postcondition=[],
            precondition=[],result=Boolean,
-           scope=XMI.InstanceScope,visibility=XMI.public
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[],isQuery=true,name="not",body=[],postcondition=[],
            precondition=[],result=Boolean,
-           scope=XMI.InstanceScope,visibility=XMI.public
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("b",Boolean)],
            isQuery=true,name="sor",body=[],postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("b",Boolean)],
            isQuery=true,name="sxor",body=[],postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("b",Boolean)],
            isQuery=true,name="sand",body=[],postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("b",Boolean)],
            isQuery=true,name="simplies",body=[],postcondition=[],
            precondition=[],result=Boolean,
-           scope=XMI.InstanceScope,visibility=XMI.public
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("b",Boolean)],
            isQuery=true,name="implies1",body=[],postcondition=[],
            precondition=[],result=Boolean,
-           scope=XMI.InstanceScope,visibility=XMI.public
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("b",Boolean)],
            isQuery=true,name="implies2",body=[],postcondition=[],
            precondition=[],result=Boolean,
-           scope=XMI.InstanceScope,visibility=XMI.public}],
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]}],
 	  parent= SOME OclAny,
 	  stereotypes=[],
 	  thyname=NONE
@@ -1268,59 +1285,59 @@ val oclLib =
 	   arguments=[("i",Integer)],
            isQuery=true,name="+",body=[],postcondition=[],precondition=[],
            result=Integer,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("i",Integer)],
            isQuery=true,name="-",body=[],postcondition=[],precondition=[],
            result=Integer,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("i",Integer)],
            isQuery=true,name="*",body=[],postcondition=[],precondition=[],
            result=Integer,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[],isQuery=true,name="-",body=[],postcondition=[],
            precondition=[],result=Integer,
-           scope=XMI.InstanceScope,visibility=XMI.public
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("i",Integer)],
            isQuery=true,name="/",body=[],postcondition=[],precondition=[],
            result=Real,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("i",Integer)],
            isQuery=true,name="div",body=[],postcondition=[],precondition=[],
            result=Integer,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[],isQuery=true,name="abs",body=[],postcondition=[],
            precondition=[],result=Integer,
-           scope=XMI.InstanceScope,visibility=XMI.public
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("i",Integer)],
            isQuery=true,name="mod",body=[],postcondition=[],precondition=[],
            result=Integer,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("i",Integer)],
            isQuery=true,name="max",body=[],postcondition=[],precondition=[],
            result=Integer,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("i",Integer)],
            isQuery=true,name="min",body=[],postcondition=[],precondition=[],
            result=Integer,scope=XMI.InstanceScope,
-           visibility=XMI.public}],
+           visibility=XMI.public,stereotypes=[]}],
 	  parent= SOME Real,
 	  stereotypes=[],
 	  thyname=NONE
@@ -1333,81 +1350,81 @@ val oclLib =
 	   arguments=[("r",Real)],
            isQuery=true,name="+",body=[],postcondition=[],precondition=[],
            result=Real,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("r",Real)],
            isQuery=true,name="-",body=[],postcondition=[],precondition=[],
            result=Real,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("r",Real)],
            isQuery=true,name="*",body=[],postcondition=[],precondition=[],
            result=Real,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[],isQuery=true,name="-",body=[],postcondition=[],
            precondition=[],result=Real,
-           scope=XMI.InstanceScope,visibility=XMI.public
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("r",Real)],
            isQuery=true,name="/",body=[],postcondition=[],precondition=[],
            result=Real,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[],isQuery=true,name="abs",body=[],postcondition=[],
            precondition=[],result=Real,
-           scope=XMI.InstanceScope,visibility=XMI.public
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[],isQuery=true,name="floor",body=[],postcondition=[],
            precondition=[],result=Integer,
-           scope=XMI.InstanceScope,visibility=XMI.public
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[],isQuery=true,name="round",body=[],postcondition=[],
            precondition=[],result=Integer,
-           scope=XMI.InstanceScope,visibility=XMI.public
+           scope=XMI.InstanceScope,visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("r",Real)],
            isQuery=true,name="max",body=[],postcondition=[],precondition=[],
            result=Real,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("r",Real)],
            isQuery=true,name="min",body=[],postcondition=[],precondition=[],
            result=Real,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("r",Real)],
            isQuery=true,name="<",body=[],postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("r",Real)],
            isQuery=true,name=">",body=[],postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("r",Real)],
            isQuery=true,name="<=",body=[],postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
-           visibility=XMI.public
+           visibility=XMI.public,stereotypes=[]
 	  },
           {
 	   arguments=[("r",Real)],
            isQuery=true,name=">=",body=[],postcondition=[],precondition=[],
            result=Boolean,scope=XMI.InstanceScope,
-           visibility=XMI.public}],
+           visibility=XMI.public,stereotypes=[]}],
 	  parent= SOME OclAny,
 	  stereotypes=[],
 	  thyname=NONE

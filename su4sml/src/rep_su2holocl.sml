@@ -229,7 +229,8 @@ fun create_getter c {name,attr_type,visibility,scope,stereotypes,init} =
       result=attr_type,
       isQuery=true,
       scope=scope,
-      visibility=public
+      visibility=public,
+	  stereotypes=[]
     }
 
 (** creates a setter function for the given attribute.
@@ -254,7 +255,8 @@ fun create_setter c {name,attr_type,visibility,scope,stereotypes,init} =
           result=OclVoid,
           isQuery=false,
           scope=scope,
-          visibility=public
+          visibility=public,
+	  stereotypes=[]
         }
     end
     
@@ -264,7 +266,7 @@ fun create_setter c {name,attr_type,visibility,scope,stereotypes,init} =
  * to corresponding "secured" operations.
  *)
 fun create_secured {name, body,precondition, postcondition, arguments, result,
-                    isQuery, scope, visibility} =
+                    isQuery, scope,stereotypes,visibility} =
     { name=name^"_sec",
       precondition=precondition,
       postcondition=map (fn (name,t) => (name,replace_attcalls (replace_opcalls t))) 
@@ -274,7 +276,8 @@ fun create_secured {name, body,precondition, postcondition, arguments, result,
       body=body,
       isQuery=isQuery,
       scope=scope,
-      visibility=public
+      stereotypes=stereotypes,
+      visibility=visibility
     }
 
 
@@ -300,7 +303,8 @@ fun add_operations c =
            result=Classifier (name_of c),
            isQuery=false,
            scope=ClassifierScope,
-           visibility=public}
+           visibility=public,
+           stereotypes=[]}
       val destructor  = 
           {name="delete",
            precondition=nil,
@@ -316,7 +320,8 @@ fun add_operations c =
            result=OclVoid,
            isQuery=false,
            scope=InstanceScope,
-           visibility=public}
+           visibility=public,
+	   stereotypes=[]}
       val getters = map (create_getter c) (attributes_of c)
       val setters = map (create_setter c) (attributes_of c)
       val sec_ops = map create_secured (operations_of c)
@@ -396,7 +401,8 @@ val role =
                         init=NONE,name="name",
                         scope=InstanceScope,
                         stereotypes=[],
-                        visibility=public}],
+                        visibility=public
+		      }],
            interfaces=[],
            invariant=[],
            name=Classifier ["AuthorizationEnvironment","Role"],
@@ -408,10 +414,13 @@ val role =
                         body=[],
                         result=Classifier ["AuthorizationEnvironment","Role"],
                         scope=ClassifierScope,
-                        visibility=public}],
+			stereotypes=[],
+                        visibility=public}
+		      ],
            parent=NONE,
            stereotypes=[],
-           thyname=NONE}
+           thyname=NONE,
+	  visibility=public}
     
 val identity =  
     Class { activity_graphs=[],
@@ -441,6 +450,7 @@ val identity =
             name=Classifier ["AuthorizationEnvironment","Identity"],
             operations=[],
             parent=NONE,
+	    visibility=public,
             stereotypes=[],
             thyname=NONE
           }
@@ -461,6 +471,7 @@ val static_auth_env = [
             name=Classifier ["AuthorizationEnvironment","Context"],
             operations=[],
             parent=NONE,
+	    visibility=public:Rep_Core.Visibility,
             stereotypes=[],
             thyname=NONE},
     Class
@@ -493,13 +504,14 @@ val static_auth_env = [
                        precondition=[],
                        body=[],
                      result=Boolean,
-                       scope=InstanceScope,
-                       visibility=public}],
+		       stereotypes=[],
+                       scope=InstanceScope:Rep_Core.Scope,
+                        visibility=public:Rep_Core.Visibility }],
           parent=NONE,
+            visibility=public:Rep_Core.Visibility,
           stereotypes=[],
           thyname=NONE}]
                       
-
 (** defines the role hierarchy. *)
 (* FIXME: context Identity inv: self.roles.name->includes(r1) implies *)
 (*        self.roles.name->includes(r2) *)

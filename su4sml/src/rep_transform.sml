@@ -282,7 +282,7 @@ fun transformAssociationClassIntoClass (AssociationClass
                                             {name,parent,attributes,operations,
 				             associations,association,
                                              invariant,stereotypes,interfaces,
-                                             thyname,activity_graphs}) =
+                                             visibility,thyname,activity_graphs}) =
      Class { name = name,
 	     parent = parent,
 	     attributes = attributes,
@@ -292,6 +292,7 @@ fun transformAssociationClassIntoClass (AssociationClass
 	     stereotypes = stereotypes,
 	     interfaces = interfaces,
 	     thyname = thyname,
+	     visibility = visibility,
 	     activity_graphs = activity_graphs}
         
 (** 

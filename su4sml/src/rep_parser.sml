@@ -267,6 +267,7 @@ fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
        result = result_type,
        body = [],
        visibility = visibility,
+	 stereotypes = [],      (* FIX *)
        scope = ownerScope,
        isQuery = isQuery      (* FIX *)
       }
@@ -438,6 +439,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 		   associations = assocs,
 		   stereotypes = map (find_stereotype t) stereotype, 
 		   interfaces = nil, (* FIX *)
+		   visibility = visibility:Rep_Core.Visibility,
                    activity_graphs = List.concat [map (transform_activitygraph t) activity_graphs,
 						  map (transform_statemachine t) state_machines], 
 		   thyname = NONE}
@@ -477,6 +479,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 			      thyname = NONE,
 			      activity_graphs = [] (* FIXME *),
 			      associations = assocs,
+			      visibility = visibility,
 			      association = assoc}
 
     end
