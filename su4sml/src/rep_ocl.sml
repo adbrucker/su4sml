@@ -76,6 +76,10 @@ datatype OclTerm =
 			         * OclTerm * OclType           (* then               *)
 			         * OclTerm * OclType           (* else               *)
 			         * OclType                     (* result type        *)
+       | QualifiedAssociationEndCall of OclTerm * OclType (* source    *)
+                                        * (OclTerm * OclType) list (* qualies*)
+                                        * Path   (* assoc.-enc         *)
+                                        * OclType (* result type       *)
        | AssociationEndCall of OclTerm * OclType (* source             *)
 			                         * Path            (* assoc.-enc         *)
 			                         * OclType         (* result type        *)
@@ -86,12 +90,12 @@ datatype OclTerm =
 			                    * Path                 (* operation          *)
 			                    * (OclTerm * OclType) list (* parameters         *)
 			                    * OclType              (* result tupe        *)
-       | OperationWithType  of OclTerm * OclType (* source             *)
+       | OperationWithType of OclTerm * OclType (* source             *)
 			                         * string * OclType(* type parameter     *)
 			                         * OclType         (* result type        *)
-       | Predicate          of OclTerm * OclType             (* source             *)
-			       * Path                        (* name               *)
-                               * (OclTerm * OclType) list    (* arguments          *)
+       | Predicate of OclTerm * OclType (* source             *)
+			                * Path                        (* name               *)
+                      * (OclTerm * OclType) list    (* arguments          *)
        | Variable of string * OclType            (* name with type     *)
        | Let      of string * OclType            (* variable           *)
 			               * OclTerm * OclType         (* rhs                *)
@@ -145,11 +149,15 @@ fun string_of_OclType' f Integer        = "Integer"
   | string_of_OclType' f String         = "String"
   | string_of_OclType' f Boolean        = "Boolean"
   | string_of_OclType' f OclAny         = "OclAny"
-  | string_of_OclType' f (Set t)	     = ("Set("^(string_of_OclType' f t)^")")			
-  | string_of_OclType' f (Sequence t)   = ("Sequence("^(string_of_OclType' f t)^")")	
-  | string_of_OclType' f (OrderedSet t) = ("OrderedSet("^(string_of_OclType' f t)^")")	
-  | string_of_OclType' f (Bag t)        = ("Bag("^(string_of_OclType' f t)^")")	
-  | string_of_OclType' f (Collection t) = ("Collection("^(string_of_OclType' f t)^")")	
+  | string_of_OclType' f (Set t)	      = ("Set("^(string_of_OclType' f t)^")")
+  | string_of_OclType' f (Sequence t)   = ("Sequence("^(string_of_OclType' 
+                                                            f t)^")")	
+  | string_of_OclType' f (OrderedSet t) = ("OrderedSet("^(string_of_OclType' 
+                                                              f t)^")")	
+  | string_of_OclType' f (Bag t)        = ("Bag("^(string_of_OclType' 
+                                                       f t)^")")	
+  | string_of_OclType' f (Collection t) = ("Collection("^(string_of_OclType' 
+                                                              f t)^")")	
   | string_of_OclType' f OclVoid        = "OclVoid"
   | string_of_OclType' f (Classifier p) = (path_to_string p f)
   | string_of_OclType' f DummyT         = "DummyT"
@@ -193,44 +201,48 @@ open Rep_OclType
 datatype OclTerm = 
 	 Literal  of string * OclType              (* Literal with type  *)
        | CollectionLiteral  of CollectionPart list * OclType (* content with type  *)
-       | If       of OclTerm * OclType             (* condition          *)
-		     * OclTerm * OclType           (* then               *)
-		     * OclTerm * OclType           (* else               *)
-		     * OclType                     (* result type        *)
-       | AssociationEndCall of OclTerm * OclType             (* source             *)
-			       * Path                        (* assoc.-enc         *)
-			       * OclType                     (* result type        *)
-       | AttributeCall      of OclTerm * OclType             (* source             *)
-			       * Path                        (* attribute          *)
-			       * OclType                     (* result type        *)
-       | OperationCall      of OclTerm * OclType             (* source             *)
-			       * Path                        (* operation          *)
-			       * (OclTerm * OclType) list    (* parameters         *)
-			       * OclType                     (* result tupe        *)
-       | OperationWithType  of OclTerm * OclType             (* source             *)
-			       * string * OclType            (* type parameter     *)
-			       * OclType                     (* result type        *)
-       | Predicate          of OclTerm * OclType             (* source             *)
-			       * Path                        (* name               *)
-                               * (OclTerm * OclType) list    (* arguments          *)
-       | Variable           of string * OclType              (* name with type     *)
-       | Let                of string * OclType              (* variable           *)
-			       * OclTerm * OclType           (* rhs                *)
-			       * OclTerm * OclType           (* in                 *)
-       | Iterate            of (string * OclType) list       (* iterator variables *)
-			       * string * OclType * OclTerm  (* result variable    *)
-			       * OclTerm * OclType           (* source             *)
-			       * OclTerm * OclType           (* iterator body      *)
-			       * OclType                     (* result type        *)
-       | Iterator           of string                        (* name of iterator   *)
-			       * (string * OclType) list     (* iterator variables *)
-			       * OclTerm * OclType           (* source             *)
-			       * OclTerm * OclType           (* iterator-body      *)
-			       * OclType                     (* result type        *)
+       | If of OclTerm * OclType             (* condition          *)
+		           * OclTerm * OclType           (* then               *)
+		           * OclTerm * OclType           (* else               *)
+		           * OclType                     (* result type        *)
+       | QualifiedAssociationEndCall of OclTerm * OclType (* source    *)
+                                        * (OclTerm * OclType) list (* qualies*)
+                                        * Path   (* assoc.-enc         *)
+                                        * OclType (* result type       *)
+       | AssociationEndCall of OclTerm * OclType (* source             *)
+			                         * Path            (* assoc.-enc         *)
+			                         * OclType         (* result type        *)
+       | AttributeCall of OclTerm * OclType      (* source             *)
+			                    * Path                 (* attribute          *)
+			                    * OclType              (* result type        *)
+       | OperationCall of OclTerm * OclType      (* source             *)
+			                    * Path                 (* operation          *)
+			                    * (OclTerm * OclType) list  (* parameters         *)
+			                    * OclType              (* result tupe        *)
+       | OperationWithType  of OclTerm * OclType (* source             *)
+			                         * string * OclType(* type parameter     *)
+			                         * OclType         (* result type        *)
+       | Predicate of OclTerm * OclType          (* source             *)
+			                * Path                     (* name               *)
+                      * (OclTerm * OclType) list (* arguments          *)
+       | Variable of string * OclType            (* name with type     *)
+       | Let of string * OclType                 (* variable           *)
+			          * OclTerm * OclType              (* rhs                *)
+			          * OclTerm * OclType              (* in                 *)
+       | Iterate of (string * OclType) list      (* iterator variables *)
+			              * string * OclType * OclTerm (* result variable    *)
+			              * OclTerm * OclType          (* source             *)
+			              * OclTerm * OclType          (* iterator body      *)
+			              * OclType                    (* result type        *)
+       | Iterator of string                      (* name of iterator   *)
+			               * (string * OclType) list   (* iterator variables *)
+			               * OclTerm * OclType         (* source             *)
+			               * OclTerm * OclType         (* iterator-body      *)
+			               * OclType                   (* result type        *)
      and CollectionPart = CollectionItem of OclTerm * OclType
 	                | CollectionRange of OclTerm         (* first              *)
-		         		     * OclTerm       (* last               *)
-                                             * OclType
+		         		                       * OclTerm       (* last               *)
+                                       * OclType
 
 end
 
@@ -272,6 +284,60 @@ fun term_name_of (Literal            _) = "Literal"
 
 fun self t = Variable ("self",t)
 fun result t = Variable ("result", t)
+
+(* apply f to aendCalls, attCalls and qualiCalls *)
+fun mapOclCalls f (If(cond,condType,thenn,thennType,elsee,elseeType,
+                      resultType))=
+    If(mapOclCalls f cond,condType,
+       mapOclCalls f thenn,thennType,
+       mapOclCalls f elsee,elseeType,
+       resultType)
+  | mapOclCalls f (QualifiedAssociationEndCall(source, sourceType,
+                                               qualifierVals,path,
+                                               resultType)) =
+    f (QualifiedAssociationEndCall (mapOclCalls f source, sourceType,
+                                    qualifierVals, path,
+                                    resultType))
+  | mapOclCalls f (AssociationEndCall(source,sourceType,path,
+                                      resultType)) =
+    f (AssociationEndCall(mapOclCalls f source,sourceType,
+                          path,resultType))
+  | mapOclCalls f (AttributeCall(source,sourceType,path,resultType)) =
+    f (AttributeCall(mapOclCalls f source,sourceType,
+                     path,resultType))
+  | mapOclCalls f (OperationCall(source,sourceType,path,parameters,
+                                 resultType)) =
+    let
+      fun handleParameter (term,termType) = (mapOclCalls f term,termType)
+    in
+      OperationCall(mapOclCalls f source,sourceType,
+                    path,map handleParameter parameters,resultType)
+    end
+  | mapOclCalls f (OperationWithType(source,sourceType,var,varType,
+                                     resulType)) =
+    OperationWithType(mapOclCalls f source,sourceType,
+                      var,varType,resulType)
+  | mapOclCalls f (Let(name,nameType,rhs,rhsType,body,bodyType)) =
+    Let(name,nameType,
+        mapOclCalls f rhs,rhsType,
+        mapOclCalls f body,bodyType)
+  | mapOclCalls f (Iterate (vars,name,nameType,nameTerm,
+                            source,sourceType,body,
+                            bodyType,resultType)) =
+    Iterate (vars,
+             name,nameType, mapOclCalls f nameTerm,
+             mapOclCalls f source,sourceType,
+             mapOclCalls f body,bodyType,
+             resultType)
+  | mapOclCalls f (Iterator (name,vars,source,sourceType,body,bodyType,
+                             resultType)) =
+    Iterator (name,vars,
+              mapOclCalls f source, sourceType,
+              mapOclCalls f body,bodyType,
+              resultType)
+  | mapOclCalls f x = x
+
+
 
 (* BUG: let...? *)
 fun ocl_let var rhs body = Let (var,type_of rhs,rhs,type_of rhs,body,type_of body)
@@ -350,11 +416,9 @@ fun ocl_intersection_set a b = ocl_opcall a ["oclLib", "Set", "intersection_set"
 
 fun ocl_modifiedOnly a = ocl_opcall a ["oclLib", "Set", "modifiedOnly"] [] Boolean
 
-(* billk_tag *)
 fun ocl_size a = ocl_opcall a ["oclLib", "Collection", "size"] [] Integer
 
 (* Collection constructors *)
-
 fun ocl_set xs t = CollectionLiteral (map (fn x => CollectionItem (x, type_of x)) xs, Set t)
 
 
@@ -369,7 +433,7 @@ fun ocl_collect source var body = Iterator ("collect", [(var,type_of source)],
                                             source, type_of source,
                                             body, type_of body,
                                             Bag (type_of body))
-                                  
+
 (* source::Collection/Set/..., variables:: Variable list , body:: expression to be evaluated *)
 (* body must evaluate to Boolean *)
 fun ocl_forAll (source:OclTerm) (variables:OclTerm list) (body:OclTerm) = 
