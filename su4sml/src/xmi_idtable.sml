@@ -400,7 +400,6 @@ fun insert_association table package_prefix (association:XMI.Association) =
 end
 
 
-(* billk_tag *)
 fun insert_classifier table package_prefix class = 
     let val _ = trace function_calls "insert_classifier\n"
 	val id      = XMI.classifier_xmiid_of class

@@ -120,9 +120,10 @@ val mapCalls: (Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm) ->
               Rep.Classifier list
 
 (**
+ * @params {source, sourceRole,(target,targetRole)}
  *)
-val binaryAssociations : Rep.Classifier -> Rep.Classifier list -> 
-                         string list ->
+val binaryAssociations : Rep.Classifier -> string option ->
+                         (Rep.Classifier * string option) list -> 
                          (Rep.association list * Rep.associationend list)
 (**
  * Form binary associations between
@@ -357,7 +358,7 @@ fun isPureNAryAssoc {name,aends,qualifiers=[],aclass=NONE} =
   | isPureNAryAssoc _ = false
 
 fun isPureQualifier {name,aends=[a,b],qualifiers,aclass=NONE} = 
-    List.length qualifiers > 1
+    List.length qualifiers > 0
   | isPureQualifier _ = false
                         
 fun isPureAcAssoc {name,aends,qualifiers=[],aclass=SOME ac} = 
@@ -372,7 +373,7 @@ fun newDummyClass package =
           associations=[],
           invariant=[],
           stereotypes=[],
-          visibility=XMI.private,
+          visibility=XMI.public (* FIXME: private? *),
            interfaces=[],
           thyname=NONE,
           activity_graphs=[]}
@@ -383,7 +384,7 @@ fun newNamedClass package name =
           attributes=[],
           operations=[],
           associations=[],
-          visibility=XMI.private,
+          visibility=XMI.public (* FIXME: private? *),
           invariant=[],
           stereotypes=[],
           interfaces=[],
@@ -800,12 +801,16 @@ fun uniquenessOclConstraint (source:Classifier)
       (SOME "Uniqueness", constr)
     end
 
-fun binaryAssociations (source:Classifier) (targets:Classifier list) roles:
+fun binaryAssociations (source:Classifier) (sourceRole:string option)
+                       (targetRolePairs:(Classifier*string option) list):
     (association list * associationend list)=
     let
       val _ = trace function_calls "binaryAssociations\n"
-      fun generateAssociation (target,role): (association * associationend)=
+      fun generateAssociation srcRole (target,roleOpt):
+          (association * associationend)=
           let
+            val role = if isSome roleOpt then valOf roleOpt
+                       else uncapitalize (short_name_of target)
             val assocName =  package_of source @
                              ["BinaryAssoc"^nextUid ()]
             val oppAend = {name=assocName@[role],
@@ -816,7 +821,7 @@ fun binaryAssociations (source:Classifier) (targets:Classifier list) roles:
                            init=NONE}:associationend
           in
             ({name= assocName,
-              aends=[{name=assocName@ [short_name_of source],
+              aends=[{name=assocName@ [srcRole],
                       aend_type=type_of source,
                       multiplicity=[],
                       ordered=false,
@@ -828,9 +833,9 @@ fun binaryAssociations (source:Classifier) (targets:Classifier list) roles:
              oppAend)
           end
           
-      val roles = if length roles = length targets then roles
-                  else map short_name_of targets
-      val pairs = map generateAssociation (ListPair.zip(targets,roles))
+      val srcRole = if isSome sourceRole then valOf sourceRole
+                    else uncapitalize (short_name_of source)
+      val pairs = map (generateAssociation srcRole) targetRolePairs
     in
       ListPair.unzip pairs
     end
@@ -859,7 +864,10 @@ fun orderedBinaryAssociations (source:Classifier) (targets:Classifier list)
           end
           
       (* TODO: role names *)
-      val pairList = binaryAssociations source targets (map role_of_aend aends)
+      val pairList = binaryAssociations source NONE 
+                                        (ListPair.zip(targets,
+                                                      (map(SOME o role_of_aend)
+                                                          aends)))
     in
       ListPair.unzip (order (ListPair.zip pairList) aends)
     end

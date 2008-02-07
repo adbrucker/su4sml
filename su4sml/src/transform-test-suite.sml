@@ -105,8 +105,7 @@ val initResult = {
 
 *)
 
-val testcases = [
-(*
+val testcases = [(*
     {name = "Binary Association w/o Multiplicities",
      model = ([Class{name=Classifier ["Default","ClassA"],
 	                   parent=NONE,
@@ -187,7 +186,7 @@ val testcases = [
                 qualifiers=[],
                 aclass=NONE}]),
      result = initResult
-    }:testcase ,
+    }:testcase,
     {name = "Association Class",
      model = ([Class{name=Classifier ["Default","ClassA"],
 	                   parent=NONE,
@@ -239,9 +238,8 @@ val testcases = [
                 qualifiers=[],
                 aclass=SOME ["Default","AClass"]}]),
      result = initResult
-    }:testcase ,*)
-    {
-     name = "N-ary Association",
+    }:testcase ,
+    {name = "N-ary Association",
      model = ([Class{name=Classifier ["Default","ClassA"],
 	                   parent=NONE,
 	                   attributes=[],
@@ -297,12 +295,59 @@ val testcases = [
                 qualifiers=[],
                 aclass=NONE}]),
      result = initResult
-    }:testcase (*,
+    }:testcase,*)
     {
      name = "Qualifier",
-     model = ([],[]),
+     model = ([Class{name=Classifier ["Default","ClassA"],
+	                   parent=NONE,
+	                   attributes=[],
+	                   operations=[],
+	                   associations=[["Default","Association"]],
+	                   invariant=[],
+	                   stereotypes=[],
+	                   interfaces=[],
+	                   thyname=NONE,
+	                   visibility=XMI_DataTypes.public,
+                     activity_graphs=[]},
+               Class{name=Classifier ["Default","ClassB"],
+	                   parent=NONE,
+	                   attributes=[],
+	                   operations=[],
+	                   associations=[["Default","Association"]],
+	                   invariant=[],
+	                   stereotypes=[],
+	                   interfaces=[],
+	                   thyname=NONE,
+	                   visibility=XMI.public,
+                     activity_graphs=[]}],
+              [{name=["Default","Association"],
+                aends=[{name=["Default","Association","roleA"],
+                        aend_type=Classifier ["Default","ClassA"],
+                        multiplicity=[(0,2)],
+                        ordered=false,
+                        visibility=XMI.public,
+                        init=NONE},
+                       {name=["Default","Association","roleB"],
+                        aend_type=Classifier ["Default","ClassB"],
+                        multiplicity=[(3,4)],
+                        ordered=false,
+                        visibility=XMI.public,
+                        init=NONE}],
+                qualifiers=[("roleA",[{name="Number",
+                                    attr_type=Rep_OclType.Integer,
+                                    visibility=XMI.public,
+                                    scope=XMI.ClassifierScope,
+                                    stereotypes=[],
+                                    init=NONE},
+                                   {name="Date",
+                                    attr_type=Rep_OclType.Integer,
+                                    visibility=XMI.public,
+                                    scope=XMI.ClassifierScope,
+                                    stereotypes=[],
+                                    init=NONE}])],
+                aclass=NONE}]),
      result = initResult
-    }:testcase,  
+    }:testcase(*,  
     {
      name = "Mixed",
      model = ([],[]),
