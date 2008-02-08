@@ -4,16 +4,16 @@ sig
 (**
  * Generate an OCL constraint guaranteeing that source is unique over the
  * supplied associations. In case of binary associations, the aend is checked
- * for a multiplicity of 1. Else, this is enforced via OCL.
+ * for a multiplicity of 1. Else this is enforced via OCL.
  * @params {source,associations}
  * @param source classifier that needs a uniqueness constraint
- * @param associations binary associations the uniqueness constraint is 
- *        defined over. An n-ary association are not a valid argument.
+ * @param associations associations the uniqueness constraint should be 
+ *                     defined over. An n-ary association are not a valid 
+ *                     argument.
  * @return an OCL constraint expressing the uniqueness requirement
  *)
-val uniquenessOclConstraint : Rep_Core.Classifier -> 
-                              Rep_Core.association list
-                              -> Rep_Core.constraint
+val uniquenessOclConstraint : Rep.Classifier -> Rep.association list
+                              -> Rep.constraint
 
 (**
  * @params {source,multis,aends}
@@ -21,11 +21,10 @@ val uniquenessOclConstraint : Rep_Core.Classifier ->
 val multiplicityOclConstraints: Rep.Classifier -> (int*int) list list ->
                                 Rep.associationend list -> 
                                 Rep.constraint list
-val consistencyOclConstraint: Rep_Core.Classifier ->
-                              Rep_Core.Classifier -> 
-                              Rep_Core.associationend -> 
-                              Rep_Core.associationend list -> 
-                              Rep_Core.associationend list ->
+val consistencyOclConstraint: Rep.Classifier -> Rep.Classifier -> 
+                              Rep.associationend -> 
+                              Rep.associationend list -> 
+                              Rep.associationend list ->
                               (Rep.Classifier * Rep.constraint list)
 
 (**
@@ -100,9 +99,8 @@ val splitNAryAssociation: Rep.association -> Rep.Classifier list ->
  * @return the elements of oppRefAends in the same order as oppAends, given
  *         the classifier and the role name
  *)
-val matchAends: Rep_Core.associationend list -> 
-                Rep_Core.associationend list -> 
-                Rep_Core.associationend list
+val matchAends: Rep.associationend list -> Rep.associationend list -> 
+                Rep.associationend list
 
 (**
  * {association pool,source,roles}
@@ -111,10 +109,10 @@ val matchAendsFromClassifier: Rep.association list ->
                               Rep.Classifier -> string list
                               -> Rep.associationend list
 
-val matchClassifiersAtAend: Rep_Core.associationend list ->
-                            Rep_Core.Classifier list ->
-                            (Rep_Core.Classifier list * 
-                             Rep_Core.Classifier list )
+val matchClassifiersAtAend: Rep.associationend list ->
+                            Rep.Classifier list ->
+                            (Rep.Classifier list * 
+                             Rep.Classifier list )
 
 val findClassifier: Rep.Classifier list -> Rep_OclType.Path ->
                     (Rep.Classifier * Rep.Classifier list)
@@ -149,8 +147,8 @@ val nextUid: unit -> string
  * Helper function for generating new, unique classes within a given
  * package.
  *)
-val newDummyClass: Rep_OclType.Path -> Rep_Core.Classifier
-val newDummyAssociationClass: Rep_OclType.Path -> Rep_Core.Classifier
+val newDummyClass: Rep_OclType.Path -> Rep.Classifier
+val newDummyAssociationClass: Rep_OclType.Path -> Rep.Classifier
 (**
  * Generate a new Class for the given package and having the given name.
  * @params {package, name}
@@ -160,23 +158,24 @@ val newDummyAssociationClass: Rep_OclType.Path -> Rep_Core.Classifier
  * @return returns a new class for the given package having a unique name
  *                 starting with the given name
  *)
-val newNamedClass: Rep_OclType.Path -> string -> Rep_Core.Classifier
+val newNamedClass: Rep_OclType.Path -> string -> Rep.Classifier
 
-val fixAends: Rep_OclTerm.OclTerm -> Rep_Core.associationend list 
+val fixAends: Rep_OclTerm.OclTerm -> Rep.associationend list 
               -> (Rep_OclTerm.OclTerm * Rep_OclTerm.OclTerm list)
 
-val isPureNAryAssoc: Rep_Core.association -> bool
+(* Filters *)
 
+val isPureNAryAssoc   : Rep.association -> bool
 (**
  * For filtering pure qualified associations. At the moment, only binary
- * associations are handled.
+ * associations are supported.
  * @params {association}
  * @param association test association for being purely qualified, meaning
  *        no other adornments, such as aggregation, partitioning, etc
  * @return true iff the association is purely qualified
  *)
-val isPureQualifier: Rep_Core.association -> bool
-val isPureAcAssoc: Rep_Core.association -> bool
+val isPureQualifier   : Rep.association -> bool
+val isPureAcAssoc     : Rep.association -> bool
 (**
  * returns true iif assoc is purely a binary association, without any 
  * additional adornments, such as aggregation, qualifier, association class, 
@@ -185,9 +184,9 @@ val isPureAcAssoc: Rep_Core.association -> bool
  * @param assoc association to be tested
  * @return true iif assoc is a pure binary association
  *)
-val isPureBinAssoc : Rep_Core.association -> bool
+val isPureBinAssoc    : Rep.association -> bool
 
-val multiplicities_of_aend :  Rep_Core.associationend -> (int*int) list
+val multiplicities_of_aend :  Rep.associationend -> (int*int) list
 
 val stripMultiplicityOfAend: Rep.associationend -> Rep.associationend
 (**
@@ -197,9 +196,6 @@ val stripMultiplicityOfAend: Rep.associationend -> Rep.associationend
  * @return assoc with all multiplicities removed
  *)
 val stripMultiplicities : Rep.association -> Rep.association
-(* result: (Variable list , OCL expression for set intersection)*)
-val reachableSet  : Rep_Core.associationend -> Rep_Core.associationend list -> (Rep_OclTerm.OclTerm list * Rep_OclTerm.OclTerm)
-
 
 
 val modifyAssociationsOfClassifier: Rep_Core.association list -> 
@@ -207,9 +203,6 @@ val modifyAssociationsOfClassifier: Rep_Core.association list ->
                                     Rep_Core.Classifier -> Rep_Core.Classifier
 
 
-val withinBounds  : Rep_OclTerm.OclTerm -> (int*int) -> Rep_OclTerm.OclTerm
-val withinAendMultiplicities  : Rep_Core.associationend -> Rep_Core.associationend list -> string -> Rep_Core.constraint
-val injectiveConstraint : Rep_OclType.Path -> Rep_OclType.OclType -> Rep_Core.associationend list -> string -> Rep_Core.constraint
 val updateClassifiersWithConstraints: Rep_Core.Classifier list -> 
 				      Rep_OclType.OclType -> 
 				      Rep_Core.constraint  list -> 
@@ -681,95 +674,6 @@ fun updateClassifiersWithConstraints classifiers oclType constraints =
                                        classifiers
     in
       map (addInvariants constraints) match @ rem
-    end
-
-fun reachableSet (_:associationend) ([]:associationend list) = 
-    error "rep_transform.get_reachableSet: empty source list"
-  | reachableSet (target:associationend) ([source]:associationend list) =
-    let
-      val src_var = Variable(name_of_aend source ,type_of_aend source)
-    in
-      ([src_var], ocl_aendcall src_var (path_of_aend target) 
-                               (type_of_aend target))
-    end
-  | reachableSet (target:associationend) (source::rest) =
-    let
-      val (old_vars,intermediate) = reachableSet target rest
-      val src_var = Variable(name_of_aend source ,type_of_aend source)
-      val new_set = ocl_aendcall src_var (path_of_aend target) 
-                                 (type_of_aend target)
-    in
-      (src_var::old_vars ,ocl_intersection_set new_set intermediate)
-    end
-    
-    
-fun withinBounds (set:Rep_OclTerm.OclTerm) ((lower,upper):int*int):Rep_OclTerm.OclTerm =
-  let 
-    val size = ocl_size set
-    val lower_lit = Literal (Int.toString lower,Integer)
-    val upper_lit = Literal (Int.toString upper,Integer)
-    val lower_bound = ocl_geq size lower_lit
-    val upper_bound = ocl_leq size upper_lit
-  in
-    ocl_and lower_bound upper_bound
-  end
-
-fun withinAendMultiplicities targetAend sourceAends name =
-  let
-    val _ = trace function_calls "withinAendMultiplicities\n"
-    val tgtMultiplicities = multiplicities_of_aend targetAend
-    val tgtName = name_of_aend targetAend
-    val tgtType = type_of_aend targetAend
-    val (variables,set) = reachableSet targetAend sourceAends
-    val constrBody = ocl_or_all (map (withinBounds set) tgtMultiplicities)
-    val tgtVariable = Variable(tgtName^nextUid (),tgtType)
-    val allInstances = ocl_allInstances tgtVariable
-    val constrComplete = ocl_forAll allInstances variables constrBody 
-    val constraint = (SOME name,constrComplete)
-  in
-    constraint
-  end
-
-fun injectiveConstraint (source_path:Path) (source_type:OclType) 
-                        (targets:associationend list) (name:string):
-    constraint =
-    let
-      val source_name = get_short_name source_path
-      val src_var = Variable(source_name,source_type)
-      fun role_bounds src_var aend  = 
-          let
-	          val name = path_of_aend aend
-	          val aend_type = type_of_aend aend
-	          val set = ocl_aendcall src_var  name aend_type
-	          val size = ocl_size set
-	          val bounds = ocl_eq size (Literal("1",Integer))
-          in
-	          bounds
-          end
-      fun role_equals src_var src2_var aend =
-          let
-	          val name = path_of_aend aend
-	          val aend_type = type_of_aend aend
-	          val set = ocl_aendcall src_var  name aend_type
-	          val size = ocl_size set
-	          val match = ocl_eq size (Literal("1",Integer))
-          in
-	          match
-          end
-      val roles = map (role_bounds src_var) targets
-      val roles_part =  ocl_and_all roles
-      val allInstances = ocl_allInstances src_var
-      val src_var2 = Variable(source_name^"2",source_type)
-      val matches = map (role_equals src_var src_var2) targets
-      val matches_anded = ocl_and_all roles
-      val matches_equal = ocl_eq src_var src_var2
-      val matches_imp = ocl_implies matches_anded matches_equal
-      val allInstances2 = ocl_allInstances src_var2
-      val matches_part = ocl_forAll allInstances2 [src_var2] matches_imp
-      val constr_body = ocl_and roles_part matches_part
-      val constr_complete = ocl_forAll allInstances [src_var] constr_body
-    in
-      (SOME name,constr_complete)
     end
 
 fun modifyAssociationsOfClassifier (newAssociations:association list) 

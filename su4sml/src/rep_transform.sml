@@ -61,41 +61,42 @@ signature REP_TRANSFORM =
 sig
 
 datatype transformFlag = BinaryAssociationsOnly
-type modelTransformation = Rep_Core.transform_model * transformFlag list
-			   -> Rep_Core.transform_model * transformFlag list
+type modelTransformation = Rep.Model * transformFlag list
+			   -> Rep.Model * transformFlag list
 
 
 (* (JD) maybe not all of the following functions need to be exported.
  *)
 
-val transformClassifiersExt : Rep.Model -> Rep.Model
+val transformClassifiersExt  : Rep.Model -> Rep.Model
 val transformClassifiers     : Rep.Model -> Rep.Classifier list
 val transformFile            : string -> Rep.Model
 
 (* transforms *)
-val transformAssociationClasses: Rep.Model -> Rep.Model 
+val transformAssociationClasses : Rep.Model -> Rep.Model 
 val transformAssociationClassesToNAryAssociations: Rep.Model -> Rep.Model 
-val transformQualifiers : Rep.Model -> Rep.Model
-val transformAggregation: Rep.Model -> Rep.Model
+val transformQualifiers         : Rep.Model -> Rep.Model
+val transformAggregation        : Rep.Model -> Rep.Model
 (* remove n-ary associations *)
-val transformNAryAssociations : Rep.Model ->  Rep.Model
+val transformNAryAssociations   : Rep.Model ->  Rep.Model
 val transformNAryAssociationsToAssociationClasses : Rep.Model -> Rep.Model
 (* remove multiplicities *)
-val transformMultiplicities : Rep.Model -> Rep.Model
+val transformMultiplicities     : Rep.Model -> Rep.Model
 
 (* helper functions *)
 
-val updateClassifiersWithConstraints: Rep_Core.Classifier list -> 
+val updateClassifiersWithConstraints: Rep.Classifier list -> 
 				      Rep_OclType.OclType -> 
-				      Rep_Core.constraint  list -> 
-				      Rep_Core.Classifier list
-val get_association : Rep_Core.association list -> Rep_OclType.Path -> 
-		Rep_Core.association
+				      Rep.constraint  list -> 
+				      Rep.Classifier list
+val get_association : Rep.association list -> Rep_OclType.Path -> 
+		      Rep.association
 (* only one of the below will remain *)
-val get_other_associationends: Rep_Core.association list -> Rep_OclType.Path -> Rep_OclType.OclType -> Rep_Core.associationend list
-val get_other_associationends_alt : Rep_Core.association list -> Rep_OclType.OclType -> Rep_OclType.Path -> Rep_Core.associationend list
-val get_associationends  : Rep_Core.association list -> Rep_OclType.Path -> Rep_Core.associationend list
-val associationends_of   : Rep_Core.association -> Rep_Core.associationend list
+val get_other_associationends: Rep.association list -> Rep_OclType.Path -> 
+                               Rep_OclType.OclType -> Rep.associationend list
+val get_associationends  : Rep.association list -> Rep_OclType.Path -> 
+                           Rep.associationend list
+val associationends_of   : Rep.association -> Rep.associationend list
 
 exception NotYetImplemented of string
 exception InvalidArguments of string
@@ -150,13 +151,6 @@ fun get_other_associationends (all_assocs:association list) (assoc_path:Path)
   in
       aends
   end
-
-(** a simple wrap for get_other_associationends *)
-fun get_other_associationends_alt (all_assocs:association list) 
-                                  (cls_type:Rep_OclType.OclType) 
-                                  (assoc_path:Path):associationend list = 
-    get_other_associationends all_assocs assoc_path cls_type
-
 
 fun get_associationends (all_assocs:association list) (assoc_path:Path):associationend list = 
     let
