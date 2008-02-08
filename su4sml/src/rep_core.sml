@@ -560,12 +560,11 @@ fun associationends_of (all_associations:association list)
       val oppAends =  
           List.concat (map (oppositeAendsOfAssociation name all_associations) 
                            associations)
-      val selfAends = 
-          List.concat (map (incomingAendsOfAssociation name all_associations) 
-                           associations)
+      val selfAends = map (incomingAendsOfAssociation name all_associations) 
+                          associations
+      val filteredSelfAends = List.concat (List.filter (fn x => length x >= 2) selfAends)
     in
-      if List.length selfAends = 1 then oppAends
-      else oppAends@selfAends
+        oppAends@filteredSelfAends
     end
   | associationends_of all_associations (AssociationClass{name,associations,
                                                           association,...}) = 
@@ -577,24 +576,22 @@ fun associationends_of (all_associations:association list)
       val oppAends =  
           List.concat (map (oppositeAendsOfAssociation name all_associations) 
                            assocs)
-      val selfAends = 
-          List.concat (map (incomingAendsOfAssociation name all_associations) 
-                           assocs)
+      val selfAends = map (incomingAendsOfAssociation name all_associations) 
+                          associations
+      val filteredSelfAends = List.concat (List.filter (fn x => length x >= 2) selfAends)
     in
-      if List.length selfAends = 1 then oppAends
-      else oppAends@selfAends
+        oppAends@filteredSelfAends
     end
   | associationends_of all_associations (Primitive{name,associations,...}) = 
     let 
       val oppAends =  
           List.concat (map (oppositeAendsOfAssociation name all_associations) 
                            associations)
-      val selfAends = 
-          List.concat (map (incomingAendsOfAssociation name all_associations) 
-                           associations)
+      val selfAends = map (incomingAendsOfAssociation name all_associations) 
+                          associations
+      val filteredSelfAends = List.concat (List.filter (fn x => length x >= 2) selfAends)
     in
-      if List.length selfAends = 1 then oppAends
-      else oppAends@selfAends
+        oppAends@filteredSelfAends
     end
   | associationends_of _ _ = error ("in associationends_of: This classifier has no associationends") (*FIXME: or rather []? *)
                                    
