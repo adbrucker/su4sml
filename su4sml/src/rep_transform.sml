@@ -68,19 +68,20 @@ type modelTransformation = Rep_Core.transform_model * transformFlag list
 (* (JD) maybe not all of the following functions need to be exported.
  *)
 
-val transformClassifiersExt : Rep_Core.transform_model -> Rep.Model
-val transformClassifiers     : Rep_Core.transform_model -> Rep.Classifier list
+val transformClassifiersExt : Rep.Model -> Rep.Model
+val transformClassifiers     : Rep.Model -> Rep.Classifier list
 val transformFile            : string -> Rep.Model
 
 (* transforms *)
-val transformAssociationClasses: Rep_Core.transform_model -> 
-		                 Rep_Core.transform_model  
-val transformQualifiers : Rep_Core.transform_model -> Rep_Core.transform_model
-val transformAggregation: Rep_Core.transform_model -> Rep_Core.transform_model
-val transformNAryAssociations : Rep_Core.transform_model -> 
-		Rep_Core.transform_model (* remove n-ary associations *)
-val transformMultiplicities : Rep_Core.transform_model -> 
-		Rep_Core.transform_model (* remove multiplicities *)
+val transformAssociationClasses: Rep.Model -> Rep.Model 
+val transformAssociationClassesToNAryAssociations: Rep.Model -> Rep.Model 
+val transformQualifiers : Rep.Model -> Rep.Model
+val transformAggregation: Rep.Model -> Rep.Model
+(* remove n-ary associations *)
+val transformNAryAssociations : Rep.Model ->  Rep.Model
+val transformNAryAssociationsToAssociationClasses : Rep.Model -> Rep.Model
+(* remove multiplicities *)
+val transformMultiplicities : Rep.Model -> Rep.Model
 
 (* helper functions *)
 
@@ -416,29 +417,19 @@ fun transformQualifiers ((allClassifiers,allAssociations):transform_model):
                    aclass=aclass}
                 end
 
-            fun stripMultiplicity {name,aends,qualifiers,aclass} =
-                let
-                  fun strip {name,aend_type,multiplicity,
-                             init,ordered,visibility} =
-                      {name=name,
-                       aend_type=aend_type,
-                       multiplicity=[],
-                       init=init,
-                       ordered=ordered,
-                       visibility=visibility}
-                in
-                  {name=name,
-                   aends=map strip aends,
-                   qualifiers=qualifiers,
-                   aclass=aclass}
-                end
-
-
             fun stripQualifier {name,aends,qualifiers,aclass} =
                   {name=name,
                    aends=aends,
                    qualifiers=[],
                    aclass=aclass}
+
+            fun addUniqueness ((role,dummy, newClasses, newBinaryAssocs, 
+                                newOppAends),
+                               (dummyAssoc,dummyAend)) =
+                (role,
+                 addInvariants [uniquenessOclConstraint 
+                                    dummy (dummyAssoc::newBinaryAssocs)] dummy,
+                 newClasses, newBinaryAssocs,newOppAends)
 
             (* generate the new classes and assocs for possibly both
              * aend ends *)
@@ -447,13 +438,15 @@ fun transformQualifiers ((allClassifiers,allAssociations):transform_model):
             val sourcePairs = map (handleSources aends classifiers) qualiTuple
             (* keep the original aend as side-link and remove the mults *)
             val copy = copyAssoc assoc
-            val assoc = stripMultiplicity assoc
+            val assoc = stripMultiplicities assoc
             val assoc = stripQualifier assoc
             (* update the copied aend to point to the new dummy class,
              * possibly at both ends *)
             val modifiedCopy = foldl updateAend copy qualiTuple
+            (* add the uniqueness constraint *)
+            val qualiTuple = map addUniqueness (ListPair.zip(qualiTuple,
+                                                             sourcePairs)) 
             (* add the new assocs to the respective classifiers *)
-(*FIXME: add uniquenes constraint *)
             val (newAssocs, newClassifiers) = foldl addAssocs ([],[]) 
                                                     qualiTuple
             val (matched,rem) = matchClassifiersAtAend (aends_of_association 
@@ -488,6 +481,27 @@ fun transformQualifiers ((allClassifiers,allAssociations):transform_model):
       (modifiedClassifiers, modifiedAssociations@rem)
     end
 
+fun transformNAryAssociationsToAssociationClasses (allClassifiers,
+                                                   allAssociations) =
+    let
+      val _ = trace function_calls "transformNAryAssociationsTo\
+                                   \AssociationClasses\n"
+      fun toAssocClass (assoc as {name,aends,qualifiers,aclass=NONE}) =
+          let
+            val newAC = newDummyAssociationClass (qualifier_of_path name)
+            val newAC = setAssociationOfAssociationClass newAC name
+          in
+            (setAssociationOfAssociationClass newAC name,
+             setAssociationClassOfAssociation assoc (name_of newAC))
+          end
+
+      val (nAry, rem) = List.partition isPureNAryAssoc allAssociations
+      val (binary, rem) = List.partition isPureBinAssoc rem
+      val (newClassifiers,modifiedAssocs) = ListPair.unzip(map toAssocClass 
+                                                               (nAry@binary))
+    in
+      (newClassifiers@allClassifiers,modifiedAssocs@rem)
+    end
 
 (** 
  * Transform an AssociationClass into a Class
@@ -503,7 +517,8 @@ fun transformAssociationClassIntoClass (AssociationClass
                                             {name,parent,attributes,operations,
 				             associations,association,
                                              invariant,stereotypes,interfaces,
-                                             visibility,thyname,activity_graphs}) =
+                                             visibility,thyname,
+                                             activity_graphs}) =
      Class { name = name,
 	     parent = parent,
 	     attributes = attributes,
@@ -516,6 +531,55 @@ fun transformAssociationClassIntoClass (AssociationClass
 	     visibility = visibility,
 	     activity_graphs = activity_graphs}
         
+fun transformAssociationClassesToNAryAssociations (allClassifiers,
+                                                   allAssociations) =
+    let
+      val _ = trace function_calls "transformAssociationClassesTo\
+                                   \NAryAssociations\n"
+      fun morph {name,aends,qualifiers,aclass} class =
+          let
+            val newAend = {name=name@[StringHandling.uncapitalize 
+                                          (short_name_of class)],
+                           aend_type=type_of class,
+                           multiplicity=[],
+                           visibility= visibility_of class,
+                           ordered=false,
+                           init=NONE}
+          in
+            {name=name,
+             aends=newAend::(map stripMultiplicityOfAend aends),
+             qualifiers=qualifiers,
+             aclass=NONE}
+          end
+
+      fun aCToNAry (newACAssoc,(localClassifiers,localAssociations)) =
+          let
+            val (AC,rem) = findClassifier localClassifiers 
+                                          (associationClassOfAssociation 
+                                               newACAssoc)
+            val modifiedAC = transformAssociationClassIntoClass AC
+            val modifiedAssoc = morph newACAssoc modifiedAC
+            val aends = aends_of_association modifiedAssoc
+            val multiplicityConstraints = 
+                multiplicityOclConstraints modifiedAC 
+                                           (map multiplicity_of_aend aends)
+                                           aends
+            val uniquenessConstraint =
+                uniquenessOclConstraint modifiedAC
+                                        [modifiedAssoc]
+            val modifiedAC = addInvariants (uniquenessConstraint::
+                                            multiplicityConstraints) modifiedAC
+          in
+            (modifiedAC::rem,modifiedAssoc::localAssociations)
+          end
+
+      val (aCs, rem) = List.partition isPureAcAssoc allAssociations
+      val (modifiedClassifiers,modifiedAssociations) = 
+          foldl aCToNAry (allClassifiers,[]) aCs
+    in
+      (modifiedClassifiers, modifiedAssociations@rem)
+    end
+
 (** 
  * Process an association: add the dummy class, generate the matching-
  * constraint and update the classifiers with that constraint.
@@ -573,8 +637,8 @@ fun generalTransfromNAryAssociation dummy (association as {name,aends,
       val namedConsistencyOCLs = consistency clsses dummy selfAends oppAends 
                                              refAends
       val multiplicitiesOCL = 
-          multiplicityOclConstraint dummy (map multiplicity_of_aend aends) 
-                                    oppRefAends
+          multiplicityOclConstraints dummy (map multiplicity_of_aend aends) 
+                                     oppRefAends
       val dummy = addInvariants (uniquenessOCL::multiplicitiesOCL) dummy
       val modifiedClassifiers = foldl addOcl modifiedClassifiers 
                                       namedConsistencyOCLs   
@@ -641,7 +705,7 @@ fun transformAssociationClasses (allClassifiers,allAssociations) =
  *)
 fun transformNAryAssociations (allClassifiers,allAssociations) =
     let
-      val _ = trace function_calls "transform_n_ary_associations\n"
+      val _ = trace function_calls "transformNAryAssociations\n"
       fun transformNAryAssociation (association,(classifiers,procAssocs)) =
           generalTransfromNAryAssociation 
               (newDummyClass (package_of_association association))
@@ -752,15 +816,13 @@ fun transformMultiplicities (allClassifiers,allAssociations) =
 fun transformClassifiersExt (model:Rep_Core.transform_model):Rep_Core.transform_model =
   (* remove qualifiers *)
   transformQualifiers model |>>
-  (* remove multiplicities *)
-  transformMultiplicities |>>
-  
-  (** At this point, only n-ary associations without multiplicities and 
-   * possibly with an associacation class are left. *)
   (* remove association classes *)
   transformAssociationClasses |>>
   (* remove n-ary associations *)  
-  transformNAryAssociations
+  transformNAryAssociations |>>  
+  (* remove multiplicities *)
+  transformMultiplicities
+
 
 fun transformClassifiers (model:transform_model):Rep.Classifier list =
     fst (transformClassifiersExt model) (* return classifiers *)

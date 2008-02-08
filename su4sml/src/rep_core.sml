@@ -107,8 +107,8 @@ datatype Classifier =
 	   stereotypes : string list,
 	   interfaces  : Rep_OclType.OclType list,
 	   thyname     : string option,
-           activity_graphs    : Rep_ActivityGraph.ActivityGraph list,
-           associations: Rep_OclType.Path list,
+     activity_graphs    : Rep_ActivityGraph.ActivityGraph list,
+     associations: Rep_OclType.Path list,
 	   visibility  : Visibility,
 	   association: Rep_OclType.Path
 	 } 
@@ -159,6 +159,7 @@ val name_of       : Classifier -> Rep_OclType.Path
 val type_of       : Classifier -> Rep_OclType.OclType 
 val package_of    : Classifier -> Rep_OclType.Path
 val short_name_of : Classifier -> string 
+val visibility_of : Classifier -> Visibility
 
 val parent_name_of       : Classifier -> Rep_OclType.Path 
 val parent_interface_names_of : Classifier -> Rep_OclType.Path list
@@ -964,14 +965,14 @@ fun update_operations operations' (Class{name,parent,attributes,invariant,
           operations=operations',
           stereotypes=stereotypes,
           interfaces=interfaces,
-	  visibility=visibility,
+	        visibility=visibility,
           thyname=thyname,
           activity_graphs=activity_graphs }
   | update_operations operations' (AssociationClass{name,parent,attributes,
                                                     invariant,operations,
                                                     stereotypes,interfaces,
                                                     associations,association,
-						    visibility,
+						                                        visibility,
                                                     activity_graphs,thyname}) =
     AssociationClass{name=name,
                      parent=parent,
@@ -1062,6 +1063,10 @@ fun name_of (Class{name,...})            = path_of_OclType name
   | name_of (Enumeration{name,...})      = path_of_OclType name
   | name_of (Primitive{name,...})        = path_of_OclType name
   | name_of (Template{classifier,...})   = name_of classifier
+
+fun visibility_of (Class{visibility,...})            = visibility
+  | visibility_of (AssociationClass{visibility,...}) = visibility
+  | visibility_of (Template{classifier,...})   = visibility_of classifier
 
 
 fun short_name_of C =  case (name_of C)  of

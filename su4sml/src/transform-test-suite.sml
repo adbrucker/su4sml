@@ -105,7 +105,7 @@ val initResult = {
 
 *)
 
-val testcases = [(*
+val testcases = [
     {name = "Binary Association w/o Multiplicities",
      model = ([Class{name=Classifier ["Default","ClassA"],
 	                   parent=NONE,
@@ -295,7 +295,7 @@ val testcases = [(*
                 qualifiers=[],
                 aclass=NONE}]),
      result = initResult
-    }:testcase,*)
+    }:testcase,
     {
      name = "Qualifier",
      model = ([Class{name=Classifier ["Default","ClassA"],
