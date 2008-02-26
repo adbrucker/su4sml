@@ -445,7 +445,72 @@ fun name_of_association ({name,aends,qualifiers,aclass}:association) = name
 fun path_of_association assoc = name_of_association assoc
  
 fun short_name_of_path p = (hd o rev) p
+
+fun path_of_aend ({name,aend_type,...}:associationend) = name
+
+fun consistency_constraint cls_name (aend,revAend) = 
+    let 
+        fun aendIsSet (aend:associationend) = case #multiplicity aend
+                                               of [(0,1)] => false
+                                                | [(1,1)] => false
+                                                | M       => true
+        val cons_inv_name = ("consistencyconstraint_for_aend_"^
+                             (short_name_of_path (#name aend)))
+        val revPath = path_of_aend revAend 
+        val selfVar = Rep_OclHelper.self (Rep_OclType.Classifier cls_name)
+        val attPath = cls_name@[List.last (#name aend)]
+        val targetType = if   aendIsSet aend 
+                         then Set (#aend_type aend)
+                         else      #aend_type aend
+        val targetVar = Rep_OclTerm.Variable ("x",targetType)
+        val target = Rep_OclHelper.ocl_attcall selfVar attPath 
+                                               targetType
+        val revType = if   aendIsSet revAend 
+                      then Set (#aend_type revAend)
+                      else      #aend_type revAend
+        val sources = Rep_OclHelper.ocl_attcall targetVar revPath
+                                                       (revType)
+        val back = Rep_OclHelper.ocl_attcall target revPath revType 
+        val body = case (aendIsSet aend, aendIsSet revAend)
+                    of (false,false) => Rep_OclHelper.ocl_eq       back selfVar
+                     | (false,true)  => Rep_OclHelper.ocl_includes back selfVar
+                     | (true,false)  => Rep_OclHelper.ocl_forAll target [targetVar]
+                                                                 (Rep_OclHelper.ocl_eq sources selfVar)
+                     | (true,true)   => Rep_OclHelper.ocl_forAll target [targetVar]
+                                                                 (Rep_OclHelper.ocl_includes sources selfVar)
+    in
+        (SOME cons_inv_name, body)
+    end
                                       
+
+fun multiplicity_constraint cls_name (aend:associationend) = 
+    let 
+        val mult_inv_name = ("multconstraint_for_aend_"^
+                             (short_name_of_path (#name aend)))
+        val range_constraints = 
+            (case (#multiplicity aend) of
+	         [(0,1)] => []
+	       | [(1,1)] => let
+	             val attr_name = cls_name@[List.last (#name aend)]
+	             val attr_type = aend_to_attr_type aend
+	             val cls       = Rep_OclType.Classifier cls_name
+	             val self      = Rep_OclTerm.Variable ("self",cls)
+	             val attribute = Rep_OclTerm.AttributeCall (self,cls,
+                                                                attr_name,attr_type)
+	         in
+	             [Rep_OclTerm.OperationCall (attribute,attr_type,
+					         ["oclIsDefined"],[],
+					         Rep_OclType.Boolean)]
+	         end
+	       | _ =>  map (range_to_inv cls_name aend) 
+		           (#multiplicity aend))
+    in 
+        if range_constraints = [] 
+        then (SOME mult_inv_name, Rep_OclTerm.Literal ("true",
+                                                       Rep_OclType.Boolean)) 
+        else (SOME mult_inv_name, Rep_OclHelper.ocl_or_all range_constraints)
+    end
+
 (** calculate the invariants of an association end:
  * 1. multiplicity constraints
  * 2. consistency constraints between opposing association ends
@@ -453,61 +518,12 @@ fun short_name_of_path p = (hd o rev) p
  * @params {cls_name,(aend,revPath)}
  * @param cls_name Path of source classifier
  * @param aend aend to be converted
- * @param revPath path of the reverse navigation of aend   
+ * @param revAend the reverse navigation of aend   
  *)
-fun aend_to_inv cls_name (aend:associationend,revPath:Path) =
-    let 
-      val mult_inv_name = ("multconstraint_for_aend_"^
-                      (short_name_of_path (#name aend)))
-      val range_constraints = 
-          (case (#multiplicity aend) of
-	     [(0,1)] => []
-	   | [(1,1)] => let
-	       val attr_name = cls_name@[List.last (#name aend)]
-	       val attr_type = aend_to_attr_type aend
-	       val cls       = Rep_OclType.Classifier cls_name
-	       val self      = Rep_OclTerm.Variable ("self",cls)
-	       val attribute = Rep_OclTerm.AttributeCall (self,cls,
-                                                          attr_name,attr_type)
-	     in
-	       [Rep_OclTerm.OperationCall (attribute,attr_type,
-					   ["oclIsDefined"],[],
-					   Rep_OclType.Boolean)]
-	     end
-	   | _ =>  map (range_to_inv cls_name aend) 
-		       (#multiplicity aend))
-	fun ocl_or (x,y) = 
-	    Rep_OclTerm.OperationCall (x,Rep_OclType.Boolean,
-				    ["oclLib","Boolean","or"],
-				       [(y,Rep_OclType.Boolean)],
-                                       Rep_OclType.Boolean)
-        val range_constraints = 
-            if range_constraints = [] 
-            then (SOME mult_inv_name, Rep_OclTerm.Literal ("true",
-                                                      Rep_OclType.Boolean)) 
-            else (SOME mult_inv_name, foldr1 ocl_or range_constraints)
-        val cons_inv_name = ("consistencyconstraint_for_aend_"^
-                             (short_name_of_path (#name aend)))
-        val consistency_constraint = 
-            let
-              val cls = Rep_OclType.Classifier cls_name
-              val selfVar = Rep_OclHelper.self cls
-              val attPath = cls_name@[List.last (#name aend)]
-              val targetType = #aend_type aend
-              val targetVar = Rep_OclTerm.Variable (short_name_of_OclType 
-                                                        targetType,cls)
-              val targets = Rep_OclHelper.ocl_attcall selfVar attPath 
-                                                       (Collection targetType)
-              val sources = Rep_OclHelper.ocl_attcall targetVar revPath
-                                                       (Collection cls)
-              val body = Rep_OclHelper.ocl_includes sources selfVar
-            in
-              (SOME cons_inv_name,
-               Rep_OclHelper.ocl_forAll targets [targetVar] body)
-            end
-    in
-      [consistency_constraint,range_constraints]
-    end
+fun aend_to_inv cls_name (aend:associationend,revAend:associationend) =
+      [consistency_constraint cls_name (aend,revAend),
+       multiplicity_constraint cls_name aend]
+    
 
 fun aends_of_association {name,aends,qualifiers,aclass} = aends
 
@@ -526,7 +542,6 @@ fun associations_of (Class{name,associations,...}) = associations
     associations  
   | associations_of (Primitive{name,associations,...}) = associations
                                                              
-fun path_of_aend ({name,aend_type,...}:associationend) = name
 
 fun oppositeAendsOfAssociation name allAssociations associationPath =
     let
@@ -645,8 +660,9 @@ fun normalize (all_associations:association list)
                    o string_of_path) associations
       fun mapPath (aend1,aend2) = (aend1,path_of_aend aend2)
 
-      val aendPathPairs = map mapPath (bidirectionalPairs name all_associations
-                                                          associations)
+ (*     val aendPathPairs = map mapPath (bidirectionalPairs name all_associations
+                                                          associations)*)
+      val aendPathPairs = bidirectionalPairs name all_associations associations
     in
       Class {name   = name,
 	     parent = parent,
@@ -679,7 +695,7 @@ fun normalize (all_associations:association list)
                      (Int.toString (List.length associations ))^"\n")
       fun mapPath (aend1,aend2) = (aend1,path_of_aend aend2)
                                   
-      val aendPathPairs = map mapPath (bidirectionalPairs name all_associations
+      val aendPathPairs = (bidirectionalPairs name all_associations
                                                           associations)
     in
       AssociationClass {
