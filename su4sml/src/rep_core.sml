@@ -446,7 +446,13 @@ fun path_of_association assoc = name_of_association assoc
  
 fun short_name_of_path p = (hd o rev) p
 
-fun path_of_aend ({name,aend_type,...}:associationend) = name
+fun path_of_aend ({name,aend_type,...}:associationend) = let
+        val sname = hd (rev name)
+        val classifier = (rev o tl o tl o rev) name 
+    in
+       List.concat [classifier,[sname]]
+    end
+
 
 fun consistency_constraint cls_name (aend,revAend) = 
     let 
