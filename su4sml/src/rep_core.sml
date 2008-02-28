@@ -479,11 +479,11 @@ fun consistency_constraint cls_name (aend,revAend) =
         val back = Rep_OclHelper.ocl_attcall target revPath revType 
         val body = case (aendIsSet aend, aendIsSet revAend)
                     of (false,false) => Rep_OclHelper.ocl_eq       back selfVar
-                     | (false,true)  => Rep_OclHelper.ocl_includes back selfVar
-                     | (true,false)  => Rep_OclHelper.ocl_forAll target [targetVar]
+                     | (false,true)  => Rep_OclHelper.ocl_includes (Rep_OclHelper.ocl_asType back (Collection (#aend_type revAend))) selfVar
+                     | (true,false)  => Rep_OclHelper.ocl_forAll (Rep_OclHelper.ocl_asType target (Collection (#aend_type aend))) [targetVar]
                                                                  (Rep_OclHelper.ocl_eq sources selfVar)
-                     | (true,true)   => Rep_OclHelper.ocl_forAll target [targetVar]
-                                                                 (Rep_OclHelper.ocl_includes sources selfVar)
+                     | (true,true)   => Rep_OclHelper.ocl_forAll (Rep_OclHelper.ocl_asType target (Collection (#aend_type aend))) [targetVar]
+                                                                 (Rep_OclHelper.ocl_includes (Rep_OclHelper.ocl_asType sources (Collection (#aend_type revAend))) selfVar)
     in
         (SOME cons_inv_name, body)
     end
