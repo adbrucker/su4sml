@@ -446,13 +446,7 @@ fun path_of_association assoc = name_of_association assoc
  
 fun short_name_of_path p = (hd o rev) p
 
-fun path_of_aend ({name,aend_type,...}:associationend) = let
-        val sname = hd (rev name)
-        val classifier = (rev o tl o tl o rev) name 
-    in
-       List.concat [classifier,[sname]]
-    end
-
+fun path_of_aend ({name,aend_type,...}:associationend) = name 
 
 fun consistency_constraint cls_name (aend,revAend) = 
     let 
@@ -460,32 +454,42 @@ fun consistency_constraint cls_name (aend,revAend) =
                                                of [(0,1)] => false
                                                 | [(1,1)] => false
                                                 | M       => true
+	fun mkCollection a = if (#ordered a) 
+			     then (Sequence (#aend_type a)) 
+			     else (Set (#aend_type a))
+
+	fun path_of_classifier (Classifier p) = p
         val cons_inv_name = ("consistencyconstraint_for_aend_"^
                              (short_name_of_path (#name aend)))
-        val revPath = path_of_aend revAend 
+        val revPath = 
+	    (path_of_classifier (#aend_type aend))@[List.last (#name revAend)]  
         val selfVar = Rep_OclHelper.self (Rep_OclType.Classifier cls_name)
-        val attPath = cls_name@[List.last (#name aend)]
+        val attPath =  
+	    (path_of_classifier (#aend_type revAend))@[List.last (#name aend)] 
         val targetType = if   aendIsSet aend 
-                         then Set (#aend_type aend)
+                         then mkCollection aend 
                          else      #aend_type aend
-        val targetVar = Rep_OclTerm.Variable ("x",targetType)
+        val targetVar = Rep_OclTerm.Variable ("x",#aend_type aend)
         val target = Rep_OclHelper.ocl_attcall selfVar attPath 
                                                targetType
         val revType = if   aendIsSet revAend 
-                      then Set (#aend_type revAend)
-                      else      #aend_type revAend
+                      then mkCollection revAend
+                      else  (#aend_type revAend)
         val sources = Rep_OclHelper.ocl_attcall targetVar revPath
                                                        (revType)
         val back = Rep_OclHelper.ocl_attcall target revPath revType 
-        val body = case (aendIsSet aend, aendIsSet revAend)
-                    of (false,false) => Rep_OclHelper.ocl_eq       back selfVar
-                     | (false,true)  => Rep_OclHelper.ocl_includes (Rep_OclHelper.ocl_asType back (Collection (#aend_type revAend))) selfVar
-                     | (true,false)  => Rep_OclHelper.ocl_forAll (Rep_OclHelper.ocl_asType target (Collection (#aend_type aend))) [targetVar]
-                                                                 (Rep_OclHelper.ocl_eq sources selfVar)
-                     | (true,true)   => Rep_OclHelper.ocl_forAll (Rep_OclHelper.ocl_asType target (Collection (#aend_type aend))) [targetVar]
-                                                                 (Rep_OclHelper.ocl_includes (Rep_OclHelper.ocl_asType sources (Collection (#aend_type revAend))) selfVar)
+	val oclTrue = Rep_OclTerm.Literal ("true",Rep_OclType.Boolean)
+
+        val body = 
+	    case (aendIsSet aend, aendIsSet revAend)
+             of (false,false) =>  Rep_OclHelper.ocl_eq  back selfVar 
+              | (false,true)  =>  Rep_OclHelper.ocl_includes back selfVar 
+              | (true,false)  =>  Rep_OclHelper.ocl_forAll target [targetVar]
+							  (Rep_OclHelper.ocl_eq sources selfVar) 
+              | (true,true)   => Rep_OclHelper.ocl_forAll target [targetVar]
+				(Rep_OclHelper.ocl_includes sources selfVar) 
     in
-        (SOME cons_inv_name, body)
+      (SOME cons_inv_name, body)
     end
                                       
 
@@ -527,7 +531,7 @@ fun multiplicity_constraint cls_name (aend:associationend) =
  * @param revAend the reverse navigation of aend   
  *)
 fun aend_to_inv cls_name (aend:associationend,revAend:associationend) =
-      [consistency_constraint cls_name (aend,revAend),
+      [ consistency_constraint cls_name (aend,revAend), 
        multiplicity_constraint cls_name aend]
     
 
