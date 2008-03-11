@@ -282,7 +282,7 @@ fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,ordering
                          Rep_OclType.OclVoid)
     in
 	{name = name,
-	 attr_type = if multiplicity = [(1,1)] 
+	 attr_type = if multiplicity = [(1,1)] orelse multiplicity = [(0,1)] 
 		     then cls_type
 		     else if ordering = XMI.Ordered then Rep_OclType.Sequence cls_type
 		     else Rep_OclType.Set cls_type,

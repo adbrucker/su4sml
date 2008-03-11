@@ -756,7 +756,7 @@ fun uniquenessOclConstraint (source:Classifier)
             val sizeCall = ocl_eq (ocl_size selfCall) 
                                   (Literal("1",Rep_OclType.Integer))
           in
-            if multiplicity = [(1,1)] then ocl_eq selfCall iterCall
+            if multiplicity = [(1,1)] orelse multiplicity = [(0,1)] then ocl_eq selfCall iterCall
             else ocl_and (ocl_eq selfCall iterCall)
                          sizeCall
           end
