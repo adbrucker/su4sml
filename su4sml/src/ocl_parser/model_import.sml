@@ -268,7 +268,9 @@ fun import xmifile oclfile excludePackages =
 
 			    val _         = trace high "### Fixing Types ###\n"
 	                    val model = removeOclLibrary  model
+			    (*
 			    val model     = FixTyping.transform_ocl_spec FixTyping.transformForHolOcl model 
+			    *)
 			    val _         = trace high "### Finished Fixing Types ###\n\n"
 
 
