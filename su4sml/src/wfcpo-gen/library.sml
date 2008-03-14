@@ -13,7 +13,8 @@
  * modification, are permitted provided that the following conditions are
  * met:
  *
- *     * Redistributions of source code must retain the above copyright *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions of source code must retain the above copyright 
+ *       notice, this list of conditions and the following disclaimer.
  *
  *     * Redistributions in binary form must reproduce the above
  *       copyright notice, this list of conditions and the following
@@ -43,7 +44,7 @@
  *  Although they are used frequently, it does make no sense to export them to the standard ocl 
  *  library because there just important for implementing constraints.						
  *)
-signature WFCPO_LIBRARY = 
+signature WFCPOG_LIBRARY = 
 sig
     
     (** Get the name of a certain precondition.*)
@@ -58,16 +59,28 @@ sig
     val wrap_predicate            : Rep_OclTerm.OclTerm -> string option -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list -> Rep_OclTerm.OclTerm
     (** Conjugate a list of terms to one single term.*)							 
     val conjugate_terms           : Rep_OclTerm.OclTerm list -> Rep_OclTerm.OclTerm
+    (** *)
+    val disjugate_terms           : Rep_OclTerm.OclTerm list -> Rep_OclTerm.OclTerm
     (** Transform a option list to a normal list.*)
     val optlist2list              : 'a option list -> 'a list
-    (** Get a local operation by name. *)
-    val get_operation             : string -> Rep_Core.Classifier -> Rep_Core.operation
+    (** Get an attribute by name. *)
+    val get_attribute             : string -> Rep_Core.Classifier -> Rep.Model -> Rep_Core.attribute
+    (** Get an operation by name. *)
+    val get_operation             : string -> Rep_Core.Classifier -> Rep.Model -> Rep_Core.operation
     (** Test wheter the signatures are type consistent.*)
     val sig_conforms_to           : (string * Rep_OclType.OclType) list -> (string * Rep_OclType.OclType) list -> Rep.Model -> bool
     (** Check if the operation is a refinement of another operation.*)
     val same_op                   : Rep_Core.operation -> Rep_Core.operation -> Rep.Model -> bool
     (** *) 
     val class_contains_op         : Rep_Core.operation -> Rep.Model -> Rep_Core.Classifier -> bool
+    (** *)
+    val class_has_local_op        : string -> Rep.Model -> Rep_Core.Classifier -> bool
+    (** *)
+    val class_of_package          : Rep_OclType.Path -> Rep.Model -> Rep_Core.Classifier list
+    (** Get all query operations of a classifier.*)
+    val query_operations_of       : Rep_Core.Classifier -> Rep_Core.operation list
+    (** Get all command operations of a classifier.*)
+    val command_operations_of     : Rep_Core.Classifier -> Rep_Core.operation list
     (** Get the local operations of a classifier.*)
     val local_operations_of       : Rep_OclType.Path -> Rep.Model -> Rep_Core.operation list
     (** Get the redefined/refined operations of a classifier.*)
@@ -79,7 +92,17 @@ sig
     (** Get all creators of a classifier.*)
     val creation_operations_of    : Rep_OclType.Path -> Rep.Model -> Rep_Core.operation list
     (** Get all destroying operations of a classifier.*)
-    val destruction_operations_of     : Rep_OclType.Path -> Rep.Model -> Rep_Core.operation list
+    val destruction_operations_of : Rep_OclType.Path -> Rep.Model -> Rep_Core.operation list
+    (** Get all public operations of a classifier.*)
+    val public_operations_of      : Rep_OclType.Path -> Rep.Model -> Rep_Core.operation list
+    (** Get all private operations of a classifier.*)
+    val private_operations_of     : Rep_OclType.Path -> Rep.Model -> Rep_Core.operation list
+    (** Get all package operations of a classifier.*)
+    val package_operations_of     : Rep_OclType.Path -> Rep.Model -> Rep_Core.operation list
+    (** Get all protected operations of a classifier.*)
+    val protected_operations_of   : Rep_OclType.Path -> Rep.Model -> Rep_Core.operation list
+
+
     (** Get the class his children *)
     val children_of               : Rep_Core.Classifier -> Rep.Model -> Rep_OclType.Path list
     (** Check inheritance tree for a given property and return first classifer fullfilling property.*)
@@ -94,10 +117,14 @@ sig
     val rel_path_of               : Rep_OclType.Path -> Rep_OclType.Path -> Rep_OclType.Path
     (** Substitute a package name of a path. *)
     val substitute_package        : Rep_OclType.Path -> Rep_OclType.Path -> Rep_OclType.Path -> Rep_OclType.Path
+    (** Substitute (string,Type) args as (Variable(s,Type),Type) args.*)
+    val args2varargs              : (string * Rep_OclType.OclType) list -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list
+    (** Add self as argument *)
+    val selfarg                   : Rep_OclType.OclType -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType)
     (** Any kind of exceptions. *)
-    exception WFCPO_LibraryError of string 
+    exception WFCPOG_LibraryError of string 
 end
-structure WFCPO_Library:WFCPO_LIBRARY =
+structure WFCPOG_Library:WFCPOG_LIBRARY =
 struct
 
 (* SU4SML *)
@@ -107,15 +134,15 @@ open Rep_OclType
 open Rep_OclTerm
 open OclLibrary
 open Rep2String
-
+open XMI_DataTypes
 (* OclParser *)
 open Ext_Library
 
 (* WFCPO-Gen *)
 open WFCPO_Naming
-open Base_Constraint
 
-exception WFCPO_LibraryError of string 
+
+exception WFCPOG_LibraryError of string 
 
 fun name_of_precondition ((a:string option),(t:OclTerm)) = a
 
@@ -127,21 +154,33 @@ fun term_of_postcondition ((a:string option),(t:OclTerm)) = t
 
 (* FixME: adapter for info in subterm *)
 (* fun holocl_adapter path (t:OclTerm) =
+
     OperationCall (
 *)
 
 fun wrap_predicate term (NONE) args = Predicate (term,type_of_term term,[generate_name "gen_name"],args)
   | wrap_predicate term (SOME(x)) args = Predicate (term,type_of_term term,[x],args)
 
-fun conjugate_terms [] = raise WFCPO_LibraryError ("Empty list not conjugateable. \n")
+fun conjugate_terms [] = raise WFCPOG_LibraryError ("Empty list not conjugateable. \n")
   | conjugate_terms [x:OclTerm] = (x)
   | conjugate_terms ((h:OclTerm)::tail) = 
     let
 	val x = conjugate_terms tail
     in
 	if (type_of_term h = Boolean)
-	then (OperationCall(h,type_of_term h,["oclLib","Boolean","implies"],[(x,type_of_term x)],Boolean))
-	else raise WFCPO_LibraryError ("type of term is not Boolean") 
+	then (OperationCall(h,type_of_term h,["oclLib","Boolean","and"],[(x,type_of_term x)],Boolean))
+	else raise WFCPOG_LibraryError ("type of term is not Boolean. \n") 
+    end
+
+fun disjugate_terms [] = raise WFCPOG_LibraryError("Empty list not disjugateable. \n")
+  | disjugate_terms [x:OclTerm] = (x)
+  | disjugate_terms ((h:OclTerm)::tail) =
+    let
+	val x = disjugate_terms tail
+    in
+	if (type_of_term h = Boolean)
+	then (OperationCall(h,type_of_term h,["oclLib","Boolean","or"],[(x,type_of_term x)],Boolean))
+	else raise WFCPOG_LibraryError ("type of term is not Boolean. \n")
     end
 
 (* create normal list from a list of options type *)
@@ -157,14 +196,6 @@ fun filter_out_none [] = []
   | filter_out_none (NONE::tail) = filter_out_none tail
   | filter_out_none (SOME(x)::tail) = (SOME(x)::(filter_out_none tail))
 
-fun get_operation s classifier = 
-    let
-	val x = List.find (fn a => if (name_of_op a = s) then true else false) (operations_of classifier)
-    in
-	case x of
-	    NONE => raise WFCPO_LibraryError ("No operation found using 'get_operation'.\n")
-	  | SOME (x) => x
-    end
 
 
 (* check whether two given signatures match each other from the type point of view *)
@@ -200,10 +231,23 @@ fun sig_conforms_to [] [] model = true
 	result 
     end
 
+fun query_operations_of (Class{operations,...}) = List.filter (fn a => (#isQuery a)) operations
+  | query_operations_of (AssociationClass{operations,...}) = List.filter (fn a => (#isQuery a)) operations
+  | query_operations_of (Primitive{operations,...}) = List.filter (fn a => (#isQuery a)) operations
+  | query_operations_of (Interface{operations,...}) = List.filter (fn a => (#isQuery a)) operations
+  | query_operations_of x = []
+
+fun command_operations_of (Class{operations,...}) = List.filter (fn a => not (#isQuery a)) operations
+  | command_operations_of (AssociationClass{operations,...}) = List.filter (fn a => not (#isQuery a)) operations
+  | command_operations_of (Primitive{operations,...}) = List.filter (fn a => not (#isQuery a)) operations
+  | command_operations_of (Interface{operations,...}) = List.filter (fn a => not (#isQuery a)) operations
+  | command_operations_of x = []
+
 fun same_op (sub_op:operation) (super_op:operation) (model:Model) =
     if ((name_of_op sub_op = name_of_op super_op ) andalso (sig_conforms_to (arguments_of_op sub_op) (arguments_of_op super_op) model))
     then true
     else false
+
 
 fun class_contains_op oper model classifier = 
     let
@@ -215,8 +259,22 @@ fun class_contains_op oper model classifier =
 			     else false) ops
     end
 
+
 (* get all local operations of a classifier *)
-and local_operations_of c_name model = operations_of (class_of c_name (#1 model))
+and local_operations_of c_name model = 
+    let
+	val class = class_of_type (path_to_type c_name) model
+    in 
+	(operations_of class)
+    end
+
+fun class_has_local_op name model classifier = 
+    let
+	val ops = local_operations_of (name_of classifier) model
+    in
+	List.exists (fn a => (#name a) = name) ops
+    end
+
 
 fun embed_local_operation oper [] model = [oper]
   | embed_local_operation lop ((oper:operation)::iops) model = 
@@ -237,10 +295,14 @@ fun embed_local_operations [] iops model = iops
 (* get all inherited operations of a classifier, without the local operations *)
 fun inherited_operations_of c_name (model as (clist,alist)) =
     let
-	val class = class_of c_name (#1 model)
+	val class = class_of_type (path_to_type c_name) model
+	val _ = trace 50 ("inh ops 1: classifier = " ^ (classifier2string class) ^ "\n")
 	val parents = parents_of class (#1 model)
-	val c_parents = List.map (fn a => class_of a (#1 model)) parents
+	val _ = trace 50 ("inh ops 2\n")
+	val c_parents = List.map (fn a => class_of_type (path_to_type a) model) parents
+	val _ = trace 50 ("inh ops 3\n")
 	val ops_of_par = (List.map (operations_of) c_parents)
+	val _ = trace 50 ("inh ops 4\n")
     in
 	List.foldr (fn (a,b) => embed_local_operations a b model) (List.last (ops_of_par)) ops_of_par
     end
@@ -249,7 +311,9 @@ fun inherited_operations_of c_name (model as (clist,alist)) =
 fun all_operations_of c_name model =
     let 
 	val lo = local_operations_of c_name model
+	val _ = trace 50 ("all ops 1\n")
 	val io = inherited_operations_of c_name model
+	val _ = trace 50 ("all ops 2\n")
     in
 	embed_local_operations lo io model
     end
@@ -290,6 +354,57 @@ fun destruction_operations_of c_name (model:Rep.Model) =
 	creators
     end   
 
+fun public_operations_of c_name (model:Rep.Model) = 
+    let
+	val ops = all_operations_of c_name model
+    in
+	List.filter (fn a => (#visibility a) = public) ops
+    end
+
+fun private_operations_of c_name (model:Rep.Model) = 
+    let
+	val ops = all_operations_of c_name model
+    in
+	List.filter (fn a => (#visibility a) = private) ops
+    end
+
+fun package_operations_of c_name (model:Rep.Model) = 
+    let
+	val ops = all_operations_of c_name model
+    in
+	List.filter (fn a => (#visibility a) = package) ops
+    end
+
+fun protected_operations_of c_name (model:Rep.Model) = 
+    let
+	val ops = all_operations_of c_name model
+    in
+	List.filter (fn a => (#visibility a) = protected) ops
+    end
+
+
+fun get_operation s classifier model = 
+    let
+	val _ = trace 100 ("get_operation: \n")
+	val x = List.find (fn a => if (name_of_op a = s) then true else false) (all_operations_of (name_of classifier) model)
+	val _ = trace 100 ("end get_operation\n")
+    in
+	case x of
+	    NONE => raise WFCPOG_LibraryError ("No operation found using 'get_operation'.\n")
+	  | SOME (x) => x
+    end
+
+
+fun get_attribute s classifier model = 
+    let
+	val x = List.find (fn a => if ((#name a) = s) then true else false) (attributes_of classifier)
+    in
+	case x of
+	    NONE => raise WFCPOG_LibraryError ("No operation found using 'get_attribute'.\n")
+	  | SOME (x) => x
+    end
+
+
 fun go_up_hierarchy location func (model as (clist,alist)) = 
     let 
 	val parent = parent_of location (#1 model)
@@ -298,7 +413,7 @@ fun go_up_hierarchy location func (model as (clist,alist)) =
 	then  parent
 	else 
 	    (if (type_of parent = OclAny) 
-	     then raise WFCPO_LibraryError ("No such property using 'go_up_hierarchy'.\n")
+	     then raise WFCPOG_LibraryError ("No such property using 'go_up_hierarchy'.\n")
 	     else go_up_hierarchy parent func model
 	    )
     end
@@ -338,18 +453,26 @@ fun all_invariants_of class model =
 
 
 fun rel_path_of [] name = name
-  | rel_path_of [x] [y] = if (x=y) then [] else raise WFCPO_LibraryError ("rel_path_of only possible for name with same package/prefix.\n")
-  | rel_path_of [x] name = if (x = List.hd (name)) then (List.tl (name)) else raise WFCPO_LibraryError ("rel_path_of only possible for name with same package/prefix")
-  | rel_path_of package name =
-    if (List.hd(package) = List.hd(name)) then (rel_path_of (List.tl package) (List.tl name)) else raise WFCPO_LibraryError ("rel_path_of only possible for name with same package/prefix")
+  | rel_path_of [x] [y] = if (x=y) then [] else raise WFCPOG_LibraryError ("rel_path_of only possible for name with same package/prefix.\n")
+  | rel_path_of [x] name = if (x = List.hd (name)) then (List.tl (name)) else raise WFCPOG_LibraryError ("rel_path_of only possible for name with same package/prefix")
+  | rel_path_of pkg name =
+    if (List.hd(pkg) = List.hd(name)) then (rel_path_of (List.tl pkg) (List.tl name)) else raise WFCPOG_LibraryError ("rel_path_of only possible for name with same package/prefix")
 
 
-fun substitute_package [] tpackage [] = raise WFCPO_LibraryError ("Not possible to substitute package since names belongs to package itself and not a class of it.\n")
+fun substitute_package [] tpackage [] = raise WFCPOG_LibraryError ("Not possible to substitute package since names belongs to package itself and not a class of it.\n")
   | substitute_package [] tpackage path = tpackage@path
-  | substitute_package x tpackage [] = raise WFCPO_LibraryError ("Not Possible to substitute Package since package longer than path.\n")
+  | substitute_package x tpackage [] = raise WFCPOG_LibraryError ("Not Possible to substitute Package since package longer than path.\n")
   | substitute_package (hf::fpackage) (tpackage) (hp::path) = 
     if (hf = hp) 
     then substitute_package fpackage tpackage path
     else (hp::path)
+
+fun class_of_package pkg (model as (clist,alist)) = 
+    List.filter (fn a => package_of a = pkg) clist
+
+fun args2varargs [] = []
+  | args2varargs ((a,b)::tail) = (Variable(a,b),b)::(args2varargs tail)
+
+fun selfarg typ = (Variable("self",typ),typ)
 
 end;

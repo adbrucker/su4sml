@@ -38,50 +38,91 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************)
 (* $Id: context_declarations.sml 6727 2007-07-30 08:43:40Z brucker $ *)
-signature WFCPO_SYNTAX_ERROR_DB =
-sig
-    datatype SyntaxError =
-	     SEType of  
-	     { fromClass : Rep_Core.Classifier,
-	       toClass   : Rep_Core.Classifier,
-	       fromOp    : Rep_Core.operation,
-               toOp      : Rep_Core.operation }
-	   | SEOp of
-	     { fromClass : Rep_Core.Classifier,
-	       ops       : Rep_Core.operation list }
-	   | SEClass of 
-	     { package   : Rep_OclType.Path,
-	       classes   : Rep_Core.Classifier list}
-	     
-    val SE_db            : ((SyntaxError option) list) ref 
-    val add_syntax_error : SyntaxError -> unit
-end;
-structure WFCPO_Syntax_Error_DB:WFCPO_SYNTAX_ERROR_DB = 
-struct 
 
+(** Implementation of the Liskov Substitiution Principle. *)
+signature TAXONOMY_CONSTRAINT =
+sig 
+    type TAX_args      
+    structure TAX_Data :
+	      sig
+		  type T = TAX_args
+		  val get : WFCPOG.wfpo -> T
+		  val put : T -> WFCPOG.wfpo -> WFCPOG.wfpo
+		  val map : (T -> T) -> WFCPOG.wfpo -> WFCPOG.wfpo
+	      end
+    
+    val print_taxonomy_args : TAX_args -> unit
+
+    (** Subconstraint *)
+    val has_maxDepth   : WFCPOG.wfpo -> Rep.Model -> bool	   
+
+    exception WFCPOG_TaxonomyError of string
+end
+
+structure Taxonomy_Constraint:TAXONOMY_CONSTRAINT = 
+struct
+
+(* su4sml *)
 open Rep_Core
+open Rep_OclTerm
 open Rep_OclType
+open Rep2String
+open XMI_DataTypes
 
-datatype SyntaxError =
-	 SEType of  
-	 { fromClass : Classifier,
-	   toClass   : Classifier,
-	   fromOp    : operation,
-           toOp      : operation }
-       | SEOp of
-	 { fromClass : Classifier,
-	   ops       : operation list }
-       | SEClass of 
-	 { package   : Path,
-	   classes   : Classifier list }
-		    
-val SE_db:SyntaxError option list ref = ref [NONE]
+(* oclparser *)
+open Ext_Library
+open ModelImport
 
-fun add_syntax_error (s:SyntaxError) = 
+(* wfcpo-gen *)
+open WFCPOG_Library
+open WFCPO_Naming
+open Datatab
+
+exception WFCPOG_TaxonomyError of string
+
+type TAX_args = {
+     key : int,
+     max_depth : int
+}
+
+structure TAX_Data = WfpoDataFun
+(struct
+ val name =" tax";
+ type T = TAX_args;
+ val empty = ({key=0,max_depth=0});
+ fun copy T = T;
+ fun extend T = T;
+end);
+
+ 
+fun print_taxonomy_args (args:TAX_args) = 
+    print (concat["Taxonomy max_Depth with args: max_depth=\"",Int.toString (#max_depth args)," and key", Int.toString(#key args),"\n\n\n"])
+
+fun deep_of_classifier x (Class{parent,...}) (model as (clist,alist)) = 
+    (case parent of 
+	NONE => x+1
+      | SOME(OclAny) => x+1
+      | SOME(typ) => deep_of_classifier (x+1) (class_of_type typ model) model
+    )
+  | deep_of_classifier x y model = raise WFCPOG_TaxonomyError ("Only Classes can check for maxDepth.\n")
+
+
+fun has_maxDepth_help depth [] model = true
+  | has_maxDepth_help depth (h::classes) (model as (clist,alist)) = 
     let 
-	val x = (SOME(s)::(!SE_db))
+	val d = deep_of_classifier 0 h model
     in
-	SE_db := x
+	if (d > depth) 
+	then false
+	else has_maxDepth_help depth classes model
     end
-
+    
+fun has_maxDepth wfpo (model as (clist,alist)) =
+    let
+	val classes = removeOclLibrary clist
+	val tax_args = TAX_Data.get wfpo
+	val depth = (#max_depth tax_args)
+    in
+	has_maxDepth_help depth classes model 
+    end
 end;

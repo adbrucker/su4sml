@@ -42,41 +42,67 @@
 (** Implementation of the Liskov Substitiution Principle. *)
 signature LISKOV_CONSTRAINT =
 sig
-    include BASE_CONSTRAINT
-    (** sub constraint, included in liskov.*)
-    val weaken_precondition         : Rep.Model -> Rep_OclTerm.OclTerm list
-    (** sub constraint, included in liskov.*)
-    val strengthen_postcondition    : Rep.Model -> Rep_OclTerm.OclTerm list
-    (** sub constraint, included in liskov.*)
-    val conjugate_invariants        : Rep.Model -> Rep_OclTerm.OclTerm list
+    type Liskov_args
+    
+    structure LSK_Data :
+	      sig
+		  type T = Liskov_args
+		  val get : WFCPOG.wfpo -> T
+		  val put : T -> WFCPOG.wfpo -> WFCPOG.wfpo
+		  val map : (T -> T) -> WFCPOG.wfpo -> WFCPOG.wfpo
+	      end
 
+    val print_liskov_args : Liskov_args -> unit
+   
+    (** sub constraint, included in liskov.*)
+    val weaken_precondition         : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
+
+    (** sub constraint, included in liskov.*)
+    val strengthen_postcondition    : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
+
+    (** sub constraint, included in liskov.*)
+    val conjugate_invariants        : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
 end 
-functor Liskov_Constraint (SuperCon : BASE_CONSTRAINT) : LISKOV_CONSTRAINT =
+structure Liskov_Constraint : LISKOV_CONSTRAINT = 
 struct
 
+exception WFCPOG_LiskovError of string
 (* su4sml *)
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType
+open Rep2String
+
+(* oclparser *)
 open Ext_Library
 open ModelImport
-open Rep2String
+
 (* wfcpo-gen *)
-open WFCPO_Library
+open WFCPOG_Library
 open WFCPO_Naming
+open Datatab
+exception WFCPO_LiskovError of string
 
-exception ConstraintError of string
-exception BaseConstraintError of string
-exception LiskovError of string
+type Liskov_args = {
+     model:string,
+     size:int
+}
+		   
+structure LSK_Data = WfpoDataFun
+			  (struct
+			   type T =  Liskov_args;
+			   val empty = ({model="", size=0});
+			   fun copy T = T;
+			   fun extend T = T;
+			   end);
+	  
 
-type constraint = SuperCon.constraint
-
-
-
+fun print_liskov_args (args:Liskov_args) = 
+    print (concat["Lisov with args: size=\"",Int.toString (#size args), "\""," and model=\"", #model (args),"\"\n\n"]) 
 
 fun generate_return_value typ oper sub_class super_class model = 
     let
-	val op_of_super = get_operation (name_of_op oper) super_class
+	val op_of_super = get_operation (name_of_op oper) super_class model 
 	val sub_name = string_of_path (name_of sub_class)
 	val super_name = string_of_path (name_of super_class)
 	val op_name = name_of_op oper
@@ -92,9 +118,9 @@ fun generate_return_value typ oper sub_class super_class model =
 	    1 => 
 	    let
                 (* preconditions of super type in one term *)
-		val term_super = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,["liskov","weaken precondition",super_name,op_name,(generate_opt_name "gen_pre" a)],[]))) (precondition_of_op op_of_super))
+		val term_super = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[(generate_opt_name "gen_pre" a)],(args2varargs (arguments_of_op op_of_super))))) (precondition_of_op op_of_super))
                 (* preconditions of sub type in one term *)
-		val term_sub = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,["liskov","weaken precondition",sub_name,op_name,(generate_opt_name "gen_pre" a)],[]))) (precondition_of_op oper))
+		val term_sub = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[(generate_opt_name "gen_pre" a)],(args2varargs (arguments_of_op oper))))) (precondition_of_op oper))
 	    in 
 		OperationCall(term_super,Boolean,["Boolean","implies"],[(term_sub,type_of_term term_sub)],Boolean)
 	    end
@@ -110,13 +136,13 @@ fun generate_return_value typ oper sub_class super_class model =
 	  | 2 => 
 	    let 
 		(* postconditions of sub type in one term *)
-		val term_sub = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,["liskov","strengthen postcondition",sub_name,op_name,(generate_opt_name "gen_post" a)],[]))) (postcondition_of_op oper))
+		val term_sub = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[(generate_opt_name "gen_post" a)],(args2varargs (arguments_of_op oper))))) (postcondition_of_op oper))
                 (* postconditions of super type in one term *)
-		val term_super = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,["liskov","strengthen postcondition",super_name,op_name,(generate_opt_name "gen_post" a)],[]))) (postcondition_of_op op_of_super))
+		val term_super = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[(generate_opt_name "gen_post" a)],(args2varargs (arguments_of_op op_of_super))))) (postcondition_of_op op_of_super))
 	    in 
 		OperationCall(term_sub,Boolean,["Boolean","implies"],[(term_super,type_of_term term_super)],Boolean)
 	    end
-	  | x => raise LiskovError ("Wrong Argument for generate_return_value. Only 1 (pre) and 2 (post) allowed.\n")
+	  | x => raise WFCPO_LiskovError ("Wrong Argument for generate_return_value. Only 1 (pre) and 2 (post) allowed.\n")
     end
     
 		 
@@ -132,7 +158,7 @@ fun weaken_precondition_help [] model = []
 	pos@(weaken_precondition_help clist model)
     end
 
-fun weaken_precondition (model as (clist,alist)) = 
+fun weaken_precondition wfpo (model as (clist,alist)) = 
     let
 	val cl = removeOclLibrary clist
     in
@@ -152,7 +178,7 @@ fun strengthen_postcondition_help [] model = []
 	pos@(strengthen_postcondition_help clist model)
     end
 
-fun strengthen_postcondition (model as (clist,alist)) = 
+fun strengthen_postcondition wfpo (model as (clist,alist)) = 
     let
 	val cl = removeOclLibrary clist
     in
@@ -165,7 +191,7 @@ fun conjugate_invariants_help [] model = []
 	(* get the invariants of all parents *)
 	val invariants = all_invariants_of class model
 	val c_name = string_of_path (name_of class)
-	val invs = List.map (fn (a,b) => Predicate(b,type_of_term b,["liskov","conjugate invariants",c_name,(generate_opt_name "inv" a)],[])) invariants
+	val invs = List.map (fn (a,b) => Predicate(b,type_of_term b,[(generate_opt_name "inv" a)],[selfarg (type_of class)])) invariants
     in
 	if (List.length(invs) = 0)
 	then (conjugate_invariants_help clist model)
@@ -173,22 +199,23 @@ fun conjugate_invariants_help [] model = []
 	    (conjugate_terms invs)::(conjugate_invariants_help clist model)
     end
 
-fun conjugate_invariants (model as (clist,alist)) = 
+fun conjugate_invariants wfpo (model as (clist,alist)) = 
     let
 	val cl = removeOclLibrary clist
+	
     in
 	conjugate_invariants_help cl model
     end
 
-fun generate_po (model as (clist,alist)) = 
+fun generate_po (model as (clist,alist)) data = 
     let
 	val _ = trace zero ("generate_po: \n")
 	val _ = trace zero ("weaken the precondition.\n")
-	val x1 = weaken_precondition model
+	val x1 = weaken_precondition model data 
 	val _ = trace zero ("strengthen the postcondition.\n")
-	val x2 = strengthen_postcondition model
+	val x2 = strengthen_postcondition model data 
 	val _ = trace zero ("conjugate the invariants.\n")
-	val x3 = conjugate_invariants model
+	val x3 = conjugate_invariants model data 
     in
 	x1@x2@x3
     end

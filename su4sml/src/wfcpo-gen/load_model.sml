@@ -8,20 +8,23 @@ open Ext_Library
 
 (* WFCPO-GEN *)
 open WFCPO_Library
-open WFCPO_Registry
+
 
 (* set debugging settings *)
-val _ = Control.Print.printDepth:=10
+val _ = Control.Print.printDepth:=20
 val _ = Control.Print.printLength:=30
+(*
+val zargo = "../../../stack_manu/stack.zargo"
+val ocl = "../../../stack_manu/stack.ocl"
+*)
 
+val zargo = "../../../examples/ebank/ebank.zargo"
+val ocl="../../../examples/ebank/ebank.ocl"
 
-
-val zargo = "../../../examples/calendar/calendar.zargo" 
-val ocl="../../../examples/calendar/calendar.ocl"
-
-(** impor model *)
+(** import model *)
 val i_model = import zargo ocl [] 
 val (clist,alist) = normalize_ext i_model
 val model = ((clist@oclLib),(alist))
+val classifiers = removeOclLibrary clist
 
 

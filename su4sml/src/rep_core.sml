@@ -235,6 +235,7 @@ val body_of_op  : operation -> (string option * Rep_OclTerm.OclTerm) list
 val result_of_op        : operation -> Rep_OclType.OclType
 val postcondition_of_op : operation -> (string option * Rep_OclTerm.OclTerm) list
 val name_of_op          : operation -> string
+val name_of_ae          : associationend -> Rep_OclType.Path
 val mangled_name_of_op          : operation -> string
 
 val class_of            : Rep_OclType.Path -> Classifier list -> Classifier
@@ -454,7 +455,7 @@ fun consistency_constraint cls_name (aend,revAend) =
                                                of [(0,1)] => false
                                                 | [(1,1)] => false
                                                 | M       => true
-	fun mkCollection a = if (#ordered a) 
+	fun mkCollection (a:associationend) = if (#ordered a) 
 			     then (Sequence (#aend_type a)) 
 			     else (Set (#aend_type a))
 
@@ -1251,7 +1252,9 @@ fun postcondition_of_op ({postcondition, ...}:operation) =
      | il => il)
 
 fun name_of_op ({name,...}:operation) = name
-                                        
+              
+fun name_of_ae ({name,...}:associationend) = name
+
 fun mangled_name_of_op ({name,arguments,result,...}:operation) = 
     let
       val arg_typestrs = map (fn a => (Rep_OclType.string_of_OclType o #2 )a )
@@ -1301,7 +1304,9 @@ fun class_of (name:Path) (cl:Classifier list):Classifier = hd (filter (fn a => i
                                                                                then true else false ) cl )
     handle _ => error ("class_of: class "^(string_of_path name)^" not found!\n")
 		
-                
+
+
+
 fun parent_of  C cl =  (class_of (parent_name_of C) cl)
                        
 fun parents_of C cl = 
@@ -1311,6 +1316,7 @@ fun parents_of C cl =
                  then [(name_of OclAnyC)]
                  else [class]@(parents_of (class_of class cl) cl)))
         
+    
 (* returns the activity graphs (list) of the given Classifier --> this is a list of StateMachines*)
 (* Classifier -> ActivityGraph list *)
 fun activity_graphs_of (Class{activity_graphs,...}) = activity_graphs

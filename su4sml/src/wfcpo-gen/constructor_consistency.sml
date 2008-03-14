@@ -42,11 +42,16 @@
 (** Implementation of the wellformed constraint for a constructor *)
 signature CONSTRUCTOR_CONSTRAINT = 
 sig
-    include BASE_CONSTRAINT
     (** sub constraint, included in constructor consistency.*)
     val post_implies_invariant     : Rep.Model -> Rep_OclTerm.OclTerm list
+    (** sub constraint, included in constructor consistency.*)
+    val overwrites_old_creators    : Rep.Model -> bool
+    (** sub constraint, included in constructor consistency.*)
+    val attributes_are_inited      : Rep.Model -> bool
+    (** Any kind of Exception *)
+    exception WFCPO_ConstructorError of string
 end
-functor Constructor_Constraint (SuperCon : BASE_CONSTRAINT) : CONSTRUCTOR_CONSTRAINT =
+structure Constructor_Constraint : CONSTRUCTOR_CONSTRAINT = 
 struct
 
 (* SU4SML *)
@@ -61,24 +66,12 @@ open ModelImport
 
 (* WFCPO *)
 open WFCPO_Naming
-open WFCPO_Library
+open WFCPOG_Library
 
-exception ConstraintError of string
-exception BaseConstraintError of string
-exception ConstructorError of string
-
-type constraint = Constraint.constraint
-
+exception WFCPO_ConstructorError of string
 
 (* Make a string case insensitive *)
-fun to_lower_string "" = ""
-  | to_lower_string s:string = 
-    let
-	fun to_lower [x] = [Char.toLower x]
-	  | to_lower (h::tail) = (Char.toLower h)::(to_lower tail)
-    in 
-	String.implode (to_lower (String.explode s))
-    end
+
 
 fun generate_return_value crea_op classifier model = 
     let
@@ -116,11 +109,37 @@ fun post_implies_invariant (model as (clist, alist)) =
 	post_implies_invariant_help class model
     end
 
-fun generate_po (model as (clist,alist)) =
+fun overwrites_old_creators_help [] model = [true]
+  | overwrites_old_creators_help (h::class) (model as (clist,alist)) = 
     let
-	val x1 = post_implies_invariant model
+	val crea = creation_operations_of (name_of h) model
+	val over_ops = modified_operations_of (name_of h) model
     in
-	x1
+	(List.all (fn a => List.exists (fn b => b =a) (over_ops)) crea)::(overwrites_old_creators_help class model)
     end
-    
-end;
+
+fun overwrites_old_creators (model as (clist, alist)) = 
+    let
+	val class = removeOclLibrary clist
+    in
+	List.all (fn a => a) (overwrites_old_creators_help class model)
+    end
+
+fun attributes_are_inited_help [] model = [true]
+  | attributes_are_inited_help (h::class) (model as (clist,alist)) = 
+    let
+	val attrs = attributes_of h
+	fun inited NONE = false
+	  | inited (SOME(x)) = true
+    in
+	(List.all (fn a => inited (#init a)) (attrs))::(attributes_are_inited_help class model)
+    end
+
+
+fun attributes_are_inited (model as (clist,alist)) = 
+    let
+	val class = removeOclLibrary clist
+    in
+	List.all (fn a => a) (attributes_are_inited_help class model)
+    end
+end; 

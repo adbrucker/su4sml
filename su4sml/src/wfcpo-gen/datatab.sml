@@ -2,10 +2,10 @@
  * su4sml --- a SML repository for managing (Secure)UML/OCL models
  *             http://projects.brucker.ch/su4sml/
  *                                                                            
- * context_declarations.sml --- 
+ * datatab.sml  --- a very simplistic datatab implementation
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2008 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -37,28 +37,57 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************)
-(* $Id: context_declarations.sml 6727 2007-07-30 08:43:40Z brucker $ *)
+(* $Id: wfcpog.sml 7256 2008-02-10 19:31:53Z brucker $ *)
+
 
 (** 
- * The core provides the basic data structures and general exceptions.
- *)
-signature WFCPO_GEN =
-sig
-    val generate : Rep.Model -> (Rep_OclTerm.OclTerm * string) list
-end
- 
-functor WFCPO_Gen(C: BASE_CONSTRAINT) : WFCPO_GEN =
-struct
-
-open Rep_Core
-open Rep
-open Rep2String
-  
-
-fun generate model =  C.generate_po model
-
-(*fun print_cinfo (LiskovInfo {package,po_producer,po_causer,operation_name,pre_or_post}) =
-    print("PACKAGE: " ^ (String.concat package) ^ ",  SUBCLASS: " ^ (String.concat (name_of po_producer)) ^ ",  SUPER_CLASS: " ^ (String.concat (name_of po_causer)) ^ ",  OPNAME: " ^ operation_name ^ "  TYPE: " ^ pre_or_post ^ "\n")
-  | print_cinfo _ = print ("Print not supported now")
+   A simple Object Type (similar to the one used in Isabelle) for 
+   fooling the type system of SML.
 *)
-end;
+structure Object = struct type T = exn end;
+
+(**
+  A very simplistic table using integers as key. The signature is a 
+  subset of the TableFun provided by Isabelle, i.e., when using a 
+  Isabelle based setup, 'a Datatab can be implemented/replaced
+  by 
+
+  structure Datatab = TableFun(type key = int val ord = int_ord);
+
+*)
+signature DATATAB =
+sig
+  type 'a table 
+  type key
+  exception DUP of key
+  exception SAME of key
+  exception UNDEF of key
+  val empty : 'a table
+  val keys : 'a table -> key list
+  val lookup : 'a table -> key -> 'a option 
+  val update : key * 'a -> 'a table -> 'a table
+end
+
+structure Datatab:DATATAB = 
+struct
+type key = int
+type 'a table = (key * 'a) list
+	       
+exception DUP of key
+exception SAME of key
+exception UNDEF of key
+val empty=[]
+
+(* 'a option *)
+fun lookup t k = case (List.filter (fn (k',v) => (k'=k))  t) of
+		   []    => NONE
+		 | t' => SOME ((#2 o hd) t')
+
+(* 'a table *)
+fun update (k,v) [] = [(k,v)] 
+  | update (k,v) (x::xs) = if (#1 x) = k 
+			   then raise DUP k         (* (k,v)::xs *)
+			   else x::(update (k,v) xs)
+(* key list *)
+fun keys (t:'a table) = map (#1) t
+end

@@ -1,12 +1,20 @@
 signature REFINE_CONSTRAINT =
 sig
-    include PLUGIN_CONSTRAINT
-    val setPackages     : Rep_OclType.Path -> Rep_OclType.Path -> unit
-    val refine_model    : Rep_OclType.Path -> Rep_OclType.Path -> Rep.Model -> (Rep_OclTerm.OclTerm * string) list
-    val FromPack        : Rep_OclType.Path ref
-    val ToPack          : Rep_OclType.Path ref
+    type RFM_args 
 
-    exception RefineError of string
+    structure RFM_Data :
+	      sig
+		  type T = RFM_args
+		  val get : WFCPOG.wfpo -> T
+		  val put : T -> WFCPOG.wfpo -> WFCPOG.wfpo
+		  val map : (T -> T) -> WFCPOG.wfpo -> WFCPOG.wfpo
+	      end	 
+
+    val check_syntax         : WFCPOG.wfpo -> Rep.Model -> bool
+
+    val refine_po            : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list 
+
+    exception WFCPO_RefineError of string
     exception ClassGroupError of Rep_Core.Classifier list * string
     exception OpGroupError of Rep_Core.operation list * string
     exception WFCPO_SyntaxError_ClassConsistency of (Rep_OclType.Path * Rep_Core.Classifier list)
@@ -14,7 +22,7 @@ sig
     exception WFCPO_SyntaxError_TypeConsistency of (Rep_Core.Classifier * Rep_Core.Classifier * Rep_Core.operation * Rep_Core.operation)
 
 end
-functor Refine_Constraint(SuperCon : PLUGIN_CONSTRAINT)(* : REFINE_CONSTRAINT *) =
+structure Refine_Constraint : REFINE_CONSTRAINT =
 struct
 
 (* su4sml *)
@@ -27,31 +35,30 @@ open Rep2String
 open Ext_Library
 
 (* wfcpo-gen *)
-open Base_Constraint
-open WFCPO_Library
+open WFCPOG_Library
 
 
 exception WFCPO_SyntaxError_ClassConsistency of (Path * Classifier list)
 exception WFCPO_SyntaxError_OpConsistency of (Classifier * operation list)
 exception WFCPO_SyntaxError_TypeConsistency of (Classifier * Classifier * operation * operation)
-exception Plugin_Constraint_Error of string
 exception ClassGroupError of Rep_Core.Classifier list * string
 exception OpGroupError of Rep_Core.operation list * string
-exception RefineError of string
-type constraint = SuperCon.constraint
-                  
+exception WFCPO_RefineError of string
 
-val FromPack = ref ["AbstractSimpleChair01"]
-val ToPack = ref ["ConcreteSimpleChair01"]
+type RFM_args = {
+     key : int,
+     rfm_tuples : (Rep_OclType.Path * Rep_OclType.Path) list
+}
 
 
-fun setPackages (p1) (p2) = 
-    let 
-	val x = FromPack := p1
-	val y = ToPack := p2
-    in
-	print ("Packages set from " ^ (string_of_path p1) ^ " to " ^ (string_of_path p2) ^ "\n")
-    end
+
+structure RFM_Data = WfpoDataFun
+		     (struct
+		      type T = RFM_args;
+		      val empty = ({key=10,rfm_tuples=[([]:Path,[]:Path)]});
+		      fun copy T = T;
+		      fun extend T = T;
+		      end);
 
 fun rm x [] = [] 
   | rm x [b] = if (x = b) then [] else [b] 
@@ -103,7 +110,7 @@ fun map_public_classes fromPath toPath (model as (clist,alist)) =
 		   val _ = trace exce ("The following public classes are not included in the refined class:\n\n") 
 		   val _ = trace exce (String.concat (List.map (fn a => (" * " ^ (string_of_path (name_of a)) ^ "\n")) clist))
 	       in 
-		   raise RefineError ("Please adjust model...\n")
+		   raise WFCPO_RefineError ("Please adjust model...\n")
 	       end     
     end
 
@@ -127,7 +134,7 @@ fun map_public_ops [] = [[]]
 		   val _ = trace exce ("The following public operations are not included in the refined classes:\n\n") 
 		   val _ = trace exce (String.concat (List.map (fn a => (" * " ^ (operation2string a) ^ "\n")) oplist))
 	       in 
-		   raise RefineError ("Please adjust model...\n")
+		   raise WFCPO_RefineError ("Please adjust model...\n")
 	       end     
 	 ))]
 	@(map_public_ops tail)
@@ -165,7 +172,7 @@ fun map_types [] fP tP model = []
 			    val _ = trace exce ("Existing FromClass = " ^ (string_of_path (name_of h1)) ^ "\n")
 			    val _ = trace exce ("Inexisting ToClass = " ^ (string_of_path (name_of h2)) ^ "\n")
 			in 
-			    raise RefineError ("Please adjust model...\n")
+			    raise WFCPO_RefineError ("Please adjust model...\n")
 			end
 	(* name of the arguments *)
 	val _ = trace zero ("map_types_6: " ^ string_of_path (name_of c1) ^ "\n")
@@ -187,7 +194,7 @@ fun map_types [] fP tP model = []
 					     val _ = trace exce ("Existing FromClass = " ^ (string_of_path (name_of h1)) ^ "\n")
 					     val _ = trace exce ("Inexisting ToClass = " ^ (string_of_path (name_of h2)) ^ "\n")
 					 in 
-					     raise RefineError ("Please adjust model...\n")
+					     raise WFCPO_RefineError ("Please adjust model...\n")
 					 end
 			      end
 			  ) arg_class_name1
@@ -196,7 +203,7 @@ fun map_types [] fP tP model = []
 	(true)::(map_types tail fP tP model)
     end
 
-fun check_syntax fromPath toPath (model:Rep.Model as (clist,alist)) = 
+fun check_syntax_help (model:Rep.Model as (clist,alist)) fromPath toPath = 
     let
 	val _ = trace zero ("CHECK SYNTAX ... \n")
 	(* check public classes of the two packages *)
@@ -210,41 +217,116 @@ fun check_syntax fromPath toPath (model:Rep.Model as (clist,alist)) =
 	val _ = trace zero ("check syntax 4 \n")
     in 
 	List.all (fn a => a) z
-	handle _ => raise RefineError ("Something undetermined happened. Shit!.\n")
     end
-(*
-fun refine_semantics [] (model:Rep.Model) = []
-  | refine_semantics ((fromC,toC)::tail) (model as (clist,alist)) = 
 
-*)
-
-(*
-fun rule_1
-
-fun rule_2
-
-fun rule_3
-*)
-
-fun refine_model fromPath toPath (model:Rep.Model) = 
+fun check_syntax wfpo (model:Rep.Model as (clist,alist)) = 
     let
-	val _ = trace zero ("REFINE MODEL ...\n")
-	val _ = trace zero ("shit")
-	val x = check_syntax fromPath toPath model
-	val _ = trace zero ("output of syntax check : " ^ Bool.toString x ^ "\n")
-(*	val po1 = rule_1 fromPath toPath model
-	val po2 = rule_2 fromPath toPath model
-	val po3 = rule_3 fromPath toPath model *)
+	val data = RFM_Data.get wfpo
+	val packages = (#rfm_tuples data)
     in
-	(* po1@po2@po3 *)
-        [(Literal("true",Boolean))]
+	List.all (fn a => a) (List.map (fn a => check_syntax_help model (#1 a) (#2 a)) packages)
     end
-		   
-val getConstraint = 
-    {  name          = "refine",
-       description   = ("refine from package " ^ (string_of_path (!FromPack)) ^ " to package " ^ (string_of_path (!ToPack))),
-       generator     = refine_model (!FromPack) (!ToPack) }:Constraint.constraint
 
-val info = "\n\nCREATION OF A NEW REFINE CONSTRAINT: \n\ni.) call: Refine.setPackages pack1 pack2\n                     where pack1 is the package to be replaced and pack2 the one who is replacing.\nii.) call: getConstraint , for getting Constraint with the pack1 and pack2.\n\n\n"
 
-end
+
+(* page 13 *)
+fun operation_term oper class = 
+    let
+	val pres = List.map (fn (a,b) => b) (precondition_of_op oper)
+	val posts = List.map (fn (a,b) => b) (postcondition_of_op oper)
+	val con_pres = conjugate_terms pres
+	val con_posts = conjugate_terms posts
+	val args = List.map (fn (a,b) => Variable(a,b)) (arguments_of_op oper)
+	val args_term = conjugate_terms args
+	val result = Variable("result",result_of_op oper)
+	val pre_term = conjugate_terms [con_pres,Variable("self",type_of class),args_term]
+	val post_term = conjugate_terms [con_posts,Variable("self",type_of class),args_term,result]
+	val pre_local = OperationCall(pre_term,Boolean,["holOclLib","Boolean","OclLocalValid"],[(Variable("tau",DummyT),DummyT)],Boolean)
+	val post_local = OperationCall(post_term,Boolean,["holOclLib","Boolean","OclLocalValid"],[(Variable("tau",DummyT),DummyT)],Boolean)
+	val final = conjugate_terms [pre_local,post_local]
+    in
+	OperationCall(result,result_of_op oper,["holOclLib","Quantor","existence"],[(final,Boolean)],Boolean)
+    end
+(*
+fun lamdba_operation name class model = 
+    let
+	(* go up hierarchie where operation is implemented *)
+	(* (operation of subclass, classifier of super class) *)
+	val cl = go_up_hierarchy class (class_has_local_op name model) model
+	val oper = get_operation name cl
+    in
+	operation_term oper cl
+    end
+*)
+(* evaluation to true or exception *)
+(*
+fun eval_to_true_or_excep name class model  = 
+    let
+	val S = lambda_operation name class model
+	val tau = Variable("tau",DummyT)
+	val delta = Variable("delta",DummyT)
+
+    in
+	OperationCall(term,DummyT,["holOclLib","Boolean","OclLocalValid"],[],Boolean)
+    end
+*)
+(* valid pre states *)
+(* fun valid_pre_states name class model = 
+    let
+	val 
+    in
+	
+    end
+*)
+(* abs make trans, conc can also *)
+(*
+fun abs_to_conc_trans op_abs op_conc model = 
+*)
+(* conc make trans, abs terminate in R(conc) *)
+(*
+fun conc_to_abs_trans op_abs op_conc model = 
+*)
+(* forward simulation *)
+(* fun fw_sim op_abs op_conc model = 
+    let
+	val po1 = abs_to_conc_trans op_abs op_conc model
+	val po2 = conc_to_abs_trans op_abs op_conc model
+    in
+	conjugate_terms [po1,po2]
+    end
+*)
+(*
+fun refine_operation fc fop_name tc top_name model = 
+    let
+	
+	val prereq1 = eval_to_true_or_excep fop_name fc model
+	val prereq2 = valid_pre_states fop_name fc model
+	val po1 = 
+	val po2 = 
+    in
+	
+    end
+
+fun refine_classifier fc tc model = 
+    let
+	val fops_name = List.filter (is_visible_op) (all_operations_of fc)
+	val tops_name = List.filter (is_visible_op) (all_operations_of tc)
+	val gops = group_op fops tops
+    in
+	List.map (fn (a,b) => refine_operation fc (name_of_op a) tc (name_of_op b)) (gops)
+    end
+
+*)
+fun refine_po wfpo (model as (clist,alist)) = []
+(*
+    let
+	val fc = List.filter (is_visible_cl) (class_of_package from model)
+	val tc = List.filter (is_visible_cl) (class_of_package to model)
+	val gc = group_cl fc tc model
+    in	
+	[]
+	List.map (fn (a,b) => refine_classifier a b model) gc
+    end
+*)
+
+end;

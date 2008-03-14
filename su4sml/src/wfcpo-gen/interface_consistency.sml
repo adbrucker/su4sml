@@ -40,83 +40,85 @@
 (* $Id: context_declarations.sml 6727 2007-07-30 08:43:40Z brucker $ *)
 
 (** Implementation of the Liskov Substitiution Principle. *)
-signature DATA_MODEL_CONSISTENCY_CONSTRAINT = 
+signature INTERFACE_CONSTRAINT =
 sig
-    (** sub constraint, included in liskov.*)
-    val class_model_consistency        : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
-    (** sub constraint, included in liskov.*)
-    val strong_model_consistency       : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
+    val has_consistent_stereotypes      : WFCPOG.wfpo -> Rep.Model -> bool
+
+    val is_nameclash_free               : WFCPOG.wfpo -> Rep.Model -> bool
+
+
+
+
 end
-structure Data_Model_Consistency_Constraint : DATA_MODEL_CONSISTENCY_CONSTRAINT = 
-struct
+structure Interface_Constraint:INTERFACE_CONSTRAINT =
+struct 
 
 (* su4sml *)
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType
-open Ext_Library
-open ModelImport
 open Rep2String
 
-(* ocl-parser *)
+(* oclparser *)
+open Ext_Library
 open ModelImport
-open Context
 
 (* wfcpo-gen *)
 open WFCPOG_Library
+open WFCPO_Naming
+
+exception WFCPOG_InterfaceError of string
+
+fun list_has_dup [] = false
+  | list_has_dup [x] = false
+  | list_has_dup (h::tail) = 
+    if List.exists (fn a => a = h) tail
+    then false
+    else list_has_dup (tail)
 
 
-exception WFCPO_DataModelError
+fun has_consistent_stereotypes_help [] model = true
+  | has_consistent_stereotypes_help ((Interface{operations,...})::classes) (model as (clist,alist)) = 
+    List.all (fn a => not (List.exists (fn b => (b = "create") orelse (b = "destroy")) (#stereotypes a))) (operations) 
+  | has_consistent_stereotypes_help (h::classes) model = has_consistent_stereotypes_help classes model
+
+fun is_nameclash_free_help [] model = true
+  | is_nameclash_free_help ((Class{interfaces,...})::classes) (model as (clist,alist)) =
+    if (List.length(interfaces)) <= 1
+    then is_nameclash_free_help classes model
+    else
+	let
+	    val if_list = List.map (fn a => class_of_type a model) interfaces
+	    val op_name_list = List.concat (List.map (fn a => (List.map (name_of_op) (all_operations_of (name_of a) model))) if_list)
+	in 
+	    list_has_dup (op_name_list)
+	end
+  | is_nameclash_free_help ((AssociationClass{interfaces,...})::classes) (model as (clist,alist)) = 
+        if (List.length(interfaces)) <= 1
+    then is_nameclash_free_help classes model
+    else
+	let
+	    val if_list = List.map (fn a => class_of_type a model) interfaces
+	    val op_name_list = List.concat (List.map (fn a => (List.map (name_of_op) (all_operations_of (name_of a) model))) if_list)
+	in 
+	    list_has_dup (op_name_list)
+	end
+  | is_nameclash_free_help (x::classes) model = is_nameclash_free_help classes model
 
 
-fun c_allInstance_term (c:Classifier) =
+fun has_consistent_stereotypes wfpo (model as (clist,alist)) = 
     let
-	(* create terms form right to left *)
-	val x = Variable("x",DummyT)
-	val oclIsTypeOf = OperationWithType (x,DummyT,"oclIsTypeOf",type_of c,Boolean)
-	val exists = Iterator("exists",[("x",DummyT)],Literal("dummy_source",DummyT),DummyT,oclIsTypeOf,Boolean,Boolean)
-	val allInstances = OperationCall (Literal("dummy_source",DummyT),DummyT,["oclLib","OclAny","allInstances"],[],Boolean)
-	val class = Literal("c",type_of c)
-	(* nest sources *)
-	val term = add_source (class,allInstances)
-	val term = add_source (allInstances,exists)
+	val classes = removeOclLibrary clist
     in
-	OperationCall (term,type_of_term term,["holOclLib","Boolean","OclLocalValid"],[(Variable("tau",DummyT),DummyT)],Boolean)
+	has_consistent_stereotypes_help classes model
     end
 
-(* E t. t |= c::allInstances()->exists(x|x.oclIsTypeOf(c)) *)
-fun single_model_consistency (c:Classifier) (model as (clist,alist)) = 
+fun is_nameclash_free wfpo (model as (clist,alist)) = 
     let
-	val term = c_allInstance_term c
+	val classes = removeOclLibrary clist
     in
-	OperationCall (Variable("tau",DummyT),DummyT,["holOclLib","Quantor","existence"],[(term,type_of_term term)],Boolean)
+	is_nameclash_free_help classes model
     end
 
-
-fun class_model_consistency_help [] (model as (clist,alist)) = []
-  | class_model_consistency_help (h::classes) (model as (clist,alist)) =
-    (single_model_consistency h model)::(class_model_consistency_help classes model)
-
-fun class_model_consistency wfpo (model as (clist,alist)) = 
-    let
-	val classifiers = removeOclLibrary (clist)
-    in
-	class_model_consistency_help classifiers model
-    end
-
-fun strong_model_consistency_help classes model = 
-    let 
-	val terms = List.map (c_allInstance_term) classes
-	val n_term = nest_source terms
-    in
-	[OperationCall (Variable ("tau",DummyT),DummyT,["holOclLib","Quantor","existence"],[(n_term,type_of_term n_term)],Boolean)]
-    end
-
-fun strong_model_consistency wfpo (model as (clist,alist)) = 
-    let
-	val classifiers = removeOclLibrary (clist)
-    in
-	strong_model_consistency_help classifiers model
-    end
 
 end;

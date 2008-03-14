@@ -42,16 +42,18 @@
 (** Implementation of the wellformed constraint for a constructor *)
 signature OPERATIONAL_CONSTRAINT = 
 sig
-    include BASE_CONSTRAINT
     (** sub constraint, included in operational consistency.*)
-    val generate_class_constraints          : Rep.Model -> Rep_OclTerm.OclTerm list
+    val generate_secureUML_creators_po      : Rep_Core.Classifier -> Rep.Model -> Rep_OclTerm.OclTerm list
     (** sub constraint, included in operational consistency.*)
-    val generate_operation_constraints      : Rep.Model -> Rep_OclTerm.OclTerm list
+    val generate_secureUML_destructors_po   : Rep_Core.Classifier -> Rep.Model -> Rep_OclTerm.OclTerm list
     (** sub constraint, included in operational consistency.*)
-    val generate_attribute_constraints      : Rep.Model -> Rep_OclTerm.OclTerm list
+    val generate_secureUML_getters_po       : Rep_Core.Classifier -> Rep.Model -> Rep_OclTerm.OclTerm list
+    val generate_secureUML_setters_po       : Rep_Core.Classifier -> Rep.Model -> Rep_OclTerm.OclTerm list
+    val generate_secureUML_op_sec_po        : Rep_Core.Classifier -> Rep.Model -> Rep_OclTerm.OclTerm list
+    val generate_pos                        : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
 
 end
-functor Operational_Constraint (SuperCon : BASE_CONSTRAINT) : OPERATIONAL_CONSTRAINT =
+structure Operational_Constraint : OPERATIONAL_CONSTRAINT = 
 struct
 
 
@@ -67,64 +69,171 @@ open ModelImport
 
 (* WFCPO *)
 open WFCPO_Naming
-open WFCPO_Library
+open WFCPOG_Library
 
-exception ConstraintError of string
-exception BaseConstraintError of string
-exception ConstructorError of string
-
-type constraint = Constraint.constraint
-
-
-
-(*
-fun generate_class_constraints_single classe (model as (clist,alist)) = 
-    (* [Variable("s",DummyT)]  *)
-    let
-	val creators = creation_operations_of 
-	val x = List.map (fn a => 
-    in
+exception WFCPO_OperationalError
 	
-    end
-*)
-fun generate_operation_constraints_help classes (model as (clist,alist)) = [Variable("s",DummyT)]
-
-fun generate_attribute_constraints_help classes (model as (clist,alist)) = [Variable("s",DummyT)] 
-
-(** 
-    tink about which classes to filter.
-    Maybe the classes from the SecureUML metamodel 
-    must be deletet to.
- **)
-fun generate_class_constraints (model as (clist,alist)) = 
+fun case_insensitive "" = ""
+  | case_insensitive s:string = 
     let
-	val classes = removeOclLibrary clist
+	fun to_lower [x] = [Char.toLower x]
+	  | to_lower (h::tail) = (Char.toLower h)::(to_lower tail)
+    in 
+	String.implode (to_lower (String.explode s))
+    end
+
+
+(* get corresponding operation x from x_sec of. *) 
+fun secureUML_real_op oper class model = 
+    let
+	val name = name_of_op oper
+	val len = String.size name
+	val substr = String.substring (name,0,len-4)
     in
-	generate_class_constraints_help classes model
+	get_operation substr class model 
     end
 
-fun generate_operation_constraints (model as (clist,alist)) = 
+fun secureUML_sec_op oper class model = 
     let
-	val classes = removeOclLibrary clist
+	val name = name_of_op oper ^ "_sec"
     in
-	generate_operation_constraints_help classes model
+	get_operation name class model 
     end
 
-fun generate_attribute_constraints (model as (clist,alist)) = 
+fun secureUML_get_att_name oper = 
     let
-	val classes = removeOclLibrary clist
+	val name = name_of_op oper
+	val len = String.size name
     in
-	generate_attribute_constraints_help classes model
+	String.substring (name,0,len-4)
+    end
+
+(* *)
+fun secureUML_getter_operations_of class_n model = List.filter (fn a => String.isPrefix "get" (name_of_op a)) (local_operations_of class_n model)
+(* *)
+fun secureUML_setter_operations_of class_n model = List.filter (fn a => String.isPrefix "set" (name_of_op a)) (local_operations_of class_n model)
+(* *)
+fun secureUML_op_sec_operations_of class_n model = List.filter (fn a => String.isSuffix "_sec" (name_of_op a)) (local_operations_of class_n model)
+
+fun secureUML_substitute_terms (OperationCall(src,typ,path,args,rtyp)) class = 
+    let
+	val op_name = List.last path
+	val p_len = List.length path
+	val p = List.take (path,p_len-1)
+    in    
+	if (name_of class) = p
+	then (* substitute operation x with x_sec *)
+	    (OperationCall(src,typ,p@[op_name^"_sec"],args,rtyp))
+	else OperationCall(src,typ,path,args,rtyp)
+    end
+  | secureUML_substitute_terms (AttributeCall(src,typ,path,rtyp)) class =
+    let
+	val att_name = List.last path
+	val p_len = List.length path
+	val p = List.take (path,p_len-1)
+    in
+	if (name_of class) = p
+	then (* substitute attribute x with operation getX() *)
+	    OperationCall(src,typ,p@["get"^att_name],[],rtyp)
+	else AttributeCall(src,typ,path,rtyp)
+    end
+  | secureUML_substitute_terms x class = x
+
+fun generate_secureUML_creators_po class (model as (clist,alist)) = 
+    let
+		val creators = creation_operations_of (name_of class) model 
+    in
+	(List.map (fn a => 
+		      let
+			  val op_res = result_of_op a
+			  val result = Variable("result",op_res)
+			  val term1 = OperationCall(result,op_res,(name_of class)@["oclIsUndefined"],[],Boolean)
+			  val term2 = OperationCall(result,op_res,(name_of class)@["modifiedOnly"],[],Boolean)
+		      in 
+			  OperationCall(term1,Boolean,["oclLib","Boolean","and"],[(term2,Boolean)],Boolean) 
+		      end
+		  ) creators)
+    end
+
+fun generate_secureUML_destructors_po class (model as (clist,alist)) = 
+    let
+	val destructors = destruction_operations_of (name_of class) model
+    in
+	(List.map (fn a => 
+		      let
+			  val self = Variable("self",type_of class)
+			  val term1 = OperationCall(self,type_of class,(name_of class)@["oclIsUndefined"],[],Boolean)
+			  val atPre = OperationCall(self,type_of class,["oclLib","OclAny","atPre"],[],type_of class)
+			  val term2 = OperationCall(atPre,type_of class,(name_of class)@["modifiedOnly"],[],Boolean)
+		      in
+			  OperationCall(term1,Boolean,["oclLib","Boolean","and"],[(term2,Boolean)],Boolean) 
+		      end
+		  ) destructors)
+    end
+	
+fun generate_secureUML_getters_po class (model as (clist,alist)) = 
+    let
+	val getter = secureUML_getter_operations_of (name_of class) model
+    in
+	(List.map (fn a =>
+		      let
+			  val op_res = result_of_op a
+			  val att_name = secureUML_get_att_name a
+			  val result = Variable("result",op_res)
+			  val self = Variable("self",type_of class)
+			  val atCall = AttributeCall(self,type_of class,(name_of class)@[(att_name)],op_res)
+		      in
+			  OperationCall(result,op_res,["oclLib","Boolean","="],[(atCall,op_res)],Boolean)
+		      end
+		  ) getter)
+    end
+
+fun generate_secureUML_setters_po class (model as (clist,alist)) = 
+    let
+	val setter = secureUML_setter_operations_of (name_of class) model
+    in
+    	(List.map (fn a =>
+		      let
+			  val (name,arg_type)= hd(arguments_of_op a)
+			  val self = Variable("self",type_of class)
+			  val att_name = secureUML_get_att_name a
+			  val arg = Variable(name,arg_type)
+			  val att = AttributeCall(self,type_of class,(name_of class)@[att_name],arg_type)
+			  val term1 = OperationCall(att,arg_type,["oclLib","Boolean","="],[(arg,arg_type)],Boolean)
+			  val term2 = OperationCall(att,arg_type,(name_of class)@["modifiedOnly"],[],Boolean)
+		      in
+			  OperationCall(term1,Boolean,["oclLib","Boolean","and"],[(term2,Boolean)],Boolean)
+		      end
+		  ) setter)
+    end
+	
+fun generate_secureUML_op_sec_po class (model as (clist,alist)) =
+    let
+	val op_sec = secureUML_op_sec_operations_of (name_of class) model
+    in
+	List.concat (List.map (fn a =>
+		      let
+			  val real_op = secureUML_real_op a class model
+			  val add_pres = List.map (fn (a,b) => b ) (precondition_of_op real_op)
+			  val real_posts = postcondition_of_op real_op
+			  val add_posts = List.map (fn (a,b) => secureUML_substitute_terms b class) (real_posts)
+		      in
+			  add_pres@add_posts
+		      end
+		  ) op_sec)
     end
 
 
 
-fun generate_po (model as (clist,alist)) = (* [Variable("s",DummyT)] *)
+fun generate_pos wfpo (model as (clist,alist)) = (* [Variable("s",DummyT)] *)
     let
-(*	val po1 = generate_class_constraints model
-	val po2 = generate_operation_constraints model
-	val po3 = generate_attribute_constraints model
- *)   in
-	[] (* po1@po2@po3 *)
+	val design_model_classes = removeOclLibrary clist
+	val po1 = List.map (fn a => generate_secureUML_creators_po a model) design_model_classes 
+	val po2 = List.map (fn a => generate_secureUML_destructors_po a model) design_model_classes 
+	val po3 = List.map (fn a => generate_secureUML_getters_po a model) design_model_classes 
+	val po4 = List.map (fn a => generate_secureUML_setters_po a model) design_model_classes 
+	val po5 = List.map (fn a => generate_secureUML_op_sec_po a model) design_model_classes 
+    in
+	List.concat(po1@po2@po3@po4@po5)
     end
 end;

@@ -48,6 +48,7 @@ sig
     val type_of_parents         : Rep_Core.Classifier -> Rep_Core.transform_model -> Rep_OclType.OclType list    
     (* classifiers and packages *) 
     val class_of_type           : Rep_OclType.OclType -> Rep_Core.transform_model -> Rep_Core.Classifier
+    val path_to_type            : Rep_OclType.Path -> Rep_OclType.OclType
     val get_classifier          : Rep_OclTerm.OclTerm -> Rep_Core.transform_model -> Rep_Core.Classifier
     val package_of_template_parameter : Rep_OclType.OclType -> string list
 
@@ -450,6 +451,7 @@ fun string_to_type ["Integer"] = Integer
   | string_to_type ["DummyT"] = DummyT
   | string_to_type ["String"] = String
   | string_to_type ["OclVoid"] = OclVoid
+  | string_to_type (("oclLib")::tail) = string_to_type tail
   | string_to_type [set] = 
     if (List.exists (fn a => if (a = (#"(")) then true else false) (String.explode set)) then
 	(* set *)
@@ -543,6 +545,7 @@ fun substitute_operations typ [] = []
 	val _ = trace low ("\n\nsubstitute operation : " ^ (#name oper) ^ " ... \n")
 	val args = substitute_args typ (#arguments oper)
 	val res = substitute_typ typ (#result oper)
+	val _ = trace 100 ("check\n")
     in
 	({
 	 name = #name oper,
@@ -572,7 +575,9 @@ fun substitute_classifier typ classifier =
 	val _ = trace low ("substitute classifier: parameter type: " ^ string_of_OclType typ ^ " template type: " ^ string_of_OclType (type_of classifier) ^ "\n") 
 	val styp = substitute_typ typ (type_of classifier)
 	val ops = substitute_operations typ (operations_of classifier)
+	val _ = trace 100 ("substitute parent.\n")
 	val sparent = substitute_parent typ
+	val _ = trace 100 ("end substitute parent.\n")
     in
 	(Class
 	     {
@@ -605,7 +610,7 @@ fun substitute_classifier typ classifier =
 and get_classifier source (c:Classifier list, a:association list) =
     let
 	val typ = type_of_term (source)
-	val _ = map (fn a => trace development (string_of_OclType (type_of a) ^ "\n")) c
+	val _ = map (fn a => trace development (string_of_OclType (type_of a) ^ "manu type: \n")) c
 	fun class_of_t typ m = 
 	    hd (List.filter (fn a => if ((type_of a) = typ) then true else false) m)
     in
@@ -674,6 +679,19 @@ and templ_of temp_typ para_typ [] = raise TemplateInstantiationError ("Error dur
 
 and class_of_type typ (model:Rep_Core.transform_model) = 
     get_classifier (Variable ("x",typ)) model
+
+
+fun path_to_type (name:Path) = 
+    case name of 
+    	["oclLib","OclAny"] => OclAny
+      | ["oclLib","Integer"] => Integer
+      | ["oclLib","Boolean"] => Boolean
+      | ["oclLib","Real"] => Real
+      | ["oclLib","String"] => String
+      | ["oclLib","OclVoid"] => OclVoid
+      | (("oclLib")::tail) => string_to_type tail
+      | x => Classifier(x)
+
 
 (* RETURN: Boolean *)
 fun conforms_to_up _ OclAny (_:Rep_Core.transform_model) = true
