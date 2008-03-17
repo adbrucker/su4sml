@@ -182,7 +182,7 @@ val normalize_init : Classifier -> Classifier
 (**
  * Returns the classifier of a given path.
  *)
-val class_of            : Rep_OclType.Path -> Classifier list -> Classifier
+val class_of            : Rep_OclType.Path -> transform_model -> Classifier
 
 (** 
  * Returns the classifier of a given type.
@@ -1774,23 +1774,10 @@ fun thy_name_of (C as Class{thyname,...}) =
                                      " has no thyname"))
   | thy_name_of (Template _) = error "in Rep.thy_name_of: \
                                      \unsupported argument type Template"
-     
-                               
-fun class_of (name:Path) (cl:Classifier list):Classifier = hd (filter (fn a => if ((name_of a) = name)
-                                                                               then true else false ) cl )
-    handle _ => error ("class_of: class "^(string_of_path name)^" not found!\n")
-		
 
 
-
-fun parent_of  C cl =  (class_of (parent_name_of C) cl)
                        
-fun parents_of C cl = 
-    (case parent_name_of C of
-       [] => []    
-     | class => (if( class = (name_of OclAnyC) )
-                 then [(name_of OclAnyC)]
-                 else [class]@(parents_of (class_of class cl) cl)))
+
         
     
 (* returns the activity graphs (list) of the given Classifier --> this is a list of StateMachines*)
@@ -1798,16 +1785,6 @@ fun parents_of C cl =
 fun activity_graphs_of (Class{activity_graphs,...}) = activity_graphs
   | activity_graphs_of _                            = []
 				                      
-fun operation_of cl fq_name = 
-    let 
-      val classname   = (rev o  tl o rev) fq_name
-      val operations  = operations_of (class_of classname cl)
-      val name        = (hd o rev) fq_name	
-    in
-      SOME(hd (filter (fn a => if ((name_of_op a) = name)
-			       then true else false ) operations ))
-    end	
-        
 fun is_visible_cl (Class {visibility,...}) =
     if (visibility = public) then true else false
   | is_visible_cl (AssociationClass {visibility,...}) =
@@ -1834,48 +1811,7 @@ fun topsort_cl cl =
     in
       foldl (op@) [] (map (fn a => sub cl a) (OclAny_subcl))  
     end
-    
-fun connected_classifiers_of (all_associations:association list) 
-                             (C as Class {attributes,associations,...}) 
-                             (cl:Classifier list) =
-    let 
-      val att_classifiers = List.mapPartial 
-                                (fn (Classifier p) => SOME (class_of p cl)
-                                  | _              => NONE)
-                                (map  #attr_type attributes)
-      val aend_classifiers = List.mapPartial 
-                                 (fn (Classifier p) => SOME (class_of p cl)
-                                   | _              => NONE)
-                                 (map #aend_type (associationends_of 
-                                                      all_associations C))
-    in
-      att_classifiers @ aend_classifiers 
-    end
-  | connected_classifiers_of all_associations (AC as AssociationClass
-                                                  {attributes,associations,
-                                                   association,...}) 
-                             (cl:Classifier list) =
-    let 
-      val att_classifiers = List.mapPartial 
-                                (fn (Classifier p) => SOME (class_of p cl)
-                                  | _              => NONE)
-                                (map  #attr_type attributes)
-      (* FIXME: correct handling for association classes? *)
-      val aend_classifiers = List.mapPartial 
-                                 (fn (Classifier p) => SOME (class_of p cl)
-                                   | _              => NONE)
-                                 (map #aend_type (associationends_of 
-                                                      all_associations AC))
-    in
-      att_classifiers @ aend_classifiers 
-    end
-  | connected_classifiers_of all_associations(P as Primitive{associations,...})
-                             (cl:Classifier list) = 
-    List.mapPartial (fn (Classifier p) => SOME (class_of p cl)
-                      | _              => NONE)
-                    (map #aend_type (associationends_of all_associations P))
-  | connected_classifiers_of _  _ _ = nil
-                                          
+                                              
 (** adds an invariant to a classifier.
  *)
 fun addInvariant inv (Class {name, parent, attributes, operations, 
@@ -2200,11 +2136,17 @@ fun string_to_type ["Integer"] = Integer
 fun path_to_type (name:Path) = 
     case name of 
     	["oclLib","OclAny"] => OclAny
+      | ["OclAny"] => OclAny
       | ["oclLib","Integer"] => Integer
+      | ["Integer"] => Integer
       | ["oclLib","Boolean"] => Boolean
+      | ["Boolean"] => Boolean
       | ["oclLib","Real"] => Real
+      | ["Real"] => Real
       | ["oclLib","String"] => String
+      | ["String"] => String
       | ["oclLib","OclVoid"] => OclVoid
+      | ["OclVoid"] => OclVoid
       | (("oclLib")::tail) => string_to_type tail
       | x => Classifier(x)
 
@@ -2329,7 +2271,12 @@ fun substitute_classifier typ classifier =
 	})
     end
 (* RETURN: classifier *) 
-
+and class_of (name:Path) (model as (clist,alist)) = 
+    (
+     case (List.hd(name)) of 
+	 "oclLib" => class_of_term (Variable("x",(path_to_type (List.tl (name))))) model
+       | x => hd (filter (fn a => if ((name_of a) = name) then true else false ) clist)
+    ) handle _ => error ("class_of: class "^(string_of_path name)^" not found!\n")
 
 (* RETURN: Classifer *)
 and class_of_term source (c:Classifier list, a:association list) =
@@ -2405,6 +2352,67 @@ and templ_of temp_typ para_typ [] = raise TemplateInstantiationError ("Error dur
 and class_of_type typ (model:transform_model) = 
     class_of_term (Variable ("x",typ)) model
 
+fun parent_of  C cl =  (class_of (parent_name_of C) (cl,[]))
+
+
+fun parents_of C cl = 
+    (case parent_name_of C of
+       [] => []    
+     | class => (if( class = (name_of OclAnyC) )
+                 then [(name_of OclAnyC)]
+                 else [class]@(parents_of (class_of class (cl,[])) cl)))
+
+fun operation_of cl fq_name = 
+    let 
+      val classname   = (rev o  tl o rev) fq_name
+      val operations  = operations_of (class_of classname (cl,[]))
+      val name        = (hd o rev) fq_name	
+    in
+      SOME(hd (filter (fn a => if ((name_of_op a) = name)
+			       then true else false ) operations ))
+    end	
+
+fun connected_classifiers_of (all_associations:association list) 
+                             (C as Class {attributes,associations,...}) 
+                             (cl:Classifier list) =
+    let 
+      val att_classifiers = List.mapPartial 
+                                (fn (Classifier p) => SOME (class_of p (cl,[]))
+                                  | _              => NONE)
+                                (map  #attr_type attributes)
+      val aend_classifiers = List.mapPartial 
+                                 (fn (Classifier p) => SOME (class_of p (cl,[]))
+                                   | _              => NONE)
+                                 (map #aend_type (associationends_of 
+                                                      all_associations C))
+    in
+      att_classifiers @ aend_classifiers 
+    end
+  | connected_classifiers_of all_associations (AC as AssociationClass
+                                                  {attributes,associations,
+                                                   association,...}) 
+                             (cl:Classifier list) =
+    let 
+      val att_classifiers = List.mapPartial 
+                                (fn (Classifier p) => SOME (class_of p (cl,[]))
+                                  | _              => NONE)
+                                (map  #attr_type attributes)
+      (* FIXME: correct handling for association classes? *)
+      val aend_classifiers = List.mapPartial 
+                                 (fn (Classifier p) => SOME (class_of p (cl,[]))
+                                   | _              => NONE)
+                                 (map #aend_type (associationends_of 
+                                                      all_associations AC))
+    in
+      att_classifiers @ aend_classifiers 
+    end
+  | connected_classifiers_of all_associations(P as Primitive{associations,...})
+                             (cl:Classifier list) = 
+    List.mapPartial (fn (Classifier p) => SOME (class_of p (cl,[]))
+                      | _              => NONE)
+                    (map #aend_type (associationends_of all_associations P))
+  | connected_classifiers_of _  _ _ = nil
+(* HERE *)
 
 
 fun conforms_to_up _ OclAny (_:transform_model) = true
@@ -2818,5 +2826,6 @@ fun correct_type_for_CollLiteral coll_typ (CollectionItem (term,typ)) =
 	true
     else
 	false
+
 end
 
