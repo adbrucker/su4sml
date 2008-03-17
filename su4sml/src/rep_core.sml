@@ -148,27 +148,439 @@ datatype Classifier =
 type transform_model = (Classifier list * association list)
 
 
-(** 
- * RETURN transform_model
+(***************************************** 
+ * RETURN transform_model                *
+ *****************************************)
+(**
+ * TODO: Description 
  *)
 val joinModel      : transform_model -> transform_model -> transform_model
-val normalize_ext  : transform_model -> transform_model
-
-(**
- * RETURN Classifier 
- *)
-val OclAnyC : Classifier
-val normalize      : association list -> Classifier -> Classifier
-val normalize_init : Classifier -> Classifier
-
-
-(**
- * RETURN BOOL
- *)
 
 (** 
- * Checks if a type is a collection type.
+ * TODO: Description 
  *)
+val normalize_ext  : transform_model -> transform_model
+
+(*****************************************
+ * RETURN Classifier                     *
+ *****************************************)
+(**
+ * Ocl Classifier OclAny.
+ *)
+val OclAnyC : Classifier
+
+(**
+ * TODO: Description
+ *)
+val normalize      : association list -> Classifier -> Classifier
+
+(**
+ * TODO: Description
+ *)
+val normalize_init : Classifier -> Classifier
+
+(**
+ * Returns the classifier of a given path.
+ *)
+val class_of            : Rep_OclType.Path -> Classifier list -> Classifier
+(**
+ * Returns the classifier of the parent of classifier.
+ *) 
+val parent_of           : Classifier -> Classifier list -> Classifier
+
+(** 
+ * Update the thy_name of a classifier.
+ *)
+val update_thyname      : string -> Classifier -> Classifier
+
+(**
+ * Update the classifier wiht new invariants.
+ *)
+val update_invariant    : (string option * Rep_OclTerm.OclTerm) list -> 
+                          Classifier -> Classifier
+
+(** 
+ * Update the classifier with new operations.
+ *)
+val update_operations   : operation list -> Classifier -> Classifier 
+
+(** 
+ * Update the classifier with a new invariant.
+ *)
+val addInvariant : constraint -> Classifier -> Classifier
+
+(**
+ * Update the classifier with new invariants.
+ *)
+val addInvariants: constraint list -> Classifier -> Classifier
+
+(** 
+ * Update the classifier with a new operations
+ *)
+val addOperation : operation  -> Classifier -> Classifier
+
+(**
+ * Sort the classifier according to its names.
+ *)
+val topsort_cl          : Classifier list -> Classifier list
+
+(**
+ * TODO: Description
+ *)
+val connected_classifiers_of : association list -> Classifier -> Classifier list -> Classifier list
+
+
+
+(*****************************************
+ * RETURN OclType                        *
+ *****************************************)
+
+(**
+ * Returns the type of a classifier.
+ *)
+val type_of       : Classifier -> Rep_OclType.OclType 
+
+(** 
+ * Returns the type of the parent from a 
+ * classifier.
+ *)
+val type_of_parent       : Classifier -> Rep_OclType.OclType
+
+(** 
+ * Returns the type of a given term.
+ *)
+val type_of_term  : Rep_OclTerm.OclTerm -> Rep_OclType.OclType
+
+(**
+ * returns the type of the classifier this association end belongs to.
+ * @params {aend}
+ * @param aend association end
+ * @return type of the classifier at the association end
+ *)
+val type_of_aend   : associationend -> Rep_OclType.OclType
+
+(** 
+ * TODO: Description 
+ *)
+val aend_to_attr_type : associationend -> Rep_OclType.OclType
+(**
+ * Returns the type of a not yet instantiate template
+ *)
+val type_of_template : Classifier -> Rep_OclType.OclType
+
+(**
+ * Prefixes a type with a given package name.
+ *)
+val prefix_type             : string list -> Rep_OclType.OclType -> Rep_OclType.OclType
+
+(**
+ * Returns the type of a given CollectionPart.
+ *)
+val type_of_CollPart : Rep_OclTerm.CollectionPart -> Rep_OclType.OclType
+
+(**
+ * Converts a string to a OclType including Collections.
+ *)
+val string_to_type   : string list -> Rep_OclType.OclType
+
+(**
+ * Collections of Collections are flattened according to Ocl 2.0 Standard.
+ *)
+val flatten_type  : Rep_OclType.OclType -> Rep_OclType.OclType
+
+
+
+(*****************************************
+ * RETURN OclTerms/CollectionPart        *
+ *****************************************)
+
+
+(**
+ * Prefixes all types in a term with the 
+ * given string list. 
+ *)
+val prefix_expression       : string list -> Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm
+
+(**
+ * Prefix all types in a CollectionPart with
+ * the given string list.
+ *)
+val prefix_collectionpart   : string list -> Rep_OclTerm.CollectionPart -> Rep_OclTerm.CollectionPart
+
+
+(*****************************************
+ * RETURN operation                      *
+ *****************************************)
+
+(**
+ * Find an operation in a list of operations.
+ *)
+val find_operation : string -> operation list -> operation
+
+(** 
+ * Find an attribute in a list of attributes.
+ *)
+val find_attribute : string -> attribute list -> attribute
+
+(** OBSOLETE **)
+val operations_of       : Classifier -> operation list
+
+(**
+ * Returns the preconditions of an operation.
+ *)
+val precondition_of_op  : operation -> (string option * Rep_OclTerm.OclTerm) list
+
+(**
+ * Returns the postconditions of an operation.
+ *)
+val postcondition_of_op : operation -> (string option * Rep_OclTerm.OclTerm) list
+
+(**
+ * Returns the invariants of an operation.
+ *)
+val invariant_of        : Classifier -> (string option * Rep_OclTerm.OclTerm) list
+
+(**
+ * Returns the body of an operation.
+ *)
+val body_of_op          : operation -> (string option * Rep_OclTerm.OclTerm) list
+
+(**
+ * Returns the arguments of an operation.
+ *)
+val arguments_of_op     : operation -> (string * Rep_OclType.OclType) list
+
+(**
+ * Returns the result type of an operation.
+ *)
+val result_of_op        : operation -> Rep_OclType.OclType
+
+(**
+ * Returns the name (string) of an operation.
+ *)
+val name_of_op          : operation -> string
+
+(**
+ * TODO: Description
+ *)
+val mangled_name_of_op  : operation -> string
+
+(**
+ * TODO: Description (OBSOLETE?)
+ *)
+val operation_of        : Classifier list -> Rep_OclType.Path -> operation option
+
+(**
+ * Update an operation with new preconditions.
+ *)
+val update_precondition   : (string option * Rep_OclTerm.OclTerm) list -> 
+                            operation ->  operation
+
+(** 
+ * Update an operation with new postconditions.
+ *)
+val update_postcondition  : (string option * Rep_OclTerm.OclTerm) list -> 
+                            operation ->  operation
+
+(*****************************************
+ * RETURN signature                      *
+ *****************************************)
+
+(** 
+ * Prefixes all types in the signature with a 
+ * given string list.
+ *)
+val prefix_signature        : string list -> (string * Rep_OclType.OclType) list -> (string * Rep_OclType.OclType) list
+
+
+
+(*****************************************
+ * RETURN attribute                      *
+ *****************************************)
+val attributes_of     : Classifier -> attribute list
+
+(*****************************************
+ * RETURN associationend                 *
+ *****************************************)
+
+(**
+ * TODO: Description
+ *)
+val associationends_of: association list -> Classifier -> associationend list 
+
+(** 
+ * Returns ends of an association.
+ *)
+val aends_of_association: association -> associationend list
+
+(**
+ * returns all associationends belonging to associationPath, excluding the 
+ * associationend at source.
+ * @params {source,associations,associationPath}
+ *)
+val oppositeAendsOfAssociation: Rep_OclType.OclType -> association list -> 
+                                Rep_OclType.Path -> associationend list
+(**
+ * Does the opposite of oppositeAendsOfAssociation above. Returns only the 
+ * associationends belonging to source.
+ * @params {source,associations,associationPath}
+ *)
+val incomingAendsOfAssociation:  Rep_OclType.OclType -> association list -> 
+                                 Rep_OclType.Path -> associationend list
+
+(*****************************************
+ * RETURN association                    *
+ *****************************************)
+
+
+(*****************************************
+ * RETURN Path/string                    *
+ *****************************************)
+
+(**
+ * Returns the name of the classifier.
+ *)
+val name_of              : Classifier -> Rep_OclType.Path 
+
+(** 
+ * Returns the thy_name of a classifer.
+ *)
+val thy_name_of       : Classifier -> string
+
+(** 
+ * Returns one of the parents from the classifier.
+ *)
+val parent_name_of       : Classifier -> Rep_OclType.Path  
+
+(**
+ * Returns the name of the package.
+ *)
+val package_of           : Classifier -> Rep_OclType.Path 
+
+(** 
+ * Returns the name of the package from the
+ * parent class.
+ *)
+val parent_package_of    : Classifier -> Rep_OclType.Path  
+
+(**
+ * Returns the name of the class without the first package part.
+ *)
+val real_path            : Rep_OclType.Path -> Rep_OclType.Path 
+
+(** 
+ * Returns the last part (last string in path) of 
+ * the name of the classifier.
+ *)
+val short_name_of : Classifier -> string 
+
+(**
+ * Returns the last part (last string in path) of the name
+ * of the parent of the classifier.
+ *)
+val short_parent_name_of : Classifier -> string 
+
+(**
+ * Returns the types of the interfaces from 
+ * the classifier.
+ *)
+val parent_interfaces_of : Classifier -> Rep_OclType.OclType list
+
+(**
+ * Returns the names of the interfaces from the
+ * parents.
+ *)
+val parent_interface_names_of : Classifier -> Rep_OclType.Path list
+
+(** 
+ * Returns paths of the associations of a classifier.
+ *)
+val associations_of   : Classifier -> Rep_OclType.Path list 
+
+(** 
+ * Path of the association.
+ *)
+val path_of_association: association -> Rep_OclType.Path
+
+(** 
+ * Name of the association.
+ *)
+val name_of_association: association -> Rep_OclType.Path
+
+(**
+ * returns the association this association end belongs to.
+ * @params {aend}
+ * @param aend association end
+ * @return the path of the enclosing association
+ *)
+val association_of_aend : associationend -> Rep_OclType.Path
+
+(**
+ * returns the name of the association end.  The name of the association
+ * end is the last part of the association end's path.
+ * @params {aend}
+ * @param aend association end
+ * @return name of the association end as string.
+ *)
+val name_of_aend   : associationend -> string
+
+(** 
+ * Return the associationend as path
+ *)
+val name_of_ae          : associationend -> Rep_OclType.Path
+
+(**
+ * returns the path of an association end. The path of an association end
+ * is <path_of_association>@[<name_of_aend>].
+ * @params {aend}
+ * @param aend association end
+ * @return path of association end
+ *)
+val path_of_aend: associationend -> Rep_OclType.Path
+
+(**
+ * TODO: Description
+ *)
+val role_of_aend   : associationend -> string
+
+(**
+ * Get the stereotypes of a classifier.
+ *)
+val stereotypes_of      : Classifier -> string list
+
+(** 
+ * Convert Path(string list) into a string.
+ *)
+val string_of_path      : Rep_OclType.Path -> string    
+
+(**
+ * TODO: Description
+ *)
+val short_name_of_path  : Rep_OclType.Path -> string    
+
+(**
+ * Returns all parents of a classifier. 
+ *)
+val parents_of          : Classifier -> Classifier list -> Rep_OclType.Path list
+
+
+(*****************************************
+ * RETURN activity_graphs                *
+ *****************************************)
+
+(** 
+ * TODO: Description
+ *)
+val activity_graphs_of: Classifier -> Rep_ActivityGraph.ActivityGraph list 
+
+(*****************************************
+ * RETURN bool                           *
+ *****************************************)
+(**
+ * Are two types equal?
+ *)
+val type_equals         : Rep_OclType.OclType -> Rep_OclType.OclType -> bool
+
 (** 
  * Type a collection type?
  *)
@@ -186,171 +598,11 @@ val is_visible_op       : operation -> bool
  *)
 val is_visible_attr     : attribute -> bool
 
-(**
- * RETURN TYPES
- *)
 
-(**
- * Returns the type of a classifier.
- *)
-val type_of       : Classifier -> Rep_OclType.OclType 
-
-(**
- * Collections of Collections are flattened according to Ocl 2.0 Standard.
- *)
-val flatten_type  : Rep_OclType.OclType -> Rep_OclType.OclType
-
-(** 
- * Returns the type of a given term.
- *)
-val type_of_term  : Rep_OclTerm.OclTerm -> Rep_OclType.OclType
-
-(**
- * Returns the type of a given CollectionPart.
- *)
-val type_of_CollPart : Rep_OclTerm.CollectionPart -> Rep_OclType.OclType
-
-
-
-
-(**
- * CLASSIFIERS 
- *)
-val name_of       : Classifier -> Rep_OclType.Path 
-val package_of    : Classifier -> Rep_OclType.Path
-val short_name_of : Classifier -> string 
-
-
-(**
- * PARENTS 
- *)
-val parent_name_of       : Classifier -> Rep_OclType.Path 
-val parent_interface_names_of : Classifier -> Rep_OclType.Path list
-val parent_package_of    : Classifier -> Rep_OclType.Path 
-val short_parent_name_of : Classifier -> string 
-val parent_interfaces_of : Classifier -> Rep_OclType.OclType list
-val type_of_parent       : Classifier -> Rep_OclType.OclType
-
-
-(**
- * OPERATIONS
- *)
-
-(**
- * Find an operation in a list of operations.
- *)
-val find_operation : string -> operation list -> operation
-
-(** 
- * Find an attribute in a list of attributes.
- *)
-val find_attribute : string -> attribute list -> attribute
-
-
-(**
- * PATHS
- *)
-val prefix_type             : string list -> Rep_OclType.OclType -> Rep_OclType.OclType
-val prefix_expression       : string list -> Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm
-val prefix_signature        : string list -> (string * Rep_OclType.OclType) list -> (string * Rep_OclType.OclType) list
-val prefix_collectionpart   : string list -> Rep_OclTerm.CollectionPart -> Rep_OclTerm.CollectionPart
-
-
-
-
-val thy_name_of       : Classifier -> string
-val attributes_of     : Classifier -> attribute list
-val associationends_of: association list -> Classifier -> associationend list 
-val associations_of   : Classifier -> Rep_OclType.Path list 
-val path_of_association: association -> Rep_OclType.Path
-val name_of_association: association -> Rep_OclType.Path
-val aends_of_association: association -> associationend list
-val role_of_aend   : associationend -> string
-(**
- * returns the type of the classifier this association end belongs to.
- * @params {aend}
- * @param aend association end
- * @return type of the classifier at the association end
- *)
-val type_of_aend   : associationend -> Rep_OclType.OclType
-(**
- * returns the association this association end belongs to.
- * @params {aend}
- * @param aend association end
- * @return the path of the enclosing association
- *)
-val association_of_aend : associationend -> Rep_OclType.Path
-(**
- * returns the name of the association end.  The name of the association
- * end is the last part of the association end's path.
- * @params {aend}
- * @param aend association end
- * @return name of the association end as string.
- *)
-val name_of_aend   : associationend -> string
-(**
- * returns the path of an association end. The path of an association end
- * is <path_of_association>@[<name_of_aend>].
- * @params {aend}
- * @param aend association end
- * @return path of association end
- *)
-val path_of_aend: associationend -> Rep_OclType.Path
-
-
-(**
- * returns all associationends belonging to associationPath, excluding the 
- * associationend at source.
- * @params {source,associations,associationPath}
- *)
-val oppositeAendsOfAssociation: Rep_OclType.OclType -> association list -> 
-                                Rep_OclType.Path -> associationend list
-(**
- * Does the opposite of oppositeAendsOfAssociation above. Returns only the 
- * associationends belonging to source.
- * @params {source,associations,associationPath}
- *)
-val incomingAendsOfAssociation:  Rep_OclType.OclType -> association list -> 
-                                 Rep_OclType.Path -> associationend list
-
-val operations_of     : Classifier -> operation list
-val invariant_of      : Classifier -> (string option * Rep_OclTerm.OclTerm) list
-val stereotypes_of    : Classifier -> string list
-val string_of_path    : Rep_OclType.Path -> string    
-val short_name_of_path : Rep_OclType.Path -> string    
-val activity_graphs_of: Classifier -> Rep_ActivityGraph.ActivityGraph list 
-
-val arguments_of_op     : operation -> (string * Rep_OclType.OclType) list
-val precondition_of_op  : operation -> (string option * Rep_OclTerm.OclTerm) list
-val body_of_op  : operation -> (string option * Rep_OclTerm.OclTerm) list
-val result_of_op        : operation -> Rep_OclType.OclType
-val postcondition_of_op : operation -> (string option * Rep_OclTerm.OclTerm) list
-val name_of_op          : operation -> string
-val name_of_ae          : associationend -> Rep_OclType.Path
-val mangled_name_of_op          : operation -> string
-
-val class_of            : Rep_OclType.Path -> Classifier list -> Classifier
-val parent_of           : Classifier -> Classifier list -> Classifier
-val parents_of          : Classifier -> Classifier list -> Rep_OclType.Path list
-val operation_of        : Classifier list -> Rep_OclType.Path -> operation option
-val topsort_cl          : Classifier list -> Classifier list
-val connected_classifiers_of : association list -> Classifier -> Classifier list -> Classifier list
-
-val aend_to_attr_type : associationend -> Rep_OclType.OclType
 
 
 (** update model **)
-val update_thyname      : string -> Classifier -> Classifier
-val update_invariant    : (string option * Rep_OclTerm.OclTerm) list -> 
-                          Classifier -> Classifier
-val update_operations   : operation list -> Classifier -> Classifier 
-val update_precondition   : (string option * Rep_OclTerm.OclTerm) list -> 
-                            operation ->  operation
-val update_postcondition  : (string option * Rep_OclTerm.OclTerm) list -> 
-                            operation ->  operation
-val addInvariant : constraint -> Classifier -> Classifier
-val addInvariants: constraint list -> Classifier -> Classifier
-val addOperation : operation  -> Classifier -> Classifier
+
 
 (* visibility *)
 val visibility_of : Classifier -> Visibility
@@ -1772,8 +2024,64 @@ and prefix_expression ext_path (Variable (s,t)) = (Variable (s,t))
 	(Iterate (prefixed_vars,acc_var_name,prefix_acc_type,acc_var_term,sterm,stype,bterm,btype,restype))
     end
 
+fun real_path ([]) = []
+  | real_path ([x]) = []
+  | real_path (x::tail) = x::real_path tail
 
+fun string_to_type ["Integer"] = Integer
+  | string_to_type ["Boolean"] = Boolean
+  | string_to_type ["Real"] = Real
+  | string_to_type ["OclAny"] = OclAny
+  | string_to_type ["DummyT"] = DummyT
+  | string_to_type ["String"] = String
+  | string_to_type ["OclVoid"] = OclVoid
+  | string_to_type (("oclLib")::tail) = string_to_type tail
+  | string_to_type [set] = 
+    if (List.exists (fn a => if (a = (#"(")) then true else false) (String.explode set)) then
+	(* set *)
+	let
+	    fun string_to_cons "Set" typ = Set(typ)
+	      | string_to_cons "Bag" typ = Bag(typ)
+	      | string_to_cons "Collection" typ = Collection (typ)
+	      | string_to_cons "OrderedSet" typ = OrderedSet (typ)
+	      | string_to_cons "Sequence" typ = Sequence (typ)	
+	    fun parse_string c ([]) = ([],[])
+	      | parse_string c (h::tail) =
+		if (c = h) then
+		    ([],h::tail)
+		else
+ 		    (h::(#1 (parse_string c tail)),(#2 (parse_string c tail)))
+	    val tokens = parse_string (#"(") (String.explode set)
+	    val cons = (#1 tokens)
+	    (* delete first "(" and last ")" element *)
+	    val tail = List.tl (real_path (#2 tokens))
+	    val _ = TextIO.output(TextIO.stdOut,"tail "^ (String.implode tail) ^ "\n")
 
+	in
+	    string_to_cons (String.implode cons) (string_to_type ([String.implode tail]))
+	end
+    else
+	Classifier ([set])
+  | string_to_type list = Classifier (list)
 
+fun type_of_template (T as Template{classifier,parameter}) =
+    (case (name_of classifier) of
+	["Collection(T)"] => Collection (parameter)
+      | ["Set(T)"] => Set (parameter)
+      | ["OrderedSet(T)"] => OrderedSet (parameter)
+      | ["Bag(T)"] => Bag (parameter)
+      | ["Sequence(T)"] => Sequence (parameter)
+    )
+  | type_of_template x = raise TemplateError ("type_of_template: Only Template Classifiers can be used.\n")
+
+fun type_equals Integer (Classifier ([OclLibPackage,"Real"])) = true
+  | type_equals (Classifier ([OclLibPackage,"Integer"])) Real = true
+  | type_equals _ OclAny = true
+  | type_equals _ (Classifier ([OclLibPackage,"OclAny"])) = true
+  | type_equals x y = 
+    if (x = y) then
+	true
+    else
+	false
 
 end
