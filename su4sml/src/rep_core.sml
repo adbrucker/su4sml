@@ -147,25 +147,116 @@ datatype Classifier =
 
 type transform_model = (Classifier list * association list)
 
-val OclAnyC : Classifier
 
+(** 
+ * RETURN transform_model
+ *)
 val joinModel      : transform_model -> transform_model -> transform_model
-
-val normalize      : association list -> Classifier -> Classifier
-val normalize_init : Classifier -> Classifier
 val normalize_ext  : transform_model -> transform_model
 
-val name_of       : Classifier -> Rep_OclType.Path 
+(**
+ * RETURN Classifier 
+ *)
+val OclAnyC : Classifier
+val normalize      : association list -> Classifier -> Classifier
+val normalize_init : Classifier -> Classifier
+
+
+(**
+ * RETURN BOOL
+ *)
+
+(** 
+ * Checks if a type is a collection type.
+ *)
+(** 
+ * Type a collection type?
+ *)
+val isColl_Type      : Rep_OclType.OclType -> bool
+(**
+ * Is the classifier visible?
+ *)
+val is_visible_cl       : Classifier -> bool
+(** 
+ * Is the operation visible?
+ *)
+val is_visible_op       : operation -> bool
+(**
+ * Is the attribute visible?
+ *)
+val is_visible_attr     : attribute -> bool
+
+(**
+ * RETURN TYPES
+ *)
+
+(**
+ * Returns the type of a classifier.
+ *)
 val type_of       : Classifier -> Rep_OclType.OclType 
+
+(**
+ * Collections of Collections are flattened according to Ocl 2.0 Standard.
+ *)
+val flatten_type  : Rep_OclType.OclType -> Rep_OclType.OclType
+
+(** 
+ * Returns the type of a given term.
+ *)
+val type_of_term  : Rep_OclTerm.OclTerm -> Rep_OclType.OclType
+
+(**
+ * Returns the type of a given CollectionPart.
+ *)
+val type_of_CollPart : Rep_OclTerm.CollectionPart -> Rep_OclType.OclType
+
+
+
+
+(**
+ * CLASSIFIERS 
+ *)
+val name_of       : Classifier -> Rep_OclType.Path 
 val package_of    : Classifier -> Rep_OclType.Path
 val short_name_of : Classifier -> string 
-val visibility_of : Classifier -> Visibility
 
+
+(**
+ * PARENTS 
+ *)
 val parent_name_of       : Classifier -> Rep_OclType.Path 
 val parent_interface_names_of : Classifier -> Rep_OclType.Path list
 val parent_package_of    : Classifier -> Rep_OclType.Path 
 val short_parent_name_of : Classifier -> string 
 val parent_interfaces_of : Classifier -> Rep_OclType.OclType list
+val type_of_parent       : Classifier -> Rep_OclType.OclType
+
+
+(**
+ * OPERATIONS
+ *)
+
+(**
+ * Find an operation in a list of operations.
+ *)
+val find_operation : string -> operation list -> operation
+
+(** 
+ * Find an attribute in a list of attributes.
+ *)
+val find_attribute : string -> attribute list -> attribute
+
+
+(**
+ * PATHS
+ *)
+val prefix_type             : string list -> Rep_OclType.OclType -> Rep_OclType.OclType
+val prefix_expression       : string list -> Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm
+val prefix_signature        : string list -> (string * Rep_OclType.OclType) list -> (string * Rep_OclType.OclType) list
+val prefix_collectionpart   : string list -> Rep_OclTerm.CollectionPart -> Rep_OclTerm.CollectionPart
+
+
+
 
 val thy_name_of       : Classifier -> string
 val attributes_of     : Classifier -> attribute list
@@ -247,6 +338,8 @@ val connected_classifiers_of : association list -> Classifier -> Classifier list
 
 val aend_to_attr_type : associationend -> Rep_OclType.OclType
 
+
+(** update model **)
 val update_thyname      : string -> Classifier -> Classifier
 val update_invariant    : (string option * Rep_OclTerm.OclTerm) list -> 
                           Classifier -> Classifier
@@ -255,23 +348,23 @@ val update_precondition   : (string option * Rep_OclTerm.OclTerm) list ->
                             operation ->  operation
 val update_postcondition  : (string option * Rep_OclTerm.OclTerm) list -> 
                             operation ->  operation
-
 val addInvariant : constraint -> Classifier -> Classifier
 val addInvariants: constraint list -> Classifier -> Classifier
 val addOperation : operation  -> Classifier -> Classifier
 
 (* visibility *)
-val is_visible_cl       : Classifier -> bool
-val is_visible_op       : operation -> bool
-val is_visible_attr     : attribute -> bool
+val visibility_of : Classifier -> Visibility
 
 exception InvalidArguments of string
-  
+exception TemplateError of string 
+
+
 end
 
 structure Rep_Core :  REP_CORE = 
 struct
 open library
+open Rep_OclTerm
 open Rep_OclType
 open XMI_DataTypes
 
@@ -383,6 +476,7 @@ datatype Classifier =
 type transform_model = (Classifier list * association list)
 
 exception InvalidArguments of string
+exception TemplateError of string 
 
 (* convert an association end into the corresponding collection type *)
 fun aend_to_attr_type ({name,aend_type,multiplicity,
@@ -1551,5 +1645,135 @@ fun addOperation oper (Class {name, parent, attributes, operations,
   | addOperation oper (Template {parameter, classifier}) 
     = Template { parameter=parameter, 
                  classifier=addOperation oper classifier}
+
+
+
+(** type operations **)
+fun flatten_type (Set(Set(t))) = Set(t)
+  | flatten_type (Set(Collection(t))) = Set(t)
+  | flatten_type (Set(Bag(t))) = Set(t)
+  | flatten_type (Set(OrderedSet(t))) = Set(t)
+  | flatten_type (Set(Sequence(t))) = Set(t)
+
+  | flatten_type (Collection(Set(t))) = Collection(t)
+  | flatten_type (Collection(Bag(t))) = Collection(t)
+  | flatten_type (Collection(OrderedSet(t))) = Collection(t)
+  | flatten_type (Collection(Sequence(t))) = Collection(t)
+  | flatten_type (Collection(Collection(t))) = Collection(t)
+
+  | flatten_type (OrderedSet(Collection(t))) = OrderedSet(t)
+  | flatten_type (OrderedSet(Bag(t))) = OrderedSet(t)
+  | flatten_type (OrderedSet(OrderedSet(t))) = OrderedSet(t)
+  | flatten_type (OrderedSet(Sequence(t))) = OrderedSet(t)
+  | flatten_type (OrderedSet(Set(t))) = OrderedSet(t)
+
+  | flatten_type (Bag(Collection(t))) = Bag(t)
+  | flatten_type (Bag(Bag(t))) = Bag(t)
+  | flatten_type (Bag(OrderedSet(t))) = Bag(t)
+  | flatten_type (Bag(Sequence(t))) = Bag(t)
+  | flatten_type (Bag(Set(t))) = Bag(t)
+
+  | flatten_type (Sequence(Collection(t))) = Sequence(t) 
+  | flatten_type (Sequence(Bag(t))) = Sequence(t)
+  | flatten_type (Sequence(OrderedSet(t))) = Sequence(t)
+  | flatten_type (Sequence(Sequence(t))) = Sequence(t)
+  | flatten_type (Sequence(Set(t))) = Sequence(t)
+
+  | flatten_type typ = typ
+
+fun type_of_term (Literal (s,typ)) = typ
+  | type_of_term (AttributeCall (t,typ,p,res_typ)) = res_typ
+  | type_of_term (AssociationEndCall (t,typ,p,res_typ)) = res_typ
+  | type_of_term (OperationCall (t,typ,p,l,res_typ)) = res_typ
+  | type_of_term (Variable (s,typ)) = typ
+  | type_of_term (CollectionLiteral (set,typ)) = typ
+  | type_of_term (Iterator (_,_,_,_,_,_,res_typ)) = res_typ
+  | type_of_term (If(_,_,_,_,_,_,res_typ)) = res_typ
+  | type_of_term (OperationWithType (_,_,_,_,res_typ)) = res_typ
+  | type_of_term (Let (_,_,_,_,_,res_typ)) = res_typ
+  | type_of_term (Iterate (_,_,_,_,_,_,_,_,res_typ)) = res_typ
+  | type_of_term (Predicate (_,_,_,_)) = Boolean
+
+fun type_of_CollPart (CollectionItem (term,typ)) = typ
+  | type_of_CollPart (CollectionRange (term1,term2,typ)) = typ
+
+fun isColl_Type (Set(x)) = true
+  | isColl_Type (Sequence(x)) = true
+  | isColl_Type (OrderedSet(x)) = true
+  | isColl_Type (Bag(x)) = true
+  | isColl_Type (Collection(x)) = true
+  | isColl_Type _ = false
+
+fun find_operation op_name (list:operation list) = List.hd (List.filter (fn a => (#name a) = op_name) list)
+
+fun find_attribute att_name (list:attribute list) = List.hd (List.filter (fn a => (#name a) = att_name) list)
+
+fun type_of_parent (Class {parent,...}) = 
+    let
+	val _ = trace development ("type_of_parent : Class{parent,...} \n")
+    in
+	Option.valOf(parent)
+    end
+  | type_of_parent (AssociationClass {parent,...}) = 
+    let
+	val _ = trace development ("type_of_parent : AssociationClass{parent,...} \n")
+    in
+	Option.valOf(parent)
+    end
+  | type_of_parent (Primitive {parent, ...}) = 	Option.valOf(parent)
+  | type_of_parent (Interface {parents, ...}) = (List.hd parents)
+  | type_of_parent (Template{classifier,...}) = raise TemplateError ("Parent of a class can never be of type template(x).\n")
+
+fun prefix_type [] typ = typ
+  | prefix_type h (Classifier (path)) = Classifier (h@[List.last path])
+  | prefix_type h (Set (t)) = Set (prefix_type h t)
+  | prefix_type h (Collection (t)) = Collection (prefix_type h t)
+  | prefix_type h (OrderedSet (t)) = OrderedSet (prefix_type h t)
+  | prefix_type h (Sequence (t)) = Sequence (prefix_type h t)
+  | prefix_type h (Bag (t)) = Bag (prefix_type h t)
+  | prefix_type h  basic_type = basic_type
+
+fun prefix_signature ext_path [] = []
+  | prefix_signature ext_path ((s,typ)::tail) = 
+    (s,prefix_type ext_path typ)::(prefix_signature ext_path tail)
+
+fun prefix_collectionpart ext_path (CollectionItem (term,typ)) = 
+    (CollectionItem (prefix_expression ext_path term,typ))
+  | prefix_collectionpart ext_path (CollectionRange (first_term,last_term,typ)) =
+    (CollectionRange (prefix_expression ext_path first_term,prefix_expression ext_path last_term,typ))
+
+
+(* RETURN: OclTerm *)
+and prefix_expression ext_path (Variable (s,t)) = (Variable (s,t))
+  | prefix_expression ext_path (Literal(s,t)) = Literal (s,t)
+  | prefix_expression ext_path (AttributeCall (sterm,stype,path,res_typ)) =
+    (AttributeCall (prefix_expression ext_path sterm,stype,path,res_typ))
+  | prefix_expression ext_path (OperationCall (sterm,stype,path,args,res_typ)) =
+    (OperationCall (prefix_expression ext_path sterm,stype,path,args,res_typ))
+  | prefix_expression ext_path (Iterator (name,iter_vars,sterm,styp,expr,expr_typ,res_typ)) =
+    let
+	val prefixed_vars = List.map (fn a => (#1 a,prefix_type ext_path (#2 a))) iter_vars
+    in
+	Iterator (name,prefixed_vars,prefix_expression ext_path sterm,styp,prefix_expression ext_path expr,expr_typ,res_typ)
+    end
+  | prefix_expression ext_path (Let (var_name,var_type,rhs_term,rhs_type,expr,expr_type)) =
+    (Let (var_name,prefix_type ext_path var_type,rhs_term,rhs_type,prefix_expression ext_path expr,expr_type))
+  | prefix_expression ext_path (If (cond,cond_type,then_e,then_type,else_e,else_type,res_type)) = 
+    (If (prefix_expression ext_path cond,cond_type,prefix_expression ext_path then_e,then_type,prefix_expression ext_path else_e,else_type,res_type))
+  | prefix_expression ext_path (OperationWithType (sterm,stype,para_name,para_type,res_type)) = 
+    (OperationWithType (prefix_expression ext_path sterm,stype,para_name,para_type,res_type)) 
+  | prefix_expression ext_path (CollectionLiteral (coll_part_list,typ)) =
+    (CollectionLiteral (List.map (prefix_collectionpart ext_path) coll_part_list,typ))
+  | prefix_expression ext_path (Iterate (iter_vars,acc_var_name,acc_var_type,acc_var_term,sterm,stype,bterm,btype,restype)) = 
+    let
+	val prefixed_vars = List.map (fn a => (#1 a,prefix_type ext_path (#2 a))) iter_vars
+	val prefix_acc_type = prefix_type ext_path acc_var_type 
+    in
+	(Iterate (prefixed_vars,acc_var_name,prefix_acc_type,acc_var_term,sterm,stype,bterm,btype,restype))
+    end
+
+
+
+
 
 end

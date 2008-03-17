@@ -83,7 +83,7 @@ fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) =
 						  expression_type}) =
     Rep_OclTerm.AttributeCall (transform_expression t source,
 			       find_classifier_type t (XMI.expression_type_of source),
-			       find_attribute t referredAttribute,
+			       Xmi_IDTable.find_attribute t referredAttribute,
 			       find_classifier_type t expression_type)
   | transform_expression t (XMI.OperationCallExp {source,arguments,
 						  referredOperation,
@@ -93,7 +93,7 @@ fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) =
     in
 	Rep_OclTerm.OperationCall (transform_expression t source,
 			           find_classifier_type t (XMI.expression_type_of source),
-			           find_operation t referredOperation,
+			           Xmi_IDTable.find_operation t referredOperation,
 			           ListPair.zip (arglist, argtyplist),
 			           find_classifier_type t expression_type)
     end
@@ -372,7 +372,7 @@ fun transform_guard t (XMI.mk_Guard g) =
     end
 
 fun transform_event t (XMI.CallEvent ev) =
-    Rep.CallEvent (find_operation t (#operation ev),
+    Rep.CallEvent (Xmi_IDTable.find_operation t (#operation ev),
 		   map (transform_parameter t) (#parameter ev))
   | transform_event t (XMI.SignalEvent ev) =
     Rep.SignalEvent (map (transform_parameter t) (#parameter ev))
