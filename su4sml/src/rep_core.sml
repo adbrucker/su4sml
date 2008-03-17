@@ -2095,12 +2095,14 @@ fun type_of_parent (Class {parent,...}) =
 	val _ = trace development ("type_of_parent : Class{parent,...} \n")
     in
 	Option.valOf(parent)
+	handle Option.Option => OclAny
     end
   | type_of_parent (AssociationClass {parent,...}) = 
     let
 	val _ = trace development ("type_of_parent : AssociationClass{parent,...} \n")
     in
-	Option.valOf(parent)
+	Option.valOf(parent) 
+	handle Option.Option => OclAny
     end
   | type_of_parent (Primitive {parent, ...}) = 	Option.valOf(parent)
   | type_of_parent (Interface {parents, ...}) = (List.hd parents)
@@ -2688,7 +2690,7 @@ fun get_overloaded_attrs_or_assocends class attr_name ([],_) = raise NoModelRefe
        val _ = map (trace function_arguments o 
 		    (fn {name,...} => string_of_path name ^"\n")) associations
        val attrs = attributes_of class
-       val _ = print "attrs: \n"
+       val _ = print "attrs hallo: \n"
        val _ = map (print o (fn {name,...} => name^"\n")) attrs
        val assocends = associationends_of associations class
        val _ = trace low ("assocends:\n")
