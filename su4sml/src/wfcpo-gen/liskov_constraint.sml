@@ -68,13 +68,13 @@ struct
 
 exception WFCPOG_LiskovError of string
 (* su4sml *)
+open library
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType
 open Rep2String
 
 (* oclparser *)
-open Ext_Library
 open ModelImport
 
 (* wfcpo-gen *)

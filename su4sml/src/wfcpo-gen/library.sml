@@ -77,30 +77,8 @@ sig
     val class_has_local_op        : string -> Rep.Model -> Rep_Core.Classifier -> bool
     (** *)
     val class_of_package          : Rep_OclType.Path -> Rep.Model -> Rep_Core.Classifier list
-    (** Get all query operations of a classifier.*)
-    val query_operations_of       : Rep_Core.Classifier -> Rep_Core.operation list
-    (** Get all command operations of a classifier.*)
-    val command_operations_of     : Rep_Core.Classifier -> Rep_Core.operation list
-    (** Get the local operations of a classifier.*)
-    val local_operations_of       : Rep_OclType.Path -> Rep.Model -> Rep_Core.operation list
-    (** Get the redefined/refined operations of a classifier.*)
-    val modified_operations_of    : Rep_OclType.Path -> Rep.Model -> Rep_Core.operation list
-    (** Get all the inherited (without the redefined ones) operations of a classifier.*)
-    val inherited_operations_of   : Rep_OclType.Path -> Rep.Model -> Rep_Core.operation list
-    (** Get all operations of a classifier (for redefined ones the more special is choosen).*)
-    val all_operations_of         : Rep_OclType.Path -> Rep.Model -> Rep_Core.operation list
-    (** Get all creators of a classifier.*)
-    val creation_operations_of    : Rep_OclType.Path -> Rep.Model -> Rep_Core.operation list
-    (** Get all destroying operations of a classifier.*)
-    val destruction_operations_of : Rep_OclType.Path -> Rep.Model -> Rep_Core.operation list
-    (** Get all public operations of a classifier.*)
-    val public_operations_of      : Rep_OclType.Path -> Rep.Model -> Rep_Core.operation list
-    (** Get all private operations of a classifier.*)
-    val private_operations_of     : Rep_OclType.Path -> Rep.Model -> Rep_Core.operation list
-    (** Get all package operations of a classifier.*)
-    val package_operations_of     : Rep_OclType.Path -> Rep.Model -> Rep_Core.operation list
-    (** Get all protected operations of a classifier.*)
-    val protected_operations_of   : Rep_OclType.Path -> Rep.Model -> Rep_Core.operation list
+
+
 
 
     (** Get the class his children *)
@@ -128,6 +106,7 @@ structure WFCPOG_Library:WFCPOG_LIBRARY =
 struct
 
 (* SU4SML *)
+open library
 open Rep_Core
 open Rep 
 open Rep_OclType
@@ -136,7 +115,6 @@ open OclLibrary
 open Rep2String
 open XMI_DataTypes
 (* OclParser *)
-open Ext_Library
 
 (* WFCPO-Gen *)
 open WFCPO_Naming
@@ -184,13 +162,7 @@ fun disjugate_terms [] = raise WFCPOG_LibraryError("Empty list not disjugateable
     end
 
 (* create normal list from a list of options type *)
-fun optlist2list [] = []
-  | optlist2list (h::tail) =
-    (
-     case h  of
-	 NONE => optlist2list (tail)
-       | SOME (e) => (e::(optlist2list tail))
-    )
+
 
 fun filter_out_none [] = []
   | filter_out_none (NONE::tail) = filter_out_none tail
@@ -198,55 +170,9 @@ fun filter_out_none [] = []
 
 
 
-(* check whether two given signatures match each other from the type point of view *)
-fun sig_conforms_to [] [] model = true
-  | sig_conforms_to [] list model = 
-    let
-	val result = false
-    in
-	result
-    end
-  | sig_conforms_to list [] model = 
-    let
-	val result = false 
-    in
-	result
-    end 
-  | sig_conforms_to [(s1:string,sig_sub:OclType)] [(s2:string,sig_super:OclType)] model = 
-    let
-	val result = if (conforms_to (sig_sub) (sig_super) model) then 
-			 true 
-		     else 
-			 false    
-    in
-	result
-    end
-  | sig_conforms_to ((s1:string,sig_sub:OclType)::tail1)  ((s2:string,sig_super:OclType)::tail2) model =
-    let
-	val result = if (s2 = s1 andalso (conforms_to (sig_sub) (sig_super) model)) then 
-			 sig_conforms_to tail1 tail2 model
-		     else 
-			 false   
-    in
-	result 
-    end
 
-fun query_operations_of (Class{operations,...}) = List.filter (fn a => (#isQuery a)) operations
-  | query_operations_of (AssociationClass{operations,...}) = List.filter (fn a => (#isQuery a)) operations
-  | query_operations_of (Primitive{operations,...}) = List.filter (fn a => (#isQuery a)) operations
-  | query_operations_of (Interface{operations,...}) = List.filter (fn a => (#isQuery a)) operations
-  | query_operations_of x = []
 
-fun command_operations_of (Class{operations,...}) = List.filter (fn a => not (#isQuery a)) operations
-  | command_operations_of (AssociationClass{operations,...}) = List.filter (fn a => not (#isQuery a)) operations
-  | command_operations_of (Primitive{operations,...}) = List.filter (fn a => not (#isQuery a)) operations
-  | command_operations_of (Interface{operations,...}) = List.filter (fn a => not (#isQuery a)) operations
-  | command_operations_of x = []
 
-fun same_op (sub_op:operation) (super_op:operation) (model:Model) =
-    if ((name_of_op sub_op = name_of_op super_op ) andalso (sig_conforms_to (arguments_of_op sub_op) (arguments_of_op super_op) model))
-    then true
-    else false
 
 
 fun class_contains_op oper model classifier = 
@@ -261,12 +187,6 @@ fun class_contains_op oper model classifier =
 
 
 (* get all local operations of a classifier *)
-and local_operations_of c_name model = 
-    let
-	val class = class_of_type (path_to_type c_name) model
-    in 
-	(operations_of class)
-    end
 
 fun class_has_local_op name model classifier = 
     let
@@ -276,111 +196,9 @@ fun class_has_local_op name model classifier =
     end
 
 
-fun embed_local_operation oper [] model = [oper]
-  | embed_local_operation lop ((oper:operation)::iops) model = 
-    if (same_op lop oper model)
-    then (lop::iops)
-    else (oper)::(embed_local_operation lop iops model) 
-
-(* embed local operations to the inherited operations *)
-fun embed_local_operations [] iops model = iops
-  | embed_local_operations x [] model = x
-  | embed_local_operations (h::tail) iops model = 
-    let
-	val tmp = embed_local_operation h iops model
-    in
-	(embed_local_operations tail tmp model)
-    end
-
-(* get all inherited operations of a classifier, without the local operations *)
-fun inherited_operations_of c_name (model as (clist,alist)) =
-    let
-	val class = class_of_type (path_to_type c_name) model
-	val _ = trace 50 ("inh ops 1: classifier = " ^ (classifier2string class) ^ "\n")
-	val parents = parents_of class (#1 model)
-	val _ = trace 50 ("inh ops 2\n")
-	val c_parents = List.map (fn a => class_of_type (path_to_type a) model) parents
-	val _ = trace 50 ("inh ops 3\n")
-	val ops_of_par = (List.map (operations_of) c_parents)
-	val _ = trace 50 ("inh ops 4\n")
-    in
-	List.foldr (fn (a,b) => embed_local_operations a b model) (List.last (ops_of_par)) ops_of_par
-    end
-		      
-(* get absolutelly all operations of a classifier. In case of a functions which occurs serveral times in the inheritance tree, the must specified function is listed. *)
-fun all_operations_of c_name model =
-    let 
-	val lo = local_operations_of c_name model
-	val _ = trace 50 ("all ops 1\n")
-	val io = inherited_operations_of c_name model
-	val _ = trace 50 ("all ops 2\n")
-    in
-	embed_local_operations lo io model
-    end
-
-(* get all local operations, which occurs in one of the parent classes at least each time also *)
-fun modified_operations_of c_name model = 
-    let
-	val io = inherited_operations_of c_name model
-	val lo = local_operations_of c_name model
-	fun op_exists (oper:operation) [] = false
-	  | op_exists (oper:operation) ((h:operation)::tail) = if (oper=h) 
-							       then true
-							       else op_exists oper tail
-    in
-	optlist2list (List.map (fn a => if (op_exists a io)
-			  then NONE
-			  else (if  (List.exists (fn b => same_op a b model) io)
-				then SOME(a)
-				else NONE
-			       )) lo) 
-	(* List.concat (List.map (fn a => List.filter (fn b => if (same_op a b model) then false else true) io) lo ) *)
-    end
 
 
-fun creation_operations_of c_name (model:Rep.Model) = 
-    let
-	val oper = all_operations_of c_name model
-	val creators = List.filter (fn a => List.exists (fn b => b = "create") (#stereotypes a)) (oper)
-    in
-	creators
-    end   
 
-fun destruction_operations_of c_name (model:Rep.Model) = 
-    let
-	val oper = all_operations_of c_name model
-	val creators = List.filter (fn a => List.exists (fn b => b = "destroy") (#stereotypes a)) (oper)
-    in
-	creators
-    end   
-
-fun public_operations_of c_name (model:Rep.Model) = 
-    let
-	val ops = all_operations_of c_name model
-    in
-	List.filter (fn a => (#visibility a) = public) ops
-    end
-
-fun private_operations_of c_name (model:Rep.Model) = 
-    let
-	val ops = all_operations_of c_name model
-    in
-	List.filter (fn a => (#visibility a) = private) ops
-    end
-
-fun package_operations_of c_name (model:Rep.Model) = 
-    let
-	val ops = all_operations_of c_name model
-    in
-	List.filter (fn a => (#visibility a) = package) ops
-    end
-
-fun protected_operations_of c_name (model:Rep.Model) = 
-    let
-	val ops = all_operations_of c_name model
-    in
-	List.filter (fn a => (#visibility a) = protected) ops
-    end
 
 
 fun get_operation s classifier model = 

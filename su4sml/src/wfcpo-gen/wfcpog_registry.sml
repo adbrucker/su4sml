@@ -72,7 +72,7 @@ structure LSK_Data = Liskov_Constraint.LSK_Data
 structure TAX_Data = Taxonomy_Constraint.TAX_Data
 structure RFM_Data = Refine_Constraint.RFM_Data
 
-open Ext_Library
+open library
 open WFCPOG
 
 val wfpos = ref ([]:(WFCPOG.wfpo list))

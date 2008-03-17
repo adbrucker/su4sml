@@ -26,13 +26,11 @@ structure Refine_Constraint : REFINE_CONSTRAINT =
 struct
 
 (* su4sml *)
+open library
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType
 open Rep2String
-
-(* ocl-parser *)
-open Ext_Library
 
 (* wfcpo-gen *)
 open WFCPOG_Library
@@ -160,7 +158,7 @@ fun map_types [] fP tP model = []
 	(* relative path of return type *)
 	val new_path = substitute_package fP tP ret_namefC
 	val _ = trace zero ("map_types_5: name of return type: " ^ string_of_path (ret_namefC) ^ "\n")
-	val c1 = class_of (new_path) (#1 model)
+	val c1 = class_of (new_path) (model)
 		 handle _ => 
 			let
 			    val _ = trace exce  ("\n\n#####################################################################\n")
@@ -182,7 +180,7 @@ fun map_types [] fP tP model = []
 			      let
 				  val rel_path = substitute_package fP tP a
 			      in
-				  class_of (rel_path) (#1 model)
+				  class_of (rel_path) (model)
 				  handle _ => 
 					 let
 					     val _ = trace exce  ("\n\n#####################################################################\n")

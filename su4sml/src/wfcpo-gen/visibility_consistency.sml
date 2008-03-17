@@ -51,6 +51,7 @@ structure Visibility_Constraint:VISIBILITY_CONSTRAINT =
 struct
 
 (* su4sml *)
+open library
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType
@@ -58,7 +59,6 @@ open Rep2String
 open XMI_DataTypes
 
 (* oclparser *)
-open Ext_Library
 open ModelImport
 
 (* wfcpo-gen *)
@@ -99,7 +99,7 @@ and is_modificator_conformant modif (Literal(s,typ)) model = true
     andalso is_modificator_conformant modif then_t model
   | is_modificator_conformant modif (AssociationEndCall(src,styp,path,rtyp)) model = 
     let
-	val cl = get_classifier src model
+	val cl = class_of_term src model
 	val att_name = List.last(path)
 	val att = get_attribute att_name cl model
 	val _ = trace 100 ("end is_modificator_conformant")
@@ -111,7 +111,7 @@ and is_modificator_conformant modif (Literal(s,typ)) model = true
   | is_modificator_conformant modif (x as OperationCall(src,styp,path,args,rtyp)) model = 
     let
 	val typ = type_of_term src
-	val cl = get_classifier (Variable("x",typ)) model
+	val cl = class_of_term (Variable("x",typ)) model
 	val op_name = List.last(path)
 	val _ = trace 100 ("OperationCall: " ^ (Ocl2String.ocl2string false x)  ^ "\n")
 	val _ = trace 100 ("Classifier : " ^ Rep2String.classifier2string cl ^ "\n")
@@ -125,7 +125,7 @@ and is_modificator_conformant modif (Literal(s,typ)) model = true
     end
   | is_modificator_conformant modif (x as AttributeCall(src,styp,path,rtyp)) model =
     let
-	val cl = get_classifier src model
+	val cl = class_of_term src model
 	val att_name = List.last(path)
 	val att = get_attribute att_name cl model
 	val _ = trace 100 ("end is_modificator_conformant")
