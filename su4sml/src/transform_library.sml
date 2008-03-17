@@ -34,7 +34,7 @@ val consistencyOclConstraint: Rep.Classifier -> Rep.Classifier ->
  * and role remain the same. The qualifier transformation is not covered, for
  * instance.
  *
- * @params {classifiers,[(oldAssoc,newAssocs)]}
+ * params {classifiers,[(oldAssoc,newAssocs)]}
  * @param classifiers
  * @param oldAssoc the association that has been removed from the model
  * @param newAssocs the associations that have replaced oldAssoc
@@ -51,7 +51,7 @@ val updateAssociationReferences: Rep.Classifier list ->
  * references may need to be updated to
  *     a) pass-through the new classifier
  *     b) retain their meaning (i.e. qualifier split)
- * @params {[association,[(Hike,D1,f1,f2)]],classifiers}
+ * params {[association,[(Hike,D1,f1,f2)]],classifiers}
  * @param oldAssoc the original association with the original types
  * @param newAssoc the new association with the modified types but same
  *                 role names
@@ -122,7 +122,7 @@ val mapCalls: (Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm) ->
               Rep.Classifier list
 
 (**
- * @params {source, sourceRole,(target,targetRole)}
+ * @params source sourceRole (target,targetRole)
  *)
 val binaryAssociations : Rep.Classifier -> string option ->
                          (Rep.Classifier * string option) list -> 
@@ -136,7 +136,7 @@ val binaryAssociations : Rep.Classifier -> string option ->
  * @param aends original associationends at the targets. The returned
  *              associationends. oppRefAends are in the same order as the 
  *              supplied aends and denote the new association ends
- * @returns (binaryAssocs,oppRefAends)
+ * @return (binaryAssocs,oppRefAends)
  *)
 val orderedBinaryAssociations: Rep.Classifier -> Rep.Classifier list -> 
                                Rep.associationend list -> 
