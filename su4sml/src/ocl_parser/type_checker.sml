@@ -316,12 +316,14 @@ and resolve_OclTerm (Literal (s,typ)) model =
 		     (
 		      (
 		       let
-			   val _ = trace low ("\n==> 2-dim Inheritance check: attribute/assocend\n")
+			   val _ = trace low ("\n==> 2-dim Inheritance check: ma attribute/assocend\n")
 			   val rtyp = type_of_term rterm
-			   val _ = trace low (string_of_OclType rtyp ^ "\n")
+			   val _ = trace low (string_of_OclType rtyp ^ "manu \n")
 			   val templ_type = template_parameter rtyp
 			   val pclass = class_of_term (Variable ("x",templ_type)) model
+			   val _ = trace low ("manu 2")
 			   val ntempl_type = type_of_parent pclass 
+			   val _ = trace low ("manu 3")
 			   val new_type = replace_templ_para rtyp ntempl_type
 			   val new_class = class_of_term (Variable ("x",new_type)) model
 			   val attrs = get_overloaded_attrs_or_assocends new_class (List.last attr_path) model
