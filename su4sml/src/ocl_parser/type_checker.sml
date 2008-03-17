@@ -357,7 +357,7 @@ let
       val class = class_of_term rterm model
       val prfx = package_of class
       val _ = trace low ("type of classifier: " ^ string_of_path prfx ^ "\n")
-      val ctyp = prefix_type prfx (string_to_type [real_typ])       
+      val ctyp = prefix_type prfx (path_to_type [real_typ])       
       val _ = trace low ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
   in
       OperationWithType (rterm,rtyp,"oclIsTypeOf",ctyp,Boolean)
@@ -375,7 +375,7 @@ let
       val class = class_of_term rterm model
       val prfx = package_of class
       val _ = trace low ("type of classifier: " ^ string_of_path prfx ^ "\n")
-      val ctyp = prefix_type prfx (string_to_type [real_typ])
+      val ctyp = prefix_type prfx (path_to_type [real_typ])
       val _ = trace low ("res OpCall: oclIsKindOf 4:" ^ "... " ^ "\n")
   in
       OperationWithType (rterm,rtyp,"oclIsKindOf",ctyp,Boolean)
@@ -393,7 +393,7 @@ let
       val class = class_of_term rterm model
       val prfx = package_of class   
       val _ = trace low ("type of classifier: " ^ string_of_path prfx ^ "\n")
-      val ctyp = prefix_type prfx (string_to_type [real_typ])
+      val ctyp = prefix_type prfx (path_to_type [real_typ])
       val _ = trace low ("res OpCall: oclAsType 4:" ^ "... " ^ "\n")
   in
       OperationWithType (rterm,rtyp,"oclAsType",ctyp,ctyp)
