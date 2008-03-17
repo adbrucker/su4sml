@@ -50,15 +50,16 @@ val log_level = ref 6
 fun trace lev s = if (lev  <= !log_level ) then print(s) else ()
 
 (* debugging-levels *)
+val zero = 0
+val exce = 0
 val function_calls = 5
 val function_arguments = 6
-
-val zero = 0
 val high = 10
 val medium = 20
 val low = 100
 val development = 200
-		  
+
+
 
 (* HOLOCL_HOME resp. SU4SML_HOME should point to the top-level directory *)
 (* of the corresponding library.  The semantics of UML2CDL_HOME should   *)
@@ -90,7 +91,14 @@ fun append xs ys = xs @ ys;
 fun find _ []        = Option.NONE
   | find p (x :: xs) = if p x then Option.SOME x else find p xs;
     
+fun member x [] = false
+| member x (h::tail) = 
+    if (x = h) then
+	true
+    else 
+	member x tail
 
+fun swap1 f a b c = f c b a
 
 (* fun getenv var =
   (case OS.Process.getEnv var of
