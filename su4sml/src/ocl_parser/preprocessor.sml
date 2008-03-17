@@ -49,14 +49,16 @@ end
 
 structure Preprocessor:PREPROCESSOR  = 
  struct
-open Context
+open library
+open Rep_Core
 open Rep_OclTerm
 open Rep_OclType
-open Rep_Core
+
+open Context
 open RepParser
 open XMI_DataTypes
 open OclLibrary
-open Ext_Library
+
 
 type operation = Rep_Core.operation
 type attribute = Rep_Core.attribute

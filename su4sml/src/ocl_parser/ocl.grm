@@ -60,11 +60,12 @@ THIS POINTS HAVE TO BE NOTICED TO UNDERSTAND THE SEMANTICS OF:
 *)
 
 
-
+open library
+open Rep_Core
 open Rep_OclTerm
 open Rep_OclType
 open Context
-open Ext_Library
+
 
 exception NotYetSupported of string 
 

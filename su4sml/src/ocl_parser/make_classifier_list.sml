@@ -60,8 +60,8 @@ end
 structure Update_Model:UPDATE_MODEL =
 struct
 
+open library;
 open Rep_Core;
-open Ext_Library;
 open Context;
 
 exception AlreadyInitValueError of string * Rep_OclTerm.OclTerm * string

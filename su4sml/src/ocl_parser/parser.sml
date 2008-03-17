@@ -49,7 +49,9 @@ structure OclParser : sig
 		   val parse_contextlist: string -> Context.context list
 end = 
 struct
-  open Context
+ open library 
+ open Context
+ 
   structure OclParserLrVals =
     OclParserLrValsFun(structure Token = LrParser.Token)
 
@@ -66,12 +68,6 @@ struct
  * function invoke does this.
  *)
   
-(* Error logging *)
-val high = 5
-val medium = 20
-val low = 100
-
-
   fun invoke lexstream =
       let fun print_error (s,i:(int * int * int),_) =
 	      TextIO.output(TextIO.stdOut,

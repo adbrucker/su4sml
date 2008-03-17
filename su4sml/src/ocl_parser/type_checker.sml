@@ -57,7 +57,8 @@ sig
     exception IterateError of string
     exception IterateAccumulatorTypeError of string
     exception IterateTypeMissMatch of string
-
+    exception NoSuchAttributeError of string 
+    exception NoSuchOperationError of string
     val check_context_list            : Context.context list -> Rep_Core.transform_model -> Context.context option list
     val check_context                 : Context.context -> Rep_Core.transform_model -> Context.context option
     val resolve_OclTerm               : Rep_OclTerm.OclTerm -> Rep_Core.transform_model -> Rep_OclTerm.OclTerm
@@ -67,16 +68,16 @@ end
 
 structure TypeChecker:TYPECHECKER  = 
  struct
-
-open Context
+open library
+open Rep_Core
 open Rep_OclTerm
 open Rep_OclType
-open Rep_Core
+open Context
 open RepParser
 open XMI_DataTypes
 open Preprocessor
 open OclLibrary
-open Ext_Library
+
 
 type operation = Rep_Core.operation
 type attribute = Rep_Core.attribute
@@ -93,6 +94,8 @@ exception DesugaratorCall of (OclTerm * string list * int * (OclTerm * OclType) 
 exception IterateError of string			     
 exception IterateAccumulatorTypeError of string
 exception IterateTypeMissMatch of string			  
+exception NoSuchAttributeError of string 
+exception NoSuchOperationError of string
 
 (* RETURN: bool *)
 fun check_argument_type [] [] = true
@@ -121,7 +124,7 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
 	    val _ = trace low ("\n==> FromSet-desugarator: operation ... \n")
 	    val new_type = template_parameter (type_of_term rterm)
 	    val iterVar = (("anonIterVar_" ^ (varcounter.nextStr())),new_type)
-	    val class = get_classifier (Variable (iterVar)) model
+	    val class = class_of_term (Variable (iterVar)) model
 	    val ops = get_overloaded_methods class (List.last path) model
 	in
 	    if (List.length ops = 0)
@@ -140,7 +143,7 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
 	    val _ = trace low ("\n==> FromSet-desugarator: attribute/assocend ... \n")
 	    val new_type = template_parameter (type_of_term rterm)
 	    val iterVar = (("anonIterVar_" ^ (varcounter.nextStr())),new_type)
-	    val class = get_classifier (Variable (iterVar)) model
+	    val class = class_of_term (Variable (iterVar)) model
 	    val attrs_or_assocs = get_overloaded_attrs_or_assocends class (List.last path) model
 	in
 	    if (List.length attrs_or_assocs = 0)
@@ -189,7 +192,7 @@ fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
 	    val _ = trace low ("\n==> AsSet-desugarator: operation ... \n")
 	    val rtyp = Set(type_of_term rterm)
 	    val _ = trace low ("Type of source term " ^ string_of_OclType rtyp ^ " ---> try Set(" ^ string_of_OclType rtyp ^ ")\n")
-	    val class = get_classifier (Variable ("anonIterVar_" ^ (varcounter.nextStr()),rtyp)) model
+	    val class = class_of_term (Variable ("anonIterVar_" ^ (varcounter.nextStr()),rtyp)) model
 	    val ops = get_overloaded_methods class (List.last path) model
 	    val new_rterm = CollectionLiteral([CollectionItem(rterm,type_of_term rterm)],rtyp)
 	in
@@ -204,7 +207,7 @@ fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
 	    val _ = trace low ("\n==> AsSet-desugarator: attribute/assocend\n")
 	    val rtyp = Set(type_of_term rterm)
 	    val _ = trace low (string_of_OclType rtyp ^ "\n")
-	    val class = get_classifier (Variable ("anonIterVar_" ^ (varcounter.nextStr()),Set(rtyp))) model
+	    val class = class_of_term (Variable ("anonIterVar_" ^ (varcounter.nextStr()),Set(rtyp))) model
 	    val attrs = get_overloaded_attrs_or_assocends class (List.last path) model
 	    (* source term is a dummy-Term *) 
 	    val new_rterm = CollectionLiteral([CollectionItem(rterm,type_of_term rterm)],rtyp)
@@ -317,10 +320,10 @@ and resolve_OclTerm (Literal (s,typ)) model =
 			   val rtyp = type_of_term rterm
 			   val _ = trace low (string_of_OclType rtyp ^ "\n")
 			   val templ_type = template_parameter rtyp
-			   val pclass = get_classifier (Variable ("x",templ_type)) model
+			   val pclass = class_of_term (Variable ("x",templ_type)) model
 			   val ntempl_type = type_of_parent pclass 
 			   val new_type = replace_templ_para rtyp ntempl_type
-			   val new_class = get_classifier (Variable ("x",new_type)) model
+			   val new_class = class_of_term (Variable ("x",new_type)) model
 			   val attrs = get_overloaded_attrs_or_assocends new_class (List.last attr_path) model
 			   val _ = trace low ("parent type of term:" ^ string_of_OclType new_type ^ "\n")
 		       in
@@ -349,7 +352,7 @@ let
       val _ = trace low ("res OpCall: oclIsTypeOf 3: "  ^ "\n")
       (* need to prefix the package *)
       (* because parameter is written relativly *)	
-      val class = get_classifier rterm model
+      val class = class_of_term rterm model
       val prfx = package_of class
       val _ = trace low ("type of classifier: " ^ string_of_path prfx ^ "\n")
       val ctyp = prefix_type prfx (string_to_type [real_typ])       
@@ -367,7 +370,7 @@ let
       val _ = trace low ("res OpCall: oclIsKindOf 3:" ^ "... " ^ "\n")
       (* need to prefix the package *)
       (* because parameter is written relativly *)
-      val class = get_classifier rterm model
+      val class = class_of_term rterm model
       val prfx = package_of class
       val _ = trace low ("type of classifier: " ^ string_of_path prfx ^ "\n")
       val ctyp = prefix_type prfx (string_to_type [real_typ])
@@ -385,7 +388,7 @@ let
       val _ = trace low ("res OpCall: oclAsType 3:" ^ "... " ^ "\n")
       (* need to prefix the package *)
       (* because parameter is written relativly *)
-      val class = get_classifier rterm model
+      val class = class_of_term rterm model
       val prfx = package_of class   
       val _ = trace low ("type of classifier: " ^ string_of_path prfx ^ "\n")
       val ctyp = prefix_type prfx (string_to_type [real_typ])
@@ -430,11 +433,11 @@ let
 			   val rtyp = type_of_term rterm
 			   val _ = trace low (string_of_OclType rtyp ^ "\n")
 			   val templ_type = template_parameter rtyp
-			   val pclass = get_classifier (Variable ("x",templ_type)) model
+			   val pclass = class_of_term (Variable ("x",templ_type)) model
 			   val ntempl_type = type_of_parent pclass 
 			   val _ = trace low (string_of_OclType ntempl_type ^ "\n")
 			   val new_type = replace_templ_para rtyp ntempl_type
-			   val new_class = get_classifier (Variable ("x",new_type)) model
+			   val new_class = class_of_term (Variable ("x",new_type)) model
 			   val ops = get_overloaded_methods new_class (List.last meth_path) model
 			   val _ = trace low ("parent type of term: " ^ string_of_OclType new_type ^ "\n")
 		       in
@@ -457,7 +460,7 @@ end
       val rtyp = type_of_term rterm
       val _ = trace low ("res Iter (" ^ name ^ "): source type " ^ string_of_OclType (type_of_term  rterm) ^ "\n\n")
       (* get source classifier *)
-      val source_class = get_classifier rterm model
+      val source_class = class_of_term rterm model
       val _ = trace low ("res Iter (" ^ name ^ "): type of classifier: " ^ string_of_OclType (type_of source_class) ^ "\n")
       (* prefix types *)
       val prfx = (package_of_template_parameter (type_of source_class))
@@ -514,7 +517,7 @@ let
       val rtyp = type_of_term rterm
       val _ = trace medium ("res Iterate: source type " ^ string_of_OclType (type_of_term  rterm) ^ "\n\n")
       (* get source classifier *)
-      val source_class = get_classifier rterm model
+      val source_class = class_of_term rterm model
       val _ = trace medium ("res Iterate: type of classifier: " ^ string_of_OclType (type_of source_class) ^ "\n")
       (* prefix types *)
       val prfx = (package_of_template_parameter (type_of source_class))

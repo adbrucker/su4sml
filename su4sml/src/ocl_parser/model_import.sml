@@ -56,9 +56,12 @@ struct
 (* basic library *)
 open List
 open Posix.Error
+
+(* su4sml *)
+open library
+open Rep_Core
      
 (* OclParser *)
-open Ext_Library
 open Context
 open TypeChecker
 open Update_Model

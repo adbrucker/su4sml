@@ -93,11 +93,12 @@ end
 structure Context:CONTEXT =
 struct
 
+open library
 open Rep_Core
 open Rep_OclType
 open Rep_OclTerm
 open OclLibrary
-open Ext_Library
+
      
 type operation = Rep_Core.operation
 		 

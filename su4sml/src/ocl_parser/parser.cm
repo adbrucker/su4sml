@@ -51,7 +51,6 @@ Group is
   $smlnj/ml-yacc/ml-yacc-lib.cm
 #endif
 
-  "library.sml"	
   context_declarations.sml		
 #if(defined(SMLNJ_VERSION))
   ocl.grm
