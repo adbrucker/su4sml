@@ -78,7 +78,17 @@ fun filter (pred: 'a->bool) : 'a list -> 'a list =
     let fun filt [] = []
           | filt (x :: xs) = if pred x then x :: filt xs else filt xs
 	in filt end;
-    
+
+fun real_path x = List.rev (List.tl (List.rev x))    
+
+
+fun optlist2list [] = []
+  | optlist2list (h::tail) =
+    (
+     case h  of
+	 NONE => optlist2list (tail)
+       | SOME (e) => (e::(optlist2list tail))
+    )
     
 fun exists (pred: 'a -> bool) : 'a list -> bool =
 	let fun boolf [] = false

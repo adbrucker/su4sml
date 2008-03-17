@@ -317,11 +317,6 @@ val prefix_type             : string list -> Rep_OclType.OclType -> Rep_OclType.
 val type_of_CollPart : Rep_OclTerm.CollectionPart -> Rep_OclType.OclType
 
 (**
- * Converts a string to a OclType including Collections.
- *)
-val string_to_type   : string list -> Rep_OclType.OclType
-
-(**
  * Collections of Collections are flattened according to Ocl 2.0 Standard.
  *)
 val flatten_type  : Rep_OclType.OclType -> Rep_OclType.OclType
@@ -387,8 +382,37 @@ val find_operation : string -> operation list -> operation
  *)
 val find_attribute : string -> attribute list -> attribute
 
+
 (** OBSOLETE **)
-val operations_of       : Classifier -> operation list
+val operations_of                : Classifier -> operation list
+(** Get the local operations of a classifier.*)
+val local_operations_of          : Classifier -> operation list
+(** Get the redefined/refined operations of a classifier.*)
+val modified_operations_of    : Classifier -> transform_model -> operation list
+(** Get all the inherited (without the redefined ones) operations of a classifier.*)
+val inherited_operations_of   : Classifier -> transform_model -> operation list
+(** Get all operations of a classifier (for redefined ones the more special is choosen).*)
+val all_operations_of         : Classifier -> transform_model -> operation list
+(** Get all creators of a classifier.*)
+val creation_operations_of    : Classifier -> transform_model -> operation list
+(** Get all destroying operations of a classifier.*)
+val destruction_operations_of : Classifier -> transform_model -> operation list
+(** Get all public operations of a classifier.*)
+val public_operations_of      : Classifier -> transform_model -> operation list
+(** Get all private operations of a classifier.*)
+val private_operations_of     : Classifier -> transform_model -> operation list
+(** Get all package operations of a classifier.*)
+val package_operations_of     : Classifier -> transform_model -> operation list
+(** Get all protected operations of a classifier.*)
+val protected_operations_of   : Classifier -> transform_model -> operation list
+(** Get all query operations of a classifier.*)
+val query_operations_of       : Classifier -> transform_model -> operation list
+(** Get all command operations of a classifier.*)
+val command_operations_of     : Classifier -> transform_model -> operation list							   
+
+
+
+
 
 (** OBSOLETE **)
 val get_overloaded_methods  : Classifier -> string -> transform_model -> (Classifier * operation) list
@@ -437,7 +461,7 @@ val mangled_name_of_op  : operation -> string
 (**
  * TODO: Description (OBSOLETE?)
  *)
-val operation_of        : Classifier list -> Rep_OclType.Path -> operation option
+(* val operation_of        : Classifier list -> Rep_OclType.Path -> operation option *)
 
 (**
  * Update an operation with new preconditions.
@@ -839,6 +863,571 @@ exception NoCollectionTypeError of Rep_OclType.OclType
 
 
 val OclLibPackage = "oclLib"
+val OclAnyC = Class{name=Rep_OclType.OclAny,parent=NONE,attributes=[],
+		    operations=[], interfaces=[],
+		    invariant=[],stereotypes=[], associations=[],
+		    thyname=NONE,
+		    visibility = public,
+                    activity_graphs=nil}
+              
+val OclAnyAC = AssociationClass{name=Rep_OclType.OclAny,parent=NONE,
+                                attributes=[],operations=[], interfaces=[],
+			        invariant=[],stereotypes=[], associations=[],
+				visibility = public,
+			        association= []:Path (*FIXME: sensible dummy*),
+			        thyname=NONE, activity_graphs=nil}
+
+fun type_of (Class{name,...})            = name  
+  | type_of (AssociationClass{name,...}) = name
+  | type_of (Interface{name,...})        = name
+  | type_of (Enumeration{name,...})      = name
+  | type_of (Primitive{name,...})        = name
+  | type_of (Template{classifier,...})   = type_of classifier 
+
+fun type_of_term (Literal (s,typ)) = typ
+  | type_of_term (AttributeCall (t,typ,p,res_typ)) = res_typ
+  | type_of_term (AssociationEndCall (t,typ,p,res_typ)) = res_typ
+  | type_of_term (OperationCall (t,typ,p,l,res_typ)) = res_typ
+  | type_of_term (Variable (s,typ)) = typ
+  | type_of_term (CollectionLiteral (set,typ)) = typ
+  | type_of_term (Iterator (_,_,_,_,_,_,res_typ)) = res_typ
+  | type_of_term (If(_,_,_,_,_,_,res_typ)) = res_typ
+  | type_of_term (OperationWithType (_,_,_,_,res_typ)) = res_typ
+  | type_of_term (Let (_,_,_,_,_,res_typ)) = res_typ
+  | type_of_term (Iterate (_,_,_,_,_,_,_,_,res_typ)) = res_typ
+  | type_of_term (Predicate (_,_,_,_)) = Boolean
+
+
+fun name_of (Class{name,...})            = path_of_OclType name  
+  | name_of (AssociationClass{name,...}) = path_of_OclType name
+  | name_of (Interface{name,...})        = path_of_OclType name
+  | name_of (Enumeration{name,...})      = path_of_OclType name
+  | name_of (Primitive{name,...})        = path_of_OclType name
+  | name_of (Template{classifier,...})   = name_of classifier
+
+
+fun name_of_op ({name,...}:operation) = name
+
+
+fun mangled_name_of_op ({name,arguments,result,...}:operation) = 
+    let
+      val arg_typestrs = map (fn a => (Rep_OclType.string_of_OclType o #2 )a )
+                             arguments
+    in 
+      foldr1 (fn (a,b) =>(a^"_"^b)) 
+             ((name::arg_typestrs)@[Rep_OclType.string_of_OclType result])
+    end
+    
+                                                 
+fun result_of_op ({result,...}:operation) = result
+                                            
+fun arguments_of_op ({arguments,...}:operation) = arguments
+
+fun path_to_type ["Integer"] = Integer
+  | path_to_type ["Boolean"] = Boolean
+  | path_to_type ["Real"] = Real
+  | path_to_type ["OclAny"] = OclAny
+  | path_to_type ["DummyT"] = DummyT
+  | path_to_type ["String"] = String
+  | path_to_type ["OclVoid"] = OclVoid
+  | path_to_type (("oclLib")::tail) = path_to_type tail
+  | path_to_type [set] = 
+    if (List.exists (fn a => if (a = (#"(")) then true else false) (String.explode set)) then
+	(* set *)
+	let
+	    fun string_to_cons "Set" typ = Set(typ)
+	      | string_to_cons "Bag" typ = Bag(typ)
+	      | string_to_cons "Collection" typ = Collection (typ)
+	      | string_to_cons "OrderedSet" typ = OrderedSet (typ)
+	      | string_to_cons "Sequence" typ = Sequence (typ)	
+	    fun parse_string c ([]) = ([],[])
+	      | parse_string c (h::tail) =
+		if (c = h) then
+		    ([],h::tail)
+		else
+ 		    (h::(#1 (parse_string c tail)),(#2 (parse_string c tail)))
+	    val tokens = parse_string (#"(") (String.explode set)
+	    val cons = (#1 tokens)
+	    (* delete first "(" and last ")" element *)
+	    val tail = List.tl (real_path (#2 tokens))
+	    val _ = TextIO.output(TextIO.stdOut,"tail "^ (String.implode tail) ^ "\n")
+
+	in
+	    string_to_cons (String.implode cons) (path_to_type ([String.implode tail]))
+	end
+    else
+	Classifier ([set])
+  | path_to_type list = Classifier (list)
+
+
+fun operations_of (Class{operations,...}) = operations
+	  | operations_of (AssociationClass{operations,...}) = operations
+	  | operations_of (Interface{operations,...})      = operations
+	  | operations_of (Enumeration{operations,...})    = operations
+	  | operations_of (Primitive{operations,...})      = operations  
+	  | operations_of (Template{parameter,classifier}) = operations_of classifier
+
+fun local_operations_of (class:Classifier) = operations_of class
+
+
+fun class_of_term source (c:Classifier list, a:association list) =
+    let
+	val typ = type_of_term (source)
+	val _ = map (fn a => trace development (string_of_OclType (type_of a) ^ "manu type: \n")) c
+	fun class_of_t typ m = 
+	    hd (List.filter (fn a => if ((type_of a) = typ) then true else false) m)
+	fun substitute_classifier typ classifier =
+	    let
+		fun substitute_args typ [] = []
+		  | substitute_args typ ((s,t)::tail) =
+		    let 
+			val _ = trace low ("substitute argument : " ^ (string_of_OclType typ) ^ " template parameter of " ^ (string_of_OclType t) ^ " \n")
+		    in
+			(s,substitute_typ typ t)::(substitute_args typ tail)
+		    end
+		and substitute_parent (Set (t)) = SOME (Collection t)
+		  | substitute_parent (OrderedSet (t)) = SOME (Set (t))
+		  | substitute_parent (Sequence (t)) = SOME (Collection (t))
+		  | substitute_parent (Bag (t)) = SOME (Collection t)
+		  | substitute_parent (Collection (t)) = SOME (Collection (t))
+		  | substitute_parent t = SOME (Collection t)
+		and substitute_operations typ [] = []
+		  | substitute_operations typ ((oper:operation)::tail) =
+		    let 
+			val _ = trace low ("\n\nsubstitute operation : " ^ (#name oper) ^ " ... \n")
+			val args = substitute_args typ (#arguments oper)
+			val res = substitute_typ typ (#result oper)
+			val _ = trace 100 ("check\n")
+		    in
+			({
+			 name = #name oper,
+			 postcondition = #postcondition oper,
+			 precondition = #precondition oper,
+			 body = #body oper,
+			 arguments = args,
+			 result = res,
+			 visibility = #visibility oper,
+			 isQuery = #isQuery oper,
+			 stereotypes = #stereotypes oper, 
+			 scope = #scope oper
+			 }:operation)::(substitute_operations typ tail)
+		    end
+		and substitute_typ typ templ_type =
+		    let 
+			val _ = trace low ("substitute type : " ^ (string_of_OclType typ) ^ " instead of " ^ (string_of_OclType templ_type) ^ " \n")
+		    in    
+			case templ_type of  
+			    (* innerst type *)
+			    Sequence(TemplateParameter "T") => Sequence (typ)
+			  | Set(TemplateParameter "T") => Set(typ)
+			  | OrderedSet(TemplateParameter "T") => OrderedSet (typ)
+			  | Collection(TemplateParameter "T") => Collection(typ)
+			  | Bag(TemplateParameter "T") => Bag(typ)
+			  (* nested types *)
+			  | Sequence (t) => Sequence (substitute_typ typ t)
+			  | Set (t) => Set (substitute_typ typ t)
+			  | OrderedSet (t) => OrderedSet (substitute_typ typ t)
+			  | Collection (t) => Collection (substitute_typ typ t)
+			  | Bag (t) => Bag (substitute_typ typ t)
+			  (* only parameter  *)
+			  | TemplateParameter "T" => typ
+			  (* basic types *)
+			  | OclAny => OclAny
+			  | OclVoid => OclVoid
+			  | Integer => Integer
+			  | Real => Real
+			  | String => String
+			  | Boolean => Boolean
+			  | DummyT => DummyT
+			  | Classifier (path) => Classifier (path)
+			  (* else error *)
+			  | _ => raise TemplateInstantiationError ("Template type not of type: Sequence, Set, OrderedSet, Collection or Bag")
+		    end
+		val _ = trace low ("substitute classifier: parameter type: " ^ string_of_OclType typ ^ " template type: " ^ string_of_OclType (type_of classifier) ^ "\n") 
+		val styp = substitute_typ typ (type_of classifier)
+		val ops = substitute_operations typ (local_operations_of classifier)
+		val _ = trace 100 ("substitute parent.\n")
+		val sparent = substitute_parent typ
+		val _ = trace 100 ("end substitute parent.\n")
+	    in
+		(Class
+		     {
+		      name = styp,
+		      (* take the parent of the template parameter *)
+		      parent = sparent,
+		      (* a template has no attributes *)
+		      attributes = [],
+		      operations = ops,
+		      (* a template has no associationends *)
+		      associations = [],
+		      (* a template has no invariants *)
+		      invariant = [],
+		      (* a template has no stereotypes *)
+		      stereotypes = [],
+		      (* a template has no interfaces *)
+		      interfaces = [],
+		      (* a template's thyname is NONE *)
+		      thyname = NONE,
+		      (* a template's visibility is public *)
+		      visibility = public:Visibility,
+		      (* a template has no activity_graphs *)
+		      activity_graphs = []
+		})
+	    end
+	fun  templ_of temp_typ para_typ [] = raise TemplateInstantiationError ("Error during instantiating a template" ^ "\n")
+	   | templ_of temp_typ para_typ (Template{parameter,classifier}::tail) =
+	     let
+		 val _ = trace low ("Instantiate Template for classifier: " ^ (string_of_OclType (type_of classifier)) ^ "\n")
+	     in
+		 if ((type_of classifier) = temp_typ) then
+		     substitute_classifier para_typ classifier
+		 else
+		     templ_of temp_typ para_typ tail
+	     end
+	   | templ_of temp_typ para_typ (h::tail) = 
+	     let
+		 val _ = trace development ("shit")
+	     in
+		 templ_of temp_typ para_typ tail
+	     end  
+    in
+	case typ of
+	    (* Primitive types of lib *)
+	    Boolean => class_of_t Boolean c
+	  | Integer => class_of_t Integer c
+	  | Real => class_of_t Real c
+	  | String => class_of_t String c
+	  (* Template types of lib *)
+	  | Sequence (T) => templ_of (Sequence(TemplateParameter "T")) T c
+	  | Set (T) => templ_of (Set(TemplateParameter "T")) T c
+	  | OrderedSet (T) => templ_of (OrderedSet(TemplateParameter "T")) T c
+	  | Bag (T) => templ_of (Bag(TemplateParameter "T")) T c
+	  | Collection (T) => templ_of (Collection(TemplateParameter "T")) T c
+	  (* Class types of lib *)
+	  | OclVoid => class_of_t OclVoid c
+	  | OclAny => class_of_t OclAny c
+	  (* Model types *)
+	  | Classifier (path) =>
+	    let
+		val _ = trace development ("class_of_term: Classifier ("^(string_of_path path)^")\n")
+		val res = class_of_t (Classifier (path)) c
+		val _ = trace development ("found: "^(string_of_path (name_of res)) ^"\n")
+	    in
+		(*class_of_t (Classifier (path)) model*)
+		res
+	    end
+	  | DummyT => 
+	    let
+		val _ = trace development ("GetClassifierError: DummyT \n")
+	    in
+		raise GetClassifierError ("No classifier of type: 'DummyT' \n")
+	    end
+	  | TemplateParameter (string) => 
+	    let
+		val _ = trace development ("GetClassifierError: TemplateParameter ("^ string ^") \n")
+	    in
+		raise GetClassifierError ("No classifier of type: 'TemplateParameter (string)' \n")
+	    end
+    end
+
+fun class_of (name:Path) (model as (clist,alist)) = 
+     let
+	 val _ = trace low ("top level package: " ^ (List.hd (name)) ^ "\n")
+	 val _ = trace low ("remaining package: " ^ (String.concat (List.tl name)) ^ "\n") 
+     in
+	 class_of_term (Variable("x",path_to_type name)) model
+     end
+
+and class_of_type (typ:OclType) (model:transform_model) = 
+    class_of_term (Variable ("x",typ)) model
+
+
+fun type_equals Integer (Classifier ([OclLibPackage,"Real"])) = true
+  | type_equals (Classifier ([OclLibPackage,"Integer"])) Real = true
+  | type_equals _ OclAny = true
+  | type_equals _ (Classifier ([OclLibPackage,"OclAny"])) = true
+  | type_equals x y = 
+    if (x = y) then
+	true
+    else
+	false
+
+fun conforms_to_up _ OclAny (_:transform_model) = true
+  | conforms_to_up (Set(T1)) (Collection(T2)) model =
+    let
+	val _ = trace low ("conforms_to_up: set -> collection \n")
+    in
+	if (conforms_to T1 T2 model) then 
+	    true
+	else 
+	    false
+    end
+  | conforms_to_up (Bag(T1)) (Collection(T2)) model =
+    let
+	val _ = trace low ("conforms_to_up: bag -> collection \n")
+    in    
+	if (conforms_to T1 T2 model) then 
+	    true
+	else 
+	    false
+    end
+  | conforms_to_up (Sequence(T1)) (Collection(T2)) model =
+    let
+	val _ = trace low ("conforms_to_up: sequence -> collection \n")
+    in
+	if (conforms_to T1 T2 model) then 
+	    true
+	else 
+	    false
+    end
+  | conforms_to_up (OrderedSet(T1)) (Collection(T2)) model =
+    let
+	val _ = trace low ("conforms_to_up:  orderedset -> collection \n")
+    in
+	if (conforms_to T1 T2 model) then 
+	    true
+	else 
+	    false
+    end
+  | conforms_to_up typ1 typ2  (model as(classifiers,associations)) = 
+    let
+	val class = class_of_type typ1 model
+	val parents_types = type_of_parents (class) model
+	val _ = trace low ("conforms_to_up:  ... \n")
+    in
+	member (typ2) (parents_types)
+    end
+
+and
+(* RETRUN: Boolean *)
+conforms_to x y (model:transform_model) =
+    let
+	val _ = trace low ("conforms_to: " ^ string_of_OclType x ^ " -> " ^ string_of_OclType y ^ " ? \n")
+    in
+	if (x = y) then 
+	    true
+	else
+	    if (type_equals x y) then
+		true
+	    else
+		conforms_to_up x y model
+    end
+
+(* RETURN: OclTerm *)
+and upcast (term,typ) =  
+    if (type_equals (type_of_term term) typ) then
+	term
+    else
+	OperationWithType (term,type_of_term term,"oclIsTypeOf",typ,typ)
+
+
+(* RETURN: OclType list *)
+and type_of_parents (Primitive {parent,...}) (model:transform_model) =
+    (    
+     case parent of 
+	 NONE => [OclAny]
+       | SOME (OclAny) => [OclAny]
+       | SOME (t) => (t)::(type_of_parents (class_of_type t model) model)
+    )
+  | type_of_parents (Class {parent,...}) model =
+    (
+     case parent of
+	 NONE => [OclAny]
+       | SOME (OclAny) => [OclAny]
+       | SOME (t) => (t)::(type_of_parents (class_of_type t model) model)
+    )
+  | type_of_parents (AssociationClass {parent,...}) model =
+    (
+     case parent of
+	 NONE => [OclAny]
+       | SOME (OclAny) => [OclAny]
+       | SOME (t) => (t)::(type_of_parents (class_of_type t model) model)
+    )
+  | type_of_parents (Interface {parents,...}) model = parents
+  | type_of_parents (Template {classifier,...}) model =
+    raise TemplateInstantiationError ("During Instantiation of template parent needn't to be accessed")
+
+fun parent_name_of (C as Class{parent,...}) = 
+    (case parent  of NONE   => name_of OclAnyC
+		   | SOME p => path_of_OclType p ) 
+  | parent_name_of (AC as AssociationClass{parent,...}) = 
+    (case parent  of NONE   => name_of OclAnyAC
+		   | SOME p => path_of_OclType p )
+  | parent_name_of (Interface{...}) =
+    error "in Rep.parent_name_of: unsupported argument type Interface"
+  | parent_name_of (E as Enumeration{parent,...}) = 
+    (case parent  of NONE => error ("in Rep.parent_name_of: Enumeration "^
+                                    ((string_of_path o name_of) E)
+                                    ^" has no parent")
+		   | SOME p  => path_of_OclType p )  
+  | parent_name_of (D as Primitive{parent,...})    = 
+    (case parent  of NONE => name_of OclAnyC
+    (* error ("Primitive "^((string_of_path o name_of) D)^" has no parent") *)
+		   | SOME p  => path_of_OclType p )
+  | parent_name_of (Template _) = 
+    error "in Rep.parent_name_of: unsupported argument type Template"
+
+fun parents_of C cl = 
+    (case parent_name_of C of
+       [] => []    
+     | class => (if( class = (name_of OclAnyC) )
+                 then [(name_of OclAnyC)]
+                 else [class]@(parents_of (class_of class (cl,[])) cl)))
+
+fun sig_conforms_to [] [] model = true
+  | sig_conforms_to [] list model = 
+    let
+	val result = false
+    in
+	result
+    end
+  | sig_conforms_to list [] model = 
+    let
+	val result = false 
+    in
+	result
+    end 
+  | sig_conforms_to [(s1:string,sig_sub:OclType)] [(s2:string,sig_super:OclType)] model = 
+    let
+	val result = if (conforms_to (sig_sub) (sig_super) model) then 
+			 true 
+		     else 
+			 false    
+    in
+	result
+    end
+  | sig_conforms_to ((s1:string,sig_sub:OclType)::tail1)  ((s2:string,sig_super:OclType)::tail2) model =
+    let
+	val result = if (s2 = s1 andalso (conforms_to (sig_sub) (sig_super) model)) then 
+			 sig_conforms_to tail1 tail2 model
+		     else 
+			 false   
+    in
+	result 
+    end
+
+
+fun same_op (sub_op:operation) (super_op:operation) (model:transform_model) =
+    if ((name_of_op sub_op = name_of_op super_op ) andalso (sig_conforms_to (arguments_of_op sub_op) (arguments_of_op super_op) model))
+    then true
+    else false
+
+(* embed local operations to the inherited operations *)
+fun embed_local_operations [] iops model = iops
+  | embed_local_operations x [] model = x
+  | embed_local_operations (h::tail) iops model = 
+    let
+	fun embed_local_operation oper [] model = [oper]
+	  | embed_local_operation lop ((oper:operation)::iops) model = 
+	    if (same_op lop oper model)
+	    then (lop::iops)
+	    else (oper)::(embed_local_operation lop iops model) 
+	val tmp = embed_local_operation h iops model
+    in
+	(embed_local_operations tail tmp model)
+    end
+
+(* get all inherited operations of a classifier, without the local operations *)
+fun inherited_operations_of class (model as (clist,alist)) =
+    let
+	val parents = parents_of class (#1 model)
+	val _ = trace 50 ("inh ops 2\n")
+	val c_parents = List.map (fn a => class_of_type (path_to_type a) model) parents
+	val _ = trace 50 ("inh ops 3\n")
+	val ops_of_par = (List.map (operations_of) c_parents)
+	val _ = trace 50 ("inh ops 4\n")
+    in
+	List.foldr (fn (a,b) => embed_local_operations a b model) (List.last (ops_of_par)) ops_of_par
+    end
+		      
+(* get absolutelly all operations of a classifier. In case of a functions which occurs serveral times in the inheritance tree, the must specified function is listed. *)
+fun all_operations_of class model =
+    let 
+	val lo = local_operations_of class
+	val _ = trace 50 ("all ops 1\n")
+	val io = inherited_operations_of class model
+	val _ = trace 50 ("all ops 2\n")
+    in
+	embed_local_operations lo io model
+    end
+
+(* get all local operations, which occurs in one of the parent classes at least each time also *)
+fun modified_operations_of class model = 
+    let
+	val io = inherited_operations_of class model
+	val lo = local_operations_of class
+	fun op_exists (oper:operation) [] = false
+	  | op_exists (oper:operation) ((h:operation)::tail) = if (oper=h) 
+							       then true
+							       else op_exists oper tail
+    in
+	optlist2list (List.map (fn a => if (op_exists a io)
+			  then NONE
+			  else (if  (List.exists (fn b => same_op a b model) io)
+				then SOME(a)
+				else NONE
+			       )) lo) 
+	(* List.concat (List.map (fn a => List.filter (fn b => if (same_op a b model) then false else true) io) lo ) *)
+    end
+
+
+fun creation_operations_of class (model:transform_model) = 
+    let
+	val oper = all_operations_of class model
+	val creators = List.filter (fn a => List.exists (fn b => b = "create") (#stereotypes a)) (oper)
+    in
+	creators
+    end   
+
+fun destruction_operations_of class (model:transform_model) = 
+    let
+	val oper = all_operations_of class model
+	val creators = List.filter (fn a => List.exists (fn b => b = "destroy") (#stereotypes a)) (oper)
+    in
+	creators
+    end   
+
+fun public_operations_of class (model:transform_model) = 
+    let
+	val ops = all_operations_of class model
+    in
+	List.filter (fn a => (#visibility a) = public) ops
+    end
+
+fun private_operations_of class (model:transform_model) = 
+    let
+	val ops = all_operations_of class model
+    in
+	List.filter (fn a => (#visibility a) = private) ops
+    end
+
+fun package_operations_of class (model:transform_model) = 
+    let
+	val ops = all_operations_of class model
+    in
+	List.filter (fn a => (#visibility a) = package) ops
+    end
+
+fun protected_operations_of class (model:transform_model) = 
+    let
+	val ops = all_operations_of class model
+    in
+	List.filter (fn a => (#visibility a) = protected) ops
+    end
+
+fun query_operations_of class (model:transform_model) =
+    let
+	val ops = all_operations_of class model
+    in
+	List.filter (fn a => (#isQuery a)) ops
+    end
+
+fun  command_operations_of class (model:transform_model) = 
+     let
+	 val ops = all_operations_of class model
+     in
+	 List.filter (fn a => not (#isQuery a)) ops
+     end
 
 
 (* convert an association end into the corresponding collection type *)
@@ -858,6 +1447,7 @@ fun aend_to_attr (cls_name:string) (aend:associationend):attribute =
      scope = XMI.InstanceScope,
      stereotypes = nil,
      init = #init aend}
+
 
 
 (* convert a multiplicity range into an invariant of the form *)
@@ -1301,23 +1891,7 @@ fun normalize_init (Class {name,parent,attributes,operations,
                        
 fun normalize_ext ((classifiers,associations):transform_model) =
     (* no distinguishing for valid binary associations *)
-    (map (normalize associations) classifiers, [])
-
-    
-val OclAnyC = Class{name=Rep_OclType.OclAny,parent=NONE,attributes=[],
-		    operations=[], interfaces=[],
-		    invariant=[],stereotypes=[], associations=[],
-		    thyname=NONE,
-		    visibility = public,
-                    activity_graphs=nil}
-              
-val OclAnyAC = AssociationClass{name=Rep_OclType.OclAny,parent=NONE,
-                                attributes=[],operations=[], interfaces=[],
-			        invariant=[],stereotypes=[], associations=[],
-				visibility = public,
-			        association= []:Path (*FIXME: sensible dummy*),
-			        thyname=NONE, activity_graphs=nil}
-		   
+    (map (normalize associations) classifiers, [])		   
 	       
 fun string_of_path (path:Rep_OclType.Path) = 
     (case path of
@@ -1544,22 +2118,8 @@ fun update_postcondition post' ({name,precondition,postcondition,body,
      visibility=visibility,
      stereotypes=stereotypes}:operation
 
-      
-      
-fun type_of (Class{name,...})            = name  
-  | type_of (AssociationClass{name,...}) = name
-  | type_of (Interface{name,...})        = name
-  | type_of (Enumeration{name,...})      = name
-  | type_of (Primitive{name,...})        = name
-  | type_of (Template{classifier,...})   = type_of classifier 
 
 
-fun name_of (Class{name,...})            = path_of_OclType name  
-  | name_of (AssociationClass{name,...}) = path_of_OclType name
-  | name_of (Interface{name,...})        = path_of_OclType name
-  | name_of (Enumeration{name,...})      = path_of_OclType name
-  | name_of (Primitive{name,...})        = path_of_OclType name
-  | name_of (Template{classifier,...})   = name_of classifier
 
 fun visibility_of (Class{visibility,...})            = visibility
   | visibility_of (AssociationClass{visibility,...}) = visibility
@@ -1607,27 +2167,8 @@ fun package_of (Class{name,...}) =
     else []
   | package_of (Template{classifier,...}) = package_of classifier
 
-fun parent_name_of (C as Class{parent,...}) = 
-    (case parent  of NONE   => name_of OclAnyC
-		   | SOME p => path_of_OclType p ) 
-  | parent_name_of (AC as AssociationClass{parent,...}) = 
-    (case parent  of NONE   => name_of OclAnyAC
-		   | SOME p => path_of_OclType p )
-  | parent_name_of (Interface{...}) =
-    error "in Rep.parent_name_of: unsupported argument type Interface"
-  | parent_name_of (E as Enumeration{parent,...}) = 
-    (case parent  of NONE => error ("in Rep.parent_name_of: Enumeration "^
-                                    ((string_of_path o name_of) E)
-                                    ^" has no parent")
-		   | SOME p  => path_of_OclType p )  
-  | parent_name_of (D as Primitive{parent,...})    = 
-    (case parent  of NONE => name_of OclAnyC
-    (* error ("Primitive "^((string_of_path o name_of) D)^" has no parent") *)
-		   | SOME p  => path_of_OclType p )
-  | parent_name_of (Template _) = 
-    error "in Rep.parent_name_of: unsupported argument type Template"
-    
-    
+
+       
 fun short_parent_name_of C =  
     (case (parent_name_of C) of
        [] => error "in Rep.short_parent_name_of: empty type"
@@ -1694,12 +2235,6 @@ fun attributes_of (Class{attributes,...}) = attributes
          (* error "attributes_of <Primitive> not supported" *)  
   | attributes_of (Template{parameter,classifier}) = attributes_of classifier
 
-fun operations_of (Class{operations,...})          = operations
-  | operations_of (AssociationClass{operations,...}) = operations
-  | operations_of (Interface{operations,...})      = operations
-  | operations_of (Enumeration{operations,...})    = operations
-  | operations_of (Primitive{operations,...})      = operations  
-  | operations_of (Template{parameter,classifier}) = operations_of classifier
 
 fun p_invariant_of (Class{invariant,...})       = invariant 
   | p_invariant_of (AssociationClass{invariant,...}) = invariant
@@ -1727,24 +2262,9 @@ fun postcondition_of_op ({postcondition, ...}:operation) =
        [] => [(NONE, Rep_OclTerm.Literal ("true",Rep_OclType.Boolean))]
      | il => il)
 
-fun name_of_op ({name,...}:operation) = name
+
               
 fun name_of_ae ({name,...}:associationend) = name
-
-fun mangled_name_of_op ({name,arguments,result,...}:operation) = 
-    let
-      val arg_typestrs = map (fn a => (Rep_OclType.string_of_OclType o #2 )a )
-                             arguments
-    in 
-      foldr1 (fn (a,b) =>(a^"_"^b)) 
-             ((name::arg_typestrs)@[Rep_OclType.string_of_OclType result])
-    end
-    
-fun result_of_op ({result,...}:operation) = result
-                                            
-fun arguments_of_op ({arguments,...}:operation) = arguments
-                                                  
-
 
 
 
@@ -1999,18 +2519,6 @@ fun flatten_type (Set(Set(t))) = Set(t)
 
   | flatten_type typ = typ
 
-fun type_of_term (Literal (s,typ)) = typ
-  | type_of_term (AttributeCall (t,typ,p,res_typ)) = res_typ
-  | type_of_term (AssociationEndCall (t,typ,p,res_typ)) = res_typ
-  | type_of_term (OperationCall (t,typ,p,l,res_typ)) = res_typ
-  | type_of_term (Variable (s,typ)) = typ
-  | type_of_term (CollectionLiteral (set,typ)) = typ
-  | type_of_term (Iterator (_,_,_,_,_,_,res_typ)) = res_typ
-  | type_of_term (If(_,_,_,_,_,_,res_typ)) = res_typ
-  | type_of_term (OperationWithType (_,_,_,_,res_typ)) = res_typ
-  | type_of_term (Let (_,_,_,_,_,res_typ)) = res_typ
-  | type_of_term (Iterate (_,_,_,_,_,_,_,_,res_typ)) = res_typ
-  | type_of_term (Predicate (_,_,_,_)) = Boolean
 
 fun type_of_CollPart (CollectionItem (term,typ)) = typ
   | type_of_CollPart (CollectionRange (term1,term2,typ)) = typ
@@ -2092,63 +2600,10 @@ and prefix_expression ext_path (Variable (s,t)) = (Variable (s,t))
 	(Iterate (prefixed_vars,acc_var_name,prefix_acc_type,acc_var_term,sterm,stype,bterm,btype,restype))
     end
 
-fun real_path ([]) = []
-  | real_path ([x]) = []
-  | real_path (x::tail) = x::real_path tail
 
 
-fun string_to_type ["Integer"] = Integer
-  | string_to_type ["Boolean"] = Boolean
-  | string_to_type ["Real"] = Real
-  | string_to_type ["OclAny"] = OclAny
-  | string_to_type ["DummyT"] = DummyT
-  | string_to_type ["String"] = String
-  | string_to_type ["OclVoid"] = OclVoid
-  | string_to_type (("oclLib")::tail) = string_to_type tail
-  | string_to_type [set] = 
-    if (List.exists (fn a => if (a = (#"(")) then true else false) (String.explode set)) then
-	(* set *)
-	let
-	    fun string_to_cons "Set" typ = Set(typ)
-	      | string_to_cons "Bag" typ = Bag(typ)
-	      | string_to_cons "Collection" typ = Collection (typ)
-	      | string_to_cons "OrderedSet" typ = OrderedSet (typ)
-	      | string_to_cons "Sequence" typ = Sequence (typ)	
-	    fun parse_string c ([]) = ([],[])
-	      | parse_string c (h::tail) =
-		if (c = h) then
-		    ([],h::tail)
-		else
- 		    (h::(#1 (parse_string c tail)),(#2 (parse_string c tail)))
-	    val tokens = parse_string (#"(") (String.explode set)
-	    val cons = (#1 tokens)
-	    (* delete first "(" and last ")" element *)
-	    val tail = List.tl (real_path (#2 tokens))
-	    val _ = TextIO.output(TextIO.stdOut,"tail "^ (String.implode tail) ^ "\n")
 
-	in
-	    string_to_cons (String.implode cons) (string_to_type ([String.implode tail]))
-	end
-    else
-	Classifier ([set])
-  | string_to_type list = Classifier (list)
 
-fun path_to_type (name:Path) = 
-    case name of 
-    	["oclLib","OclAny"] => OclAny
-      | ["OclAny"] => OclAny
-      | ["oclLib","Integer"] => Integer
-      | ["Integer"] => Integer
-      | ["oclLib","Boolean"] => Boolean
-      | ["Boolean"] => Boolean
-      | ["oclLib","Real"] => Real
-      | ["Real"] => Real
-      | ["oclLib","String"] => String
-      | ["String"] => String
-      | ["oclLib","OclVoid"] => OclVoid
-      | ["OclVoid"] => OclVoid
-      | (("oclLib")::tail) => string_to_type tail
-      | x => Classifier(x)
 
 fun type_of_template (T as Template{classifier,parameter}) =
     (case (name_of classifier) of
@@ -2160,170 +2615,17 @@ fun type_of_template (T as Template{classifier,parameter}) =
     )
   | type_of_template x = raise TemplateError ("type_of_template: Only Template Classifiers can be used.\n")
 
-fun type_equals Integer (Classifier ([OclLibPackage,"Real"])) = true
-  | type_equals (Classifier ([OclLibPackage,"Integer"])) Real = true
-  | type_equals _ OclAny = true
-  | type_equals _ (Classifier ([OclLibPackage,"OclAny"])) = true
-  | type_equals x y = 
-    if (x = y) then
-	true
-    else
-	false
 
 
 
-fun substitute_classifier typ classifier =
-    let
-	fun substitute_args typ [] = []
-	  | substitute_args typ ((s,t)::tail) =
-	    let 
-		val _ = trace low ("substitute argument : " ^ (string_of_OclType typ) ^ " template parameter of " ^ (string_of_OclType t) ^ " \n")
-	    in
-		(s,substitute_typ typ t)::(substitute_args typ tail)
-	    end
-	and substitute_parent (Set (t)) = SOME (Collection t)
-	  | substitute_parent (OrderedSet (t)) = SOME (Set (t))
-	  | substitute_parent (Sequence (t)) = SOME (Collection (t))
-	  | substitute_parent (Bag (t)) = SOME (Collection t)
-	  | substitute_parent (Collection (t)) = SOME (Collection (t))
-	  | substitute_parent t = SOME (Collection t)
-	and substitute_operations typ [] = []
-	  | substitute_operations typ ((oper:operation)::tail) =
-	    let 
-		val _ = trace low ("\n\nsubstitute operation : " ^ (#name oper) ^ " ... \n")
-		val args = substitute_args typ (#arguments oper)
-		val res = substitute_typ typ (#result oper)
-		val _ = trace 100 ("check\n")
-	    in
-		({
-		 name = #name oper,
-		 postcondition = #postcondition oper,
-		 precondition = #precondition oper,
-		 body = #body oper,
-		 arguments = args,
-		 result = res,
-		 visibility = #visibility oper,
-		 isQuery = #isQuery oper,
-		 stereotypes = #stereotypes oper, 
-		 scope = #scope oper
-		 }:operation)::(substitute_operations typ tail)
-	    end
-	and substitute_typ typ templ_type =
-	    let 
-		val _ = trace low ("substitute type : " ^ (string_of_OclType typ) ^ " instead of " ^ (string_of_OclType templ_type) ^ " \n")
-	    in    
-		case templ_type of  
-		    (* innerst type *)
-		    Sequence(TemplateParameter "T") => Sequence (typ)
-		  | Set(TemplateParameter "T") => Set(typ)
-		  | OrderedSet(TemplateParameter "T") => OrderedSet (typ)
-		  | Collection(TemplateParameter "T") => Collection(typ)
-		  | Bag(TemplateParameter "T") => Bag(typ)
-		  (* nested types *)
-		  | Sequence (t) => Sequence (substitute_typ typ t)
-		  | Set (t) => Set (substitute_typ typ t)
-		  | OrderedSet (t) => OrderedSet (substitute_typ typ t)
-		  | Collection (t) => Collection (substitute_typ typ t)
-		  | Bag (t) => Bag (substitute_typ typ t)
-		  (* only parameter  *)
-		  | TemplateParameter "T" => typ
-		  (* basic types *)
-		  | OclAny => OclAny
-		  | OclVoid => OclVoid
-		  | Integer => Integer
-		  | Real => Real
-		  | String => String
-		  | Boolean => Boolean
-		  | DummyT => DummyT
-		  | Classifier (path) => Classifier (path)
-		  (* else error *)
-		  | _ => raise TemplateInstantiationError ("Template type not of type: Sequence, Set, OrderedSet, Collection or Bag")
-	    end
-	val _ = trace low ("substitute classifier: parameter type: " ^ string_of_OclType typ ^ " template type: " ^ string_of_OclType (type_of classifier) ^ "\n") 
-	val styp = substitute_typ typ (type_of classifier)
-	val ops = substitute_operations typ (operations_of classifier)
-	val _ = trace 100 ("substitute parent.\n")
-	val sparent = substitute_parent typ
-	val _ = trace 100 ("end substitute parent.\n")
-    in
-	(Class
-	     {
-	      name = styp,
-	      (* take the parent of the template parameter *)
-	      parent = sparent,
-	      (* a template has no attributes *)
-	      attributes = [],
-	      operations = ops,
-	      (* a template has no associationends *)
-	      associations = [],
-	      (* a template has no invariants *)
-	      invariant = [],
-	      (* a template has no stereotypes *)
-	      stereotypes = [],
-	      (* a template has no interfaces *)
-	      interfaces = [],
-	      (* a template's thyname is NONE *)
-	      thyname = NONE,
-	      (* a template's visibility is public *)
-	      visibility = public:Visibility,
-              (* a template has no activity_graphs *)
-	      activity_graphs = []
-	})
-    end
+
+
 (* RETURN: classifier *) 
-and class_of (name:Path) (model as (clist,alist)) = 
-    (
-     case (List.hd(name)) of 
-	 "oclLib" => class_of_term (Variable("x",(path_to_type (List.tl (name))))) model
-       | x => hd (filter (fn a => if ((name_of a) = name) then true else false ) clist)
-    ) handle _ => error ("class_of: class "^(string_of_path name)^" not found!\n")
+
+
 
 (* RETURN: Classifer *)
-and class_of_term source (c:Classifier list, a:association list) =
-    let
-	val typ = type_of_term (source)
-	val _ = map (fn a => trace development (string_of_OclType (type_of a) ^ "manu type: \n")) c
-	fun class_of_t typ m = 
-	    hd (List.filter (fn a => if ((type_of a) = typ) then true else false) m)
-    in
-	case typ of
-	    (* Primitive types of lib *)
-	    Boolean => class_of_t Boolean c
-	  | Integer => class_of_t Integer c
-	  | Real => class_of_t Real c
-	  | String => class_of_t String c
-	  (* Template types of lib *)
-	  | Sequence (T) => templ_of (Sequence(TemplateParameter "T")) T c
-	  | Set (T) => templ_of (Set(TemplateParameter "T")) T c
-	  | OrderedSet (T) => templ_of (OrderedSet(TemplateParameter "T")) T c
-	  | Bag (T) => templ_of (Bag(TemplateParameter "T")) T c
-	  | Collection (T) => templ_of (Collection(TemplateParameter "T")) T c
-	  (* Class types of lib *)
-	  | OclVoid => class_of_t OclVoid c
-	  | OclAny => class_of_t OclAny c
-	  (* Model types *)
-	  | Classifier (path) =>
-	    let
-		val _ = trace development ("class_of_term: Classifier ("^(string_of_path path)^")\n")
-		val res = class_of_t (Classifier (path)) c
-		val _ = trace development ("found: "^(string_of_path (name_of res)) ^"\n")
-	    in
-		(*class_of_t (Classifier (path)) model*)
-		res
-	    end
-	  | DummyT => 
-	    let
-		val _ = trace development ("GetClassifierError: DummyT \n")
-	    in
-		raise GetClassifierError ("No classifier of type: 'DummyT' \n")
-	    end
-	  | TemplateParameter (string) => 
-	    let
-		val _ = trace development ("GetClassifierError: TemplateParameter ("^ string ^") \n")
-	    in
-		raise GetClassifierError ("No classifier of type: 'TemplateParameter (string)' \n")
-	    end
-    end
+
  
 (* RETURN: Classifier /* one-time classifier */ *)
 (*         Return the "one-time" classifier.
@@ -2331,46 +2633,24 @@ and class_of_term source (c:Classifier list, a:association list) =
            template form the library. Its only instanciate for one
            use and not stored later in the library.
 *) 
-and templ_of temp_typ para_typ [] = raise TemplateInstantiationError ("Error during instantiating a template" ^ "\n")
-  | templ_of temp_typ para_typ (Template{parameter,classifier}::tail) =
-    let
-	val _ = trace low ("Instantiate Template for classifier: " ^ (string_of_OclType (type_of classifier)) ^ "\n")
-    in
-	if ((type_of classifier) = temp_typ) then
-	    substitute_classifier para_typ classifier
-	else
-	    templ_of temp_typ para_typ tail
-    end
-(* element in lib not a template *)
-  | templ_of temp_typ para_typ (h::tail) = 
-    let
-	val _ = trace development ("shit")
-    in
-	templ_of temp_typ para_typ tail
-    end
 
-and class_of_type typ (model:transform_model) = 
-    class_of_term (Variable ("x",typ)) model
+(* element in lib not a template *)
+
 
 fun parent_of  C cl =  (class_of (parent_name_of C) (cl,[]))
 
 
-fun parents_of C cl = 
-    (case parent_name_of C of
-       [] => []    
-     | class => (if( class = (name_of OclAnyC) )
-                 then [(name_of OclAnyC)]
-                 else [class]@(parents_of (class_of class (cl,[])) cl)))
-
+(* 
 fun operation_of cl fq_name = 
     let 
       val classname   = (rev o  tl o rev) fq_name
-      val operations  = operations_of (class_of classname (cl,[]))
+      val operations  = local_operations_of (class_of classname (cl,[]) model)
       val name        = (hd o rev) fq_name	
     in
       SOME(hd (filter (fn a => if ((name_of_op a) = name)
 			       then true else false ) operations ))
-    end	
+    end
+*)	
 
 fun connected_classifiers_of (all_associations:association list) 
                              (C as Class {attributes,associations,...}) 
@@ -2415,99 +2695,7 @@ fun connected_classifiers_of (all_associations:association list)
 (* HERE *)
 
 
-fun conforms_to_up _ OclAny (_:transform_model) = true
-  | conforms_to_up (Set(T1)) (Collection(T2)) model =
-    let
-	val _ = trace low ("conforms_to_up: set -> collection \n")
-    in
-	if (conforms_to T1 T2 model) then 
-	    true
-	else 
-	    false
-    end
-  | conforms_to_up (Bag(T1)) (Collection(T2)) model =
-    let
-	val _ = trace low ("conforms_to_up: bag -> collection \n")
-    in    
-	if (conforms_to T1 T2 model) then 
-	    true
-	else 
-	    false
-    end
-  | conforms_to_up (Sequence(T1)) (Collection(T2)) model =
-    let
-	val _ = trace low ("conforms_to_up: sequence -> collection \n")
-    in
-	if (conforms_to T1 T2 model) then 
-	    true
-	else 
-	    false
-    end
-  | conforms_to_up (OrderedSet(T1)) (Collection(T2)) model =
-    let
-	val _ = trace low ("conforms_to_up:  orderedset -> collection \n")
-    in
-	if (conforms_to T1 T2 model) then 
-	    true
-	else 
-	    false
-    end
-  | conforms_to_up typ1 typ2  (model as(classifiers,associations)) = 
-    let
-	val class = class_of_type typ1 model
-	val parents_types = type_of_parents (class) model
-	val _ = trace low ("conforms_to_up:  ... \n")
-    in
-	member (typ2) (parents_types)
-    end
 
-and
-(* RETRUN: Boolean *)
-conforms_to x y (model:transform_model) =
-    let
-	val _ = trace low ("conforms_to: " ^ string_of_OclType x ^ " -> " ^ string_of_OclType y ^ " ? \n")
-    in
-	if (x = y) then 
-	    true
-	else
-	    if (type_equals x y) then
-		true
-	    else
-		conforms_to_up x y model
-    end
-
-(* RETURN: OclTerm *)
-and upcast (term,typ) =  
-    if (type_equals (type_of_term term) typ) then
-	term
-    else
-	OperationWithType (term,type_of_term term,"oclIsTypeOf",typ,typ)
-
-(* RETURN: OclType list *)
-and type_of_parents (Primitive {parent,...}) (model:transform_model) =
-    (    
-     case parent of 
-	 NONE => [OclAny]
-       | SOME (OclAny) => [OclAny]
-       | SOME (t) => (t)::(type_of_parents (class_of_type t model) model)
-    )
-  | type_of_parents (Class {parent,...}) model =
-    (
-     case parent of
-	 NONE => [OclAny]
-       | SOME (OclAny) => [OclAny]
-       | SOME (t) => (t)::(type_of_parents (class_of_type t model) model)
-    )
-  | type_of_parents (AssociationClass {parent,...}) model =
-    (
-     case parent of
-	 NONE => [OclAny]
-       | SOME (OclAny) => [OclAny]
-       | SOME (t) => (t)::(type_of_parents (class_of_type t model) model)
-    )
-  | type_of_parents (Interface {parents,...}) model = parents
-  | type_of_parents (Template {classifier,...}) model =
-    raise TemplateInstantiationError ("During Instantiation of template parent needn't to be accessed")
 fun args_interfereable [] [] model = true
   | args_interfereable ((str,typ)::tail) ((term,ttyp)::args) model =
     let
@@ -2649,7 +2837,7 @@ fun get_overloaded_methods class op_name ([],_) = raise NoModelReferenced ("in '
    let
        val _ = trace function_calls "get_overloaded_methods\n"
        val _ = trace low("\n")
-       val ops = operations_of class
+       val ops = local_operations_of class
        val _ = trace low("Look for methods for classifier: " ^ string_of_OclType (type_of class) ^ "\n")
        val ops2 = List.filter (fn a => (if ((#name a) = op_name) then true else false)) ops
        val _ = trace low("operation name                 : " ^ op_name ^ "  Found " ^ Int.toString (List.length ops2) ^ " method(s) \n")
@@ -2693,7 +2881,7 @@ fun get_overloaded_attrs_or_assocends class attr_name ([],_) = raise NoModelRefe
 		    (fn {name,...} => name ^ "\n")) (attributes_of class)
        val _ = trace function_arguments ("class's operations:\n")
        val _ = map (trace function_arguments o 
-		    (fn {name,...} => name ^ "\n")) (operations_of class)
+		    (fn {name,...} => name ^ "\n")) (local_operations_of class)
        val _ = trace function_arguments ("associations:\n")
        val _ = map (trace function_arguments o 
 		    (fn {name,...} => string_of_path name ^"\n")) associations
