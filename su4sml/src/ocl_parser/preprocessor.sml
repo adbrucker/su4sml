@@ -291,7 +291,7 @@ and generate_variables (Literal (paras)) path meth_name model = Literal (paras)
 	val _ = trace low ("generate_variable: AttributeCall\n")
 	val _ = List.app (print o (fn x => x^"\n") o string_of_path o name_of ) model
 	(* val classifier = obsolete_obsolete_class_of path model *)
-	val classifier = class_of path model
+	val classifier = class_of path (model,[])
 	val _ = trace low "classifier found\n"
 	val meth_list = operations_of  classifier
 	val meth = find_operation meth_name meth_list
