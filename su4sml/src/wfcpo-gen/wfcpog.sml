@@ -67,6 +67,7 @@ sig
   val is_pog : wfpo -> bool
   val apply_of : wfpo -> wf_or_po
   val id_of  : wfpo -> wfpo_id
+  val name_of : wfpo -> string
 end
 
 
@@ -112,6 +113,9 @@ fun apply_of (WFPO {apply=apply,...}) = apply
 
 
 fun id_of (WFPO{identifier=identifier,...}) = identifier
+
+fun name_of (WFPO{name=name,...}) = name
+
 
 end
 
