@@ -104,13 +104,27 @@ fun deep_of_classifier x (Class{parent,...}) (model as (clist,alist)) =
       | SOME(OclAny) => x+1
       | SOME(typ) => deep_of_classifier (x+1) (class_of_type typ model) model
     )
+  | deep_of_classifier x (AssociationClass{parent,...}) (model as (clist,alist)) = 
+    (case parent of
+	 NONE => x+1
+       | SOME(OclAny) => x+1
+       | SOME(typ) => deep_of_classifier (x+1) (class_of_type typ model) model
+    )
+  | deep_of_classifier x (Primitive {parent,...}) (model as (clist,alist)) =
+    (case parent of 
+	NONE => x+1
+      | SOME(OclAny) => x+1
+      | SOME(typ) => deep_of_classifier (x+1) (class_of_type typ model) model
+    )
   | deep_of_classifier x y model = raise WFCPOG_TaxonomyError ("Only Classes can check for maxDepth.\n")
 
 
 fun has_maxDepth_help depth [] model = true
   | has_maxDepth_help depth (h::classes) (model as (clist,alist)) = 
     let 
+	val _ = trace 50 ("look for deep ...\n")
 	val d = deep_of_classifier 0 h model
+	val _ = trace 50 ("deep of classifier " ^ (String.concat (Rep_Core.name_of h)) ^ " = " ^ (Int.toString d) ^ "\n")
     in
 	if (d > depth) 
 	then false
@@ -119,9 +133,13 @@ fun has_maxDepth_help depth [] model = true
     
 fun has_maxDepth wfpo (model as (clist,alist)) =
     let
+	val _ = trace 50 ("remove oclLib ...\n")
 	val classes = removeOclLibrary clist
+	val _ = trace 50 ("oclLib removed ...\n")
 	val tax_args = TAX_Data.get wfpo
+	val _ = trace 50 ("args extracted ...\n")
 	val depth = (#max_depth tax_args)
+	val _ = trace 50 ("depth = " ^ (Int.toString (depth)) ^ "\n")
     in
 	has_maxDepth_help depth classes model 
     end

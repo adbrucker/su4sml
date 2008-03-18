@@ -1,6 +1,7 @@
-open WFCPOG_Registry
-open WFCPOG
 open OclLibrary
+open WFCPOG
+open WFCPOG_Registry
+open WFCPOG_TestSuite
 
 (** LISKOV CONSTRAINT **)
 val lsk = WFCPOG_Registry.get_wfpo WFCPOG_Registry.supported "lsk"
@@ -39,3 +40,6 @@ val md5 = WFCPOG_Registry.rename_wfpo "md5" (WFCPOG_Registry.TAX_Data.put ({key=
 val md6 = WFCPOG_Registry.rename_wfpo "md6" (WFCPOG_Registry.TAX_Data.put ({key=9,max_depth=6}) tax)
 val md7 = WFCPOG_Registry.rename_wfpo "md7" (WFCPOG_Registry.TAX_Data.put ({key=9,max_depth=7}) tax)
 val md8 = WFCPOG_Registry.rename_wfpo "md8" (WFCPOG_Registry.TAX_Data.put ({key=9,max_depth=8}) tax)
+
+
+

@@ -106,29 +106,23 @@ fun rename_wfpo new_name (WFCPOG.WFPO{identifier=identifier,name=name,descriptio
 
 fun check_wfc model (wfc_sel)  = 
     let 
-	val _ = trace 10 (id_of wfc_sel ^ "..............")
-	val apply = case WFCPOG.apply_of wfc_sel of
-			(WFCPOG.WFC a ) => a wfc_sel
-		      | _  => (fn _ => true)
-	val res = apply (model)
-	val _ = case res of
-		    false => trace 10 ("[FAILED]\n")
-		  | true => trace 10 ("[OK]\n")
+	val _ = trace 50 (name_of wfc_sel ^ "..............")
     in
-	res
+	case WFCPOG.apply_of wfc_sel of
+	    WFCPOG.WFC(a) => a wfc_sel model 
+	  | x => raise WFCPOG_RegistryError ("A assumed wfc " ^ (name_of wfc_sel) ^ " is not a wfc!\n")
     end
     
-fun check_wfcs model wfcs = List.all (fn v => (v = true)) 
-				     (map (check_wfc model) wfcs) 
+fun check_wfcs model wfcs = List.all (fn v => (v = true)) (map (check_wfc model) wfcs) 
 
 
 fun generate_po model (wfc_sel)  = 
-    let 
-      val apply = case WFCPOG.apply_of wfc_sel of
-		    (WFCPOG.POG a) => a wfc_sel
-		  | _  => (fn _ => [])
+    let
+	val _ = trace 50 (name_of wfc_sel ^ "...............")
     in
-      (wfc_sel, (apply (model)) ) 
+	case (WFCPOG.apply_of wfc_sel) of
+	    WFCPOG.POG (a) => (wfc_sel,a wfc_sel model)
+	  | x  => raise WFCPOG_RegistryError ("A assumed po " ^ (name_of wfc_sel) ^ " is not a po!\n")
     end
 
 fun generate_pos model wfcs = map (generate_po model) wfcs
