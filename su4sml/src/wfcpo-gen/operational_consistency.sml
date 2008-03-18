@@ -90,7 +90,7 @@ fun secureUML_real_op oper class model =
 	val len = String.size name
 	val substr = String.substring (name,0,len-4)
     in
-	get_operation substr class model 
+	get_operation substr class model
     end
 
 fun secureUML_sec_op oper class model = 

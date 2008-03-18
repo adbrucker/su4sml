@@ -102,7 +102,7 @@ fun print_liskov_args (args:Liskov_args) =
 
 fun generate_return_value typ oper sub_class super_class model = 
     let
-	val op_of_super = get_operation (name_of_op oper) super_class model 
+	val op_of_super = get_operation (name_of_op oper) super_class model
 	val sub_name = string_of_path (name_of sub_class)
 	val super_name = string_of_path (name_of super_class)
 	val op_name = name_of_op oper

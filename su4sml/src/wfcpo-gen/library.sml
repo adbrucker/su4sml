@@ -64,7 +64,7 @@ sig
     (** Get an attribute by name. *)
     val get_attribute             : string -> Rep_Core.Classifier -> Rep.Model -> Rep_Core.attribute
     (** Get an operation by name. *)
-    val get_operation             : string -> Rep_Core.Classifier -> Rep.Model -> Rep_Core.operation
+ (*    val get_operation             : string -> Rep_Core.Classifier -> Rep.Model -> Rep_Core.operation *)
     (** *) 
     val class_contains_op         : Rep_Core.operation -> Rep.Model -> Rep_Core.Classifier -> bool
     (** *)

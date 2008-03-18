@@ -85,31 +85,34 @@ fun modificator_conforms_to private private = true
 
   | modificator_conforms_to x y = false
 
-fun is_modificator_conformant_CollPart modif (CollectionItem(term,typ)) model = is_modificator_conformant modif term model
-  | is_modificator_conformant_CollPart modif (CollectionRange(first,last,typ)) model = 
-    (is_modificator_conformant modif first model) andalso (is_modificator_conformant modif last model)
+fun expr_is_visible_CollPart modif (CollectionItem(term,typ)) model = expr_is_visible modif term model
+  | expr_is_visible_CollPart modif (CollectionRange(first,last,typ)) model = 
+    (expr_is_visible modif first model) andalso (expr_is_visible modif last model)
 
-and is_modificator_conformant modif (Literal(s,typ)) model = true 
-  | is_modificator_conformant modif (Variable(s,typ)) model = true
-  | is_modificator_conformant modif (CollectionLiteral(part,typ)) model = 
-    List.all (fn a => is_modificator_conformant_CollPart modif a model) part
-  | is_modificator_conformant modif (If(cond,cond_typ,else_t,else_typ,then_t,then_typ,rtyp)) model = 
-    is_modificator_conformant modif cond model 
-    andalso is_modificator_conformant modif else_t model
-    andalso is_modificator_conformant modif then_t model
-  | is_modificator_conformant modif (AssociationEndCall(src,styp,path,rtyp)) model = 
+and expr_is_visible modif (Literal(s,typ)) model = true 
+  | expr_is_visible modif (Variable(s,typ)) model = true
+  | expr_is_visible modif (CollectionLiteral(part,typ)) model = 
+    List.all (fn a => expr_is_visible_CollPart modif a model) part
+  | expr_is_visible modif (If(cond,cond_typ,else_t,else_typ,then_t,then_typ,rtyp)) model = 
+    expr_is_visible modif cond model 
+    andalso expr_is_visible modif else_t model
+    andalso expr_is_visible modif then_t model
+  | expr_is_visible modif (AssociationEndCall(src,styp,path,rtyp)) model = 
     let
+	val _ = trace 50 ("start expr_is_visible")
 	val cl = class_of_term src model
 	val att_name = List.last(path)
+	val _ = trace 50 ("start get_attribute ")
 	val att = get_attribute att_name cl model
-	val _ = trace 100 ("end is_modificator_conformant")
+	val _ = trace 50 ("end expr_is_visible")
     in
 	if (modificator_conforms_to (#visibility att) modif)
-	then (is_modificator_conformant modif src model)
+	then (expr_is_visible modif src model)
 	else false
     end    
-  | is_modificator_conformant modif (x as OperationCall(src,styp,path,args,rtyp)) model = 
+  | expr_is_visible modif (x as OperationCall(src,styp,path,args,rtyp)) model = 
     let
+	val typ = trace 50 ("expr_is_visible: OpCall \n")
 	val typ = type_of_term src
 	val cl = class_of_term (Variable("x",typ)) model
 	val op_name = List.last(path)
@@ -117,30 +120,30 @@ and is_modificator_conformant modif (Literal(s,typ)) model = true
 	val _ = trace 100 ("Classifier : " ^ Rep2String.classifier2string cl ^ "\n")
 	val _ = trace 100 ("Op_name : " ^ op_name ^ "\n")
 	val oper = get_operation op_name cl model
-	val _ = trace 100 ("end is_modificator_conformant")
+	val _ = trace 100 ("end expr_is_visible")
     in
 	if (modificator_conforms_to (#visibility oper) modif) 
-	then ((List.all (fn (a,b) => (is_modificator_conformant modif a model)) args) andalso (is_modificator_conformant modif src model))
+	then ((List.all (fn (a,b) => (expr_is_visible modif a model)) args) andalso (expr_is_visible modif src model))
 	else false
     end
-  | is_modificator_conformant modif (x as AttributeCall(src,styp,path,rtyp)) model =
+  | expr_is_visible modif (x as AttributeCall(src,styp,path,rtyp)) model =
     let
 	val cl = class_of_term src model
 	val att_name = List.last(path)
 	val att = get_attribute att_name cl model
-	val _ = trace 100 ("end is_modificator_conformant")
+	val _ = trace 100 ("end expr_is_visible")
     in
 	if (modificator_conforms_to (#visibility att) modif)
-	then (is_modificator_conformant modif src model)
+	then (expr_is_visible modif src model)
 	else false
     end
-  | is_modificator_conformant modif (OperationWithType(src,styp,name,ntyp,rtyp)) model = is_modificator_conformant modif src model
-  | is_modificator_conformant modif (Let(var,vtyp,rhs,rtyp,t_in,ityp)) model =
-    (is_modificator_conformant modif rhs model) andalso (is_modificator_conformant modif t_in model)
-  | is_modificator_conformant modif (Iterate(iter_vars,rname,rtyp,rterm,src,styp,body,btyp,retyp)) model = 
-    (is_modificator_conformant modif src model) andalso (is_modificator_conformant modif body model)
-  | is_modificator_conformant modif (Iterator(name,vars,src,styp,body,btyp,rtyp)) model = 
-    (is_modificator_conformant modif src model) andalso (is_modificator_conformant modif body model)
+  | expr_is_visible modif (OperationWithType(src,styp,name,ntyp,rtyp)) model = expr_is_visible modif src model
+  | expr_is_visible modif (Let(var,vtyp,rhs,rtyp,t_in,ityp)) model =
+    (expr_is_visible modif rhs model) andalso (expr_is_visible modif t_in model)
+  | expr_is_visible modif (Iterate(iter_vars,rname,rtyp,rterm,src,styp,body,btyp,retyp)) model = 
+    (expr_is_visible modif src model) andalso (expr_is_visible modif body model)
+  | expr_is_visible modif (Iterator(name,vars,src,styp,body,btyp,rtyp)) model = 
+    (expr_is_visible modif src model) andalso (expr_is_visible modif body model)
 
 
 
@@ -162,7 +165,16 @@ fun are_conditions_visible_help [] model = true
 					  val posts = postcondition_of_op a
 				      in
 					  (* TODO: bug must be here *)
-					  List.map (fn (x,y) => is_modificator_conformant public y model) posts
+					  (* crashed after the third extraction of 
+					     OpCall from postcondition of 'isEmpty
+					   *)
+					  List.map (fn (x,y) => 
+						       let
+							   val _ = trace 50 ("next post: \n" )
+						       in
+							   expr_is_visible public y model
+						       end
+						   ) posts
 				      end
 				  ) (public_operations_of h model)
 	    val _ = trace 50 ("public operations done.\n\n")
@@ -171,7 +183,7 @@ fun are_conditions_visible_help [] model = true
 					  val _ = trace 50 ("package operations = " ^ (name_of_op a) ^ "\n")
 					  val posts = postcondition_of_op a
 				      in
-					  List.map (fn (x,y) => is_modificator_conformant package y model) posts
+					  List.map (fn (x,y) => expr_is_visible package y model) posts
 				      end
 				  ) (package_operations_of h model)
 	    val _ = trace 50 ("package operations done.\n\n")
@@ -180,7 +192,7 @@ fun are_conditions_visible_help [] model = true
 					  val _ = trace 50 ("protected operations " ^ (name_of_op a) ^ "\n")
 					  val posts = postcondition_of_op a
 				      in
-					  List.map (fn (x,y) => is_modificator_conformant protected y model) posts
+					  List.map (fn (x,y) => expr_is_visible protected y model) posts
 				      end
 				  ) (protected_operations_of h model)
 	    val _ = trace 50 ("protected operations done.\n\n")
