@@ -1865,7 +1865,7 @@ collection_type_identifier_cs1) = collection_type_identifier_cs1 ()
  val  BRACE_OPEN1 = BRACE_OPEN1 ()
  val  BRACE_CLOSE1 = BRACE_CLOSE1 ()
  in (
-CollectionLiteral ([],dispatch_collection (collection_type_identifier_cs,DummyT))
+CollectionLiteral ([],create_set (collection_type_identifier_cs,DummyT))
 )
 end)
  in ( LrTable.NT 63, ( result, collection_type_identifier_cs1left, 
@@ -1884,7 +1884,7 @@ collection_type_identifier_cs1) = collection_type_identifier_cs1 ()
 collection_literal_parts_cs1 ()
  val  BRACE_CLOSE1 = BRACE_CLOSE1 ()
  in (
-CollectionLiteral (collection_literal_parts_cs,dispatch_collection(collection_type_identifier_cs,DummyT))
+CollectionLiteral (collection_literal_parts_cs,create_set(collection_type_identifier_cs,DummyT))
 )
 end)
  in ( LrTable.NT 63, ( result, collection_type_identifier_cs1left, 
@@ -1972,9 +1972,7 @@ collection_type_identifier_cs1 ()
  val  PAREN_OPEN1 = PAREN_OPEN1 ()
  val  (type_specifier as type_specifier1) = type_specifier1 ()
  val  PAREN_CLOSE1 = PAREN_CLOSE1 ()
- in (
-dispatch_collection (collection_type_identifier_cs,type_specifier))
-
+ in (create_set (collection_type_identifier_cs,type_specifier))
 end)
  in ( LrTable.NT 48, ( result, collection_type_identifier_cs1left, 
 PAREN_CLOSE1right), rest671)
@@ -3238,7 +3236,7 @@ end
 , simple_name1right)) :: rest671)) => let val  result = 
 MlyValue.simple_type_specifier_cs (fn _ => let val  (simple_name as 
 simple_name1) = simple_name1 ()
- in (path_to_type [simple_name])
+ in (type_of_path [simple_name])
 end)
  in ( LrTable.NT 52, ( result, simple_name1left, simple_name1right), 
 rest671)

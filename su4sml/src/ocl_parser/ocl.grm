@@ -399,8 +399,8 @@ op_constraint_stereotype_cs :             PRE									(PRE)
 
 
 (* RETURN: OclTerm *)
-collection_literal_exp_cs :               collection_type_identifier_cs BRACE_OPEN  BRACE_CLOSE			(CollectionLiteral ([],dispatch_collection (collection_type_identifier_cs,DummyT)))
-                                        | collection_type_identifier_cs BRACE_OPEN collection_literal_parts_cs BRACE_CLOSE	(CollectionLiteral (collection_literal_parts_cs,dispatch_collection(collection_type_identifier_cs,DummyT)))
+collection_literal_exp_cs :               collection_type_identifier_cs BRACE_OPEN  BRACE_CLOSE			(CollectionLiteral ([],create_set (collection_type_identifier_cs,DummyT)))
+                                        | collection_type_identifier_cs BRACE_OPEN collection_literal_parts_cs BRACE_CLOSE	(CollectionLiteral (collection_literal_parts_cs,create_set(collection_type_identifier_cs,DummyT)))
 
 
 (* RETURN: CollectionPart list *)
@@ -419,7 +419,7 @@ collection_range_cs :                   expression DBL_DOT expression						(Coll
 
 (* renamed to collection_type_specifier_cs from collection_type_cs *)
 (* RETURN: OclType *)
-collection_type_specifier_cs :            collection_type_identifier_cs PAREN_OPEN type_specifier PAREN_CLOSE   (dispatch_collection (collection_type_identifier_cs,type_specifier))
+collection_type_specifier_cs :            collection_type_identifier_cs PAREN_OPEN type_specifier PAREN_CLOSE   (create_set (collection_type_identifier_cs,type_specifier))
 
 (* RETURN: string *)
 collection_type_identifier_cs:          SET                                                                     (SET)
@@ -616,7 +616,7 @@ property_call_exp_cs :                    path_name_cs								(AttributeCall (Va
 					| path_name_cs time_exp_cs property_call_parameters_cs			(OperationCall (Variable ("dummy_source",DummyT),DummyT,path_name_cs@["atPre"],property_call_parameters_cs,DummyT))
 
 (* NOT YET SUPPORTED 
-					| path_name_cs qualifiers						(CollectionLiteral (qualifiers, dispatch_collection (List.last path_name_cs,qualifiers)))
+					| path_name_cs qualifiers						(CollectionLiteral (qualifiers, create_set (List.last path_name_cs,qualifiers)))
                                        | path_name_cs qualifiers time_exp_cs
 *)
 
@@ -695,7 +695,7 @@ type_specifier:                           simple_type_specifier_cs              
 *)
 
 (* RETURN: OclType *)
-simple_type_specifier_cs :                simple_name                                                           (path_to_type [simple_name])                                                          
+simple_type_specifier_cs :                simple_name                                                           (type_of_path [simple_name])                                                          
 
 
 (* RETURN: (string * OclType * OclTerm) list *)

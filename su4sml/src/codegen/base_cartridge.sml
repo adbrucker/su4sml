@@ -152,7 +152,7 @@ fun curClassifierPackageToString env p2sfun = (case (#curClassifier env) of
 fun lookup env "classifier_name"  	 = Rep_Core.short_name_of (curClassifier' env)
   | lookup env "classifier_package"      = curClassifierPackageToString env Rep_OclType.string_of_path 
   | lookup env "classifier_package_path" = curClassifierPackageToString env Rep_OclType.pathstring_of_path 
-  | lookup env "classifier_parent"       = Rep_Core.short_parent_name_of (curClassifier' env)
+  | lookup env "classifier_parent"       = Rep_Core.parent_short_name_of (curClassifier' env)
   | lookup env "attribute_name"          = #name (curAttribute' env)
   | lookup env "attribute_type" 	 = oclType2Native (#attr_type (curAttribute' env))
   

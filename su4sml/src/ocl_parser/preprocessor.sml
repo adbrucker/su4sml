@@ -294,10 +294,10 @@ and generate_variables (Literal (paras)) path meth_name model = Literal (paras)
 	val classifier = class_of path (model,[])
 	val _ = trace low "classifier found\n"
 	val meth_list = operations_of  classifier
-	val meth = find_operation meth_name meth_list
+	val meth = get_operation meth_name meth_list
 	val _ = trace zero ("a result call resolved ..." ^ "\n")
     in
-	(Variable ("result",(#result meth)))
+	(Variable ("result",(#result (valOf(meth)))))
     end
   | generate_variables (AttributeCall (sterm,styp,p,res_typ)) path meth_name model =
     (AttributeCall (generate_variables sterm path meth_name model,styp,p,res_typ))
