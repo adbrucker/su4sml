@@ -109,11 +109,11 @@ fun secureUML_get_att_name oper =
     end
 
 (* *)
-fun secureUML_getter_operations_of class_n model = List.filter (fn a => String.isPrefix "get" (name_of_op a)) (local_operations_of class_n model)
+fun secureUML_getter_operations_of class model = List.filter (fn a => String.isPrefix "get" (name_of_op a)) (local_operations_of class)
 (* *)
-fun secureUML_setter_operations_of class_n model = List.filter (fn a => String.isPrefix "set" (name_of_op a)) (local_operations_of class_n model)
+fun secureUML_setter_operations_of class model = List.filter (fn a => String.isPrefix "set" (name_of_op a)) (local_operations_of class)
 (* *)
-fun secureUML_op_sec_operations_of class_n model = List.filter (fn a => String.isSuffix "_sec" (name_of_op a)) (local_operations_of class_n model)
+fun secureUML_op_sec_operations_of class model = List.filter (fn a => String.isSuffix "_sec" (name_of_op a)) (local_operations_of class)
 
 fun secureUML_substitute_terms (OperationCall(src,typ,path,args,rtyp)) class = 
     let
@@ -141,7 +141,7 @@ fun secureUML_substitute_terms (OperationCall(src,typ,path,args,rtyp)) class =
 
 fun generate_secureUML_creators_po class (model as (clist,alist)) = 
     let
-		val creators = creation_operations_of (name_of class) model 
+		val creators = creation_operations_of class model
     in
 	(List.map (fn a => 
 		      let
@@ -157,7 +157,7 @@ fun generate_secureUML_creators_po class (model as (clist,alist)) =
 
 fun generate_secureUML_destructors_po class (model as (clist,alist)) = 
     let
-	val destructors = destruction_operations_of (name_of class) model
+	val destructors = destruction_operations_of class model
     in
 	(List.map (fn a => 
 		      let
@@ -173,7 +173,7 @@ fun generate_secureUML_destructors_po class (model as (clist,alist)) =
 	
 fun generate_secureUML_getters_po class (model as (clist,alist)) = 
     let
-	val getter = secureUML_getter_operations_of (name_of class) model
+	val getter = secureUML_getter_operations_of class model
     in
 	(List.map (fn a =>
 		      let
@@ -190,7 +190,7 @@ fun generate_secureUML_getters_po class (model as (clist,alist)) =
 
 fun generate_secureUML_setters_po class (model as (clist,alist)) = 
     let
-	val setter = secureUML_setter_operations_of (name_of class) model
+	val setter = secureUML_setter_operations_of class model
     in
     	(List.map (fn a =>
 		      let
@@ -209,7 +209,7 @@ fun generate_secureUML_setters_po class (model as (clist,alist)) =
 	
 fun generate_secureUML_op_sec_po class (model as (clist,alist)) =
     let
-	val op_sec = secureUML_op_sec_operations_of (name_of class) model
+	val op_sec = secureUML_op_sec_operations_of class model
     in
 	List.concat (List.map (fn a =>
 		      let

@@ -116,7 +116,7 @@ fun post_implies_not_args_or_not_self_at_pre oper class =
 fun ops_are_query_help [] model = []
   | ops_are_query_help (h::classes) (model as (clist,alist)) = 
     let
-	val qops = query_operations_of h
+	val qops = query_operations_of h model
 	val x = List.map (fn a => (post_implies_args_and_self_at_pre a h)) qops
     in
 	(x)@(ops_are_query_help classes model)
@@ -125,7 +125,7 @@ fun ops_are_query_help [] model = []
 fun ops_are_command_help [] model = []
   | ops_are_command_help (h::classes) (model as (clist,alist)) =  
     let
-	val cops = command_operations_of h
+	val cops = command_operations_of h model
 	val x = List.map (fn a => (post_implies_not_args_or_not_self_at_pre a h)) cops 
     in
 	(x)@(ops_are_command_help classes model)

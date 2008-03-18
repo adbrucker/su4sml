@@ -65,17 +65,10 @@ sig
     val get_attribute             : string -> Rep_Core.Classifier -> Rep.Model -> Rep_Core.attribute
     (** Get an operation by name. *)
     val get_operation             : string -> Rep_Core.Classifier -> Rep.Model -> Rep_Core.operation
-
     (** *) 
     val class_contains_op         : Rep_Core.operation -> Rep.Model -> Rep_Core.Classifier -> bool
     (** *)
     val class_has_local_op        : string -> Rep.Model -> Rep_Core.Classifier -> bool
-
-
-
-
-
-
     (** Get the class his children *)
     val children_of               : Rep_Core.Classifier -> Rep.Model -> Rep_OclType.Path list
     (** Check inheritance tree for a given property and return first classifer fullfilling property.*)
@@ -150,23 +143,13 @@ fun disjugate_terms [] = raise WFCPOG_LibraryError("Empty list not disjugateable
 	else raise WFCPOG_LibraryError ("type of term is not Boolean. \n")
     end
 
-(* create normal list from a list of options type *)
-
-
 fun filter_out_none [] = []
   | filter_out_none (NONE::tail) = filter_out_none tail
   | filter_out_none (SOME(x)::tail) = (SOME(x)::(filter_out_none tail))
 
-
-
-
-
-
-
-
 fun class_contains_op oper model classifier = 
     let
-	val ops = local_operations_of (name_of classifier) model
+	val ops = local_operations_of classifier 
     in
 	List.exists (fn a => if (#name oper) = (#name a) 
 				andalso (sig_conforms_to (arguments_of_op oper) (arguments_of_op a) model)
@@ -174,26 +157,18 @@ fun class_contains_op oper model classifier =
 			     else false) ops
     end
 
-
-(* get all local operations of a classifier *)
-
 fun class_has_local_op name model classifier = 
     let
-	val ops = local_operations_of (name_of classifier) model
+	val ops = local_operations_of classifier 
     in
 	List.exists (fn a => (#name a) = name) ops
     end
 
 
-
-
-
-
-
 fun get_operation s classifier model = 
     let
 	val _ = trace 100 ("get_operation: \n")
-	val x = List.find (fn a => if (name_of_op a = s) then true else false) (all_operations_of (name_of classifier) model)
+	val x = List.find (fn a => if (name_of_op a = s) then true else false) (all_operations_of classifier model)
 	val _ = trace 100 ("end get_operation\n")
     in
 	case x of

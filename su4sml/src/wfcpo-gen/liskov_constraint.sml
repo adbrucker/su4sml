@@ -149,7 +149,7 @@ fun generate_return_value typ oper sub_class super_class model =
 fun weaken_precondition_help [] model = []
   | weaken_precondition_help (class::clist) model =
     let
-	val mo = modified_operations_of (name_of class) model
+	val mo = modified_operations_of class model 
 	(* (operation of subclass, classifier of super class) *)
 	val raw_po = List.map (fn a => (a,(go_up_hierarchy class (class_contains_op a model) model))) mo
         (* proofs obligation for classifier [(term,constraint info)] *)
@@ -169,7 +169,7 @@ fun weaken_precondition wfpo (model as (clist,alist)) =
 fun strengthen_postcondition_help [] model = []
   | strengthen_postcondition_help (class::clist) model =
     let
-	val mo = modified_operations_of (name_of class) model
+	val mo = modified_operations_of class model
 	(* (operation of subclass, classifier of super class) *)
 	val raw_po = List.map (fn a => (a,(go_up_hierarchy class (class_contains_op a model) model))) mo
         (* proof obligations for classifier [(term,constraint info)] *)

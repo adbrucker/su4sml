@@ -94,7 +94,7 @@ fun generate_return_value crea_op classifier model =
 fun post_implies_invariant_help [] model = []
   | post_implies_invariant_help (h::class) (model as (clist,alist)) = 
     let
-	val crea_ops = creation_operations_of (name_of h) model 
+	val crea_ops = creation_operations_of h model
 	val pos = List.map (fn a => generate_return_value a h model) crea_ops		       
 							    
     in
@@ -112,8 +112,8 @@ fun post_implies_invariant (model as (clist, alist)) =
 fun overwrites_old_creators_help [] model = [true]
   | overwrites_old_creators_help (h::class) (model as (clist,alist)) = 
     let
-	val crea = creation_operations_of (name_of h) model
-	val over_ops = modified_operations_of (name_of h) model
+	val crea = creation_operations_of h model
+	val over_ops = modified_operations_of h model
     in
 	(List.all (fn a => List.exists (fn b => b =a) (over_ops)) crea)::(overwrites_old_creators_help class model)
     end

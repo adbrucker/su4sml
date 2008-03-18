@@ -89,7 +89,7 @@ fun is_nameclash_free_help [] model = true
     else
 	let
 	    val if_list = List.map (fn a => class_of_type a model) interfaces
-	    val op_name_list = List.concat (List.map (fn a => (List.map (name_of_op) (all_operations_of (name_of a) model))) if_list)
+	    val op_name_list = List.concat (List.map (fn a => (List.map (name_of_op) (all_operations_of a model))) if_list)
 	in 
 	    list_has_dup (op_name_list)
 	end
@@ -99,7 +99,7 @@ fun is_nameclash_free_help [] model = true
     else
 	let
 	    val if_list = List.map (fn a => class_of_type a model) interfaces
-	    val op_name_list = List.concat (List.map (fn a => (List.map (name_of_op) (all_operations_of (name_of a) model))) if_list)
+	    val op_name_list = List.concat (List.map (fn a => (List.map (name_of_op) (all_operations_of a model))) if_list)
 	in 
 	    list_has_dup (op_name_list)
 	end

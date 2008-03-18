@@ -163,7 +163,7 @@ fun are_conditions_visible_help [] model = true
 				      in
 					  List.map (fn (x,y) => is_modificator_conformant public y model) posts
 				      end
-				  ) (public_operations_of (name_of h) model)
+				  ) (public_operations_of h model)
 	    val _ = trace 50 ("public operations done.\n\n")
 	    val pac_op = List.map (fn a => 
 				      let
@@ -172,7 +172,7 @@ fun are_conditions_visible_help [] model = true
 				      in
 					  List.map (fn (x,y) => is_modificator_conformant package y model) posts
 				      end
-				  ) (package_operations_of (name_of h) model)
+				  ) (package_operations_of h model)
 	    val _ = trace 50 ("package operations done.\n\n")
 	    val pro_op = List.map (fn a => 
 				      let
@@ -181,7 +181,7 @@ fun are_conditions_visible_help [] model = true
 				      in
 					  List.map (fn (x,y) => is_modificator_conformant protected y model) posts
 				      end
-				  ) (protected_operations_of (name_of h) model)
+				  ) (protected_operations_of h model)
 	    val _ = trace 50 ("protected operations done.\n\n")
 	    val _ = trace 50 ("visibility" ^ (string_of_path (name_of h)) ^ " done.\n")
 	in
