@@ -158,16 +158,17 @@ fun are_conditions_visible_help [] model = true
 	    val _ = trace 50 ("Classifier " ^ (string_of_path (name_of h)) ^ " is visible.\n")
 	    val pub_op = List.map (fn a => 
 				      let
-					  val _ = trace 100 ("public operation = " ^ (name_of_op a) ^ "\n")
+					  val _ = trace 50 ("public operation = " ^ (name_of_op a) ^ "\n")
 					  val posts = postcondition_of_op a
 				      in
+					  (* TODO: bug must be here *)
 					  List.map (fn (x,y) => is_modificator_conformant public y model) posts
 				      end
 				  ) (public_operations_of h model)
 	    val _ = trace 50 ("public operations done.\n\n")
 	    val pac_op = List.map (fn a => 
 				      let
-					  val _ = trace 100 ("package operations ...\n")
+					  val _ = trace 50 ("package operations = " ^ (name_of_op a) ^ "\n")
 					  val posts = postcondition_of_op a
 				      in
 					  List.map (fn (x,y) => is_modificator_conformant package y model) posts
@@ -176,7 +177,7 @@ fun are_conditions_visible_help [] model = true
 	    val _ = trace 50 ("package operations done.\n\n")
 	    val pro_op = List.map (fn a => 
 				      let
-					  val _ = trace 100 ("protected operations ...\n")
+					  val _ = trace 50 ("protected operations " ^ (name_of_op a) ^ "\n")
 					  val posts = postcondition_of_op a
 				      in
 					  List.map (fn (x,y) => is_modificator_conformant protected y model) posts
