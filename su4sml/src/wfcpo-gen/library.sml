@@ -61,22 +61,17 @@ sig
     val conjugate_terms           : Rep_OclTerm.OclTerm list -> Rep_OclTerm.OclTerm
     (** *)
     val disjugate_terms           : Rep_OclTerm.OclTerm list -> Rep_OclTerm.OclTerm
-    (** Transform a option list to a normal list.*)
-    val optlist2list              : 'a option list -> 'a list
     (** Get an attribute by name. *)
     val get_attribute             : string -> Rep_Core.Classifier -> Rep.Model -> Rep_Core.attribute
     (** Get an operation by name. *)
     val get_operation             : string -> Rep_Core.Classifier -> Rep.Model -> Rep_Core.operation
-    (** Test wheter the signatures are type consistent.*)
-    val sig_conforms_to           : (string * Rep_OclType.OclType) list -> (string * Rep_OclType.OclType) list -> Rep.Model -> bool
-    (** Check if the operation is a refinement of another operation.*)
-    val same_op                   : Rep_Core.operation -> Rep_Core.operation -> Rep.Model -> bool
+
     (** *) 
     val class_contains_op         : Rep_Core.operation -> Rep.Model -> Rep_Core.Classifier -> bool
     (** *)
     val class_has_local_op        : string -> Rep.Model -> Rep_Core.Classifier -> bool
-    (** *)
-    val class_of_package          : Rep_OclType.Path -> Rep.Model -> Rep_Core.Classifier list
+
+
 
 
 
@@ -85,12 +80,6 @@ sig
     val children_of               : Rep_Core.Classifier -> Rep.Model -> Rep_OclType.Path list
     (** Check inheritance tree for a given property and return first classifer fullfilling property.*)
     val go_up_hierarchy           : Rep_Core.Classifier -> (Rep_Core.Classifier -> bool) ->  Rep.Model -> Rep_Core.Classifier
-    (** Get the local invariants of a classifier.*)
-    val local_invariants_of       : Rep_Core.Classifier -> (string option * Rep_OclTerm.OclTerm) list
-    (** Get the inherited invarinats of a classifier.*)
-    val inherited_invariants_of   : Rep_Core.Classifier -> Rep.Model -> (string option * Rep_OclTerm.OclTerm) list
-    (** Get all invariants of a classifier.*)
-    val all_invariants_of         : Rep_Core.Classifier -> Rep.Model -> (string option * Rep_OclTerm.OclTerm) list
     (** get the relative path according to the package *)
     val rel_path_of               : Rep_OclType.Path -> Rep_OclType.Path -> Rep_OclType.Path
     (** Substitute a package name of a path. *)
@@ -255,19 +244,7 @@ fun has_children class (model as (clist,alist)) =
     
 
 
-fun local_invariants_of class = invariant_of class
 
-fun inherited_invariants_of class (model:Rep.Model as (clist,alist)) = 
-    let
-	val parent = parent_of class (#1 model)
-    in
-	if (type_of parent = OclAny) 
-	then []
-	else (local_invariants_of class)@(inherited_invariants_of parent model)
-    end
-
-fun all_invariants_of class model = 
-    (local_invariants_of class)@(inherited_invariants_of class model)
 
 
 fun rel_path_of [] name = name
@@ -284,9 +261,6 @@ fun substitute_package [] tpackage [] = raise WFCPOG_LibraryError ("Not possible
     if (hf = hp) 
     then substitute_package fpackage tpackage path
     else (hp::path)
-
-fun class_of_package pkg (model as (clist,alist)) = 
-    List.filter (fn a => package_of a = pkg) clist
 
 fun args2varargs [] = []
   | args2varargs ((a,b)::tail) = (Variable(a,b),b)::(args2varargs tail)

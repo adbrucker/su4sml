@@ -149,7 +149,7 @@ type transform_model = (Classifier list * association list)
 
 
 (***************************************** 
- * RETURN transform_model                *
+ *                 MODEL                 *
  *****************************************)
 (**
  * TODO: Description 
@@ -162,7 +162,7 @@ val joinModel      : transform_model -> transform_model -> transform_model
 val normalize_ext  : transform_model -> transform_model
 
 (*****************************************
- * RETURN Classifier                     *
+ *              CLASSIFIERS              *
  *****************************************)
 (**
  * Ocl Classifier OclAny.
@@ -195,15 +195,22 @@ val class_of_type           : Rep_OclType.OclType -> transform_model -> Classifi
 val class_of_term           : Rep_OclTerm.OclTerm -> transform_model -> Classifier
 
 (**
+ * Returns the classifier of the parent of a classifier.
+ *)
+val class_of_parent         : Classifier -> transform_model -> Classifier
+
+(**
+ * Returns all classifiers of a given package.
+ *) 
+val classes_of_package      : Rep_OclType.Path -> transform_model -> Classifier list
+
+(**
  * Returns the classifier of the parent of classifier.
  *) 
 val parent_of           : Classifier -> Classifier list -> Classifier
 
 
-(**
- * Returns the classifier of the parent of a classifier.
- *)
-val class_of_parent         : Classifier -> transform_model -> Classifier
+
 
 (** 
  * Update the thy_name of a classifier.
@@ -249,7 +256,7 @@ val connected_classifiers_of : association list -> Classifier -> Classifier list
 
 
 (*****************************************
- * RETURN OclType                        *
+ *             TYPES                     *
  *****************************************)
 
 (**
@@ -328,7 +335,7 @@ val dispatch_collection     : (string * Rep_OclType.OclType) -> Rep_OclType.OclT
 
 
 (*****************************************
- * RETURN OclTerms/CollectionPart        *
+ *             TERMS/EXPRESSIONS         *
  *****************************************)
 
 
@@ -341,19 +348,19 @@ val upcast                  : (Rep_OclTerm.OclTerm * Rep_OclType.OclType) -> Rep
  * Interfere the types of the arguments of an operation according to 
  * a given signature, if possible.
  *)
-val interfere_args          : (string * Rep_OclType.OclType) list -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list 
+val upcast_args          : (string * Rep_OclType.OclType) list -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list 
 			      -> transform_model -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list
 
 (** 
- * Interfere the types of an operation according to another operation, if possible.
+ * Upcast the types of an operation according to another operation, if possible.
  *)
-val interfere_methods       : (Classifier * operation) list -> Rep_OclTerm.OclTerm 
+val upcast_op       : (Classifier * operation) list -> Rep_OclTerm.OclTerm 
 			      -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list -> transform_model -> Rep_OclTerm.OclTerm
 
 (** 
- * Interfere the types of an assoc/attribute to an other assoc/attribute, if possible.
+ * Upcast the types of an assoc/attribute to an other assoc/attribute, if possible.
  *)
-val interfere_attrs_or_assocends: (Classifier * attribute option * associationend option) list 
+val upcast_att_ae   : (Classifier * attribute option * associationend option) list 
 				  -> Rep_OclTerm.OclTerm -> transform_model -> Rep_OclTerm.OclTerm
 (**
  * Prefixes all types in a term with the 
@@ -369,7 +376,7 @@ val prefix_collectionpart   : string list -> Rep_OclTerm.CollectionPart -> Rep_O
 
 
 (*****************************************
- * RETURN operation                      *
+ *            OPERATIONS                 *
  *****************************************)
 
 (**
@@ -378,7 +385,7 @@ val prefix_collectionpart   : string list -> Rep_OclTerm.CollectionPart -> Rep_O
 val find_operation : string -> operation list -> operation
 
 (** 
- * Find an attribute in a list of attributes.
+ * Find an attribute in a list of attributes. 
  *)
 val find_attribute : string -> attribute list -> attribute
 
@@ -409,15 +416,28 @@ val protected_operations_of   : Classifier -> transform_model -> operation list
 val query_operations_of       : Classifier -> transform_model -> operation list
 (** Get all command operations of a classifier.*)
 val command_operations_of     : Classifier -> transform_model -> operation list							   
+(** Get the local invariants of a classifier.*)
 
-
-
-
-
+val local_invariants_of       : Classifier -> (string option * Rep_OclTerm.OclTerm) list
+(** Get the inherited invarinats of a classifier.*)
+val inherited_invariants_of   : Classifier -> transform_model -> (string option * Rep_OclTerm.OclTerm) list
+(** Get all invariants of a classifier.*)
+val all_invariants_of         : Classifier -> transform_model -> (string option * Rep_OclTerm.OclTerm) list
+								    
 (** OBSOLETE **)
-val get_overloaded_methods  : Classifier -> string -> transform_model -> (Classifier * operation) list
+val get_overloaded_methods    : Classifier -> string -> transform_model -> (Classifier * operation) list
 (** OBSOLETE **)
-val get_meth                : Rep_OclTerm.OclTerm -> string -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list -> transform_model -> Rep_OclTerm.OclTerm
+val get_meth                  : Rep_OclTerm.OclTerm -> string -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list 
+				-> transform_model -> Rep_OclTerm.OclTerm
+(** OBSOLETE **)
+(* val operation_of        : Classifier list -> Rep_OclType.Path -> operation option *)
+
+
+
+(** Test wheter the signatures are type consistent.*)
+val sig_conforms_to           : (string * Rep_OclType.OclType) list -> (string * Rep_OclType.OclType) list -> transform_model -> bool
+
+
 (**
  * Returns the preconditions of an operation.
  *)
@@ -459,11 +479,6 @@ val name_of_op          : operation -> string
 val mangled_name_of_op  : operation -> string
 
 (**
- * TODO: Description (OBSOLETE?)
- *)
-(* val operation_of        : Classifier list -> Rep_OclType.Path -> operation option *)
-
-(**
  * Update an operation with new preconditions.
  *)
 val update_precondition   : (string option * Rep_OclTerm.OclTerm) list -> 
@@ -476,7 +491,7 @@ val update_postcondition  : (string option * Rep_OclTerm.OclTerm) list ->
                             operation ->  operation
 
 (*****************************************
- * RETURN signature                      *
+ *         SIGNATURES                    *
  *****************************************)
 
 (** 
@@ -488,7 +503,7 @@ val prefix_signature        : string list -> (string * Rep_OclType.OclType) list
 
 
 (*****************************************
- * RETURN attribute                      *
+ *  attribute                      *
  *****************************************)
 (** OBSOLETE **)
 val attributes_of     : Classifier -> attribute list
@@ -719,7 +734,7 @@ val correct_type_for_CollLiteral : Rep_OclType.OclType -> Rep_OclTerm.Collection
 (**
  * Are the (first args) arguments of the an operation conform to another operations (second args)?
  *) 
-val args_interfereable      : (string * Rep_OclType.OclType) list -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list -> transform_model  -> bool
+val args_upcastable      : (string * Rep_OclType.OclType) list -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list -> transform_model  -> bool
 																		      
 
 (** update model **)
@@ -732,7 +747,7 @@ exception InvalidArguments of string
 exception TemplateError of string 
 exception TemplateInstantiationError of string
 exception GetClassifierError of string
-exception InterferenceError of string
+exception UpcastingError of string
 exception NoParentForDatatype of string
 exception NoModelReferenced of string
 exception NoCollectionTypeError of Rep_OclType.OclType
@@ -856,7 +871,7 @@ exception InvalidArguments of string
 exception TemplateError of string 
 exception TemplateInstantiationError of string
 exception GetClassifierError of string
-exception InterferenceError of string
+exception UpcastingError of string
 exception NoParentForDatatype of string
 exception NoModelReferenced of string
 exception NoCollectionTypeError of Rep_OclType.OclType
@@ -1140,6 +1155,8 @@ fun class_of (name:Path) (model as (clist,alist)) =
 
 and class_of_type (typ:OclType) (model:transform_model) = 
     class_of_term (Variable ("x",typ)) model
+
+
 
 
 fun type_equals Integer (Classifier ([OclLibPackage,"Real"])) = true
@@ -2167,7 +2184,8 @@ fun package_of (Class{name,...}) =
     else []
   | package_of (Template{classifier,...}) = package_of classifier
 
-
+fun classes_of_package pkg (model as (clist,alist)) = 
+    List.filter (fn a => package_of a = pkg) clist
        
 fun short_parent_name_of C =  
     (case (parent_name_of C) of
@@ -2640,17 +2658,17 @@ fun type_of_template (T as Template{classifier,parameter}) =
 fun parent_of  C cl =  (class_of (parent_name_of C) (cl,[]))
 
 
-(* 
+(*
 fun operation_of cl fq_name = 
     let 
       val classname   = (rev o  tl o rev) fq_name
-      val operations  = local_operations_of (class_of classname (cl,[]) model)
+      val operations  = local_operations_of (class_of classname (cl,[]))
       val name        = (hd o rev) fq_name	
     in
       SOME(hd (filter (fn a => if ((name_of_op a) = name)
 			       then true else false ) operations ))
     end
-*)	
+*)
 
 fun connected_classifiers_of (all_associations:association list) 
                              (C as Class {attributes,associations,...}) 
@@ -2696,8 +2714,8 @@ fun connected_classifiers_of (all_associations:association list)
 
 
 
-fun args_interfereable [] [] model = true
-  | args_interfereable ((str,typ)::tail) ((term,ttyp)::args) model =
+fun args_upcastable [] [] model = true
+  | args_upcastable ((str,typ)::tail) ((term,ttyp)::args) model =
     let
 	val _ = trace low ("must conform to: " ^ (string_of_OclType typ) ^ "\n")
     in
@@ -2707,55 +2725,55 @@ fun args_interfereable [] [] model = true
 	    false
     end
   (* not same nuber of arguments *)
-  | args_interfereable [x] list model = false
-  | args_interfereable list [x] model = false
+  | args_upcastable [x] list model = false
+  | args_upcastable list [x] model = false
 
 (* RETURN: (OclTerm * OclType) list *)
-fun interfere_args [] [] model = []
-  | interfere_args ((str,typ)::tail) ((term,_)::args) model  =
+fun upcast_args [] [] model = []
+  | upcast_args ((str,typ)::tail) ((term,_)::args) model  =
     let
 	val _ = trace low ("interfere args" ^ "\n")
     in
 	if (type_equals typ (type_of_term term)) then
-	    (term,type_of_term term)::(interfere_args tail args model)
+	    (term,type_of_term term)::(upcast_args tail args model)
 	else
 	    if (conforms_to (type_of_term term) typ model) then
-		(term,typ)::(interfere_args tail args model)
+		(term,typ)::(upcast_args tail args model)
 	    else
-		raise InterferenceError ("Arguments are not interferebable \n") 
+		raise UpcastingError ("Arguments are not interferebable \n") 
     end
 
 (* RETURN: OclType *)
-fun interfere_res_type t1 t2 model = 
+fun upcast_res_type t1 t2 model = 
     if (conforms_to t1 t2 model)
     then t2
-    else raise InterferenceError ("Result type  does not conform \n") 
+    else raise UpcastingError ("Result type  does not conform \n") 
 
 
 (* RETURN: OclTerm *)
-fun interfere_methods [] source args model = 
+fun upcast_op [] source args model = 
     let
-	val _ = trace development ("InterferenceError ... \n")
+	val _ = trace development ("UpcastingError ... \n")
     in
-	raise InterferenceError ("interefere_methods: No operation signature matches given types.")
+	raise UpcastingError ("interefere_methods: No operation signature matches given types.")
     end
-  | interfere_methods ((class,meth)::class_meth_list) source args model =
+  | upcast_op ((class,meth)::class_meth_list) source args model =
     let
 	val _ = trace low ("\nInterfere method      : name : '" ^ name_of_op meth ^ "'\n")
        val check_source = conforms_to (type_of_term source) (type_of class) model
-       val check_args = args_interfereable (#arguments meth) args model
-       val _ = trace low ("Interfereable ?       : Source conforms : "  ^ Bool.toString check_source ^ "   Args conforms : " ^ Bool.toString check_args ^ "\n")
+       val check_args = args_upcastable (#arguments meth) args model
+       val _ = trace low ("Upcastable ?       : Source conforms : "  ^ Bool.toString check_source ^ "   Args conforms : " ^ Bool.toString check_args ^ "\n")
        val _ = trace low ("Return type of method : " ^ string_of_OclType (result_of_op meth) ^ "\n\n")
     in
 	if (check_source andalso check_args) then
 	    (* signature matches given types *)
-	    (OperationCall(source,type_of class,(name_of class)@[name_of_op meth],interfere_args (#arguments meth) args model,result_of_op meth))	    
+	    (OperationCall(source,type_of class,(name_of class)@[name_of_op meth],upcast_args (#arguments meth) args model,result_of_op meth))	    
 	else
-	    (interfere_methods class_meth_list source args model)
+	    (upcast_op class_meth_list source args model)
     end
 
 (* RETURN: (OclTerm) *)
-fun interfere_attrs (class,attr:attribute) source (model:transform_model) =
+fun upcast_att (class,attr:attribute) source (model:transform_model) =
    let
        val check_source = conforms_to (type_of_term source) (type_of class) model
        val _ = trace low ("interfere attribute: check_source "^ Bool.toString check_source ^ "\n\n")
@@ -2767,8 +2785,8 @@ fun interfere_attrs (class,attr:attribute) source (model:transform_model) =
 	   NONE
    end
 
-(* RETURN: OclTerm option*)
-fun interfere_assocends (class,assocend:associationend) source (model:transform_model) = 
+
+fun upcast_ae (class,assocend:associationend) source (model:transform_model) = 
     let 
 	val check_source = conforms_to (type_of_term source) (type_of class) model 
 	val _ = trace low ("Interfere assocend: check_source " ^ Bool.toString check_source ^ "\n")
@@ -2784,18 +2802,18 @@ fun interfere_assocends (class,assocend:associationend) source (model:transform_
     end
 
 (* RETURN: OclTerm *) 
-fun interfere_attrs_or_assocends [] source (model:transform_model) = 
-    raise InterferenceError ("interference_attr_or_assoc: No operation signature matches given types.")
-  | interfere_attrs_or_assocends ((class,SOME(attr:attribute),NONE)::class_attr_or_assoc_list) source model =
+fun upcast_att_ae [] source (model:transform_model) = 
+    raise UpcastingError ("interference_attr_or_assoc: No operation signature matches given types.")
+  | upcast_att_ae ((class,SOME(attr:attribute),NONE)::class_attr_or_assoc_list) source model =
     (
-     case (interfere_attrs (class,attr) source model) of
-	 NONE => (interfere_attrs_or_assocends class_attr_or_assoc_list source model)
+     case (upcast_att (class,attr) source model) of
+	 NONE => (upcast_att_ae class_attr_or_assoc_list source model)
        | SOME (term) => term
     )
-  | interfere_attrs_or_assocends ((class,NONE,SOME(assocend:associationend))::class_attr_or_assoc_list) source model = 
+  | upcast_att_ae ((class,NONE,SOME(assocend:associationend))::class_attr_or_assoc_list) source model = 
     (
-     case (interfere_assocends (class,assocend) source model) of 
-	 NONE => (interfere_attrs_or_assocends class_attr_or_assoc_list source model)
+     case (upcast_ae (class,assocend) source model) of 
+	 NONE => (upcast_att_ae class_attr_or_assoc_list source model)
        | SOME (term) => term
     )
 
@@ -2942,7 +2960,7 @@ fun get_meth source op_name args (model as (classifiers,associations))=
 	val meth_list = get_overloaded_methods class op_name model
 	val _ = trace low ("overloaded methods found: " ^ Int.toString (List.length meth_list) ^ "\n")
     in
-	interfere_methods meth_list source args model
+	upcast_op meth_list source args model
     end
 
 fun get_attr_or_assoc source attr_name (model as (classifiers,associations)) =
@@ -2954,7 +2972,7 @@ fun get_attr_or_assoc source attr_name (model as (classifiers,associations)) =
 	val _ = trace low ("overloaded attributes/associationends found: " ^ Int.toString (List.length attr_or_assocend_list) ^ "\n")
     in
 	let 
-	    val x = interfere_attrs_or_assocends attr_or_assocend_list source model
+	    val x = upcast_att_ae attr_or_assocend_list source model
 	    val _ = trace low ("\nReturn type of attribute: " ^ string_of_OclType (type_of_term x) ^ "\n\n")
 	in
 	    x
@@ -3014,6 +3032,21 @@ fun correct_type_for_CollLiteral coll_typ (CollectionItem (term,typ)) =
 	true
     else
 	false
+
+fun local_invariants_of class = invariant_of class
+
+fun inherited_invariants_of class (model:transform_model as (clist,alist)) = 
+    let
+	val parent = parent_of class (#1 model)
+    in
+	if (type_of parent = OclAny) 
+	then []
+	else (local_invariants_of class)@(inherited_invariants_of parent model)
+    end
+
+fun all_invariants_of class model = 
+    (local_invariants_of class)@(inherited_invariants_of class model)
+
 
 end
 

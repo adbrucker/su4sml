@@ -128,10 +128,10 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
 	    val ops = get_overloaded_methods class (List.last path) model
 	in
 	    if (List.length ops = 0)
-	    then raise InterferenceError ("FromSet no operation/attribute found. \n")
+	    then raise UpcastingError ("FromSet no operation/attribute found. \n")
 	    else
 		let
-		    val insert_term = interfere_methods ops (Variable iterVar) rargs model
+		    val insert_term = upcast_op ops (Variable iterVar) rargs model
 		    val it_type = type_of_term insert_term
 		in
 		    Iterator ("collect",[iterVar],rterm,type_of_term rterm,insert_term,it_type,it_type)
@@ -147,10 +147,10 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
 	    val attrs_or_assocs = get_overloaded_attrs_or_assocends class (List.last path) model
 	in
 	    if (List.length attrs_or_assocs = 0)
-	    then raise InterferenceError ("Attriubte '" ^ (List.last path) ^ "' does not exist ... \n") 
+	    then raise UpcastingError ("Attriubte '" ^ (List.last path) ^ "' does not exist ... \n") 
 	    else 
 		let
-		    val insert_term = interfere_attrs_or_assocends attrs_or_assocs (Variable iterVar) model
+		    val insert_term = upcast_att_ae attrs_or_assocs (Variable iterVar) model
 		    val it_type = type_of_term insert_term
 		    val _ = trace development ("association type " ^ string_of_OclType it_type ^ "\n")
         	    (* special case *)
@@ -200,7 +200,7 @@ fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
 	    then
 		raise NoSuchOperationError ("interefere_methods: No operation signature matches given types (source: "^(Ocl2String.ocl2string false rterm)^").")
 	    else
-		interfere_methods ops new_rterm rargs model
+		upcast_op ops new_rterm rargs model
 	end
     else (* AttributeCall *)
 	let
@@ -217,13 +217,13 @@ fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
 	    then 
 		raise NoSuchAttributeError ("Attriubte '" ^ (List.last path) ^ "' does not exist ... \n") 
 	    else 
-		interfere_attrs_or_assocends attrs new_rterm model
+		upcast_att_ae attrs new_rterm model
 	end)
 
 (* RETURN: OclTerm (OperationCall/AttributeCall) *)
 fun desugarator rterm path attr_or_meth rargs model = 
     FromSet_desugarator rterm path attr_or_meth rargs model  
-    handle InterferenceError s => AsSet_desugarator rterm path attr_or_meth rargs model
+    handle UpcastingError s => AsSet_desugarator rterm path attr_or_meth rargs model
 
 (* RETURN: CollectionPart *)
 fun resolve_CollectionPart model (CollectionItem (term,typ))  =
@@ -307,12 +307,12 @@ and resolve_OclTerm (Literal (s,typ)) model =
       in
 	  if (List.hd attr_path = "arrow")
 	  then get_attr_or_assoc rterm (List.last attr_path) model
-	       handle InterferenceError s => AsSet_desugarator rterm (List.tl attr_path) 1 [] model
+	       handle UpcastingError s => AsSet_desugarator rterm (List.tl attr_path) 1 [] model
 	  else
 	      get_attr_or_assoc rterm (List.last attr_path) model
 	      
 	      (*  2-dimensional inheritance of Collection types *)
-	      handle InterferenceError s =>
+	      handle UpcastingError s =>
 		     (
 		      (
 		       let
@@ -331,7 +331,7 @@ and resolve_OclTerm (Literal (s,typ)) model =
 		       in
 			   if (List.length attrs = 0) 
 			   then raise DesugaratorCall (rterm,attr_path,1,[],model) 
-			   else interfere_attrs_or_assocends attrs rterm model
+			   else upcast_att_ae attrs rterm model
 		       end    
 		      ) 
 		      handle DesugaratorCall arg => desugarator (#1 arg) (#2 arg) (#3 arg) (#4 arg) (#5 arg)
@@ -423,11 +423,11 @@ let
       in
 	  if (List.hd meth_path = "arrow")
 	  then get_meth rterm (List.last meth_path) rargs model
-	       handle InterferenceError s => AsSet_desugarator rterm (List.tl meth_path) 0 rargs model
+	       handle UpcastingError s => AsSet_desugarator rterm (List.tl meth_path) 0 rargs model
 	  else 
 	      get_meth rterm (List.last meth_path) rargs model
 	      (*  2-dimensional inheritance of Collection types *)
-	      handle InterferenceError s =>	
+	      handle UpcastingError s =>	
 		     (     
 		      (
 		       let
@@ -445,7 +445,7 @@ let
 		       in
 			   if (List.length ops = 0) 
 			   then raise DesugaratorCall (rterm, meth_path, 0, rargs, model) 
-			   else interfere_methods ops rterm rargs model
+			   else upcast_op ops rterm rargs model
 		       end
 		      )
 		      handle DesugaratorCall arg => desugarator (#1 arg) (#2 arg) (#3 arg) (#4 arg) (#5 arg)
