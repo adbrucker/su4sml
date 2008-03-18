@@ -293,11 +293,10 @@ and generate_variables (Literal (paras)) path meth_name model = Literal (paras)
 	(* val classifier = obsolete_obsolete_class_of path model *)
 	val classifier = class_of path (model,[])
 	val _ = trace low "classifier found\n"
-	val meth_list = operations_of  classifier
-	val meth = get_operation meth_name meth_list
+	val meth = get_operation meth_name classifier (model,[])
 	val _ = trace zero ("a result call resolved ..." ^ "\n")
     in
-	(Variable ("result",(#result (valOf(meth)))))
+	(Variable ("result",(#result (meth))))
     end
   | generate_variables (AttributeCall (sterm,styp,p,res_typ)) path meth_name model =
     (AttributeCall (generate_variables sterm path meth_name model,styp,p,res_typ))

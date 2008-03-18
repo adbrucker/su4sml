@@ -615,8 +615,7 @@ let
     val _ = trace high ("Starts typechecking: ")
     val _ = trace high ("pre/post/body         : "  ^  Ocl2String.ocl2string false expr ^ "\n")
     val classifier = class_of_type  (Classifier (path)) model
-    val oper_list = operations_of classifier
-    val oper = valOf (get_operation op_name oper_list)
+    val oper = get_operation op_name classifier model
     val check1 = (op_sign = (#arguments oper))
     val check2 = (result_type = (#result oper))
     val _ = trace low ("check1 = " ^ Bool.toString check1 ^ ", check2 = " ^ Bool.toString check2 ^ "\n")

@@ -441,7 +441,7 @@ val prefix_collectionpart   : string list -> Rep_OclTerm.CollectionPart -> Rep_O
 (**
  * Find an operation in a list of operations.
  *)
-val get_operation : string -> operation list -> operation option
+val get_operation : string -> Classifier -> transform_model -> operation
 (** Get the local operations of a classifier.*)
 val local_operations_of          : Classifier -> operation list
 (** Get the redefined/refined operations of a classifier.*)
@@ -2545,7 +2545,14 @@ fun isColl_Type (Set(x)) = true
   | isColl_Type (Collection(x)) = true
   | isColl_Type _ = false
 
-fun get_operation op_name (list:operation list) = List.find (fn a => (#name a) = op_name) list
+fun find_operation op_name list = List.find (fn a => (name_of_op a = op_name)) list
+
+fun get_operation op_name class model = 
+    let
+	val ops = all_operations_of class model
+    in
+	valOf (find_operation op_name ops)
+    end
 
 fun get_attribute att_name (list:attribute list) = List.find (fn a => (#name a) = att_name) list
 
