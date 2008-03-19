@@ -1373,18 +1373,18 @@ fun parents_of C (model:transform_model) =
     let
 	val parent = parent_of C model
     in
-	[parent]@[parents_of parent model]
+	case type_of (parent) of
+	    OclAny => [parent]
+	  | x => [parent]@(parents_of parent model)
     end
 
 (* get all inherited operations of a classifier, without the local operations *)
 fun inherited_operations_of class (model as (clist,alist)) =
     let
-	val parents = parents_of class (#1 model)
-	val _ = trace 50 ("inh ops 2\n")
-	val c_parents = List.map (fn a => class_of_type (type_of_path a) model) parents
-	val _ = trace 50 ("inh ops 3\n")
+	val c_parents = parents_of class model
+	val _ = trace 50 ("inh ops 1\n")
 	val ops_of_par = (List.map (operations_of) c_parents)
-	val _ = trace 50 ("inh ops 4\n")
+	val _ = trace 50 ("inh ops 2\n")
     in
 	List.foldr (fn (a,b) => embed_local_operations a b model) (List.last (ops_of_par)) ops_of_par
     end
@@ -3069,7 +3069,7 @@ fun local_invariants_of class = invariant_of class
 
 fun inherited_invariants_of class (model:transform_model as (clist,alist)) = 
     let
-	val parent = parent_of class (#1 model)
+	val parent = parent_of class model
     in
 	if (type_of parent = OclAny) 
 	then []
