@@ -1343,44 +1343,380 @@ fun embed_local_operations [] iops model = iops
     end
 
 
-fun parent_of (Class{parent,...}) (model:transform_model) =  
-    (case parent of
+fun isColl_Type (Set(x)) = true
+  | isColl_Type (Sequence(x)) = true
+  | isColl_Type (OrderedSet(x)) = true
+  | isColl_Type (Bag(x)) = true
+  | isColl_Type (Collection(x)) = true
+  | isColl_Type _ = false
+
+
+fun parent_of (Class{parent,...}:Classifier) (model:transform_model) =   
+    (
+     case parent of 
 	 NONE => class_of_type OclAny model
-       | SOME(OclAny) => class_of_type OclAny model
-       | SOME(x) => class_of_type x model)
+       | SOME(x) => (
+	 case (isColl_Type x) of
+	     false => (
+	     case x of
+		 OclAny => class_of_type OclAny model
+	       | y => class_of_type y model)
+	   | true => (
+	     case x of
+	       Collection(OclAny) => class_of_type OclAny model
+	     | Set(OclAny) => class_of_type (Collection(OclAny)) model
+	     | OrderedSet(OclAny) => class_of_type (Set(OclAny)) model
+	     | Sequence(OclAny) => class_of_type (Collection(OclAny)) model
+	     | Bag(OclAny) => class_of_type (Collection(OclAny)) model
+	     | Collection(y) =>  
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (Collection(par_type)) model
+	       end
+	     | Set(y) => 
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (Set(par_type)) model
+	       end
+	     | OrderedSet(y) =>
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (OrderedSet(par_type)) model
+	       end 
+	     | Sequence(y)=> 
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (Sequence(par_type)) model
+	       end
+	     | Bag(y)=>
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (Bag(par_type)) model
+	       end 
+	     )
+	 )
+    )
+
   | parent_of (AssociationClass{parent,...}) (model:transform_model) = 
-    (case parent of
+    (
+     case parent of 
 	 NONE => class_of_type OclAny model
-       | SOME(OclAny) => class_of_type OclAny model
-       | SOME(x) => class_of_type x model)
+       | SOME(x) => (
+	 case (isColl_Type x) of
+	     false => (
+	     case x of
+		 OclAny => class_of_type OclAny model
+	       | y => class_of_type y model)
+	   | true => (
+	     case x of
+	       Collection(OclAny) => class_of_type OclAny model
+	     | Set(OclAny) => class_of_type (Collection(OclAny)) model
+	     | OrderedSet(OclAny) => class_of_type (Set(OclAny)) model
+	     | Sequence(OclAny) => class_of_type (Collection(OclAny)) model
+	     | Bag(OclAny) => class_of_type (Collection(OclAny)) model
+	     | Collection(y) =>  
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (Collection(par_type)) model
+	       end
+	     | Set(y) => 
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (Set(par_type)) model
+	       end
+	     | OrderedSet(y) =>
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (OrderedSet(par_type)) model
+	       end 
+	     | Sequence(y)=> 
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (Sequence(par_type)) model
+	       end
+	     | Bag(y)=>
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (Bag(par_type)) model
+	       end 
+	     )
+	 )
+    ) 
   | parent_of (Interface{parents,...}) (model:transform_model) = 
     (case (List.length(parents)) of
-	 0 => class_of_type OclAny model
-       | x => class_of_type (List.hd(parents)) model)
+	0 => class_of_type OclAny model
+      | x => (case (isColl_Type (List.hd (parents))) of
+		  false => (
+		  case (List.hd(parents)) of
+		      OclAny => class_of_type OclAny model
+		    | y => class_of_type y model)
+		| true => (
+		  case (List.hd(parents)) of
+		      Collection(OclAny) => class_of_type OclAny model
+		    | Set(OclAny) => class_of_type (Collection(OclAny)) model
+		    | OrderedSet(OclAny) => class_of_type (Set(OclAny)) model
+		    | Sequence(OclAny) => class_of_type (Collection(OclAny)) model
+		    | Bag(OclAny) => class_of_type (Collection(OclAny)) model
+		    | Collection(y) =>  
+		      let
+			  val parameter_class = class_of_type y model
+			  val parent_parameter_class = parent_of parameter_class model
+			  val par_type = type_of parent_parameter_class
+		      in
+			  class_of_type (Collection(par_type)) model
+		      end
+		    | Set(y) => 
+		      let
+			  val parameter_class = class_of_type y model
+			  val parent_parameter_class = parent_of parameter_class model
+			  val par_type = type_of parent_parameter_class
+		      in
+			  class_of_type (Set(par_type)) model
+		      end
+		    | OrderedSet(y) =>
+		      let
+			  val parameter_class = class_of_type y model
+			  val parent_parameter_class = parent_of parameter_class model
+			  val par_type = type_of parent_parameter_class
+		      in
+			  class_of_type (OrderedSet(par_type)) model
+		      end 
+		    | Sequence(y)=> 
+		      let
+			  val parameter_class = class_of_type y model
+			  val parent_parameter_class = parent_of parameter_class model
+			  val par_type = type_of parent_parameter_class
+		      in
+			  class_of_type (Sequence(par_type)) model
+		      end
+		    | Bag(y)=>
+		      let
+			  val parameter_class = class_of_type y model
+			  val parent_parameter_class = parent_of parameter_class model
+			  val par_type = type_of parent_parameter_class
+		      in
+			  class_of_type (Bag(par_type)) model
+		      end 
+		  )
+	     )
+    )
   | parent_of (Enumeration{parent,...}) (model:transform_model) =
-    (case parent of
+    (
+     case parent of 
 	 NONE => class_of_type OclAny model
-       | SOME(OclAny) => class_of_type OclAny model
-       | SOME(x) => class_of_type x model)
+       | SOME(x) => (
+	 case (isColl_Type x) of
+	     false => (
+	     case x of
+		 OclAny => class_of_type OclAny model
+	       | y => class_of_type y model)
+	   | true => (
+	     case x of
+		 Collection(OclAny) => class_of_type OclAny model
+	       | Set(OclAny) => class_of_type (Collection(OclAny)) model
+	       | OrderedSet(OclAny) => class_of_type (Set(OclAny)) model
+	       | Sequence(OclAny) => class_of_type (Collection(OclAny)) model
+	       | Bag(OclAny) => class_of_type (Collection(OclAny)) model
+	     | Collection(y) =>  
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (Collection(par_type)) model
+	       end
+	     | Set(y) => 
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (Set(par_type)) model
+	       end
+	     | OrderedSet(y) =>
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (OrderedSet(par_type)) model
+	       end 
+	     | Sequence(y)=> 
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (Sequence(par_type)) model
+	       end
+	     | Bag(y)=>
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (Bag(par_type)) model
+	       end 
+	     )
+	 )
+    )    
   | parent_of (Primitive{parent,...}) (model:transform_model) = 
-    (case parent of
+     (
+     case parent of 
 	 NONE => class_of_type OclAny model
-       | SOME(OclAny) => class_of_type OclAny model
-       | SOME(x) => class_of_type x model)
-    
+       | SOME(x) => (
+	 case (isColl_Type x) of
+	     false => (
+	     case x of
+		 OclAny => class_of_type OclAny model
+	       | y => class_of_type y model)
+	   | true => (
+	     case x of
+	       Collection(OclAny) => class_of_type OclAny model
+	     | Set(OclAny) => class_of_type (Collection(OclAny)) model
+	     | OrderedSet(OclAny) => class_of_type (Set(OclAny)) model
+	     | Sequence(OclAny) => class_of_type (Collection(OclAny)) model
+	     | Bag(OclAny) => class_of_type (Collection(OclAny)) model
+	     | Collection(y) =>  
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (Collection(par_type)) model
+	       end
+	     | Set(y) => 
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (Set(par_type)) model
+	       end
+	     | OrderedSet(y) =>
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (OrderedSet(par_type)) model
+	       end 
+	     | Sequence(y)=> 
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (Sequence(par_type)) model
+	       end
+	     | Bag(y)=>
+	       let
+		   val parameter_class = class_of_type y model
+		   val parent_parameter_class = parent_of parameter_class model
+		   val par_type = type_of parent_parameter_class
+	       in
+		   class_of_type (Bag(par_type)) model
+	       end 
+	     )
+	 )
+    ) 
     
 fun parents_of C (model:transform_model) = 
     let
+	val _ = trace wgen ("parents_of " ^ (string_of_path (name_of C)) ^ "\n")
 	val parent = parent_of C model
     in
-	case type_of (parent) of
+	case (type_of (parent)) of
 	    OclAny => [parent]
-	  | x => [parent]@(parents_of parent model)
+	  | x => (case isColl_Type x of
+		      false => [parent]@(parents_of parent model)
+		    | true => 
+		      let 
+			  val _ = trace wgen ("parent is colltype : ") 
+			  val _ = trace wgen ((string_of_OclType x) ^ "\n")
+		      in 
+			  (case x of
+			       
+			       Collection(y) => [parent]@(parents_of parent model)
+			     | Set(y) => 
+			       let 
+				   val parents_1_prior = [parent]@(parents_of parent model)
+				   val coll_typ  = Collection(y)
+				   val coll_class = class_of_type coll_typ model
+				   val parents_2_prior = [coll_class]@(parents_of coll_class model)
+			       in
+				   parents_1_prior@parents_2_prior
+			       end
+			     | Bag(y) => 
+			       let 
+				   val parents_1_prior = [parent]@(parents_of parent model)
+				   val coll_typ  = Collection(y)
+				   val coll_class = class_of_type coll_typ model
+				   val parents_2_prior = [coll_class]@(parents_of coll_class model)
+			       in
+				   parents_1_prior@parents_2_prior
+			       end
+			     | OrderedSet(y) =>
+			       let 
+				   val parents_1_prior = [parent]@(parents_of parent model)
+				   val coll_typ  = Collection(y)
+				   val coll_class = class_of_type coll_typ model
+				   val parents_2_prior = [coll_class]@(parents_of coll_class model)
+			       in
+				   parents_1_prior@parents_2_prior
+			       end
+			     | Sequence(y) => 
+			       let 
+				   val _ = trace wgen ("1-dim inheritance")
+				   val parents_1_prior = [parent]@(parents_of parent model)
+				   val _ = trace wgen ("number of parents = " ^ Int.toString (List.length (parents_1_prior)) ^ "\n")
+				   val coll_typ  = Collection(y)
+				   val coll_class = class_of_type coll_typ model
+				   val _ = trace wgen ("2-dim inheritance")
+				   val parents_2_prior = [coll_class]@(parents_of coll_class model)
+				   val _ = trace wgen ("number of parents = " ^ Int.toString (List.length (parents_1_prior)) ^ "\n")
+			       in
+				   parents_1_prior@parents_2_prior
+			       end
+			  )
+		      end
+		 )
     end
-
+    
 (* get all inherited operations of a classifier, without the local operations *)
 fun inherited_operations_of class (model as (clist,alist)) =
     let
+	val _ = trace wgen ("inh ops 0\n")
 	val c_parents = parents_of class model
 	val _ = trace 50 ("inh ops 1\n")
 	val ops_of_par = (List.map (operations_of) c_parents)
@@ -1393,7 +1729,7 @@ fun inherited_operations_of class (model as (clist,alist)) =
 fun all_operations_of class model =
     let 
 	val lo = local_operations_of class
-	val _ = trace 50 ("all ops 1\n")
+	val _ = trace 50 ("all ops of classifier : "^ (string_of_path (name_of class)) ^ "\n")
 	val io = inherited_operations_of class model
 	val _ = trace 50 ("all ops 2\n")
     in
@@ -2573,13 +2909,6 @@ fun flatten_type (Set(Set(t))) = Set(t)
 
 fun type_of_CollPart (CollectionItem (term,typ)) = typ
   | type_of_CollPart (CollectionRange (term1,term2,typ)) = typ
-
-fun isColl_Type (Set(x)) = true
-  | isColl_Type (Sequence(x)) = true
-  | isColl_Type (OrderedSet(x)) = true
-  | isColl_Type (Bag(x)) = true
-  | isColl_Type (Collection(x)) = true
-  | isColl_Type _ = false
 
 fun find_operation op_name list = List.find (fn a => (name_of_op a = op_name)) list
 
