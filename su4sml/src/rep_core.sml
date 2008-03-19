@@ -309,7 +309,7 @@ val type_of_path            : Rep_OclType.Path -> Rep_OclType.OclType
 
 (**
  * returns the type of the classifier this association end belongs to.
- * @params {aend}
+ * params {aend}
  * @param aend association end
  * @return type of the classifier at the association end
  *)
@@ -592,12 +592,12 @@ val incomingAendsOfAssociation:  Rep_OclType.OclType -> association list ->
 (**
  * Returns the classifier of the parent of classifier.
  *) 
-val parent_of           : Classifier -> Classifier list -> Classifier
+val parent_of           : Classifier -> transform_model -> Classifier
 
 (**
  * Returns all parents of a classifier. 
  *)
-val parents_of          : Classifier -> Classifier list -> Rep_OclType.Path list
+val parents_of          : Classifier -> transform_model -> Classifier list
 
 (** 
  * Returns one of the parents from the classifier.
@@ -1280,12 +1280,14 @@ fun parent_name_of (C as Class{parent,...}) =
   | parent_name_of (Template _) = 
     error "in Rep.parent_name_of: unsupported argument type Template"
 
-fun parents_of C cl = 
+(*
+fun parents_of C (model as (clist,alist)) =
     (case parent_name_of C of
        [] => []    
      | class => (if( class = (name_of OclAnyC) )
                  then [(name_of OclAnyC)]
-                 else [class]@(parents_of (class_of class (cl,[])) cl)))
+                 else [class]@parents_of (class_of class (cl,[])) cl)))
+*)
 
 fun sig_conforms_to [] [] model = true
   | sig_conforms_to [] list model = 
@@ -1338,6 +1340,40 @@ fun embed_local_operations [] iops model = iops
 	val tmp = embed_local_operation h iops model
     in
 	(embed_local_operations tail tmp model)
+    end
+
+
+fun parent_of (Class{parent,...}) (model:transform_model) =  
+    (case parent of
+	 NONE => class_of_type OclAny model
+       | SOME(OclAny) => class_of_type OclAny model
+       | SOME(x) => class_of_type x model)
+  | parent_of (AssociationClass{parent,...}) (model:transform_model) = 
+    (case parent of
+	 NONE => class_of_type OclAny model
+       | SOME(OclAny) => class_of_type OclAny model
+       | SOME(x) => class_of_type x model)
+  | parent_of (Interface{parents,...}) (model:transform_model) = 
+    (case (List.length(parents)) of
+	 0 => class_of_type OclAny model
+       | x => class_of_type (List.hd(parents)) model)
+  | parent_of (Enumeration{parent,...}) (model:transform_model) =
+    (case parent of
+	 NONE => class_of_type OclAny model
+       | SOME(OclAny) => class_of_type OclAny model
+       | SOME(x) => class_of_type x model)
+  | parent_of (Primitive{parent,...}) (model:transform_model) = 
+    (case parent of
+	 NONE => class_of_type OclAny model
+       | SOME(OclAny) => class_of_type OclAny model
+       | SOME(x) => class_of_type x model)
+    
+    
+fun parents_of C (model:transform_model) = 
+    let
+	val parent = parent_of C model
+    in
+	[parent]@[parents_of parent model]
     end
 
 (* get all inherited operations of a classifier, without the local operations *)
@@ -1602,7 +1638,7 @@ fun multiplicity_constraint cls_name (aend:associationend) =
  * 1. multiplicity constraints
  * 2. consistency constraints between opposing association ends
  *    i.e., A.b.a->includes(A)                              
- * params {cls_name,(aend,revPath)}
+ * @params {cls_name,(aend,revPath)}
  * @param cls_name Path of source classifier
  * @param aend aend to be converted
  * @param revAend the reverse navigation of aend   
@@ -2657,10 +2693,6 @@ fun type_of_template (T as Template{classifier,parameter}) =
 *) 
 
 (* element in lib not a template *)
-
-
-fun parent_of  C cl =  (class_of (parent_name_of C) (cl,[]))
-
 
 fun get_op cl op_name (model:transform_model) = 
     let 
