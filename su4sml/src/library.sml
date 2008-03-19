@@ -58,7 +58,7 @@ val high = 10
 val medium = 20
 val low = 100
 val development = 200
-
+val wgen = 50
 
 
 (* HOLOCL_HOME resp. SU4SML_HOME should point to the top-level directory *)
