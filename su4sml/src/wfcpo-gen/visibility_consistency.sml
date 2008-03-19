@@ -116,11 +116,11 @@ and expr_is_visible modif (Literal(s,typ)) model = true
 	val typ = type_of_term src
 	val cl = class_of_term (Variable("x",typ)) model
 	val op_name = List.last(path)
-	val _ = trace 100 ("OperationCall: " ^ (Ocl2String.ocl2string false x)  ^ "\n")
-	val _ = trace 100 ("Classifier : " ^ Rep2String.classifier2string cl ^ "\n")
-	val _ = trace 100 ("Op_name : " ^ op_name ^ "\n")
+	val _ = trace 50 ("OperationCall: " ^ (Ocl2String.ocl2string false x)  ^ "\n")
+	val _ = trace 50 ("Classifier : " ^ Rep2String.classifier2string cl ^ "\n")
+	val _ = trace 50 ("Op_name : " ^ op_name ^ "\n")
 	val oper = get_operation op_name cl model
-	val _ = trace 100 ("end expr_is_visible")
+	val _ = trace 50 ("end expr_is_visible")
     in
 	if (modificator_conforms_to (#visibility oper) modif) 
 	then ((List.all (fn (a,b) => (expr_is_visible modif a model)) args) andalso (expr_is_visible modif src model))
@@ -128,6 +128,7 @@ and expr_is_visible modif (Literal(s,typ)) model = true
     end
   | expr_is_visible modif (x as AttributeCall(src,styp,path,rtyp)) model =
     let
+	val _ = trace 50 ("expr_is_visible: AttCall \n ")
 	val cl = class_of_term src model
 	val att_name = List.last(path)
 	val att = get_attribute att_name cl model

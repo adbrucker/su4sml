@@ -189,7 +189,7 @@ fun get_attribute s classifier model =
 
 fun go_up_hierarchy location func (model as (clist,alist)) = 
     let 
-	val parent = parent_of location (#1 model)
+	val parent = parent_of location model
     in
 	if (func parent = true) 
 	then  parent
@@ -204,7 +204,7 @@ fun go_up_hierarchy location func (model as (clist,alist)) =
 
 fun children_of class (model as ([],alist)) = []
   | children_of class (model as ((h::tail),alist)) = 
-    if (parent_of h (#1 model) = class)
+    if (parent_of h model = class)
     then (name_of h)::(children_of class ((tail,alist)))
     else (children_of class ((tail,alist)))
 
