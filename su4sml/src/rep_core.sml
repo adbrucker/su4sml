@@ -742,6 +742,11 @@ val string_of_path      : Rep_OclType.Path -> string
 val short_name_of_path  : Rep_OclType.Path -> string    
 
 
+
+(* TODO: restored -> needs to be updated *) 
+val operation_of        :  transform_model -> Rep_OclType.Path -> operation option 
+
+
 (*****************************************
  * RETURN activity_graphs                *
  *****************************************)
@@ -760,7 +765,7 @@ exception OperationNotFoundError of string
 exception NoParentForDatatype of string
 exception NoModelReferenced of string
 exception NoCollectionTypeError of Rep_OclType.OclType
-end
+end (* signature *)
 
 structure Rep_Core :  REP_CORE = 
 struct
@@ -3449,5 +3454,21 @@ fun string_to_type ["Integer"] = Integer
   | string_to_type list = Classifier (list)
 
 
+(* TODO: restored -> needs to be updated *) 
+fun operation_of cl fq_name = 
+    let 
+      val classname   = (rev o  tl o rev) fq_name 
+      val operations  = operations_of (class_of classname cl) 
+      val name        = (hd o rev) fq_name 
+      val candidates = (filter (fn a => if ((name_of_op a) = name) 
+ 		                      then true else false ) operations ) 
+ 	               
+    in 
+      case candidates of 
+ 	[] => NONE 
+      | c  => SOME(hd c) 
+    end 
+    
+    
 end
 
