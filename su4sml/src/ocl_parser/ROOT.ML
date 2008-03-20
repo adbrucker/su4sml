@@ -43,7 +43,6 @@ OS.FileSys.chDir "ml-yacc-lib";
 use "root.sml"; 
 OS.FileSys.chDir "..";
 
-use "library.sml";
 use "context_declarations.sml";
 use "preprocessor.sml";
 use "type_checker.sml";
