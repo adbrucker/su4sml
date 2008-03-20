@@ -303,9 +303,15 @@ val type_of_term  : Rep_OclTerm.OclTerm -> Rep_OclType.OclType
 val type_of_CollPart : Rep_OclTerm.CollectionPart -> Rep_OclType.OclType
 
 (** 
+ * Returns the type of a given simple Path.
+ * DO NOT USE: just for parsing where the model is not available.
+ *)
+val simple_type_of_path     : Rep_OclType.Path -> Rep_OclType.OclType
+
+(** 
  * Returns the type of a given Path
  *)
-val type_of_path            : Rep_OclType.Path -> Rep_OclType.OclType
+val type_of_path            : Rep_OclType.Path -> transform_model -> Rep_OclType.OclType
 
 (**
  * returns the type of the classifier this association end belongs to.
@@ -749,12 +755,7 @@ exception OperationNotFoundError of string
 exception NoParentForDatatype of string
 exception NoModelReferenced of string
 exception NoCollectionTypeError of Rep_OclType.OclType
-
-(* TODO: restored -> needs to be updated *)
-val operation_of        :  transform_model -> Rep_OclType.Path -> operation option
-
-
-end (* signature *)
+end
 
 structure Rep_Core :  REP_CORE = 
 struct
@@ -941,15 +942,42 @@ fun result_of_op ({result,...}:operation) = result
                                             
 fun arguments_of_op ({arguments,...}:operation) = arguments
 
-fun type_of_path ["Integer"] = Integer
-  | type_of_path ["Boolean"] = Boolean
-  | type_of_path ["Real"] = Real
-  | type_of_path ["OclAny"] = OclAny
-  | type_of_path ["DummyT"] = DummyT
-  | type_of_path ["String"] = String
-  | type_of_path ["OclVoid"] = OclVoid
-  | type_of_path (("oclLib")::tail) = type_of_path tail
-  | type_of_path [set] = 
+
+
+fun local_operations_of (Class{operations,...}) = operations
+  | local_operations_of (AssociationClass{operations,...}) = operations
+  | local_operations_of (Interface{operations,...})      = operations
+  | local_operations_of (Enumeration{operations,...})    = operations
+  | local_operations_of (Primitive{operations,...})      = operations  
+  | local_operations_of (Template{parameter,classifier}) = raise OperationNotFoundError ("..._operations_of a template not possible.\n")
+
+fun operations_of class = local_operations_of class
+
+fun class_of_design_model path (model as (clist,alist)) = 
+    case (List.find (fn a => name_of a = path) clist) of
+	NONE => raise TemplateInstantiationError (String.concat path)
+      | SOME(x) => x
+
+fun simple_type_of_path ["Integer"] = Integer
+  | simple_type_of_path ["Boolean"] = Boolean
+  | simple_type_of_path ["Real"] = Real
+  | simple_type_of_path ["OclAny"] = OclAny
+  | simple_type_of_path ["DummyT"] = DummyT
+  | simple_type_of_path ["String"] = String
+  | simple_type_of_path ["OclVoid"] = OclVoid
+  | simple_type_of_path (("oclLib")::tail) = simple_type_of_path tail 
+  | simple_type_of_path list = Classifier (list)
+
+
+fun type_of_path ["Integer"] (model:transform_model) = Integer
+  | type_of_path ["Boolean"] (model:transform_model) = Boolean
+  | type_of_path ["Real"] (model:transform_model) = Real
+  | type_of_path ["OclAny"] (model:transform_model) = OclAny
+  | type_of_path ["DummyT"] (model:transform_model) = DummyT
+  | type_of_path ["String"] (model:transform_model) = String
+  | type_of_path ["OclVoid"] (model:transform_model) = OclVoid
+  | type_of_path (("oclLib")::tail) (model:transform_model) = type_of_path tail model
+  | type_of_path [set] (model:transform_model) = 
     if (List.exists (fn a => if (a = (#"(")) then true else false) (String.explode set)) then
 	(* set *)
 	let
@@ -971,22 +999,22 @@ fun type_of_path ["Integer"] = Integer
 	    val _ = TextIO.output(TextIO.stdOut,"tail "^ (String.implode tail) ^ "\n")
 
 	in
-	    string_to_cons (String.implode cons) (type_of_path ([String.implode tail]))
+	    string_to_cons (String.implode cons) (type_of_path ([String.implode tail]) model)
 	end
-    else
-	Classifier ([set])
-  | type_of_path list = Classifier (list)
+    else 
+	let
+	    val cl = class_of_design_model [set] model
+	in
+	    type_of cl
+	end
+  | type_of_path (list:Path) (model:transform_model) = 
+    let
+	val cl = class_of_design_model list model 
+    in
+	type_of cl
+    end
 
-fun local_operations_of (Class{operations,...}) = operations
-  | local_operations_of (AssociationClass{operations,...}) = operations
-  | local_operations_of (Interface{operations,...})      = operations
-  | local_operations_of (Enumeration{operations,...})    = operations
-  | local_operations_of (Primitive{operations,...})      = operations  
-  | local_operations_of (Template{parameter,classifier}) = raise OperationNotFoundError ("..._operations_of a template not possible.\n")
-
-fun operations_of class = local_operations_of class
-
-fun class_of_term source (c:Classifier list, a:association list) =
+and class_of_term source (c:Classifier list, a:association list) =
     let
 	val typ = type_of_term (source)
 	val _ = map (fn a => trace development (string_of_OclType (type_of a) ^ "manu type: \n")) c
@@ -1001,12 +1029,33 @@ fun class_of_term source (c:Classifier list, a:association list) =
 		    in
 			(s,substitute_typ typ t)::(substitute_args typ tail)
 		    end
-		and substitute_parent (Set (t)) = SOME (Collection t)
-		  | substitute_parent (OrderedSet (t)) = SOME (Set (t))
-		  | substitute_parent (Sequence (t)) = SOME (Collection (t))
-		  | substitute_parent (Bag (t)) = SOME (Collection t)
-		  | substitute_parent (Collection (t)) = SOME (Collection (t))
-		  | substitute_parent t = SOME (Collection t)
+		and substitute_parent (Set (t)) model =
+		    (* TODO: operation type_of_parent muss ersetzt werden *)
+		    (case t of 
+			OclAny => SOME(Set(OclAny))
+		      | x => SOME(Set(type_of_parent x model))
+		    )
+		  | substitute_parent (OrderedSet (t)) model = 
+		    (case t of 
+			OclAny => SOME(OrderedSet(OclAny))
+		      | x => SOME(OrderedSet(type_of_parent x model))
+		    )
+		  | substitute_parent (Sequence (t)) model = 
+		    (case t of 
+			 OclAny => SOME(Sequence(OclAny))
+		       | x => SOME(Sequence(type_of_parent x model))
+		    )
+		  | substitute_parent (Bag (t)) model = 
+		    (case t of 
+			OclAny => SOME(Bag(OclAny))
+		      | x => SOME(Bag(type_of_parent x model))
+		    )
+		  | substitute_parent (Collection (t)) model = 
+		    (case t of 
+			OclAny => SOME(Collection(OclAny))
+		      | x => SOME(Collection(type_of_parent x model))
+		    )
+		  | substitute_parent t model = raise TemplateInstantiationError ("substitute parent must have set type.\n")
 		and substitute_operations typ [] = []
 		  | substitute_operations typ ((oper:operation)::tail) =
 		    let 
@@ -1063,7 +1112,7 @@ fun class_of_term source (c:Classifier list, a:association list) =
 		val styp = substitute_typ typ (type_of classifier)
 		val ops = substitute_operations typ (local_operations_of classifier)
 		val _ = trace 100 ("substitute parent.\n")
-		val sparent = substitute_parent typ
+		val sparent = substitute_parent typ model
 		val _ = trace 100 ("end substitute parent.\n")
 	    in
 		(Class
@@ -1151,7 +1200,14 @@ fun class_of (name:Path) (model as (clist,alist)) =
 	 val _ = trace low ("top level package: " ^ (List.hd (name)) ^ "\n")
 	 val _ = trace low ("remaining package: " ^ (String.concat (List.tl name)) ^ "\n") 
      in
-	 class_of_term (Variable("x",type_of_path name)) model
+	 class_of_term (Variable("x",type_of_path name model)) model
+	 handle TemplateInstantiationError s =>
+		let
+		    val _ = print ("The path of the template parameter is not in the desing model.\n")
+		    val _ = print ("Path = " ^ s ^ "\n")
+		in
+		    raise TemplateError ("shit\n")
+		end
      end
 
 and class_of_type (typ:OclType) (model:transform_model) = 
@@ -1284,15 +1340,6 @@ fun parent_name_of (C as Class{parent,...}) =
 		   | SOME p  => path_of_OclType p )
   | parent_name_of (Template _) = 
     error "in Rep.parent_name_of: unsupported argument type Template"
-
-(*
-fun parents_of C (model as (clist,alist)) =
-    (case parent_name_of C of
-       [] => []    
-     | class => (if( class = (name_of OclAnyC) )
-                 then [(name_of OclAnyC)]
-                 else [class]@parents_of (class_of class (cl,[])) cl)))
-*)
 
 fun sig_conforms_to [] [] model = true
   | sig_conforms_to [] list model = 
@@ -3412,22 +3459,6 @@ fun inherited_invariants_of class (model:transform_model as (clist,alist)) =
 
 fun all_invariants_of class model = 
     (local_invariants_of class)@(inherited_invariants_of class model)
-
-(* TODO: restored -> needs to be updated *)
-
-fun operation_of cl fq_name =
-    let
-      val classname   = (rev o  tl o rev) fq_name
-      val operations  = operations_of (class_of classname cl)
-      val name        = (hd o rev) fq_name
-      val candidates = (filter (fn a => if ((name_of_op a) = name)
-				      then true else false ) operations )
-			
-    in
-      case candidates of
-	[] => NONE
-      | c  => SOME(hd c)
-    end
 
 
 end
