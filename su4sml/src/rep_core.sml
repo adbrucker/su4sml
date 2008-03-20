@@ -1652,64 +1652,64 @@ fun parent_of (cl as Class{parent,...}:Classifier) (model:transform_model) =
       | SOME(x) => class_of_type x model
      
     
-fun parents_of C (model:transform_model) = 
+fun parents_of_help C (model:transform_model) = 
     let
-	val _ = trace wgen ("parents_of " ^ (string_of_path (name_of C)) ^ "\n")
+	val _ = trace wgen ("parents_of_help " ^ (string_of_path (name_of C)) ^ "\n")
 	val parent = parent_of C model
+	val _ = trace wgen ("parent_of classifer = " ^ (string_of_path (name_of parent)) ^ "\n")
     in
-	case (type_of (parent)) of
-	    OclAny => [parent]
-	  | DummyT =>
-	    let
-		val cl_typ = type_of C
-	    in
-		case cl_typ of 
-		    Collection(y) => [parent]@(parents_of parent model)
-		  | Set(y) => 
-		    let 
-			val parents_1_prior = [parent]@(parents_of parent model)
-			val coll_typ  = Collection(y)
-			val coll_class = class_of_type coll_typ model
-			val parents_2_prior = [coll_class]@(parents_of coll_class model)
-		    in
-			parents_1_prior@parents_2_prior
-		    end
-		  | Bag(y) => 
-		    let 
-			val parents_1_prior = [parent]@(parents_of parent model)
-			val coll_typ  = Collection(y)
-			val coll_class = class_of_type coll_typ model
-			val parents_2_prior = [coll_class]@(parents_of coll_class model)
-		    in
-			parents_1_prior@parents_2_prior
-		    end
-		  | OrderedSet(y) =>
-		    let 
-			val parents_1_prior = [parent]@(parents_of parent model)
-			val coll_typ  = Collection(y)
-			val coll_class = class_of_type coll_typ model
-			val parents_2_prior = [coll_class]@(parents_of coll_class model)
-		    in
-			parents_1_prior@parents_2_prior
-		    end
-		  | Sequence(y) => 
-		    let 
-			val _ = trace wgen ("1-dim inheritance")
-			val parents_1_prior = [parent]@(parents_of parent model)
-			val _ = trace wgen ("number of parents = " ^ Int.toString (List.length (parents_1_prior)) ^ "\n")
-			val coll_typ  = Collection(y)
-			val coll_class = class_of_type coll_typ model
-			val _ = trace wgen ("2-dim inheritance")
-			val parents_2_prior = [coll_class]@(parents_of coll_class model)
-			val _ = trace wgen ("number of parents = " ^ Int.toString (List.length (parents_1_prior)) ^ "\n")
-		    in
-			parents_1_prior@parents_2_prior
-		    end
-	    end
-	  | x => [parent]@(parents_of parent model) 
+	case (isColl_Type (type_of (parent))) of
+	    true => 
+	    (
+	     case (type_of (parent)) of
+		 Collection(y) => [parent]@(parents_of_help parent model)
+	       | Set(y) => 
+		 let 
+		     val parents_1_prior = [parent]@(parents_of_help parent model)
+		     val coll_typ  = Collection(y)
+		     val coll_class = class_of_type coll_typ model
+		     val parents_2_prior = [coll_class]@(parents_of_help coll_class model)
+		 in
+		     parents_1_prior@parents_2_prior
+		 end
+	       | Bag(y) => 
+		 let 
+		     val parents_1_prior = [parent]@(parents_of_help parent model)
+		     val coll_typ  = Collection(y)
+		     val coll_class = class_of_type coll_typ model
+		     val parents_2_prior = [coll_class]@(parents_of_help coll_class model)
+		 in
+		     parents_1_prior@parents_2_prior
+		 end
+	       | OrderedSet(y) =>
+		 let 
+		     val parents_1_prior = [parent]@(parents_of_help parent model)
+		     val coll_typ  = Collection(y)
+		     val coll_class = class_of_type coll_typ model
+		     val parents_2_prior = [coll_class]@(parents_of_help coll_class model)
+		 in
+		     parents_1_prior@parents_2_prior
+		 end
+	       | Sequence(y) => 
+		 let 
+		     val _ = trace wgen ("1-dim inheritance")
+		     val parents_1_prior = [parent]@(parents_of_help parent model)
+		     val _ = trace wgen ("number of parents = " ^ Int.toString (List.length (parents_1_prior)) ^ "\n")
+		     val coll_typ  = Collection(y)
+		     val coll_class = class_of_type coll_typ model
+		     val _ = trace wgen ("2-dim inheritance")
+		     val parents_2_prior = [coll_class]@(parents_of_help coll_class model)
+		     val _ = trace wgen ("number of parents = " ^ Int.toString (List.length (parents_1_prior)) ^ "\n")
+		 in
+		     parents_1_prior@parents_2_prior
+		 end
+	    )
+	  | false => case (type_of parent) of
+			 OclAny => [class_of_type OclAny model]
+		       | x => [parent]@(parents_of_help parent model)
     (* 
 	  | x => (case isColl_Type x of
-		      false => [parent]@(parents_of parent model)
+		      false => [parent]@parents_of_help parent model)
 		    | true => 
 		      let 
 			  val _ = trace wgen ("parent is colltype : ") 
@@ -1720,6 +1720,15 @@ fun parents_of C (model:transform_model) =
 		 )
 		 
      *)
+    end
+
+fun parents_of C model = 
+    let
+	val parents = parents_of_help C model
+	fun remove_dup [] = []
+	  | remove_dup (h::tail) = if (member h tail) then (remove_dup tail) else ((h)::(remove_dup tail))
+    in
+	remove_dup parents
     end
     
 (* get all inherited operations of a classifier, without the local operations *)
