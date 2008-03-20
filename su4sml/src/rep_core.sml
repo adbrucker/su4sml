@@ -749,7 +749,12 @@ exception OperationNotFoundError of string
 exception NoParentForDatatype of string
 exception NoModelReferenced of string
 exception NoCollectionTypeError of Rep_OclType.OclType
-end
+
+(* TODO: restored -> needs to be updated *)
+val operation_of        :  transform_model -> Rep_OclType.Path -> operation option
+
+
+end (* signature *)
 
 structure Rep_Core :  REP_CORE = 
 struct
@@ -3407,6 +3412,22 @@ fun inherited_invariants_of class (model:transform_model as (clist,alist)) =
 
 fun all_invariants_of class model = 
     (local_invariants_of class)@(inherited_invariants_of class model)
+
+(* TODO: restored -> needs to be updated *)
+
+fun operation_of cl fq_name =
+    let
+      val classname   = (rev o  tl o rev) fq_name
+      val operations  = operations_of (class_of classname cl)
+      val name        = (hd o rev) fq_name
+      val candidates = (filter (fn a => if ((name_of_op a) = name)
+				      then true else false ) operations )
+			
+    in
+      case candidates of
+	[] => NONE
+      | c  => SOME(hd c)
+    end
 
 
 end
