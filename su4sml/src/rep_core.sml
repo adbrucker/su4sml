@@ -240,8 +240,9 @@ val class_of_term           : Rep_OclTerm.OclTerm -> transform_model -> Classifi
 (**
  * Returns the classifier of the parent of a classifier.
  *)
+(*
 val class_of_parent         : Classifier -> transform_model -> Classifier
-
+*)
 (**
  * Returns all classifiers of a given package.
  *) 
@@ -490,6 +491,11 @@ val get_overloaded_methods    : Classifier -> string -> transform_model -> (Clas
 (** OBSOLETE **)
 val get_meth                  : Rep_OclTerm.OclTerm -> string -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list 
 				-> transform_model -> Rep_OclTerm.OclTerm
+(** 
+ * Return the next parent which is implementing the operation.
+ *)
+val last_implementation_of_op : Classifier -> string -> transform_model -> (Classifier * operation)
+
 (**
  * Returns the preconditions of an operation.
  *)
@@ -545,6 +551,12 @@ val update_postcondition  : (string option * Rep_OclTerm.OclTerm) list ->
 (*****************************************
  *            ATTRIBUTES                 *
  *****************************************)
+
+(** 
+ * Get name of attribute
+ *)
+val name_of_att  : attribute -> string
+
 
 (** 
  * Find an attribute in a list of attributes. 
@@ -680,6 +692,11 @@ val thy_name_of       : Classifier -> string
  *)
 val package_of           : Classifier -> Rep_OclType.Path 
 
+(**
+ * Returns all the packages of a model
+ *)
+val all_packages_of_model : transform_model -> Rep_OclType.Path list
+
 (** 
  * Returns the package name of the template parameter.
  *)
@@ -742,11 +759,6 @@ val string_of_path      : Rep_OclType.Path -> string
 val short_name_of_path  : Rep_OclType.Path -> string    
 
 
-
-(* TODO: restored -> needs to be updated *) 
-val operation_of        :  transform_model -> Rep_OclType.Path -> operation option 
-
-
 (*****************************************
  * RETURN activity_graphs                *
  *****************************************)
@@ -762,10 +774,12 @@ exception TemplateInstantiationError of string
 exception GetClassifierError of string
 exception UpcastingError of string
 exception OperationNotFoundError of string
+exception AttributeNotFoundError of string
 exception NoParentForDatatype of string
 exception NoModelReferenced of string
 exception NoCollectionTypeError of Rep_OclType.OclType
-end (* signature *)
+exception AttributeAssocEndNameClash of string
+end
 
 structure Rep_Core :  REP_CORE = 
 struct
@@ -890,7 +904,8 @@ exception NoParentForDatatype of string
 exception NoModelReferenced of string
 exception NoCollectionTypeError of Rep_OclType.OclType
 exception OperationNotFoundError of string
-
+exception AttributeNotFoundError of string
+exception AttributeAssocEndNameClash of string
 val OclLibPackage = "oclLib"
 val OclAnyC = Class{name=Rep_OclType.OclAny,parent=NONE,attributes=[],
 		    operations=[], interfaces=[],
@@ -934,8 +949,16 @@ fun name_of (Class{name,...})            = path_of_OclType name
   | name_of (Primitive{name,...})        = path_of_OclType name
   | name_of (Template{classifier,...})   = name_of classifier
 
+fun short_name_of_path p = (hd o rev) p
 
 fun name_of_op ({name,...}:operation) = name
+
+fun name_of_att ({name,...}:attribute) = name
+
+fun type_of_aend ({name,aend_type,...}:associationend) = aend_type
+
+fun name_of_aend ({name,aend_type,...}:associationend) = 
+    short_name_of_path name
 
 
 fun mangled_name_of_op ({name,arguments,result,...}:operation) = 
@@ -961,13 +984,28 @@ fun local_operations_of (Class{operations,...}) = operations
   | local_operations_of (Primitive{operations,...})      = operations  
   | local_operations_of (Template{parameter,classifier}) = raise OperationNotFoundError ("..._operations_of a template not possible.\n")
 
+
+fun local_attributes_of (Class{attributes,...}) = attributes
+  | local_attributes_of (AssociationClass{attributes,...}) = attributes					    
+  | local_attributes_of (Interface{...})        = 
+         error "in Rep.local_attributes_of: argument is Interface"
+  | local_attributes_of (Enumeration{...})      = 
+         error "in Rep.local_attributes_of: argument is Enumeration"  
+  | local_attributes_of (Primitive{...})         = []  
+  | local_attributes_of (Template{parameter,classifier}) = raise AttributeNotFoundError ("..._attributes_of a template not possible.\n")
+
 fun operations_of class = local_operations_of class
 
-fun class_of_design_model path (model as (clist,alist)) = 
-    case (List.find (fn a => name_of a = path) clist) of
-	NONE => raise TemplateInstantiationError (String.concat path)
-      | SOME(x) => x
+fun attributes_of class = local_attributes_of class
 
+fun class_of_design_model path (model as (clist,alist)) = 
+    let
+	val _ = trace wgen ("path of class = " ^ (String.concat (path)) ^ "\n")
+    in
+	case (List.find (fn a => name_of a = path) clist) of
+	    NONE => raise TemplateInstantiationError (String.concat path)
+	  | SOME(x) => x
+    end
 
 fun type_of_parent (Class {parent,...}) = 
     let
@@ -1443,8 +1481,20 @@ fun operation_of cl fq_name =
     end	
 *)
 
+fun type_of_att ({name,attr_type,...}:attribute) = attr_type
+
 fun same_op (sub_op:operation) (super_op:operation) (model:transform_model) =
     if ((name_of_op sub_op = name_of_op super_op ) andalso (sig_conforms_to (arguments_of_op sub_op) (arguments_of_op super_op) model))
+    then true
+    else false
+
+fun same_att (sub_att:attribute) (super_att:attribute) (model:transform_model) = 
+    if ((name_of_att sub_att = name_of_att super_att) andalso (conforms_to (type_of_att sub_att) (type_of_att super_att) model))
+    then true
+    else false
+
+fun same_ae (sub_ae:associationend) (super_ae:associationend) (model:transform_model) = 
+    if ((name_of_aend sub_ae = name_of_aend super_ae) andalso (conforms_to (type_of_aend sub_ae) (type_of_aend super_ae) model))
     then true
     else false
 
@@ -1463,6 +1513,33 @@ fun embed_local_operations [] iops model = iops
 	(embed_local_operations tail tmp model)
     end
 
+fun embed_local_attributes [] iatts model = iatts
+  | embed_local_attributes x [] model = x
+  | embed_local_attributes (h::tail) iatts model = 
+    let
+	fun embed_local_attribute att [] model = [att]
+	  | embed_local_attribute latt ((att:attribute)::iatts) model = 
+	    if (same_att latt att model)
+	    then (latt::iatts)
+	    else (att)::(embed_local_attribute latt iatts model)
+	val tmp = embed_local_attribute h iatts model
+    in
+	(embed_local_attributes tail tmp model)
+    end
+
+fun embed_local_assocEnds [] iassE model = iassE
+  | embed_local_assocEnds x [] model = x
+  | embed_local_assocEnds (h::tail) iassEs model = 
+    let
+	fun embed_local_assocEnd assE [] model = [assE]
+	  | embed_local_assocEnd lassE ((assE:associationend)::iassEs) model =
+	    if (same_ae lassE assE model)
+	    then (lassE::iassEs)
+	    else (assE)::(embed_local_assocEnd lassE iassEs model)
+	val tmp = embed_local_assocEnd h iassEs model
+    in
+	(embed_local_assocEnds tail tmp model)
+    end
 
 fun isColl_Type (Set(x)) = true
   | isColl_Type (Sequence(x)) = true
@@ -1729,12 +1806,87 @@ fun parents_of_help C (model:transform_model) =
 		 
      *)
     end
+fun name_of_association ({name,aends,qualifiers,aclass}:association) = name
+
+fun path_of_association assoc = name_of_association assoc
+
+fun aends_of_association {name,aends,qualifiers,aclass} = aends
+
+fun associations_of (Class{name,associations,...}) = associations
+  | associations_of (AssociationClass{name,associations,association,...}) = associations  
+  | associations_of (Primitive{name,associations,...}) = associations
+                                                             
+fun oppositeAendsOfAssociation name allAssociations associationPath =
+    let
+      val [association] = List.filter (fn assoc => path_of_association assoc = associationPath) allAssociations
+    in
+      List.filter (fn aend => type_of_aend aend <> name) (aends_of_association association)
+    end
+
+fun incomingAendsOfAssociation name allAssociations associationPath =
+    let
+      val [association] = List.filter (fn assoc => path_of_association assoc = associationPath) allAssociations
+    in
+      List.filter (fn aend => type_of_aend aend = name) (aends_of_association association)
+    end
+
+(** find the associationends belonging to a classifier.
+ * This mean all other associationends from all associations the
+ * classifer is part of. For association classes, the belonging 
+ * association also needs to be checked.
+ * If the association is reflexiv, all aends will be returned.
+ *)
+
+
+fun local_associationends_of (all_associations:association list) (Class{name,associations,...}):associationend list = 
+    let 
+	val _ = trace wgen ("local_associationends_of 1 ... \n")
+	val oppAends = List.concat (map (oppositeAendsOfAssociation name all_associations) associations)
+	val _ = trace wgen ("local_associationends_of 2 ... \n")
+	val selfAends = map (incomingAendsOfAssociation name all_associations) associations
+	val _ = trace wgen ("local_associationends_of 3 ... \n")
+	val filteredSelfAends = List.concat (List.filter (fn x => length x >= 2) selfAends)
+	val _ = trace wgen ("local_associationends_of 4 ... \n")
+    in
+        oppAends@filteredSelfAends
+    end
+  | local_associationends_of all_associations (AssociationClass{name,associations,association,...}) = 
+    (* association only contains endpoints to the other, pure classes *)
+    let
+	val _ = trace wgen ("local_associationends_of 1 AssoCl ... \n")
+	val assocs = if List.exists (fn x => x = association ) associations 
+                     then associations
+		     else association::associations
+	val _ = trace wgen ("local_associationends_of 2 AssoCl ... \n")
+	val oppAends = List.concat (map (oppositeAendsOfAssociation name all_associations) assocs)
+	val _ = trace wgen ("local_associationends_of 3 AssoCl ... \n")
+	val selfAends = map (incomingAendsOfAssociation name all_associations) associations
+	val _ = trace wgen ("local_associationends_of 4 AssoCl ... \n")
+	val filteredSelfAends = List.concat (List.filter (fn x => length x >= 2) selfAends)
+	val _ = trace wgen ("local_associationends_of 5 AssoCl ... \n")
+    in
+        oppAends@filteredSelfAends
+    end
+  | local_associationends_of all_associations (Primitive{name,associations,...}) = 
+    let 
+	val _ = trace wgen ("local_associationends_of 1 Primi... \n")
+	val oppAends = List.concat (map (oppositeAendsOfAssociation name all_associations) associations)
+	val _ = trace wgen ("local_associationends_of 2 primi ... \n")
+	val selfAends = map (incomingAendsOfAssociation name all_associations) associations
+	val _ = trace wgen ("local_associationends_of 3 primi ... \n")
+	val filteredSelfAends = List.concat (List.filter (fn x => length x >= 2) selfAends)
+	val _ = trace wgen ("local_associationends_of 4 primi ... \n")
+    in
+        oppAends@filteredSelfAends
+    end
+  | local_associationends_of _ _ = error ("in local_associationends_of: This classifier has no associationends") (*FIXME: or rather []? *)
+fun associationends_of assocs classes = local_associationends_of assocs classes                             
+
+
 
 fun parents_of C model = 
     let
 	val parents = parents_of_help C model
-	fun remove_dup [] = []
-	  | remove_dup (h::tail) = if (member h tail) then (remove_dup tail) else ((h)::(remove_dup tail))
     in
 	remove_dup parents
     end
@@ -1750,8 +1902,30 @@ fun inherited_operations_of class (model as (clist,alist)) =
     in
 	List.foldr (fn (a,b) => embed_local_operations a b model) (List.last (ops_of_par)) ops_of_par
     end
-		      
-(* get absolutelly all operations of a classifier. In case of a functions which occurs serveral times in the inheritance tree, the must specified function is listed. *)
+
+fun inherited_attributes_of class (model as (clist,alist)) = 
+    let
+	val _ = trace wgen ("inh att 0\n")
+	val c_parents = parents_of class model
+	val _ = trace wgen ("inh att 0\n")
+	val atts_of_par = (List.map (attributes_of) c_parents)
+	val _ = trace wgen ("inh att 0\n")
+    in
+	List.foldr (fn (a,b) => embed_local_attributes a b model) (List.last (atts_of_par)) atts_of_par
+    end
+	
+fun inherited_associationends_of class (model as (clist,alist)) =
+    let
+	val _ = trace wgen ("inh assoEnd 0\n")
+	val c_parents = parents_of class model
+	val _ = trace wgen ("inh assoEnd 1\n")
+	val assE_of_par = (List.map (associationends_of alist) c_parents)
+	val _ = trace wgen ("inh assoEnd 2\n")
+    in
+	List.foldr (fn (a,b) => embed_local_assocEnds a b model) (List.last (assE_of_par)) assE_of_par
+    end
+
+(* get absolutelly all operations of a classifier. In case of a functions which occurs serveral times in the inheritance tree, the most specified function is listed. *)
 fun all_operations_of class model =
     let 
 	val lo = local_operations_of class
@@ -1762,6 +1936,27 @@ fun all_operations_of class model =
 	embed_local_operations lo io model
     end
 
+fun all_attributes_of class model = 
+    let
+	val la = local_attributes_of class
+	val _ = trace 50 ("all atts of classifier : "^ (string_of_path (name_of class)) ^ "\n")
+	val ia = inherited_attributes_of class model
+	val _ = trace 50 ("all atts 2\n")
+    in
+	embed_local_attributes la ia model
+    end
+
+fun all_associationends_of class (model as (clist,alist)) = 
+    let
+	val la = local_associationends_of alist class
+	val _ = trace wgen ("all assocEnds of classifier : " ^ (String.concat (name_of class)) ^ "\n")
+	val ia = inherited_associationends_of class model
+	val _ = trace wgen ("all assocEnds")
+    in
+	embed_local_assocEnds la ia model
+    end
+
+		 
 (* get all local operations, which occurs in one of the parent classes at least each time also *)
 fun modified_operations_of class model = 
     let
@@ -1773,12 +1968,29 @@ fun modified_operations_of class model =
 							       else op_exists oper tail
     in
 	optlist2list (List.map (fn a => if (op_exists a io)
-			  then NONE
-			  else (if  (List.exists (fn b => same_op a b model) io)
-				then SOME(a)
-				else NONE
+					then NONE
+					else (if  (List.exists (fn b => same_op a b model) io)
+					      then SOME(a)
+					      else NONE
 			       )) lo) 
-	(* List.concat (List.map (fn a => List.filter (fn b => if (same_op a b model) then false else true) io) lo ) *)
+    (* List.concat (List.map (fn a => List.filter (fn b => if (same_op a b model) then false else true) io) lo ) *)
+    end
+
+fun modified_attributes_of class model = 
+    let
+	val ia = inherited_attributes_of class model
+	val la = local_attributes_of class
+	fun att_exists (att:attribute) [] = false
+	  | att_exists (att:attribute) ((h:attribute)::tail) = if (att = h)
+								then true
+								else att_exists att tail
+    in
+	optlist2list (List.map (fn a => if (att_exists a ia)
+					then NONE
+					else (if (List.exists (fn b => same_att a b model) ia)
+					      then SOME(a)
+					      else NONE
+			       )) la)
     end
 
 
@@ -1899,12 +2111,6 @@ fun range_to_inv cls_name aend (a,b) =
 				      Rep_OclType.Boolean)
     end
     
-   
-fun name_of_association ({name,aends,qualifiers,aclass}:association) = name
-fun path_of_association assoc = name_of_association assoc
- 
-fun short_name_of_path p = (hd o rev) p
-
 fun path_of_aend ({name,aend_type,...}:associationend) = name 
 
 fun substitute_templ_para (Collection(tt)) t = Collection (t)
@@ -2010,123 +2216,41 @@ fun aend_to_inv cls_name (aend:associationend,revAend:associationend) =
        multiplicity_constraint cls_name aend]
     
 
-fun aends_of_association {name,aends,qualifiers,aclass} = aends
-
 fun association_of_aend ({name,aend_type,...}:associationend) =
 	  List.take(name, (List.length name)-1)
 
-fun type_of_aend ({name,aend_type,...}:associationend) = aend_type
-
-fun type_of_att ({name,attr_type,...}:attribute) = attr_type
-
-fun name_of_aend ({name,aend_type,...}:associationend) = 
-    short_name_of_path name
-
 fun role_of_aend ({name,aend_type,...}:associationend) = List.last name
-
-fun associations_of (Class{name,associations,...}) = associations
-  | associations_of (AssociationClass{name,associations,association,...}) = 
-    associations  
-  | associations_of (Primitive{name,associations,...}) = associations
-                                                             
-fun oppositeAendsOfAssociation name allAssociations associationPath =
-    let
-      val [association] = List.filter (fn assoc => path_of_association assoc =
-                                                   associationPath)
-                                      allAssociations
-    in
-      List.filter (fn aend => type_of_aend aend <> name)
-                  (aends_of_association association)
-    end
-
-fun incomingAendsOfAssociation name allAssociations associationPath =
-    let
-      val [association] = List.filter (fn assoc => path_of_association assoc =
-                                                   associationPath)
-                                      allAssociations
-    in
-      List.filter (fn aend => type_of_aend aend = name)
-                  (aends_of_association association)
-    end
-
-(** find the associationends belonging to a classifier.
- * This mean all other associationends from all associations the
- * classifer is part of. For association classes, the belonging 
- * association also needs to be checked.
- * If the association is reflexiv, all aends will be returned.
- *)
-fun associationends_of (all_associations:association list) 
-                       (Class{name,associations,...}):associationend list = 
-    let 
-      val oppAends =  
-          List.concat (map (oppositeAendsOfAssociation name all_associations) 
-                           associations)
-      val selfAends = map (incomingAendsOfAssociation name all_associations) 
-                          associations
-      val filteredSelfAends = List.concat (List.filter (fn x => length x >= 2) selfAends)
-    in
-        oppAends@filteredSelfAends
-    end
-  | associationends_of all_associations (AssociationClass{name,associations,
-                                                          association,...}) = 
-    (* association only contains endpoints to the other, pure classes *)
-    let
-      val assocs = if List.exists (fn x => x = association ) associations 
-                   then associations
-		   else association::associations
-      val oppAends =  
-          List.concat (map (oppositeAendsOfAssociation name all_associations) 
-                           assocs)
-      val selfAends = map (incomingAendsOfAssociation name all_associations) 
-                          associations
-      val filteredSelfAends = List.concat (List.filter (fn x => length x >= 2) selfAends)
-    in
-        oppAends@filteredSelfAends
-    end
-  | associationends_of all_associations (Primitive{name,associations,...}) = 
-    let 
-      val oppAends =  
-          List.concat (map (oppositeAendsOfAssociation name all_associations) 
-                           associations)
-      val selfAends = map (incomingAendsOfAssociation name all_associations) 
-                          associations
-      val filteredSelfAends = List.concat (List.filter (fn x => length x >= 2) selfAends)
-    in
-        oppAends@filteredSelfAends
-    end
-  | associationends_of _ _ = error ("in associationends_of: This classifier has no associationends") (*FIXME: or rather []? *)
-                                   
-                 
+			     
 fun bidirectionalPairs name allAssociations associationPaths =
     let
-      fun combine [] [] = []
-        | combine (xs::xss) ([y]::ys) =
-          map (fn x => (x,y)) xs @ (combine xss ys)
-        | combine (xs::xss) ((b::bs)::ys) =
-          map (fn x => (x,b)) xs @
-          map (fn x => (x,b)) bs @ 
-          map (fn x => (b,x)) bs (* need symmetry in this case *) @
-          (combine (xs::xss) (bs::ys))
-
-
-      val otherAends = map (oppositeAendsOfAssociation name allAssociations)
+	fun combine [] [] = []
+          | combine (xs::xss) ([y]::ys) =
+            map (fn x => (x,y)) xs @ (combine xss ys)
+          | combine (xs::xss) ((b::bs)::ys) =
+            map (fn x => (x,b)) xs @
+            map (fn x => (x,b)) bs @ 
+            map (fn x => (b,x)) bs (* need symmetry in this case *) @
+            (combine (xs::xss) (bs::ys))
+	    
+	    
+	val otherAends = map (oppositeAendsOfAssociation name allAssociations)
+                             associationPaths
+	val selfAends = map(incomingAendsOfAssociation name allAssociations)
                            associationPaths
-      val selfAends = map(incomingAendsOfAssociation name allAssociations)
-                         associationPaths
     in
-      combine otherAends selfAends
+	combine otherAends selfAends
     end
-
+    
 fun aendToAttCall (name,oclTerm) =
     let
-      fun aendToAtt (Rep_OclTerm.AssociationEndCall(source,sourceType,path,
-                                                    resultType)) =
-          (Rep_OclTerm.AttributeCall(source,sourceType,path,resultType))
-        | aendToAtt x = x
+	fun aendToAtt (Rep_OclTerm.AssociationEndCall(source,sourceType,path,
+                                                      resultType)) =
+            (Rep_OclTerm.AttributeCall(source,sourceType,path,resultType))
+          | aendToAtt x = x
     in
-      (name,Rep_OclHelper.mapOclCalls aendToAtt oclTerm)
+	(name,Rep_OclHelper.mapOclCalls aendToAtt oclTerm)
     end
-                  
+    
 (** convert association ends into attributes + invariants 
  * Associations belonging to an association class have not been modified to
  * include an additional aend to the association class.
@@ -2136,37 +2260,37 @@ fun normalize (all_associations:association list)
                             invariant,stereotypes,interfaces,thyname,
                             visibility,activity_graphs})):Classifier =
     let
-      val _ = trace function_calls "normalize: class\n"
-      val _ = trace function_arguments 
-                    ("number of associations: "^(Int.toString(List.length 
-                                                                  associations)
-                                                )^"\n")
-      val _ = map (trace function_arguments o (fn x => 
-                                                  "association path: "^x^"\n")
-                   o string_of_path) associations
-      fun mapPath (aend1,aend2) = (aend1,path_of_aend aend2)
-
- (*     val aendPathPairs = map mapPath (bidirectionalPairs name all_associations
-                                                          associations)*)
-      val aendPathPairs = bidirectionalPairs name all_associations associations
+	val _ = trace function_calls "normalize: class\n"
+	val _ = trace function_arguments 
+                      ("number of associations: "^(Int.toString(List.length 
+                                                                    associations)
+                                                  )^"\n")
+	val _ = map (trace function_arguments o (fn x => 
+                                                    "association path: "^x^"\n")
+                     o string_of_path) associations
+	fun mapPath (aend1,aend2) = (aend1,path_of_aend aend2)
+				    
+	(*     val aendPathPairs = map mapPath (bidirectionalPairs name all_associations
+								   associations)*)
+	val aendPathPairs = bidirectionalPairs name all_associations associations
     in
-      Class {name   = name,
-	     parent = parent,
-	     attributes = append (map (convert_aend (List.last(path_of_OclType
-                                                                   name))) 
-				      (associationends_of all_associations C))
-                                 attributes,
-	     operations = operations,
-	     associations = nil,
-	     invariant = append (List.concat 
-                                     (map (aend_to_inv (path_of_OclType name))
-                                          aendPathPairs))
-				(map aendToAttCall invariant),
-	     stereotypes = stereotypes,
-             interfaces = interfaces,
-	     thyname = thyname,
-	     visibility = visibility,
-             activity_graphs = activity_graphs}
+	Class {name   = name,
+	       parent = parent,
+	       attributes = append (map (convert_aend (List.last(path_of_OclType
+                                                                     name))) 
+					(associationends_of all_associations C))
+                                   attributes,
+	       operations = operations,
+	       associations = nil,
+	       invariant = append (List.concat 
+                                       (map (aend_to_inv (path_of_OclType name))
+                                            aendPathPairs))
+				  (map aendToAttCall invariant),
+	       stereotypes = stereotypes,
+               interfaces = interfaces,
+	       thyname = thyname,
+	       visibility = visibility,
+               activity_graphs = activity_graphs}
     end
   | normalize all_associations (AC as (AssociationClass 
                                            {name,parent,attributes,association,
@@ -2175,34 +2299,34 @@ fun normalize (all_associations:association list)
                                             thyname,visibility, activity_graphs})) =
     (* FIXME: how to handle AssociationClass.association? *)
     let
-      val _ = trace function_calls "normalize: associationclass\n"
-      val _ = trace function_arguments 
-                    ("number of associations: "^
-                     (Int.toString (List.length associations ))^"\n")
-      fun mapPath (aend1,aend2) = (aend1,path_of_aend aend2)
-                                  
-      val aendPathPairs = (bidirectionalPairs name all_associations
-                                                          associations)
+	val _ = trace function_calls "normalize: associationclass\n"
+	val _ = trace function_arguments 
+                      ("number of associations: "^
+                       (Int.toString (List.length associations ))^"\n")
+	fun mapPath (aend1,aend2) = (aend1,path_of_aend aend2)
+                                    
+	val aendPathPairs = (bidirectionalPairs name all_associations
+                                                associations)
     in
-      AssociationClass {
-      name   = name,
-      parent = parent,
-      attributes = append (map (convert_aend (List.last (path_of_OclType 
-                                                             name)))
-			       (associationends_of all_associations AC))
-                          attributes,
-      operations = operations,
-      invariant = append (List.concat(
-                          map (aend_to_inv (path_of_OclType name)) 
-                              aendPathPairs))
-			 (map aendToAttCall invariant),
-      stereotypes = stereotypes,
-      interfaces = interfaces,
-      thyname = thyname,
-      activity_graphs = activity_graphs,
-      associations = [],
-      visibility=visibility,
-      association = [] (* FIXME? *)}
+	AssociationClass {
+	name   = name,
+	parent = parent,
+	attributes = append (map (convert_aend (List.last (path_of_OclType 
+                                                               name)))
+				 (associationends_of all_associations AC))
+                            attributes,
+	operations = operations,
+	invariant = append (List.concat(
+                            map (aend_to_inv (path_of_OclType name)) 
+				aendPathPairs))
+			   (map aendToAttCall invariant),
+	stereotypes = stereotypes,
+	interfaces = interfaces,
+	thyname = thyname,
+	activity_graphs = activity_graphs,
+	associations = [],
+	visibility=visibility,
+	association = [] (* FIXME? *)}
     end
   | normalize all_associations (Primitive p) =
     (* Primitive's do not have attributes, so we have to convert *)
@@ -2637,16 +2761,6 @@ fun parent_interfaces_of (Interface{parents,...}) = parents
 
 (* Get the names of parent interfaces of a Classifier *)
 fun parent_interface_names_of c = map path_of_OclType (parent_interfaces_of c)
-
-fun attributes_of (Class{attributes,...}) = attributes
-  | attributes_of (AssociationClass{attributes,...}) = attributes					    
-  | attributes_of (Interface{...})        = 
-         error "in Rep.attributes_of: argument is Interface"
-  | attributes_of (Enumeration{...})      = 
-         error "in Rep.attributes_of: argument is Enumeration"  
-  | attributes_of (Primitive{...})         = []  
-         (* error "attributes_of <Primitive> not supported" *)  
-  | attributes_of (Template{parameter,classifier}) = attributes_of classifier
 
 
 fun p_invariant_of (Class{invariant,...})       = invariant 
@@ -3186,8 +3300,8 @@ fun upcast_att_aend [] source (model:transform_model) =
        | SOME (term) => term
     )
 
-
-fun class_of_parent (Class {parent,...}) (model:transform_model) = 
+(*
+fun class_of_parent (Class{parent,...}:Classifier) (model:transform_model) =
     (case parent of
 	 NONE => class_of_term (Variable ("x",OclAny)) model
        | SOME (others) => class_of_term (Variable ("x",others)) model 
@@ -3204,6 +3318,7 @@ fun class_of_parent (Class {parent,...}) (model:transform_model) =
        | SOME (others) => class_of_type  others model
     )
   | class_of_parent (Interface {parents,...}) model = 
+*)
     (* TODO: change API *)
     (*  
      (case (List.last (parents)) of 
@@ -3211,14 +3326,31 @@ fun class_of_parent (Class {parent,...}) (model:transform_model) =
 	| SOME (others) => class_of_type others clist
      )
      *)
-    class_of_type (List.hd parents) model
+(*    class_of_type (List.hd parents) model
   | class_of_parent c model = raise NoParentForDatatype "No Parent for this type of Classifier"
-
+*)
 fun end_of_recursion classifier = 
     case (type_of classifier) of
 	Collection (T) => true
       | others => false
 
+(* last_implentation_of_op *)
+
+fun get_overloaded_methods class op_name model = 
+    let
+	val _ = trace wgen ("get_overloaded_methods, look for operation = " ^ op_name ^ "\n")
+	val parents = parents_of class model
+	val loc_ops = List.map (fn a => (class,a)) (local_operations_of class)
+	val cl_op_list = (loc_ops)@(List.concat (List.map (fn a => (List.map (fn b => (a,b)) (all_operations_of a model))) parents))
+	val cls_ops = List.filter (fn (a,b) => if (name_of_op b = op_name) then true else false) cl_op_list
+	val _ = trace wgen ("number of overloaded operations found = " ^ Int.toString(List.length(cls_ops)) ^ "\n")
+    in
+	cls_ops
+    end
+
+fun last_implementation_of_op class op_name model = 
+    List.hd (get_overloaded_methods class op_name model)
+(*
 fun get_overloaded_methods class op_name ([],_) = raise NoModelReferenced ("in 'get_overloaded_methods' ...\n")
   | get_overloaded_methods class op_name (model as (classifiers,associations)) =
    let
@@ -3228,7 +3360,7 @@ fun get_overloaded_methods class op_name ([],_) = raise NoModelReferenced ("in '
        val _ = trace low("Look for methods for classifier: " ^ string_of_OclType (type_of class) ^ "\n")
        val ops2 = List.filter (fn a => (if ((#name a) = op_name) then true else false)) ops
        val _ = trace low("operation name                 : " ^ op_name ^ "  Found " ^ Int.toString (List.length ops2) ^ " method(s) \n")
-       val parent = class_of_parent class model
+       val parent = parent_of class model
        val _ = trace low("Parent class                   : " ^ string_of_OclType (type_of parent) ^ "\n\n")
        val cl_op = List.map (fn a => (class,a)) ops2
    in
@@ -3252,8 +3384,48 @@ fun get_overloaded_methods class op_name ([],_) = raise NoModelReferenced ("in '
 		)
 	   )
    end
+*)
+
+fun get_overloaded_attrs_or_assocends class attr_name (model as (clist,alist)) = 
+    let
+	val _ = trace wgen ("get_overloaded_attrs_or_assocends, look for attr_or_assoc = " ^ attr_name ^ "\n")
+	val parents = parents_of class model
+        (* Attributes *)
+	val loc_atts = List.map (fn a => (class,a)) (local_attributes_of class)
+	val cl_att_list = (loc_atts)@(List.concat (List.map (fn a => (List.map (fn b => (a,b)) (all_attributes_of a model))) parents))
+	val cls_atts = 	List.filter (fn (a,b) => if (name_of_att b = attr_name) then true else false) cl_att_list
+        (* Associations *)
+	val loc_assE = List.map (fn a => (class,a)) (local_associationends_of alist class)   
+	val cl_assE_list = (loc_assE)@(List.concat (List.map (fn a => (List.map (fn b => (a,b)) (all_associationends_of a model))) parents))
+	val cls_assEs = List.filter (fn (a,b) => if (name_of_aend b = attr_name) then true else false) cl_assE_list
+    in
+	(** ATTENTION: undefined in standard if assocEnds and attributes are allowed for same naem **)
+	if (List.length(cls_atts) = 0) 
+	then (
+	    if (List.length(cls_assEs) = 0)
+	    then [] 
+	    else 
+		let
+		    val (cl,assE) = List.hd (cls_assEs)
+		in
+		    [(cl,NONE,SOME(assE))]
+		end
+	    )
+	else (
+	    if (List.length(cls_assEs) = 0)
+	    then
+		let 
+		    val (cl,att) = List.hd (cls_atts)
+		in
+		    [(cl,SOME(att),NONE)]
+		end
+	    else
+		raise AttributeAssocEndNameClash ("Attributes and AssocEnd in same inheritance tree are named equal.\n")
+	    )
+    end
 
 (* RETURN: (Classifier * attribute option * association option) list *)
+(*
 fun get_overloaded_attrs_or_assocends class attr_name ([],_) = raise NoModelReferenced ("in 'get_overloaded_attrs' ... \n")
   | get_overloaded_attrs_or_assocends class attr_name (model as (classifiers,associations)) =
    let
@@ -3284,7 +3456,7 @@ fun get_overloaded_attrs_or_assocends class attr_name ([],_) = raise NoModelRefe
        val assocends2 = List.filter (fn {name,...} => (List.last name)=attr_name) assocends
        val _ = trace low ("Name of attr/assocend         : " ^ attr_name  ^ "   Found " ^ Int.toString (List.length attrs2) ^
 			  " attribute(s), " ^ Int.toString (List.length assocends2) ^  " assocend(s) \n")
-       val parent = class_of_parent class model
+       val parent = parent_of class model
        val _ = trace low ("Parent class                  : " ^ string_of_OclType(type_of parent) ^ "\n\n")
        val _ = trace low ("Size of attrs2: "^(Int.toString (List.length attrs2))^"\n")
        val _ = trace low ("Size of assocends2: "^(Int.toString (List.length assocends2))^"\n")	       
@@ -3320,6 +3492,7 @@ fun get_overloaded_attrs_or_assocends class attr_name ([],_) = raise NoModelRefe
 		)
 	   )
    end
+*)
 	
 fun get_meth source op_name args (model as (classifiers,associations))=
     (* object type *)
@@ -3454,21 +3627,11 @@ fun string_to_type ["Integer"] = Integer
   | string_to_type list = Classifier (list)
 
 
-(* TODO: restored -> needs to be updated *) 
-fun operation_of cl fq_name = 
-    let 
-      val classname   = (rev o  tl o rev) fq_name 
-      val operations  = operations_of (class_of classname cl) 
-      val name        = (hd o rev) fq_name 
-      val candidates = (filter (fn a => if ((name_of_op a) = name) 
- 		                      then true else false ) operations ) 
- 	               
-    in 
-      case candidates of 
- 	[] => NONE 
-      | c  => SOME(hd c) 
-    end 
+fun all_packages_of_model ([],alist) = []
+  | all_packages_of_model (model as (h::clist,alist):transform_model) =
+    remove_dup (package_of h)::(all_packages_of_model (clist,alist))
     
-    
+
+
 end
 
