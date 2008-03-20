@@ -276,6 +276,9 @@ val visibility_of : Classifier -> Visibility
  *             TYPES                     *
  *****************************************)
 
+
+val string_to_type : string list -> Rep_OclType.OclType
+
 (**
  * Returns the type of a classifier.
  *)
@@ -3407,6 +3410,43 @@ fun inherited_invariants_of class (model:transform_model as (clist,alist)) =
 
 fun all_invariants_of class model = 
     (local_invariants_of class)@(inherited_invariants_of class model)
+
+
+fun string_to_type ["Integer"] = Integer
+  | string_to_type ["Boolean"] = Boolean
+  | string_to_type ["Real"] = Real
+  | string_to_type ["OclAny"] = OclAny
+  | string_to_type ["DummyT"] = DummyT
+  | string_to_type ["String"] = String
+  | string_to_type ["OclVoid"] = OclVoid
+  | string_to_type (("oclLib")::tail) = string_to_type tail
+  | string_to_type [set] = 
+    if (List.exists (fn a => if (a = (#"(")) then true else false) (String.explode set)) then
+	(* set *)
+	let
+	    fun string_to_cons "Set" typ = Set(typ)
+	      | string_to_cons "Bag" typ = Bag(typ)
+	      | string_to_cons "Collection" typ = Collection (typ)
+	      | string_to_cons "OrderedSet" typ = OrderedSet (typ)
+	      | string_to_cons "Sequence" typ = Sequence (typ)	
+	    fun parse_string c ([]) = ([],[])
+	      | parse_string c (h::tail) =
+		if (c = h) then
+		    ([],h::tail)
+		else
+ 		    (h::(#1 (parse_string c tail)),(#2 (parse_string c tail)))
+	    val tokens = parse_string (#"(") (String.explode set)
+	    val cons = (#1 tokens)
+	    (* delete first "(" and last ")" element *)
+	    val tail = List.tl (real_path (#2 tokens))
+	    val _ = TextIO.output(TextIO.stdOut,"tail "^ (String.implode tail) ^ "\n")
+
+	in
+	    string_to_cons (String.implode cons) (string_to_type ([String.implode tail]))
+	end
+    else
+	Classifier ([set])
+  | string_to_type list = Classifier (list)
 
 
 end

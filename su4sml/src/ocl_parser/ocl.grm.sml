@@ -3236,7 +3236,9 @@ end
 , simple_name1right)) :: rest671)) => let val  result = 
 MlyValue.simple_type_specifier_cs (fn _ => let val  (simple_name as 
 simple_name1) = simple_name1 ()
- in (simple_type_of_path [simple_name])
+ in (
+trace wgen ("simple_type_name_specifier_cs : " ^ simple_name ^ "\n");string_to_type [simple_name]
+)
 end)
  in ( LrTable.NT 52, ( result, simple_name1left, simple_name1right), 
 rest671)
