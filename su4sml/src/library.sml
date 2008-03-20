@@ -175,4 +175,8 @@ fun join s nil = ""
 
 fun uncurry f (x,y) = f x y
 fun curry f x y     = f (x,y)
+
+fun remove_dup [] = []
+  | remove_dup (h::tail) = if (member h tail) then (remove_dup tail) else ((h)::(remove_dup tail))
+
 end

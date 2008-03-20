@@ -185,7 +185,7 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
 	
 (* RETURN: OclTerm (OperationCall/AttributeCall) *)
 fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
-    (trace function_calls "AsSet_desugarator\n";
+    (trace function_calls ("AsSet_desugarator class= " ^ (string_of_OclType (type_of_term rterm)) ^ " , attr\n");
     if (attr_or_meth = 0) 
     then (* OperationCall *)
 	let
@@ -357,7 +357,8 @@ let
       val class = class_of_term rterm model
       val prfx = package_of class
       val _ = trace low ("type of classifier: " ^ string_of_path prfx ^ "\n")
-      val ctyp = prefix_type prfx (type_of_path [real_typ] model)       
+(* 20.03.08      val ctyp = prefix_type prfx (type_of_path [real_typ] model)        *)
+      val ctyp = type_of_path (prfx@[real_typ]) model
       val _ = trace low ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
   in
       OperationWithType (rterm,rtyp,"oclIsTypeOf",ctyp,Boolean)
@@ -375,7 +376,8 @@ let
       val class = class_of_term rterm model
       val prfx = package_of class
       val _ = trace low ("type of classifier: " ^ string_of_path prfx ^ "\n")
-      val ctyp = prefix_type prfx (type_of_path [real_typ] model)
+(* 20.03.08      val ctyp = prefix_type prfx (type_of_path [real_typ] model) *)
+      val ctyp = type_of_path (prfx@[real_typ]) model
       val _ = trace low ("res OpCall: oclIsKindOf 4:" ^ "... " ^ "\n")
   in
       OperationWithType (rterm,rtyp,"oclIsKindOf",ctyp,Boolean)
@@ -393,7 +395,8 @@ let
       val class = class_of_term rterm model
       val prfx = package_of class   
       val _ = trace low ("type of classifier: " ^ string_of_path prfx ^ "\n")
-      val ctyp = prefix_type prfx (type_of_path [real_typ] model)
+(* 20.03.08      val ctyp = prefix_type (prfx (type_of_path [real_typ] model) *)
+      val ctyp = type_of_path (prfx@[real_typ]) model
       val _ = trace low ("res OpCall: oclAsType 4:" ^ "... " ^ "\n")
   in
       OperationWithType (rterm,rtyp,"oclAsType",ctyp,ctyp)

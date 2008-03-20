@@ -779,6 +779,7 @@ exception NoParentForDatatype of string
 exception NoModelReferenced of string
 exception NoCollectionTypeError of Rep_OclType.OclType
 exception AttributeAssocEndNameClash of string
+exception ParentsOfError of string
 end
 
 structure Rep_Core :  REP_CORE = 
@@ -906,6 +907,7 @@ exception NoCollectionTypeError of Rep_OclType.OclType
 exception OperationNotFoundError of string
 exception AttributeNotFoundError of string
 exception AttributeAssocEndNameClash of string
+exception ParentsOfError of string
 val OclLibPackage = "oclLib"
 val OclAnyC = Class{name=Rep_OclType.OclAny,parent=NONE,attributes=[],
 		    operations=[], interfaces=[],
@@ -1097,34 +1099,41 @@ and class_of_term source (c:Classifier list, a:association list) =
 		    in
 			(s,substitute_typ typ t)::(substitute_args typ tail)
 		    end
-		and substitute_parent x = SOME(DummyT)  (* (Set (t)) model =
+		and substitute_parent (Set (t)) model =
 		    (case t of 
-			
-			OclAny => SOME(Set(OclAny))
-		      | x => 
-			let
-			    val par = class_of_type x model
-			    val par_type = type_of par
-			in
-			    SOME(Set(par_type))
-			end
+			 
+			 OclAny => SOME(OclAny)
+		       | x => 
+			 let
+			     val _ = trace wgen ("substitute parent SET\n")
+			     val _ = trace wgen ("para type of substitute parent = " ^ (string_of_OclType x) ^ "\n")
+			     val par = class_of_type x model
+			     val par_type = type_of par
+			     val _ = trace wgen ("par_type = " ^ (string_of_OclType par_type) ^ "\n")
+			 in
+			     SOME(Set(par_type))
+			 end
 		    )
 		  | substitute_parent (OrderedSet (t)) model = 
 		    (case t of 
-			OclAny => SOME(OrderedSet(OclAny))
-		      | x => 
-			let 
-			    val par = class_of_type x model
-			    val par_type = type_of par
-			in
-			    SOME(OrderedSet(par_type))
+			 OclAny => SOME(OclAny)
+		       | x => 
+			 let 
+			     val _ = trace wgen ("substitute parent ORDEREDSET\n")
+			     val _ = trace wgen ("para type of substitute parent = " ^ (string_of_OclType x) ^ "\n")
+			     val par = class_of_type x model
+			     val par_type = type_of par
+			 in
+			     SOME(OrderedSet(par_type))
 			end
 		    )
 		  | substitute_parent (Sequence (t)) model = 
 		    (case t of 
-			 OclAny => SOME(Sequence(OclAny))
+			 OclAny => SOME(OclAny)
 		       | x => 
 			 let 
+			     val _ = trace wgen ("substitute parent SEQUENCE\n")
+			     val _ = trace wgen ("para type of substitute parent = " ^ (string_of_OclType x) ^ "\n")
 			     val par = class_of_type x model
 			     val par_type = type_of par
 			 in 
@@ -1133,9 +1142,11 @@ and class_of_term source (c:Classifier list, a:association list) =
 		    )
 		  | substitute_parent (Bag (t)) model = 
 		    (case t of 
-			OclAny => SOME(Bag(OclAny))
+			OclAny => SOME(OclAny)
 		      | x => 
 			let
+			    val _ = trace wgen ("substitute parent BAG\n")
+			    val _ = trace wgen ("para type of substitute parent = " ^ (string_of_OclType x) ^ "\n")
 			    val par = class_of_type x model
 			    val par_type = type_of par
 			in 
@@ -1144,17 +1155,24 @@ and class_of_term source (c:Classifier list, a:association list) =
 		    )
 		  | substitute_parent (Collection (t)) model = 
 		    (case t of 
-			OclAny => SOME(Collection(OclAny))
+			OclAny => SOME(OclAny)
 		      | x => 
 			let
+			    val _ = trace wgen ("substitute parent COLLECTION\n")
+			    val _ = trace wgen ("para type of substitute parent = " ^ (string_of_OclType x) ^ "\n")
 			    val par = class_of_type x model
 			    val par_type = type_of par
 			in
 			    SOME(Collection(par_type))
 			end
 		    )
-		  | substitute_parent t model = raise TemplateInstantiationError ("substitute parent must have set type.\n")
-*)
+		  | substitute_parent t model = 
+		    let
+			val _ = trace wgen ("substitute parent COLLECTION\n")
+			val _ = trace wgen ("para type of substitute parent = " ^ (string_of_OclType t) ^ "\n")
+		    in
+			raise TemplateInstantiationError ("substitute parent must have set type.\n")
+		    end
 		and substitute_operations typ [] = []
 		  | substitute_operations typ ((oper:operation)::tail) =
 		    let 
@@ -1211,7 +1229,7 @@ and class_of_term source (c:Classifier list, a:association list) =
 		val styp = substitute_typ typ (type_of classifier)
 		val ops = substitute_operations typ (local_operations_of classifier)
 		val _ = trace 100 ("substitute parent.\n")
-		val sparent = substitute_parent typ 
+		val sparent = substitute_parent styp  (c,a)
 		val _ = trace 100 ("end substitute parent.\n")
 	    in
 		(Class
@@ -1548,264 +1566,88 @@ fun isColl_Type (Set(x)) = true
   | isColl_Type (Collection(x)) = true
   | isColl_Type _ = false
 
-
-fun parent_of (cl as Class{parent,...}:Classifier) (model:transform_model) =   
-    (
-     case parent of 
-	 NONE => class_of_type OclAny model
-       | SOME(DummyT) => 
-	 (* Classifier is a template *)
-	 let
-	     val cl_typ = type_of cl
-	 in
-	      case cl_typ  of
-		  Collection(OclAny) => class_of_type OclAny model
-		| Set(OclAny) => class_of_type OclAny model
-		| OrderedSet(OclAny) => class_of_type OclAny model
-		| Sequence(OclAny) => class_of_type OclAny model
-		| Bag(OclAny) => class_of_type OclAny model
-		| Collection(y) =>  
-		  let
-		      val parameter_class = class_of_type y model
-		      val parent_parameter_class = parent_of parameter_class model
-		      val par_type = type_of parent_parameter_class
-		  in
-		      class_of_type (Collection(par_type)) model
-		  end
-	   	| Set(y) => 
-		  let
-		      val parameter_class = class_of_type y model
-		      val parent_parameter_class = parent_of parameter_class model
-		      val par_type = type_of parent_parameter_class
-		  in
-		      class_of_type (Set(par_type)) model
-		  end
-		| OrderedSet(y) =>
-		  let
-		      val parameter_class = class_of_type y model
-		      val parent_parameter_class = parent_of parameter_class model
-		      val par_type = type_of parent_parameter_class
-		  in
-		      class_of_type (OrderedSet(par_type)) model
-		  end 
-		| Sequence(y)=> 
-		  let
-		      val parameter_class = class_of_type y model
-		      val parent_parameter_class = parent_of parameter_class model
-		      val par_type = type_of parent_parameter_class
-		  in
-		      class_of_type (Sequence(par_type)) model
-		  end
-		| Bag(y)=>
-		  let
-		      val parameter_class = class_of_type y model
-		      val parent_parameter_class = parent_of parameter_class model
-		      val par_type = type_of parent_parameter_class
-		  in
-		      class_of_type (Bag(par_type)) model
-		  end
-	 end
-	 
-       | SOME(x) => class_of_type x model
-    )
-  | parent_of (asso as AssociationClass{parent,...}) (model:transform_model) = 
-      (
-     case parent of 
-	 NONE => class_of_type OclAny model
-       | SOME(DummyT) => 
-	 (* Classifier is a template *)
-	 let
-	     val cl_typ = type_of asso
-	 in
-	      case cl_typ  of
-		  Collection(OclAny) => class_of_type OclAny model
-		| Set(OclAny) => class_of_type OclAny model
-		| OrderedSet(OclAny) => class_of_type OclAny model
-		| Sequence(OclAny) => class_of_type OclAny model
-		| Bag(OclAny) => class_of_type OclAny model
-		| Collection(y) =>  
-		  let
-		      val parameter_class = class_of_type y model
-		      val parent_parameter_class = parent_of parameter_class model
-		      val par_type = type_of parent_parameter_class
-		  in
-		      class_of_type (Collection(par_type)) model
-		  end
-	   	| Set(y) => 
-		  let
-		      val parameter_class = class_of_type y model
-		      val parent_parameter_class = parent_of parameter_class model
-		      val par_type = type_of parent_parameter_class
-		  in
-		      class_of_type (Set(par_type)) model
-		  end
-		| OrderedSet(y) =>
-		  let
-		      val parameter_class = class_of_type y model
-		      val parent_parameter_class = parent_of parameter_class model
-		      val par_type = type_of parent_parameter_class
-		  in
-		      class_of_type (OrderedSet(par_type)) model
-		  end 
-		| Sequence(y)=> 
-		  let
-		      val parameter_class = class_of_type y model
-		      val parent_parameter_class = parent_of parameter_class model
-		      val par_type = type_of parent_parameter_class
-		  in
-		      class_of_type (Sequence(par_type)) model
-		  end
-		| Bag(y)=>
-		  let
-		      val parameter_class = class_of_type y model
-		      val parent_parameter_class = parent_of parameter_class model
-		      val par_type = type_of parent_parameter_class
-		  in
-		      class_of_type (Bag(par_type)) model
-		  end
-	 end
-	 
-       | SOME(x) => class_of_type x model
-    )
-  | parent_of (Interface{parents,...}) (model:transform_model) = 
-    (case (List.length (parents)) of
-	0 => class_of_type OclAny model
-      | x => class_of_type (List.hd (parents)) model
-    )
-  | parent_of (enum as Enumeration{parent,...}) (model:transform_model) =
-    (
-     case parent of 
-	 NONE => class_of_type OclAny model
-       | SOME(DummyT) => 
-	 (* Classifier is a template *)
-	 let
-	     val cl_typ = type_of enum
-	 in
-	      case cl_typ  of
-		  Collection(OclAny) => class_of_type OclAny model
-		| Set(OclAny) => class_of_type OclAny model
-		| OrderedSet(OclAny) => class_of_type OclAny model
-		| Sequence(OclAny) => class_of_type OclAny model
-		| Bag(OclAny) => class_of_type OclAny model
-		| Collection(y) =>  
-		  let
-		      val parameter_class = class_of_type y model
-		      val parent_parameter_class = parent_of parameter_class model
-		      val par_type = type_of parent_parameter_class
-		  in
-		      class_of_type (Collection(par_type)) model
-		  end
-	   	| Set(y) => 
-		  let
-		      val parameter_class = class_of_type y model
-		      val parent_parameter_class = parent_of parameter_class model
-		      val par_type = type_of parent_parameter_class
-		  in
-		      class_of_type (Set(par_type)) model
-		  end
-		| OrderedSet(y) =>
-		  let
-		      val parameter_class = class_of_type y model
-		      val parent_parameter_class = parent_of parameter_class model
-		      val par_type = type_of parent_parameter_class
-		  in
-		      class_of_type (OrderedSet(par_type)) model
-		  end 
-		| Sequence(y)=> 
-		  let
-		      val parameter_class = class_of_type y model
-		      val parent_parameter_class = parent_of parameter_class model
-		      val par_type = type_of parent_parameter_class
-		  in
-		      class_of_type (Sequence(par_type)) model
-		  end
-		| Bag(y)=>
-		  let
-		      val parameter_class = class_of_type y model
-		      val parent_parameter_class = parent_of parameter_class model
-		      val par_type = type_of parent_parameter_class
-		  in
-		      class_of_type (Bag(par_type)) model
-		  end
-	 end
-	 
-       | SOME(x) => class_of_type x model
-    )
-  | parent_of (Primitive{parent,...}) (model:transform_model) = 
-    case (parent) of
+fun parent_of (cl as Class{parent,...}:Classifier) (model:transform_model) = 
+    (case parent of 
 	NONE => class_of_type OclAny model
-      | SOME(x) => class_of_type x model
-     
+      | SOME(x) => class_of_type x model)
+  | parent_of (asso as AssociationClass{parent,...}:Classifier) (model:transform_model) = 
+    (case parent of 
+	NONE => class_of_type OclAny model
+      | SOME(x) => class_of_type x model)
+  | parent_of (enum as Enumeration{parent,...}:Classifier) (model:transform_model) = 
+        (case parent of 
+	NONE => class_of_type OclAny model
+      | SOME(x) => class_of_type x model)
+  | parent_of (primi as Primitive{parent,...}:Classifier) (model:transform_model) = 
+        (case parent of 
+	NONE => class_of_type OclAny model
+      | SOME(x) => class_of_type x model)
+  | parent_of (inf as Interface{parents,...}:Classifier) (model:transform_model) =
+    class_of_type (List.hd(parents)) model
+      
     
-fun parents_of_help C (model:transform_model) = 
-    let
-	val _ = trace wgen ("parents_of_help " ^ (string_of_path (name_of C)) ^ "\n")
-	val parent = parent_of C model
-	val _ = trace wgen ("parent_of classifer = " ^ (string_of_path (name_of parent)) ^ "\n")
+fun parents_of_help (C:Classifier) (model:transform_model) = 
+    let 
+	val _ = trace wgen ("parents_of_help classifier = " ^ (string_of_path (name_of C))  ^ "\n")
+	val typ = type_of C
     in
-	case (isColl_Type (type_of (parent))) of
-	    true => 
-	    (
-	     case (type_of (parent)) of
-		 Collection(y) => [parent]@(parents_of_help parent model)
-	       | Set(y) => 
-		 let 
-		     val parents_1_prior = [parent]@(parents_of_help parent model)
-		     val coll_typ  = Collection(y)
-		     val coll_class = class_of_type coll_typ model
-		     val parents_2_prior = [coll_class]@(parents_of_help coll_class model)
-		 in
-		     parents_1_prior@parents_2_prior
-		 end
-	       | Bag(y) => 
-		 let 
-		     val parents_1_prior = [parent]@(parents_of_help parent model)
-		     val coll_typ  = Collection(y)
-		     val coll_class = class_of_type coll_typ model
-		     val parents_2_prior = [coll_class]@(parents_of_help coll_class model)
-		 in
-		     parents_1_prior@parents_2_prior
-		 end
-	       | OrderedSet(y) =>
-		 let 
-		     val parents_1_prior = [parent]@(parents_of_help parent model)
-		     val coll_typ  = Collection(y)
-		     val coll_class = class_of_type coll_typ model
-		     val parents_2_prior = [coll_class]@(parents_of_help coll_class model)
-		 in
-		     parents_1_prior@parents_2_prior
-		 end
-	       | Sequence(y) => 
-		 let 
-		     val _ = trace wgen ("1-dim inheritance")
-		     val parents_1_prior = [parent]@(parents_of_help parent model)
-		     val _ = trace wgen ("number of parents = " ^ Int.toString (List.length (parents_1_prior)) ^ "\n")
-		     val coll_typ  = Collection(y)
-		     val coll_class = class_of_type coll_typ model
-		     val _ = trace wgen ("2-dim inheritance")
-		     val parents_2_prior = [coll_class]@(parents_of_help coll_class model)
-		     val _ = trace wgen ("number of parents = " ^ Int.toString (List.length (parents_1_prior)) ^ "\n")
-		 in
-		     parents_1_prior@parents_2_prior
-		 end
-	    )
-	  | false => case (type_of parent) of
-			 OclAny => [class_of_type OclAny model]
-		       | x => [parent]@(parents_of_help parent model)
-    (* 
-	  | x => (case isColl_Type x of
-		      false => [parent]@parents_of_help parent model)
-		    | true => 
-		      let 
-			  val _ = trace wgen ("parent is colltype : ") 
-			  val _ = trace wgen ((string_of_OclType x) ^ "\n")
-		      in 
-			  
-		      end
-		 )
-		 
-     *)
+	case (isColl_Type typ) of
+	    false => 
+	    let 
+		val _ = trace 50 ("no collection type \n")
+		val parent = parent_of C model
+	    in
+		if (type_of parent = OclAny)
+		then [parent]
+		else [parent]@(parents_of_help parent model)
+	    end
+	  | true => 
+	    let
+		val parent = parent_of C model
+	    in
+		case (type_of (parent)) of
+		    OclAny => 
+		    (* type of classifier is : Collection(OclAny), Set(Any), 
+                                               OrderedSet(OclAny), ...
+		     *)
+		    (
+		     case typ of 
+			 Collection(OclAny) => [class_of_type (OclAny) model]
+		       | Set(OclAny) => [class_of_type (Collection(OclAny)) model,
+					 class_of_type (OclAny) model]
+		       | Bag(OclAny) => [class_of_type (Collection(OclAny)) model,
+				    class_of_type (OclAny) model]
+		       | Sequence(OclAny) => [class_of_type (Collection(OclAny)) model,
+				      class_of_type (OclAny) model]
+		       | OrderedSet(OclAny) => [class_of_type (Set(OclAny)) model,
+						class_of_type (Collection(OclAny)) model,
+						class_of_type (OclAny) model]
+		       | x => raise ParentsOfError ("Parent must be Collection(OclAny), Set(OclAny), Bag(OclAny),... \n")
+		    )
+	            (* for collection only one inheritance direction needs to be done *)
+		  | Collection(T) => [parent]@(parents_of_help parent model)
+		  | Set(T) => 
+		    let
+			val parents_1_prior = [parent]@(parents_of_help parent model)
+			val coll_typ  = Collection(T)
+			val coll_class = class_of_type coll_typ model
+			val parents_2_prior = [coll_class]@(parents_of_help coll_class model)
+		    in
+			parents_1_prior@parents_2_prior
+		    end
+	    end
     end
+
+
+fun parents_of (C:Classifier) (model:transform_model) = 
+    let
+	val _ = trace wgen ("parents_of, classifier = " ^ (string_of_path (name_of C)) ^ "\n")
+	val parents = parents_of_help C model
+	val _ = trace wgen ("parents_of end manu \n")
+    in
+	remove_dup parents
+    end
+
 fun name_of_association ({name,aends,qualifiers,aclass}:association) = name
 
 fun path_of_association assoc = name_of_association assoc
@@ -1881,15 +1723,6 @@ fun local_associationends_of (all_associations:association list) (Class{name,ass
     end
   | local_associationends_of _ _ = error ("in local_associationends_of: This classifier has no associationends") (*FIXME: or rather []? *)
 fun associationends_of assocs classes = local_associationends_of assocs classes                             
-
-
-
-fun parents_of C model = 
-    let
-	val parents = parents_of_help C model
-    in
-	remove_dup parents
-    end
     
 (* get all inherited operations of a classifier, without the local operations *)
 fun inherited_operations_of class (model as (clist,alist)) =
