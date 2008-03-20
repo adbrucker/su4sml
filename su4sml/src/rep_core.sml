@@ -1037,7 +1037,34 @@ fun simple_type_of_path ["Integer"] = Integer
   | simple_type_of_path ["String"] = String
   | simple_type_of_path ["OclVoid"] = OclVoid
   | simple_type_of_path (("oclLib")::tail) = simple_type_of_path tail 
-  | simple_type_of_path list = Classifier (list)
+  | simple_type_of_path [set] = 
+    if (List.exists (fn a => if (a = (#"(")) then true else false) (String.explode set)) then
+	(* set *)
+	let
+	    fun string_to_cons "Set" typ = Set(typ)
+	      | string_to_cons "Bag" typ = Bag(typ)
+	      | string_to_cons "Collection" typ = Collection (typ)
+	      | string_to_cons "OrderedSet" typ = OrderedSet (typ)
+	      | string_to_cons "Sequence" typ = Sequence (typ)	
+	    fun parse_string c ([]) = ([],[])
+	      | parse_string c (h::tail) =
+		if (c = h) then
+		    ([],h::tail)
+		else
+ 		    (h::(#1 (parse_string c tail)),(#2 (parse_string c tail)))
+	    val tokens = parse_string (#"(") (String.explode set)
+	    val cons = (#1 tokens)
+	    (* delete first "(" and last ")" element *)
+	    val tail = List.tl (real_path (#2 tokens))
+	    val _ = TextIO.output(TextIO.stdOut,"tail "^ (String.implode tail) ^ "\n")
+
+	in
+	    string_to_cons (String.implode cons) (simple_type_of_path ([String.implode tail]))
+	end
+    else 
+	Classifier([set])
+  | simple_type_of_path (list:Path) = Classifier (list)
+
 
 fun type_of_path ["Integer"] (model:transform_model) = Integer
   | type_of_path ["Boolean"] (model:transform_model) = Boolean
@@ -1225,7 +1252,7 @@ and class_of_term source (c:Classifier list, a:association list) =
 			  (* else error *)
 			  | _ => raise TemplateInstantiationError ("Template type not of type: Sequence, Set, OrderedSet, Collection or Bag")
 		    end
-		val _ = trace low ("substitute classifier: parameter type: " ^ string_of_OclType typ ^ " template type: " ^ string_of_OclType (type_of classifier) ^ "\n") 
+		val _ = trace wgen ("substitute classifier: parameter type: " ^ string_of_OclType typ ^ " template type: " ^ string_of_OclType (type_of classifier) ^ "\n") 
 		val styp = substitute_typ typ (type_of classifier)
 		val ops = substitute_operations typ (local_operations_of classifier)
 		val _ = trace 100 ("substitute parent.\n")
