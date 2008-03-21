@@ -72,9 +72,15 @@ val initResult = {
     }:result
 
 
-val prefix = "../../examples/"
+val prefix = "../../../examples/"
 
 val testcases = [
+   {
+    name = "overriding",
+    uml  = prefix^"overriding/overriding.zargo",
+    ocl  = prefix^"overriding/overriding.ocl",
+    result = initResult
+   }:testcase,
    {
     name = "Company",
     uml  = prefix^"company/company.zargo",
