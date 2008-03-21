@@ -42,4 +42,5 @@ val md7 = WFCPOG_Registry.rename_wfpo "md7" (WFCPOG_Registry.TAX_Data.put ({key=
 val md8 = WFCPOG_Registry.rename_wfpo "md8" (WFCPOG_Registry.TAX_Data.put ({key=9,max_depth=8}) tax)
 
 
-
+val wfs = [inf,vis,md0,md1,md2,md3,md4,md5,md6,md7,md8]
+val pos = [lsk,cm,sm,om,cmd,quy]

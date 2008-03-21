@@ -26,15 +26,15 @@ exception TestSuitError of string
 val prefix = "../../../examples/"
 
 val testcases = [
-(*   { 
+   { 
     name = "Stack Manuel",
     uml  = prefix^"stack_manu/stack.zargo",
     ocl  = prefix^"stack_manu/stack.ocl"
-   }, *){ 
+   } (*,{ 
     name = "Stack",
     uml  = prefix^"stack/stack.zargo",
     ocl  = prefix^"stack/stack.ocl"
-   } (* ,
+   },
    {
     name = "Company",
     uml  = prefix^"company/company.zargo",
@@ -49,12 +49,12 @@ val testcases = [
     name = "encoding_example",
     uml  = prefix^"encoding_example/encoding_example.zargo",
     ocl  = prefix^"encoding_example/encoding_example.ocl"
-   }:testcase,
+   }:testcase,(*
    {
     name = "isp",
     uml  = prefix^"isp/isp.zargo",
     ocl  = prefix^"isp/isp.ocl"
-   }:testcase,
+   }:testcase,*)
    {
     name = "Royals and Loyals",
     uml  = prefix^"royals_and_loyals/royals_and_loyals.zargo",
@@ -74,7 +74,7 @@ val testcases = [
     name = "vehicles",
     uml  = prefix^"vehicles/vehicles.zargo",
     ocl  = prefix^"vehicles/vehicles.ocl"
-   }:testcase,
+   }:testcase ,
    {
     name = "SimpleChair",
     uml  = prefix^"SimpleChair/SimpleChair.zargo",
