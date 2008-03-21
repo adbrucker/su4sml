@@ -394,8 +394,8 @@ let
       (* need to prefix the package *)
       (* because parameter is written relativly *)
       val class = class_of_term rterm model
-      val prfx = package_of class   
-      val _ = trace low ("type of classifier: " ^ string_of_path prfx ^ "\n")
+      val prfx = package_of class
+      val _ = trace low ("package of classifier: " ^ string_of_path prfx ^ "\n")
 (* 20.03.08      val ctyp = prefix_type (prfx (type_of_path [real_typ] model) *)
       val ctyp = type_of_path (prfx@[real_typ]) model
       val _ = trace low ("res OpCall: oclAsType 4:" ^ "... " ^ "\n")
