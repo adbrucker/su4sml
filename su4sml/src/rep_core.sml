@@ -1156,7 +1156,7 @@ and class_of_term source (c:Classifier list, a:association list) =
 		    end
 		and substitute_typ typ templ_type =
 		    let 
-			val _ = trace low ("substitute type : " ^ (string_of_OclType typ) ^ " instead of " ^ (string_of_OclType templ_type) ^ " \n")
+			val _ = trace low ("\n\nsubstitute type : " ^ (string_of_OclType typ) ^ " instead of " ^ (string_of_OclType templ_type) ^ " \n")
 		    in    
 			case templ_type of  
 			    (* innerst type *)
@@ -1577,6 +1577,10 @@ fun parents_of_help (C:Classifier) (model:transform_model) =
 	case this_type of
 	    OclAny => []
 	  | Collection(OclAny) => []
+	  | Set(OclAny) => []
+	  | Bag(OclAny) => []
+	  | Sequence(OclAny) => []
+	  | OrderedSet(OclAny) => []
 	  | Collection(T) =>
 	    let
 		val class_T = class_of_type (T) model
@@ -1649,7 +1653,7 @@ fun parents_of (C:Classifier) model =
 	     else [(class_of_type (OclAny) model)]
 	    )
 	else
-	    pars
+	    remove_dup (pars)
     end
 
 
@@ -1750,18 +1754,23 @@ fun inherited_attributes_of class (model as (clist,alist)) =
 	val atts_of_par = (List.map (attributes_of) c_parents)
 	val _ = trace wgen ("inh att 0\n")
     in
-	List.foldr (fn (a,b) => embed_local_attributes a b model) (List.last (atts_of_par)) atts_of_par
+	if (List.length(atts_of_par) = 0)
+	then []
+	else List.foldr (fn (a,b) => embed_local_attributes a b model) (List.last (atts_of_par)) atts_of_par
     end
 	
 fun inherited_associationends_of class (model as (clist,alist)) =
     let
 	val _ = trace wgen ("inh assoEnd 0\n")
 	val c_parents = parents_of class model
-	val _ = trace wgen ("inh assoEnd 1\n")
+	val _ = trace wgen ("inh assoEnd 1: parents = " ^ (String.concat (List.map (fn a => string_of_path (name_of a)) (c_parents))) ^ "\n")
 	val assE_of_par = (List.map (associationends_of alist) c_parents)
 	val _ = trace wgen ("inh assoEnd 2\n")
+	val _ = trace wgen ("inh assoEnd 3\n:  assocEnds of parents: " ^ (String.concat (List.map (fn a => (name_of_aend a)) (List.concat assE_of_par))) ^ "\n")
     in
-	List.foldr (fn (a,b) => embed_local_assocEnds a b model) (List.last (assE_of_par)) assE_of_par
+	if (List.length(assE_of_par) = 0)
+	then []
+	else List.foldr (fn (a,b) => embed_local_assocEnds a b model) (List.last (assE_of_par)) assE_of_par
     end
 
 (* get absolutelly all operations of a classifier. In case of a functions which occurs serveral times in the inheritance tree, the most specified function is listed. *)
@@ -1789,7 +1798,9 @@ fun all_associationends_of class (model as (clist,alist)) =
     let
 	val la = local_associationends_of alist class
 	val _ = trace wgen ("all assocEnds of classifier : " ^ (String.concat (name_of class)) ^ "\n")
+	val _ = trace wgen ("name of loacal assends: " ^ (String.concat (List.map (fn a => (name_of_aend a)) la)) ^ "\n")
 	val ia = inherited_associationends_of class model
+	val _ = trace wgen ("name of inherited assends: " ^ (String.concat (List.map (fn a => (name_of_aend a)) ia)) ^ "\n")
 	val _ = trace wgen ("all assocEnds")
     in
 	embed_local_assocEnds la ia model
