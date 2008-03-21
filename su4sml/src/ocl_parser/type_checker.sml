@@ -336,6 +336,7 @@ and resolve_OclTerm (Literal (s,typ)) model =
 		      ) 
 		      handle DesugaratorCall arg => desugarator (#1 arg) (#2 arg) (#3 arg) (#4 arg) (#5 arg)
 			   | NoCollectionTypeError t => AsSet_desugarator  rterm attr_path 1 [] model
+			   | Empty => AsSet_desugarator rterm attr_path 1 [] model
 		     )
       end
   end
@@ -453,6 +454,7 @@ let
 		      )
 		      handle DesugaratorCall arg => desugarator (#1 arg) (#2 arg) (#3 arg) (#4 arg) (#5 arg)
 			   | NoCollectionTypeError typ => AsSet_desugarator rterm meth_path 0 rargs model 
+			   | Empty => AsSet_desugarator rterm meth_path 0 rargs model
 		     )
       end
 end
