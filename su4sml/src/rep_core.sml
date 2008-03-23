@@ -621,7 +621,6 @@ val parent_of           : Classifier -> transform_model -> Classifier
  * Returns all parents of a classifier. 
  *)
 val parents_of          : Classifier -> transform_model -> Classifier list
-val parents_of_help          : Classifier -> transform_model -> Classifier list
 
 (** 
  * Returns one of the parents from the classifier.
