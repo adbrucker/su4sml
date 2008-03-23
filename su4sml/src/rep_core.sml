@@ -447,9 +447,9 @@ val prefix_collectionpart   : string list -> Rep_OclTerm.CollectionPart -> Rep_O
 (*****************************************
  *            OPERATIONS                 *
  *****************************************)
-(*
-val operation_of        : Classifier list -> Rep_OclType.Path -> operation option
-*)
+
+val operation_of        : transform_model -> Rep_OclType.Path -> operation option
+
 (**
  * Find an operation in a list of operations.
  *)
@@ -1454,7 +1454,7 @@ fun sig_conforms_to [] [] model = true
 	result 
     end
 
-(*
+
 fun operation_of cl fq_name = 
     let 
       val classname   = (rev o  tl o rev) fq_name
@@ -1464,7 +1464,7 @@ fun operation_of cl fq_name =
       SOME(hd (filter (fn a => if ((name_of_op a) = name)
 			       then true else false ) operations ))
     end	
-*)
+
 
 fun type_of_att ({name,attr_type,...}:attribute) = attr_type
 
