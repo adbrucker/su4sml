@@ -1114,7 +1114,7 @@ fun type_of_path ["Integer"] (model:transform_model) = Integer
 and class_of_term source (c:Classifier list, a:association list) =
     let
 	val typ = type_of_term (source)
-	val _ = map (fn a => trace development (string_of_OclType (type_of a) ^ "manu type: \n")) c
+	val _ = trace wgen ("type_of_term term = " ^ (string_of_OclType typ) ^ "\n")
 	fun class_of_t typ m = 
 	    hd (List.filter (fn a => if ((type_of a) = typ) then true else false) m)
 	fun substitute_classifier typ classifier =
@@ -1249,7 +1249,12 @@ and class_of_term source (c:Classifier list, a:association list) =
 	  | Collection (T) => templ_of (Collection(TemplateParameter "T")) T c
 	  (* Class types of lib *)
 	  | OclVoid => class_of_t OclVoid c
-	  | OclAny => class_of_t OclAny c
+	  | OclAny => 
+	    let 
+		val _ = trace wgen ("type is OclAny")
+	    in
+		class_of_t OclAny c
+	    end
 	  (* Model types *)
 	  | Classifier (path) =>
 	    let
@@ -1276,14 +1281,14 @@ and class_of_term source (c:Classifier list, a:association list) =
 
 and class_of (name:Path) (model as (clist,alist)) = 
      let
-	 val _ = trace low ("top level package: " ^ (List.hd (name)) ^ "\n")
-	 val _ = trace low ("remaining package: " ^ (String.concat (List.tl name)) ^ "\n") 
+	 val _ = trace wgen ("top level package: " ^ (List.hd (name)) ^ "\n")
+	 val _ = trace wgen ("remaining package: " ^ (String.concat (List.tl name)) ^ "\n") 
      in
 	 class_of_term (Variable("x",type_of_path name model)) model
 	 handle TemplateInstantiationError s =>
 		let
-		    val _ = print ("The path of the template parameter is not in the desing model.\n")
-		    val _ = print ("Path = " ^ s ^ "\n")
+		    val _ = trace wgen ("The path of the template parameter is not in the desing model.\n")
+		    val _ = trace wgen ("Path = " ^ s ^ "\n")
 		in
 		    raise TemplateError ("shit\n")
 		end
@@ -1573,6 +1578,7 @@ fun parent_of_template (cl as Class{parent,...}:Classifier) (model:transform_mod
 fun parents_of_help (C:Classifier) (model:transform_model) = 
     let
 	val this_type = type_of C
+	val _ = trace wgen ("type of C = " ^ (string_of_OclType this_type) ^ "\n")
     in
 	case this_type of
 	    OclAny => []
@@ -1633,7 +1639,9 @@ fun parents_of_help (C:Classifier) (model:transform_model) =
 	      end
 	    | some_type => 
 	      let 
+		  val _ = trace wgen ("parent_of_template \n")
 		  val parent = parent_of_template C model
+		  val _ = trace wgen ("parent_of_template end, classifier = " ^ (String.concat (name_of parent)) ^ "\n")
 	      in
 		  [parent]@(parents_of_help parent model)
 	      end
@@ -1643,7 +1651,9 @@ fun parent_of (C:Classifier) model = parent_of_template C model
 
 fun parents_of (C:Classifier) model = 
     let
+	val _ = trace wgen ("parents_of ... \n")
 	val pars = parents_of_help C model
+	val _ = trace wgen ("parents_of end ...\n")
     in
 	if (pars = [])
 	then
