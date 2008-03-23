@@ -72,7 +72,7 @@ val initResult = {
     }:result
 
 
-val prefix = "../../../examples/"
+val prefix = "../../examples/"
 
 val testcases = [
    {
