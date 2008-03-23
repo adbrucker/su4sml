@@ -1648,14 +1648,13 @@ fun parents_of_help (C:Classifier) (model:transform_model) =
     end
 
 fun parent_of (C:Classifier) model = parent_of_template C model
+				     handle Empty => OclAnyC
 
 fun parents_of (C:Classifier) model = 
     let
 	val _ = trace wgen ("parents_of ... \n")
-	val pars = parents_of_help C model
-	val _ = trace wgen ("parents_of end ...\n")
     in
-	if (pars = [])
+	(if (parents_of_help C model = [])
 	then
 	    (
 	     if (isColl_Type (type_of C)) 
@@ -1663,7 +1662,9 @@ fun parents_of (C:Classifier) model =
 	     else [(class_of_type (OclAny) model)]
 	    )
 	else
-	    remove_dup (pars)
+	    remove_dup (parents_of_help C model)
+	)
+	handle Empty => [OclAnyC]
     end
 
 
