@@ -621,6 +621,7 @@ val parent_of           : Classifier -> transform_model -> Classifier
  * Returns all parents of a classifier. 
  *)
 val parents_of          : Classifier -> transform_model -> Classifier list
+val parents_of_help          : Classifier -> transform_model -> Classifier list
 
 (** 
  * Returns one of the parents from the classifier.
@@ -782,7 +783,7 @@ exception AttributeAssocEndNameClash of string
 exception ParentsOfError of string
 end
 
-structure Rep_Core :  REP_CORE = 
+structure Rep_Core  :  REP_CORE = 
 struct
 open library
 open Rep_OclTerm
@@ -1645,6 +1646,7 @@ fun parents_of_help (C:Classifier) (model:transform_model) =
 	      in
 		  [parent]@(parents_of_help parent model)
 	      end
+	      handle Empty => [OclAnyC]
     end
 
 fun parent_of (C:Classifier) model = parent_of_template C model
