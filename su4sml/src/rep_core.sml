@@ -2068,7 +2068,7 @@ fun multiplicity_constraint cls_name (aend:associationend) =
  * 1. multiplicity constraints
  * 2. consistency constraints between opposing association ends
  *    i.e., A.b.a->includes(A)                              
- * @params {cls_name,(aend,revPath)}
+ * params {cls_name,(aend,revPath)}
  * @param cls_name Path of source classifier
  * @param aend aend to be converted
  * @param revAend the reverse navigation of aend   
