@@ -140,5 +140,11 @@ OS.FileSys.chDir "..";
 OS.FileSys.chDir "codegen"; 
 use "ROOT.ML"; 
 OS.FileSys.chDir "..";
+(* ******************************************************** *)
+(* wfcpog-module                                           *)
+OS.FileSys.chDir "wfcpo-gen"; 
+use "ROOT.ML"; 
+OS.FileSys.chDir "..";
+
 val _ = print "successfully compiled su4sml\n"
 
