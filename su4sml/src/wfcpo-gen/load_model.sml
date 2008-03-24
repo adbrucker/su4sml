@@ -15,8 +15,8 @@ open WFCPOG_Library
 val _ = Control.Print.printDepth:=20
 val _ = Control.Print.printLength:=30
 
-val zargo = "../../../examples/stack_manu/stack.zargo"
-val ocl = "../../../examples/stack_manu/stack.ocl"
+val zargo = "../../../examples/meeting/Meeting.zargo"
+val ocl = ""
 
 (*
 val zargo = "../../../examples/ebank/ebank.zargo"
@@ -27,5 +27,3 @@ val i_model = import zargo ocl []
 val (clist,alist) = normalize_ext i_model
 val model = ((clist@oclLib),(alist))
 val classifiers = removeOclLibrary clist
-
-
