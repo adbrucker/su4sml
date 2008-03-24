@@ -52,19 +52,22 @@ Group is
   $smlnj/ml-yacc/ml-yacc-lib.cm
 #endif
 	
-   "datatab.sml"
-   "wfcpog.sml"
-   "wfcpog_registry.sml"
-   "naming.sml"
-   "library.sml"
-   "liskov_constraint.sml" 
-   "data_model_consistency.sml"
-   "constructor_consistency.sml"
-   "operational_consistency.sml"
-   "refine_constraint.sml"  
-   "command_query_consistency.sml"
-   "visibility_consistency.sml"
-   "taxonomy_consistency.sml"
-   "interface_consistency.sml"
-   "wfcpog_constraint_library.sml"
+"datatab.sml";
+"naming.sml";
+"library.sml";
+"wfcpog.sml";
 
+(* wfcs and pogs *)
+"visibility_consistency.sml"
+"liskov_constraint.sml"
+"data_model_consistency.sml"
+"constructor_consistency.sml"
+"operational_consistency.sml"
+"refine_constraint.sml"
+"command_query_consistency.sml"
+"taxonomy_consistency.sml"
+"interface_consistency.sml"
+
+(* wccpog toplevel *)
+"wfcpog_registry.sml"
+"wfcpog_constraint_library.sml"
