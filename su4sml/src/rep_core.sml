@@ -2995,7 +2995,7 @@ fun type_of_template (T as Template{classifier,parameter}) =
 
 
 
-(* RETURN: Classifer *)
+(* RETURN: Classifier *)
 
  
 (* RETURN: Classifier /* one-time classifier */ *)
