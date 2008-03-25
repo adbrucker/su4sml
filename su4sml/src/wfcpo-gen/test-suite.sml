@@ -1,13 +1,15 @@
 signature WFCPOG_TESTSUITE =
 sig
-    val runTest          : WFCPOG.wfpo list -> WFCPOG.wfpo list -> unit
-    val set_printDepth   : int -> unit
-    val set_printLength  : int -> unit
+    val runTests          : WFCPOG.wfpo list -> WFCPOG.wfpo list -> unit
+    val runTest           : WFCPOG.wfpo list -> WFCPOG.wfpo list -> unit
+    val set_printDepth    : int -> unit
+    val set_printLength   : int -> unit
 end
 
 structure WFCPOG_TestSuite : WFCPOG_TESTSUITE =
 struct
 
+open library
 open WFCPOG_Registry
 open WFCPOG
 open OclLibrary
@@ -21,16 +23,24 @@ type testcase =
      }
 
 exception TestSuitError of string
-
+exception WFCPOG_RefineError = Refine_Constraint.WFCPOG_RefineError
 
 val prefix = "../../../examples/"
+
+val testcase = 
+    { 
+     name = "Ebank",
+     uml = prefix^"ebank/ebank.zargo",
+     ocl = prefix^"ebank/ebank.ocl"
+    }
+
 
 val testcases = [
    { 
     name = "Stack Manuel",
     uml  = prefix^"stack_manu/stack.zargo",
     ocl  = prefix^"stack_manu/stack.ocl"
-   } (*,{ 
+   },{ 
     name = "Stack",
     uml  = prefix^"stack/stack.zargo",
     ocl  = prefix^"stack/stack.ocl"
@@ -74,12 +84,12 @@ val testcases = [
     name = "vehicles",
     uml  = prefix^"vehicles/vehicles.zargo",
     ocl  = prefix^"vehicles/vehicles.ocl"
-   }:testcase ,
+   }:testcase,
    {
     name = "SimpleChair",
     uml  = prefix^"SimpleChair/SimpleChair.zargo",
-    ocl  = "SimpleChair/ConcreteSimpleChair01.ocl"
-   }:testcase *)
+    ocl  = prefix^"SimpleChair/ConcreteSimpleChair01.ocl"
+   }:testcase
 ]
 
 fun set_printDepth x = 
@@ -102,49 +112,68 @@ fun add_dot 1 = ["."]
 fun insert_dots string = String.concat (add_dot (40 - String.size(string)))
     
 
-fun start_wfc_tests model [] = []
-  | start_wfc_tests model ((h)::wfcs) = 
-    (case check_wfc model h of
-	false => (((name_of h) ^ (insert_dots (name_of h)) ^ "[FAILED]\n"))::(start_wfc_tests model wfcs)
-      | true =>  (((name_of h) ^ (insert_dots (name_of h)) ^ "[OK]\n"))::(start_wfc_tests model wfcs)
-    ) handle x =>(((name_of h) ^ (insert_dots (name_of h)) ^ "[EXCP]\n"))::(start_wfc_tests model wfcs)
-
-fun start_pog_tests model [] = []
-  | start_pog_tests model (h::wfcs) = 
-    (case generate_po model h of
-	 (wfc,list) => ((name_of h ^ (insert_dots (name_of h)) ^ "[ " ^ (Int.toString(List.length(list))) ^ " Terms ]\n"))::(start_wfc_tests model wfcs)
-    ) handle x =>((id_of h ^ (insert_dots (id_of h)) ^ "[EXCP]\n"))::(start_wfc_tests model wfcs)
-
-
+fun start_tests model [] = []
+  | start_tests model (h::wfpos) = 
+    case (apply_of h) of
+	WFC (a) =>
+	(let 
+	    val _ = trace wgen ("Testing a wellformed constraint: \n")
+	in
+	    case check_wfc model h of
+		false => (((name_of h) ^ (insert_dots (name_of h)) ^ "[FAILED]\n"))::(start_tests model wfpos)
+	      | true =>  (((name_of h) ^ (insert_dots (name_of h)) ^ "[OK]\n"))::(start_tests model wfpos)
+	end
+	handle WFCPOG_RefineError s => ((name_of h) ^ (insert_dots (name_of h)) ^ "[RefineEXCP]\n" ^ "       Error Msg: " ^ s ^ "\n")::(start_tests model wfpos)
+	     | x =>((name_of h) ^ (insert_dots (name_of h)) ^ "[ERROR]\n")::(start_tests model wfpos)
+	)
+      | POG (a) =>
+	(let
+	     val _ = trace wgen ("Testing a proof obligation constraint: \n")
+	 in
+	     case generate_po model h of
+		 (wfc,list) => ((name_of h ^ (insert_dots (name_of h)) ^ "[ " ^ (Int.toString(List.length(list))) ^ " Terms ]\n"))::(start_tests model wfpos)
+	 end
+	 handle x =>((name_of h ^ (insert_dots (name_of h)) ^ "[ERROR]\n"))::(start_tests model wfpos)
+	)
 
 fun test (tc:testcase) wfs pos = 
     let 
 	val i_model = ModelImport.import (#uml tc) (#ocl tc) []
+
 	val (clist,alist) = Rep_Core.normalize_ext i_model
 	val model = ((clist@oclLib),(alist))
-			
-	val msg1 = (String.concat (start_wfc_tests model wfs))
-	val msg2 = (String.concat (start_pog_tests model pos))
+	val msg_list = start_tests model (wfs@pos)
+
     in
-	msg1^msg2
+	String.concat (msg_list)
     end
 
 fun printResult s = print s
 
-
-fun runTest wfs pos = 
-    let 
-	fun print_tc (tc:testcase)= 
+fun print_tc (tc:testcase)= 
 	    let
 		val start_tc = "\n\n\n***************************************************\n\n"
 		val name = (#name tc) ^ "\n\n"
 	    in
 		start_tc^name
 	    end
+
+fun runTest wfs pos = 
+    let
+	val string = (print_tc testcase)^(test testcase wfs pos)
+    in
+	if (String.isSubstring "[Error]" string)
+	then print(string^"\n\n !!!!!!!!!! WFCPOG still contains bugs !!!!!!!!!!!!!\n\n\n")
+	else print (string^"\n\n !!!!!!!!!!  Congratulations, no bugs  !!!!!!!!!!!!!!\n\n\n")
+    end
+
+
+fun runTests wfs pos = 
+    let 
 	val msg_list = List.map (fn a => (print_tc a)^(test a wfs pos)) testcases
 	val string = String.concat msg_list
     in
-	if (String.isSubstring "[EXCP]" string) 
+	if (String.isSubstring "[ERROR]" string) 
 	then print (string^"\n\n !!!!!!!!!! WFCPOG still contains bugs !!!!!!!!!!!!!\n\n\n")
 	else print (string^"\n\n !!!!!!!!!!  Congratulations, no bugs  !!!!!!!!!!!!!!\n\n\n")
     end

@@ -62,6 +62,9 @@ sig
 
     (** sub constraint, included in liskov.*)
     val conjugate_invariants        : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
+
+    (** all three subconstraints together *)
+    val generate_po                 : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
 end 
 structure Liskov_Constraint : LISKOV_CONSTRAINT = 
 struct
@@ -195,31 +198,30 @@ fun conjugate_invariants_help [] model = []
     in
 	if (List.length(invs) = 0)
 	then (conjugate_invariants_help clist model)
-	else
-	    (conjugate_terms invs)::(conjugate_invariants_help clist model)
+	else (conjugate_terms invs)::(conjugate_invariants_help clist model)
+	    
     end
 
 fun conjugate_invariants wfpo (model as (clist,alist)) = 
-    let
+    let 
 	val cl = removeOclLibrary clist
 	
     in
 	conjugate_invariants_help cl model
     end
 
-fun generate_po (model as (clist,alist)) data = 
+fun generate_po wfpo (model as (clist,alist)) = 
     let
-	val _ = trace zero ("generate_po: \n")
-	val _ = trace zero ("weaken the precondition.\n")
-	val x1 = weaken_precondition model data 
-	val _ = trace zero ("strengthen the postcondition.\n")
-	val x2 = strengthen_postcondition model data 
-	val _ = trace zero ("conjugate the invariants.\n")
-	val x3 = conjugate_invariants model data 
+	val msg1 = ("\n\ngenerate_po: \n")
+	val x1 = weaken_precondition wfpo model
+	val msg2 = ("weaken the precondition: " ^ Int.toString(List.length(x1)) ^ " terms generated.\n") 
+	val x2 = strengthen_postcondition wfpo model 
+	val msg3 = ("strengthen the postcondition: " ^ Int.toString(List.length(x2)) ^ " terms generated.\n")
+	val x3 = conjugate_invariants wfpo model 
+	val msg4 = ("conjugate the invariants: " ^ Int.toString(List.length(x3)) ^ " terms generated.\n\n")
+	val _ = trace wgen (msg1^msg2^msg3^msg4)
     in
 	x1@x2@x3
     end
-
-
 end
 

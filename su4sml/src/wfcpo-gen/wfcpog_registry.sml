@@ -67,7 +67,6 @@ structure WFCPOG_Registry :WFCPOG_REGISTRY  =
 struct
 
 exception WFCPOG_RegistryError of string
-
 structure LSK_Data = Liskov_Constraint.LSK_Data
 structure TAX_Data = Taxonomy_Constraint.TAX_Data
 structure RFM_Data = Refine_Constraint.RFM_Data
@@ -200,7 +199,7 @@ val supported = [
     },
     WFCPOG.WFPO{
      identifier      = "class_model", (* identifier                     *) 
-     name            = "Data model consistency",
+     name            = "Data model consistency: class model",
      description     = "Data model consistency; a classes should be able to be instantiated from a state.",
      recommended     = false,
      depends         = [],
@@ -210,7 +209,7 @@ val supported = [
     },
     WFCPOG.WFPO{
      identifier      = "strong_model", (* identifier                     *) 
-     name            = "Data model consistency",
+     name            = "Data model consistency: strong model",
      description     = "Data model consistency; all classes should be able to be instantiated from a state.",
      recommended     = false,
      depends         = [],
@@ -267,7 +266,7 @@ val supported = [
      recommends      = [],
      apply           = WFCPOG.WFC(Taxonomy_Constraint.has_maxDepth),
      data = Datatab.empty
-    },
+    }, 
     WFCPOG.WFPO{ 
      identifier      = "rfm_syn", 
      name            = "OO Refinement",  
@@ -277,7 +276,7 @@ val supported = [
      recommends      = [],
      apply           = WFCPOG.WFC(Refine_Constraint.check_syntax),
      data            = Datatab.empty
-    },
+    }(*, 
     WFCPOG.WFPO {
      identifier      = "ref_po", 
      name            = "OO Refinement",
@@ -287,5 +286,5 @@ val supported = [
      recommends      = [],
      apply           = WFCPOG.POG(Refine_Constraint.refine_po),
      data            = Datatab.empty
-    }]
+    }*)]
 end
