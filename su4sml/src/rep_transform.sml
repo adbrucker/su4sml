@@ -137,7 +137,7 @@ fun get_association (all_assocs: Rep_Core.association list) (assoc_path:Path):
   in
     (case assoc of 
        [x] => x
-     | []  => error "in get_association: no match found"
+     | []  => error ("in get_association: no match found ("^(string_of_path (assoc_path))^")")
      | _   => error "in get_association: more than 1 match found")
   end
   
