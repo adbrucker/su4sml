@@ -52,10 +52,10 @@ Group is
   $smlnj/ml-yacc/ml-yacc-lib.cm
 #endif
 	
-"datatab.sml";
-"naming.sml";
-"library.sml";
-"wfcpog.sml";
+"datatab.sml"
+"naming.sml"
+"library.sml"
+"wfcpog.sml"
 
 (* wfcs and pogs *)
 "visibility_consistency.sml"
