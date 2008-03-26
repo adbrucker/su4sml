@@ -1131,7 +1131,7 @@ and class_of_term source (c:Classifier list, a:association list) =
 		  | substitute_parent (OrderedSet(t)) typ = SOME(Set(typ))
 		  | substitute_parent (Bag(t)) typ = SOME(Collection(typ))
 		  | substitute_parent (Sequence(t)) typ = SOME(Collection(typ))
-		  | substitute_parent x typ = raise TemplateoInstantiationError ("Parent tmpl type must be a collection.\n")
+		  | substitute_parent x typ = raise TemplateInstantiationError ("Parent tmpl type must be a collection.\n")
 
 		and substitute_operations typ [] = []
 		  | substitute_operations typ ((oper:operation)::tail) =
