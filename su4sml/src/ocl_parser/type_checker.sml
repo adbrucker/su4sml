@@ -376,7 +376,7 @@ and resolve_OclTerm (Literal (s,typ)) model =
 (* built in Operations not include in Library: oclIsKindOf, oclIsTypOf, oclAsType *) 
 (* OperationWithType Calls *)
 (* OCLISTYPEOF *)
-| resolve_OclTerm (OperationCall (term,_,["oclIsTypeOf"],[(AttributeCall (Variable ("self",vtyp),_,[real_typ], _),argt)],_)) (model as (cls,assocs)) =
+| resolve_OclTerm (OperationCall (term,_,["oclIsTypeOf"],[(AttributeCall (Variable ("self",vtyp),_,path, _),argt)],_)) (model as (cls,assocs)) =
   let
       (* prefix type of iterator variable *)
       val _ = trace function_calls ("TypeChecker.resolve_OclTerm, OperationCallWithType = oclIsTypeOf, " ^ ocl2string true term ^"\n")
@@ -391,7 +391,7 @@ and resolve_OclTerm (Literal (s,typ)) model =
       val prfx = package_of class
       val _ = trace low ("type of classifier: " ^ string_of_path prfx ^ "\n")
       (* 20.03.08      val ctyp = prefix_type prfx (type_of_path [real_typ] model)        *)
-      val ctyp = type_of_path (prfx@[real_typ]) model
+      val ctyp = type_of_path path model
       val _ = trace low ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
       val res = OperationWithType (rterm,rtyp,"oclIsTypeOf",ctyp,Boolean)
       val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
@@ -399,7 +399,7 @@ and resolve_OclTerm (Literal (s,typ)) model =
       res
   end  
 (* OCLISKINDOF *)
-| resolve_OclTerm (OperationCall (term,_,["oclIsKindOf"],[(AttributeCall (Variable ("self",_),_,[real_typ], _),argt)],_)) (model as (cls,assocs)) =
+| resolve_OclTerm (OperationCall (term,_,["oclIsKindOf"],[(AttributeCall (Variable ("self",_),_,path, _),argt)],_)) (model as (cls,assocs)) =
   let
       val _ = trace function_calls ("TypeChecker.resolve_OclTerm, OperationCallWithType = oclIsKindOf, " ^ ocl2string true term ^ "\n")
       val rterm = resolve_OclTerm term model
@@ -412,7 +412,7 @@ and resolve_OclTerm (Literal (s,typ)) model =
       val prfx = package_of class
       val _ = trace low ("type of classifier: " ^ string_of_path prfx ^ "\n")
 (* 20.03.08      val ctyp = prefix_type prfx (type_of_path [real_typ] model) *)
-      val ctyp = type_of_path (prfx@[real_typ]) model
+      val ctyp = type_of_path path model
       val _ = trace low ("res OpCall: oclIsKindOf 4:" ^ "... " ^ "\n")
       val res = OperationWithType (rterm,rtyp,"oclIsKindOf",ctyp,Boolean)
       val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
@@ -420,7 +420,7 @@ and resolve_OclTerm (Literal (s,typ)) model =
       res
   end
 (* OCLASTYPE *)
-| resolve_OclTerm (OperationCall (term,_,["oclAsType"],[(AttributeCall (Variable ("self",_),_,[real_typ], _),argt)],_)) (model as (cls,assocs)) =
+| resolve_OclTerm (OperationCall (term,_,["oclAsType"],[(AttributeCall (Variable ("self",_),_,path, _),argt)],_)) (model as (cls,assocs)) =
   let
       val _ = trace function_calls ("TypeChecker.resolve_OclTerm, OperationCallWithType = oclIsKindOf, " ^ ocl2string true term ^ "\n")
       val rterm = resolve_OclTerm term model
@@ -433,7 +433,7 @@ and resolve_OclTerm (Literal (s,typ)) model =
       val prfx = package_of class
       val _ = trace low ("package of classifier: " ^ string_of_path prfx ^ "\n")
 (* 20.03.08      val ctyp = prefix_type (prfx (type_of_path [real_typ] model) *)
-      val ctyp = type_of_path (prfx@[real_typ]) model
+      val ctyp = type_of_path path model
       val _ = trace low ("res OpCall: oclAsType 4:" ^ "... " ^ "\n")
       val res = OperationWithType (rterm,rtyp,"oclAsType",ctyp,ctyp)
       val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
