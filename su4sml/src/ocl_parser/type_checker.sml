@@ -77,7 +77,7 @@ open RepParser
 open XMI_DataTypes
 open Preprocessor
 open OclLibrary
-
+open Ocl2String
 
 type operation = Rep_Core.operation
 type attribute = Rep_Core.attribute
@@ -186,7 +186,7 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
 (* RETURN: OclTerm (OperationCall/AttributeCall) *)
 fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
     let
-	val _ = (trace function_calls ("AsSet_desugarator class= " ^ (string_of_OclType (type_of_term rterm)) ^ " , attr\n"))
+	val _ = (trace function_calls ("TypeChecker.AsSet_desugarator class= " ^ (string_of_OclType (type_of_term rterm)) ^ " , attr\n"))
 	val res = if (attr_or_meth = 0) 
 		  then (* OperationCall *)
 		      let
@@ -220,7 +220,7 @@ fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
 			  else 
 			      upcast_att_aend attrs new_rterm model
 		      end
-	val _ = trace function_ends ("AsSet_desugarator class= " ^ (string_of_OclType (type_of_term rterm)) ^ " , attr\n")
+	val _ = trace function_ends ("TypeChecker.AsSet_desugarator class= " ^ (string_of_OclType (type_of_term rterm)) ^ " , attr\n")
     in
 	res
     end
@@ -233,34 +233,45 @@ fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
 (* RETURN: CollectionPart *)
 fun resolve_CollectionPart model (CollectionItem (term,typ))  =
     let
+	val _ = trace function_calls ("TypeChecker.resolve_CollectionPart " ^ (ocl2string false term) ^ "\n")
 	val rterm = resolve_OclTerm term model
 	val rtyp = type_of_term rterm
+	val res = (CollectionItem (rterm,rtyp))
+	val _ = trace function_ends ("TypeChecker.resolve_CollectionPart " ^ (ocl2string false term) ^ "\n")
     in
-	(CollectionItem (rterm,rtyp))
+	res
     end
   | resolve_CollectionPart model (CollectionRange (term1,term2,typ))  = 
     let
+	val _ = trace function_calls ("TypeChecker.resolve_CollectionPart " ^ (ocl2string false term1) ^ "\n")
 	val rterm1 = resolve_OclTerm term1 model
 	val rtyp1 = type_of_term rterm1
 	val rterm2 = resolve_OclTerm term2 model
 	val rtyp2 = type_of_term rterm2
+	val res = 
+	    if (rtyp2 = rtyp1) then
+		(CollectionRange (rterm1,rterm2,rtyp1))
+	    else
+		raise (CollectionRangeError ((CollectionRange (term1,term2,typ)),("Begin and end of Range not of same type.\n")))
+    	val _ = trace function_ends ("TypeChecker.resolve_CollectionPart " ^ (ocl2string false term1) ^ "\n")
     in
-	if (rtyp2 = rtyp1) then
-	    (CollectionRange (rterm1,rterm2,rtyp1))
-	else
-	    raise (CollectionRangeError ((CollectionRange (term1,term2,typ)),("Begin and end of Range not of same type.\n")))
+	res
     end
 
 and resolve_CollectionLiteral (CollectionLiteral (part_list,typ)) model = 
     let
+	val _ = trace function_calls ("TypeChecker.resolve_CollectionLiteral\n ")
 	val rpart_list = List.map (resolve_CollectionPart model) part_list
 	val tlist = List.map (type_of_CollPart) rpart_list
+	val res = 
+	    if (List.all (type_equals (List.hd (tlist))) tlist)
+	    then
+		rpart_list
+	    else
+		raise wrongCollectionLiteral ((CollectionLiteral (part_list,typ)),"Not all Literals have the same type.\n")
+	val _ = trace function_ends ("TypeChecker.resolve_CollectionLiteral\n ")
     in
-	if (List.all (type_equals (List.hd (tlist))) tlist)
-	then
-	    rpart_list
-	else
-	    raise wrongCollectionLiteral ((CollectionLiteral (part_list,typ)),"Not all Literals have the same type.\n")
+	res
     end
     
 (* RETURN: OclTerm * OclType *)
@@ -276,18 +287,29 @@ and resolve_arguments [] model = []
 (* RETURN: OclTerm *)
 and resolve_OclTerm (Literal (s,typ)) model = 
   let
+      val _ = trace function_calls ("TypeChecker.resolve_OclTerm Literal " ^ ocl2string false (Literal(s,typ)) ^ "\n")
       val _ = trace medium ("RESOLVE Literal: " ^ s ^ "\n")
-	      
+      val res = (Literal (s,typ))
+      val _ = trace function_ends ("TypeChecker.resolve_OclTerm Literal " ^ ocl2string false (Literal(s,typ)) ^ "\n")
   in
-      (Literal (s,typ))
+      res
   end
 (* Variable *)
-| resolve_OclTerm (Variable ("self",typ)) model = (Variable ("self",typ)) 
+| resolve_OclTerm (Variable ("self",typ)) model = 
+  let
+      val _ = trace function_calls ("TypeChecker.resolve_OclTerm Variable " ^ ocl2string false (Variable("self",typ)) ^ "\n")
+      val res = (Variable ("self",typ)) 
+      val _ = trace function_ends ("TypeChecker.resolve_OclTerm Variable " ^ ocl2string false (Variable("self",typ)) ^ "\n")
+  in
+      res
+  end
 | resolve_OclTerm (Variable (name,typ)) model = 
   let
-      val _ = trace medium ("RESOLVE Variable: " ^ name ^ "\n")
+      val _ = trace function_calls ("TypeChecker.resolve_OclTerm Variable " ^ ocl2string false (Variable(name,typ)) ^ "\n")
+      val res = Variable (name,typ)
+      val _ = trace function_ends ("TypeChecker.resolve_OclTerm Variable " ^ ocl2string false (Variable(name,typ)) ^ "\n")
   in
-      Variable (name,typ)
+      res 
   end
 (* AssociationEndCall *)
 | resolve_OclTerm (AssociationEndCall (term,_,["self"],_)) model =  (resolve_OclTerm (AttributeCall (term,OclAny,["self"],OclAny)) model) 
@@ -296,64 +318,68 @@ and resolve_OclTerm (Literal (s,typ)) model =
 (* self.self -> self *)
 | resolve_OclTerm (AttributeCall (term,_,["self"],_)) model = 
   let
-      val _ = trace medium ("RESOLVE AttributeCall:  a self call ... " ^ "\n")
+      val _ = trace function_calls ("TypeChecker.resolve_OclTerm, AttributeCall, self, " ^ ocl2string false term ^ "\n")
+      val res = (resolve_OclTerm term model)
+      val _ = trace function_ends ("TypeChecker.resolve_OclTerm, AttributeCall, self " ^ ocl2string false term ^ "\n")
   in
-      (resolve_OclTerm term model)
+      res
   end
 | resolve_OclTerm (AttributeCall (term,_,attr_path,_)) (model as (cls,assocs)) =
   let 
-      val _ = trace wgen ("RESOLVE AttributeCall: attribute name:  " ^ (List.last attr_path) ^ "\n")
+      val _ = trace function_calls ("TypeChecker.resolve_OclTerm, AttributeCall, attribute name =  " ^ (List.last attr_path) ^ ", " ^ ocl2string true term ^ "\n")
       (* resolve source term *)
       val rterm = resolve_OclTerm term model
       val _ = trace wgen ("res AttCall : arrow or not " ^ List.hd (attr_path) ^ "\n")
       val _ = trace wgen ("res AttCall (" ^ (List.last attr_path) ^ ") : rterm = " ^ Ocl2String.ocl2string false rterm ^ "\n")
       val _ = trace wgen ("res AttCall (" ^ (List.last attr_path) ^ ") : rtype = " ^ string_of_OclType (type_of_term rterm) ^ "\n")
+      val res = 
+	  let
+	  in
+	      if (List.hd attr_path = "arrow")
+	      then get_attr_or_assoc rterm (List.last attr_path) model
+		   handle UpcastingError s => AsSet_desugarator rterm (List.tl attr_path) 1 [] model
+	      else
+		  get_attr_or_assoc rterm (List.last attr_path) model
+		  
+		  (*  2-dimensional inheritance of Collection types *)
+		  handle UpcastingError s =>
+			 (
+			  (
+			   let
+			       val _ = trace low ("\n==> 2-dim Inheritance check: ma attribute/assocend\n")
+			       val rtyp = type_of_term rterm
+			       val _ = trace low (string_of_OclType rtyp ^ "manu \n")
+			       val templ_type = type_of_template_parameter rtyp
+			       val pclass = class_of_term (Variable ("x",templ_type)) model
+			       val _ = trace low ("manu 2")
+			       val ntempl_type = type_of_parent pclass 
+			       val _ = trace low ("manu 3")
+			       val new_type = substitute_templ_para rtyp ntempl_type
+			       val new_class = class_of_term (Variable ("x",new_type)) model
+			       val attrs = get_overloaded_attrs_or_assocends new_class (List.last attr_path) model
+			       val _ = trace low ("parent type of term:" ^ string_of_OclType new_type ^ "\n")
+			   in
+			       if (List.length attrs = 0) 
+			       then raise DesugaratorCall (rterm,attr_path,1,[],model) 
+			       else upcast_att_aend attrs rterm model
+			   end    
+			  ) 
+			  handle DesugaratorCall arg => desugarator (#1 arg) (#2 arg) (#3 arg) (#4 arg) (#5 arg)
+			       | NoCollectionTypeError t => AsSet_desugarator  rterm attr_path 1 [] model
+			       | Empty => AsSet_desugarator rterm attr_path 1 [] model
+			 )
+	  end
+      val _ = trace function_ends ("TypeChecker.resolve_OclTerm \n")
   in
-      let
-      in
-	  if (List.hd attr_path = "arrow")
-	  then get_attr_or_assoc rterm (List.last attr_path) model
-	       handle UpcastingError s => AsSet_desugarator rterm (List.tl attr_path) 1 [] model
-	  else
-	      get_attr_or_assoc rterm (List.last attr_path) model
-	      
-	      (*  2-dimensional inheritance of Collection types *)
-	      handle UpcastingError s =>
-		     (
-		      (
-		       let
-			   val _ = trace low ("\n==> 2-dim Inheritance check: ma attribute/assocend\n")
-			   val rtyp = type_of_term rterm
-			   val _ = trace low (string_of_OclType rtyp ^ "manu \n")
-			   val templ_type = type_of_template_parameter rtyp
-			   val pclass = class_of_term (Variable ("x",templ_type)) model
-			   val _ = trace low ("manu 2")
-			   val ntempl_type = type_of_parent pclass 
-			   val _ = trace low ("manu 3")
-			   val new_type = substitute_templ_para rtyp ntempl_type
-			   val new_class = class_of_term (Variable ("x",new_type)) model
-			   val attrs = get_overloaded_attrs_or_assocends new_class (List.last attr_path) model
-			   val _ = trace low ("parent type of term:" ^ string_of_OclType new_type ^ "\n")
-		       in
-			   if (List.length attrs = 0) 
-			   then raise DesugaratorCall (rterm,attr_path,1,[],model) 
-			   else upcast_att_aend attrs rterm model
-		       end    
-		      ) 
-		      handle DesugaratorCall arg => desugarator (#1 arg) (#2 arg) (#3 arg) (#4 arg) (#5 arg)
-			   | NoCollectionTypeError t => AsSet_desugarator  rterm attr_path 1 [] model
-			   | Empty => AsSet_desugarator rterm attr_path 1 [] model
-		     )
-      end
+      res
   end
 (* built in Operations not include in Library: oclIsKindOf, oclIsTypOf, oclAsType *) 
 (* OperationWithType Calls *)
 (* OCLISTYPEOF *)
 | resolve_OclTerm (OperationCall (term,_,["oclIsTypeOf"],[(AttributeCall (Variable ("self",vtyp),_,[real_typ], _),argt)],_)) (model as (cls,assocs)) =
-let
+  let
       (* prefix type of iterator variable *)
-    
-      val _ = trace medium ("\n\nRESOLVE OperationCallWithType: oclIsTypeOf\n")
+      val _ = trace function_calls ("TypeChecker.resolve_OclTerm, OperationCallWithType = oclIsTypeOf, " ^ ocl2string true term ^"\n")
       val rterm = resolve_OclTerm term model
       val _ = trace low ("res OpCall: oclIsTypeOf 2:  " ^ "\n")
       (* prefix types *)
@@ -364,16 +390,18 @@ let
       val class = class_of_term rterm model
       val prfx = package_of class
       val _ = trace low ("type of classifier: " ^ string_of_path prfx ^ "\n")
-(* 20.03.08      val ctyp = prefix_type prfx (type_of_path [real_typ] model)        *)
+      (* 20.03.08      val ctyp = prefix_type prfx (type_of_path [real_typ] model)        *)
       val ctyp = type_of_path (prfx@[real_typ]) model
       val _ = trace low ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
+      val res = OperationWithType (rterm,rtyp,"oclIsTypeOf",ctyp,Boolean)
+      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
   in
-      OperationWithType (rterm,rtyp,"oclIsTypeOf",ctyp,Boolean)
+      res
   end  
 (* OCLISKINDOF *)
 | resolve_OclTerm (OperationCall (term,_,["oclIsKindOf"],[(AttributeCall (Variable ("self",_),_,[real_typ], _),argt)],_)) (model as (cls,assocs)) =
   let
-      val _ = trace medium ("RESOLVE OperationCallWithType: oclIsKindOf\n")
+      val _ = trace function_calls ("TypeChecker.resolve_OclTerm, OperationCallWithType = oclIsKindOf, " ^ ocl2string true term ^ "\n")
       val rterm = resolve_OclTerm term model
       val _ = trace low ("res OpCall: oclIsKindOf 2:" ^ "... " ^ "\n")
       val rtyp = type_of_term rterm
@@ -386,13 +414,15 @@ let
 (* 20.03.08      val ctyp = prefix_type prfx (type_of_path [real_typ] model) *)
       val ctyp = type_of_path (prfx@[real_typ]) model
       val _ = trace low ("res OpCall: oclIsKindOf 4:" ^ "... " ^ "\n")
+      val res = OperationWithType (rterm,rtyp,"oclIsKindOf",ctyp,Boolean)
+      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
   in
-      OperationWithType (rterm,rtyp,"oclIsKindOf",ctyp,Boolean)
+      res
   end
 (* OCLASTYPE *)
 | resolve_OclTerm (OperationCall (term,_,["oclAsType"],[(AttributeCall (Variable ("self",_),_,[real_typ], _),argt)],_)) (model as (cls,assocs)) =
   let
-      val _ = trace medium ("RESOLVE OperationCallWithType: oclIsKindOf\n")
+      val _ = trace function_calls ("TypeChecker.resolve_OclTerm, OperationCallWithType = oclIsKindOf, " ^ ocl2string true term ^ "\n")
       val rterm = resolve_OclTerm term model
       val _ = trace low ("res OpCall: oclAsType 2:" ^ "... " ^ "\n")
       val rtyp = type_of_term rterm
@@ -405,70 +435,77 @@ let
 (* 20.03.08      val ctyp = prefix_type (prfx (type_of_path [real_typ] model) *)
       val ctyp = type_of_path (prfx@[real_typ]) model
       val _ = trace low ("res OpCall: oclAsType 4:" ^ "... " ^ "\n")
+      val res = OperationWithType (rterm,rtyp,"oclAsType",ctyp,ctyp)
+      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
   in
-      OperationWithType (rterm,rtyp,"oclAsType",ctyp,ctyp)
+      res
   end
 (* HARD CODED STUFF *)
 | resolve_OclTerm (OperationCall (term,typ,[OclLibPackage,"OclAny","atPre"],[],_)) model = 
   let
-      val _ = trace medium  ("RESOLVE OperationCall: atPre \n")
+      val _ = trace function_calls  ("TypeChecker.resolve_OclTerm, OperationCall atPre, " ^ ocl2string true term ^ "\n")
       (* resolve source term *)
       val rterm = resolve_OclTerm term model
       val rtyp = type_of_term rterm
       val _ = trace low  ("res OpCall: Type of source : " ^ string_of_OclType rtyp ^ "\n")
+      val res = OperationCall (rterm,rtyp,[OclLibPackage,"OclAny","atPre"],[],rtyp)
+      val _ = trace function_ends ("TypeChecker.resovle_OclTerm\n")
   in
-      OperationCall (rterm,rtyp,[OclLibPackage,"OclAny","atPre"],[],rtyp)
+      res
   end
 | resolve_OclTerm (OperationCall (term,typ,meth_path,args,res_typ)) (model as (cls,assocs)) =
   let
-      val _ = trace medium  ("RESOLVE OperatioCall: name = " ^ (List.last (meth_path)) ^ "\n")
+      val _ = trace function_calls ("TypeChecker.resolve_OclTerm, OperatioCall: name = " ^ (List.last (meth_path)) ^ ", " ^ ocl2string true term ^ "\n")
       (* resolve source term *)
       val rterm = resolve_OclTerm term model
       val _ = trace low  ("res OpCall: Type of source : " ^ string_of_OclType (type_of_term rterm) ^ "\n")
       (* resolve arguments *)
       val rargs = resolve_arguments args model
       val _ = trace low  ("res OpCall: args resolved ...\n")
+      val res = 
+	  let
+	  in
+	      if (List.hd meth_path = "arrow")
+	      then get_meth rterm (List.last meth_path) rargs model
+		   handle UpcastingError s => AsSet_desugarator rterm (List.tl meth_path) 0 rargs model
+	      else 
+		  get_meth rterm (List.last meth_path) rargs model
+		  (*  2-dimensional inheritance of Collection types *)
+		  handle UpcastingError s =>	
+			 (     
+			  (
+			   let
+			       val _ = trace low ("\n==> 2-dim Inheritance check: attribute/assocend\n")
+			       val rtyp = type_of_term rterm
+			       val _ = trace low (string_of_OclType rtyp ^ "\n")
+			       val templ_type = type_of_template_parameter rtyp
+			       val pclass = class_of_term (Variable ("x",templ_type)) model
+			       val ntempl_type = type_of_parent pclass 
+			       val _ = trace low (string_of_OclType ntempl_type ^ "\n")
+			       val new_type = substitute_templ_para rtyp ntempl_type
+			       val new_class = class_of_term (Variable ("x",new_type)) model
+			       val ops = get_overloaded_methods new_class (List.last meth_path) model
+			       val _ = trace low ("parent type of term: " ^ string_of_OclType new_type ^ "\n")
+			   in
+			       if (List.length ops = 0) 
+			       then raise DesugaratorCall (rterm, meth_path, 0, rargs, model) 
+			       else upcast_op ops rterm rargs model
+			   end
+			  )
+			  handle DesugaratorCall arg => desugarator (#1 arg) (#2 arg) (#3 arg) (#4 arg) (#5 arg)
+			       | NoCollectionTypeError typ => AsSet_desugarator rterm meth_path 0 rargs model 
+			       | Empty => AsSet_desugarator rterm meth_path 0 rargs model
+			 )
+	  end
+      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
   in
-      let
-      in
-	  if (List.hd meth_path = "arrow")
-	  then get_meth rterm (List.last meth_path) rargs model
-	       handle UpcastingError s => AsSet_desugarator rterm (List.tl meth_path) 0 rargs model
-	  else 
-	      get_meth rterm (List.last meth_path) rargs model
-	      (*  2-dimensional inheritance of Collection types *)
-	      handle UpcastingError s =>	
-		     (     
-		      (
-		       let
-			   val _ = trace low ("\n==> 2-dim Inheritance check: attribute/assocend\n")
-			   val rtyp = type_of_term rterm
-			   val _ = trace low (string_of_OclType rtyp ^ "\n")
-			   val templ_type = type_of_template_parameter rtyp
-			   val pclass = class_of_term (Variable ("x",templ_type)) model
-			   val ntempl_type = type_of_parent pclass 
-			   val _ = trace low (string_of_OclType ntempl_type ^ "\n")
-			   val new_type = substitute_templ_para rtyp ntempl_type
-			   val new_class = class_of_term (Variable ("x",new_type)) model
-			   val ops = get_overloaded_methods new_class (List.last meth_path) model
-			   val _ = trace low ("parent type of term: " ^ string_of_OclType new_type ^ "\n")
-		       in
-			   if (List.length ops = 0) 
-			   then raise DesugaratorCall (rterm, meth_path, 0, rargs, model) 
-			   else upcast_op ops rterm rargs model
-		       end
-		      )
-		      handle DesugaratorCall arg => desugarator (#1 arg) (#2 arg) (#3 arg) (#4 arg) (#5 arg)
-			   | NoCollectionTypeError typ => AsSet_desugarator rterm meth_path 0 rargs model 
-			   | Empty => AsSet_desugarator rterm meth_path 0 rargs model
-		     )
-      end
-end
+      res
+  end
 (* Iterator *)
 | resolve_OclTerm (Iterator (name,iter_vars,source_term,_,expr,expr_typ,res_typ)) (model as (cls,assocs)) =
   let
       (* resolve source term, type *)      
-      val _ = trace low ("RESOLVE Itertor: name = " ^ name ^ "\n")
+      val _ = trace function_calls ("TypeChecker.resolve_OclTerm,  Itertor: name = " ^ name ^ "\n")
       val rterm = resolve_OclTerm source_term model
       val rtyp = type_of_term rterm
       val _ = trace low ("res Iter (" ^ name ^ "): source type " ^ string_of_OclType (type_of_term  rterm) ^ "\n\n")
@@ -489,43 +526,47 @@ end
       val _ = trace low ("iter types: " ^ string_of_OclType (List.hd piter_types) ^ "\n")
       val h2 = List.map (fn a => conforms_to a static_iter_type model) (piter_types)
       val check = List.all (fn a => a=true) h2
+      val res = 
+	  if (check) then
+	      let
+		  val _ = trace low  ("res Iter: types conforms \n")
+		  val bound_expr = embed_bound_variables piter_vars expr
+		  val _ = trace low ("res Iter: term : " ^ Ocl2String.ocl2string false bound_expr ^ "\n")
+		  val rexpr = resolve_OclTerm bound_expr model
+		  val _ = trace low (" manuel " ^ string_of_OclType (type_of_term rexpr) ^ "\n")
+		  val _ = trace low (" ma     " ^ string_of_OclType (Set(static_iter_type)) ^ "\n")
+		  val _ = trace low  ("res Iter: Iterator name = " ^ name ^ " \n\n\n")
+	      in
+		  (
+		   case name of
+		       "select" => 
+		       Iterator (name,piter_vars,rterm,rtyp,rexpr,type_of_term rexpr,rtyp)
+		     | "reject" => 
+		       Iterator (name,piter_vars,rterm,rtyp,rexpr,type_of_term rexpr,rtyp)
+		     | "forAll" =>  
+		       Iterator (name,piter_vars,rterm,rtyp,rexpr,type_of_term rexpr,Boolean)
+		     | "one" => 
+		       Iterator (name,piter_vars,rterm,rtyp,rexpr,type_of_term rexpr,Boolean)
+		     | "any" => 
+		       Iterator (name,piter_vars,rterm,rtyp,rexpr,type_of_term rexpr,Boolean)
+		     | "exists" =>
+		       Iterator (name,piter_vars,rterm,rtyp,rexpr,type_of_term rexpr,Boolean)
+		     | "collect" => 
+		       Iterator (name,piter_vars,rterm,rtyp,rexpr,type_of_term rexpr,flatten_type (substitute_templ_para (rtyp) (type_of_term rexpr)))
+		     | _ => raise NoSuchIteratorNameError (Iterator (name,iter_vars,source_term,DummyT,expr,expr_typ,res_typ),("No such Iterator ..."))
+		  )
+	      end
+	  else      
+	      raise IteratorTypeMissMatch (Iterator (name,iter_vars,source_term,DummyT,expr,expr_typ,res_typ),("Iterator variable doesn't conform to choosen set \n"))
+      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
   in
-      if (check) then
-	  let
-	      val _ = trace low  ("res Iter: types conforms \n")
-	      val bound_expr = embed_bound_variables piter_vars expr
-	      val _ = trace low ("res Iter: term : " ^ Ocl2String.ocl2string false bound_expr ^ "\n")
-	      val rexpr = resolve_OclTerm bound_expr model
-	      val _ = trace low (" manuel " ^ string_of_OclType (type_of_term rexpr) ^ "\n")
-	      val _ = trace low (" ma     " ^ string_of_OclType (Set(static_iter_type)) ^ "\n")
-	      val _ = trace low  ("res Iter: Iterator name = " ^ name ^ " \n\n\n")
-	  in
-	      (
-	       case name of
-		   "select" => 
-		   Iterator (name,piter_vars,rterm,rtyp,rexpr,type_of_term rexpr,rtyp)
-		 | "reject" => 
-		   Iterator (name,piter_vars,rterm,rtyp,rexpr,type_of_term rexpr,rtyp)
-		 | "forAll" =>  
-		   Iterator (name,piter_vars,rterm,rtyp,rexpr,type_of_term rexpr,Boolean)
-		 | "one" => 
-		   Iterator (name,piter_vars,rterm,rtyp,rexpr,type_of_term rexpr,Boolean)
-		 | "any" => 
-		   Iterator (name,piter_vars,rterm,rtyp,rexpr,type_of_term rexpr,Boolean)
-		 | "exists" =>
-		   Iterator (name,piter_vars,rterm,rtyp,rexpr,type_of_term rexpr,Boolean)
-		 | "collect" => 
-		   Iterator (name,piter_vars,rterm,rtyp,rexpr,type_of_term rexpr,flatten_type (substitute_templ_para (rtyp) (type_of_term rexpr)))
-		 | _ => raise NoSuchIteratorNameError (Iterator (name,iter_vars,source_term,DummyT,expr,expr_typ,res_typ),("No such Iterator ..."))
-	      )
-	  end
-      else      
-	  raise IteratorTypeMissMatch (Iterator (name,iter_vars,source_term,DummyT,expr,expr_typ,res_typ),("Iterator variable doesn't conform to choosen set \n"))
-  end     
+      res
+  end
+     
 | resolve_OclTerm (Iterate (iter_vars,acc_var_name,acc_var_type,acc_var_term,sterm,stype,bterm,btype,res_type)) (model as (cls,assocs)) = 
-let
+  let
       (* resolve source term, type *)
-      val _ = trace medium ("RESOLVE Iterate: accumulator " ^ acc_var_name ^ "\n")
+      val _ = trace function_calls ("TypeChecker.resolve_OclTerm, Iterate: accumulator " ^ acc_var_name ^ "\n")
       val rterm = resolve_OclTerm sterm model
       val rtyp = type_of_term rterm
       val _ = trace medium ("res Iterate: source type " ^ string_of_OclType (type_of_term  rterm) ^ "\n\n")
@@ -549,56 +590,66 @@ let
       (* check if initial value of accumulator has correct type *)
       val racc_var_term = resolve_OclTerm acc_var_term model
       val racc_var_type = type_of_term racc_var_term
-  in
-      if (check) then
-	  if (racc_var_type = acc_var_type) then
-	      let
-		  val _ = trace medium  ("res Iterate: types conforms \n")
-		  val bound_expr = embed_bound_variables piter_vars bterm
-		  val bound_expr2 = embed_bound_variables [(acc_var_name,acc_var_type)] bound_expr
-		  val _ = trace medium ("myres Iterate: term : " ^ Ocl2String.ocl2string false bound_expr2 ^ "\n")
-		  val rexpr = resolve_OclTerm bound_expr2 model
-		  val _ = trace medium (" manuel " ^ string_of_OclType (type_of_term rexpr) ^ "\n")
-		  val _ = trace medium (" ma     " ^ string_of_OclType (Set(static_iter_type)) ^ "\n")
-		  val _ = trace medium  ("res Iterate: \n\n\n")
-	      in
-		  Iterate(piter_vars,acc_var_name,racc_var_type,racc_var_term,rterm,rtyp,rexpr,type_of_term rexpr,racc_var_type)
-	      end
+      val res = 
+	  if (check) then
+	      if (racc_var_type = acc_var_type) then
+		  let
+		      val _ = trace medium  ("res Iterate: types conforms \n")
+		      val bound_expr = embed_bound_variables piter_vars bterm
+		      val bound_expr2 = embed_bound_variables [(acc_var_name,acc_var_type)] bound_expr
+		      val _ = trace medium ("myres Iterate: term : " ^ Ocl2String.ocl2string false bound_expr2 ^ "\n")
+		      val rexpr = resolve_OclTerm bound_expr2 model
+		      val _ = trace medium (" manuel " ^ string_of_OclType (type_of_term rexpr) ^ "\n")
+		      val _ = trace medium (" ma     " ^ string_of_OclType (Set(static_iter_type)) ^ "\n")
+		      val _ = trace medium  ("res Iterate: \n\n\n")
+		  in
+		      Iterate(piter_vars,acc_var_name,racc_var_type,racc_var_term,rterm,rtyp,rexpr,type_of_term rexpr,racc_var_type)
+		  end
+	      else
+		  raise IterateAccumulatorTypeError ("Type of accumulator does not conform to type of expression of accumulator")
 	  else
-	      raise IterateAccumulatorTypeError ("Type of accumulator does not conform to type of expression of accumulator")
-      else
-	  raise IterateTypeMissMatch ("Iterate variables doesn't conform to choosen set \n")
+	      raise IterateTypeMissMatch ("Iterate variables doesn't conform to choosen set \n")
+      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
+  in
+      res
   end     
 | resolve_OclTerm (CollectionLiteral ([],typ)) model = 
   let
-      val _ = trace medium ("RESOLVE CollectionLiteral\n")
-  in 
-      CollectionLiteral ([],typ)
+      val _ = trace function_calls ("TypeChecker.resolve_OclTerm CollectionLiteral\n")
+      val res = CollectionLiteral ([],typ)
+      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
+  in
+      res
   end
 | resolve_OclTerm (CollectionLiteral (coll_parts,temp_typ)) model = 
   let
-      val _ = trace medium ("RESOLVE CollectionLiteral\n")
+      val _ = trace function_calls ("TypeChecker.resolve_OclTerm CollectionLiteral\n")
       val r_coll_parts = List.map (resolve_CollectionPart model) coll_parts
       val typ = type_of_CollPart (List.hd r_coll_parts)
+      val res =
+	  if (List.all (correct_type_for_CollLiteral typ) r_coll_parts) then
+	      (CollectionLiteral (r_coll_parts,substitute_templ_para temp_typ typ))
+	  else
+	      raise (wrongCollectionLiteral ((CollectionLiteral (coll_parts,temp_typ)), ("not all Literals have type of Collection")))
+      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
   in
-      if (List.all (correct_type_for_CollLiteral typ) r_coll_parts) then
-      (CollectionLiteral (r_coll_parts,substitute_templ_para temp_typ typ))
-  else
-      raise (wrongCollectionLiteral ((CollectionLiteral (coll_parts,temp_typ)), ("not all Literals have type of Collection")))
+      res
   end
 | resolve_OclTerm (Let (str,typ,rhs_term,_,in_term,_)) model = 
   let
-      val _ = trace medium ("RESOLVE a Let-Expression \n")
+      val _ = trace function_calls ("TypeChecker.resolve_OclTerm a Let-Expression \n")
       val rrhs_term = resolve_OclTerm rhs_term model
       val rrhs_typ = type_of_term rrhs_term
       val rin_term = resolve_OclTerm in_term model
       val rin_typ = type_of_term rin_term
+      val res = (Let (str,typ,rrhs_term,rrhs_typ,rin_term,rin_typ))
+      val _ = trace function_ends ("TypeChecker.resolve_OclTerm")
   in
-      (Let (str,typ,rrhs_term,rrhs_typ,rin_term,rin_typ))
+      res
   end
 | resolve_OclTerm (If (cond_term,cond_typ,if_expr,if_typ,else_expr,else_typ,ret_typ)) model = 
   let
-      val _ = trace medium ("RESOLVE a If-Expression \n")
+      val _ = trace function_calls ("TypeChecker.resolve_OclTerm a If-Expression \n")
       val rterm = resolve_OclTerm cond_term model
       val rtyp = type_of_term rterm
 
@@ -607,16 +658,19 @@ let
 
       val relse_expr = resolve_OclTerm else_expr model
       val relse_typ = type_of_term relse_expr
-  in 
-      if (rtyp = Boolean) then
-	  if (conforms_to rif_typ relse_typ model) then 
-	      If(rterm,rtyp,rif_expr,rif_typ,relse_expr,relse_typ,relse_typ)
-	  else if (conforms_to relse_typ rif_typ model) then
-	      If(rterm,rtyp,rif_expr,rif_typ,relse_expr,relse_typ,rif_typ)
+      val res = 
+	  if (rtyp = Boolean) then
+	      if (conforms_to rif_typ relse_typ model) then 
+		  If(rterm,rtyp,rif_expr,rif_typ,relse_expr,relse_typ,relse_typ)
+	      else if (conforms_to relse_typ rif_typ model) then
+		  If(rterm,rtyp,rif_expr,rif_typ,relse_expr,relse_typ,rif_typ)
+	      else
+		  raise TypeCheckerResolveIfError (If (cond_term,cond_typ,if_expr,if_typ,else_expr,else_typ,ret_typ),("Types of if-expression and else-expression don't conform each other \n"))
 	  else
-	      raise TypeCheckerResolveIfError (If (cond_term,cond_typ,if_expr,if_typ,else_expr,else_typ,ret_typ),("Types of if-expression and else-expression don't conform each other \n"))
-      else
-	  raise TypeCheckerResolveIfError (If (cond_term,cond_typ,if_expr,if_typ,else_expr,else_typ,ret_typ),("Type of condition is not Boolean. \n"))
+	      raise TypeCheckerResolveIfError (If (cond_term,cond_typ,if_expr,if_typ,else_expr,else_typ,ret_typ),("Type of condition is not Boolean. \n"))
+      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
+  in
+      res
   end
 
 

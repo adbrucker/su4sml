@@ -57,9 +57,9 @@ fun init_offset () = line_offset:=4
 
 fun get_offset () = get_spaces (!line_offset)
 
-fun inc_offset () = line_offset := (!line_offset)+1
+fun inc_offset () = line_offset := (!line_offset)+2
 
-fun dec_offset () = line_offset := (!line_offset)-1
+fun dec_offset () = line_offset := (!line_offset)-2
 
 (* debugging-levels *)
 val zero = 0
@@ -88,7 +88,7 @@ fun trace lev s =
 	    if (lev  <= !log_level ) then print((get_offset())^s) else ()
 	end
       | x => 
-	if x < 50 
+	if x < 20 
 	then (if (lev  <= !log_level ) then print(s) else ())
 	else (if (lev  <= !log_level ) then print((get_offset())^s) else ())
 

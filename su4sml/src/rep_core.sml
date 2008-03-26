@@ -1808,7 +1808,7 @@ fun inherited_associationends_of class (model as (clist,alist)) =
 	val _ = trace wgen ("inh assoEnd 1: parents = " ^ (String.concat (List.map (fn a => string_of_path (name_of a)) (c_parents))) ^ "\n")
 	val assE_of_par = (List.map (associationends_of alist) c_parents)
 	val _ = trace wgen ("inh assoEnd 2\n")
-	val _ = trace wgen ("inh assoEnd 3\n:  assocEnds of parents: " ^ (String.concat (List.map (fn a => (name_of_aend a)) (List.concat assE_of_par))) ^ "\n")
+	val _ = trace wgen ("inh assoEnd 3:  assocEnds of parents: " ^ (String.concat (List.map (fn a => (name_of_aend a)) (List.concat assE_of_par))) ^ "\n")
     in
 	if (List.length(assE_of_par) = 0)
 	then []
