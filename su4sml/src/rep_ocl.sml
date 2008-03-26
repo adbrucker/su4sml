@@ -60,6 +60,7 @@ sig
     val pathstring_of_path: Path -> string
     val is_Classifier     : OclType -> bool
     val is_Collection     : OclType -> bool
+    val isValueType       : OclType -> bool
 end
      
     
@@ -191,6 +192,24 @@ fun is_Collection (Set _)        = true
   | is_Collection (Bag _)        = true
   | is_Collection (Collection _) = true
   | is_Collection _              = false
+
+
+fun isValueType Integer         = true 
+  | isValueType String          = true
+  | isValueType Real            = true
+  | isValueType Boolean         = true
+  | isValueType (Set(t))        = false
+  | isValueType (OrderedSet(t)) = false
+  | isValueType (Bag(t))        = false
+  | isValueType (Sequence(t))   = false
+  | isValueType OclAny          = false
+  | isValueType (Classifier s)  = false
+  | isValueType DummyT          = false
+  | isValueType OclVoid         = false
+  | isValueType t               = error ("Error in isValueType(_,"^(string_of_OclType t)^")")		   
+
+
+
 end
      
     
