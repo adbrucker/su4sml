@@ -227,6 +227,14 @@ val OclAnyC : Classifier
  *)
 val class_of            : Rep_OclType.Path -> transform_model -> Classifier
 
+(**
+ * Is the classifier originally of the design model.
+ * Classes of the design models are classes which are wether templates
+ * nor oclLib classes.
+ *)
+val class_of_design_model : Rep_OclType.Path -> transform_model -> Classifier 
+
+
 (** 
  * Returns the classifier of a given type.
  *)
@@ -587,6 +595,11 @@ val is_visible_attr     : attribute -> bool
  * TODO: Description
  *)
 val associationends_of: association list -> Classifier -> associationend list 
+
+
+val inherited_associationends_of : Classifier -> transform_model -> associationend list
+
+val all_associationends_of : Classifier -> transform_model -> associationend list 
 
 (** 
  * Returns ends of an association.
@@ -1004,7 +1017,7 @@ fun class_of_design_model path (model as (clist,alist)) =
     let
 	val _ = trace wgen ("path of class = " ^ (String.concat (path)) ^ "\n")
     in
-	case (List.find (fn a => name_of a = path) clist) of
+	case (List.find (fn a => (type_of a) = Classifier (path)) clist) of
 	    NONE => raise TemplateInstantiationError (String.concat path)
 	  | SOME(x) => x
     end
