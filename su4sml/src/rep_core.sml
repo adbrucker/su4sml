@@ -1209,6 +1209,7 @@ and class_of_term source (c:Classifier list, a:association list) =
 		val _ = trace wgen ("substitute classifier: parameter type: " ^ string_of_OclType typ ^ " template type: " ^ string_of_OclType (type_of classifier) ^ "\n") 
                 (* val typ = parameter type *)
 		val styp = substitute_typ typ (type_of classifier)
+		val _ = trace wgen ("substitute_classifier: end substitute_type \n")
 		val ops = substitute_operations typ (local_operations_of classifier)
 		val _ = trace 100 ("substitute parent.\n")
 			
@@ -1842,7 +1843,7 @@ fun all_associationends_of class (model as (clist,alist)) =
 	val _ = trace wgen ("name of loacal assends: " ^ (String.concat (List.map (fn a => (name_of_aend a)) la)) ^ "\n")
 	val ia = inherited_associationends_of class model
 	val _ = trace wgen ("name of inherited assends: " ^ (String.concat (List.map (fn a => (name_of_aend a)) ia)) ^ "\n")
-	val _ = trace wgen ("all assocEnds")
+	val _ = trace wgen ("all assocEnds \n")
     in
 	embed_local_assocEnds la ia model
     end
@@ -2151,7 +2152,7 @@ fun normalize (all_associations:association list)
                             invariant,stereotypes,interfaces,thyname,
                             visibility,activity_graphs})):Classifier =
     let
-	val _ = trace function_calls "normalize: class\n"
+	val _ = trace function_calls ("Rep_Core:normalize: class\n")
 	val _ = trace function_arguments 
                       ("number of associations: "^(Int.toString(List.length 
                                                                     associations)
@@ -2164,6 +2165,7 @@ fun normalize (all_associations:association list)
 	(*     val aendPathPairs = map mapPath (bidirectionalPairs name all_associations
 								   associations)*)
 	val aendPathPairs = bidirectionalPairs name all_associations associations
+	val _ = trace function_ends ("Rep_Core: end normalize \n")
     in
 	Class {name   = name,
 	       parent = parent,
@@ -2190,7 +2192,7 @@ fun normalize (all_associations:association list)
                                             thyname,visibility, activity_graphs})) =
     (* FIXME: how to handle AssociationClass.association? *)
     let
-	val _ = trace function_calls "normalize: associationclass\n"
+	val _ = trace function_calls ("Rep_Core normalize: associationclass\n")
 	val _ = trace function_arguments 
                       ("number of associations: "^
                        (Int.toString (List.length associations ))^"\n")
@@ -2198,6 +2200,7 @@ fun normalize (all_associations:association list)
                                     
 	val aendPathPairs = (bidirectionalPairs name all_associations
                                                 associations)
+	val _ = trace function_ends ("Rep_Core: end normalize")
     in
 	AssociationClass {
 	name   = name,
@@ -3286,9 +3289,11 @@ fun get_overloaded_attrs_or_assocends class attr_name (model as (clist,alist)) =
 	val cl_att_list = (loc_atts)@(List.concat (List.map (fn a => (List.map (fn b => (a,b)) (all_attributes_of a model))) parents))
 	val cls_atts = 	List.filter (fn (a,b) => if (name_of_att b = attr_name) then true else false) cl_att_list
         (* Associations *)
+	val _ = trace wgen ("middle get_overloaded_attrs_or_assocends \n")
 	val loc_assE = List.map (fn a => (class,a)) (local_associationends_of alist class)   
 	val cl_assE_list = (loc_assE)@(List.concat (List.map (fn a => (List.map (fn b => (a,b)) (all_associationends_of a model))) parents))
 	val cls_assEs = List.filter (fn (a,b) => if (name_of_aend b = attr_name) then true else false) cl_assE_list
+	val _ = trace wgen ("end get_overloaded_attrs_or_assocends\n")
     in
 	(** ATTENTION: undefined in standard if assocEnds and attributes are allowed for same naem **)
 	if (List.length(cls_atts) = 0) 
@@ -3388,21 +3393,21 @@ fun get_overloaded_attrs_or_assocends class attr_name ([],_) = raise NoModelRefe
 fun get_meth source op_name args (model as (classifiers,associations))=
     (* object type *)
     let
-	val _ = trace low ("Type of Classifier : " ^ string_of_OclType (type_of_term source ) ^ "\n")
+	val _ = trace function_calls ("Rep_Core: get_meth: Type of Classifier : " ^ string_of_OclType (type_of_term source ) ^ "\n")
 	val class = class_of_term source model
 	val meth_list = get_overloaded_methods class op_name model
-	val _ = trace low ("overloaded methods found: " ^ Int.toString (List.length meth_list) ^ "\n")
+	val _ = trace function_ends ("Rep_Core: overloaded methods found: " ^ Int.toString (List.length meth_list) ^ "\n")
     in
 	upcast_op meth_list source args model
     end
 
 fun get_attr_or_assoc source attr_name (model as (classifiers,associations)) =
     let 
-	val _ = trace function_calls "get_attr_or_assoc\n"
+	val _ = trace function_calls ("Rep_Core: get_attr_or_assoc\n")
 	val _ = trace low ("GET ATTRIBUTES OR ASSOCENDS: source term.\n")
 	val class = class_of_term source model
 	val attr_or_assocend_list = get_overloaded_attrs_or_assocends class attr_name model
-	val _ = trace low ("overloaded attributes/associationends found: " ^ Int.toString (List.length attr_or_assocend_list) ^ "\n")
+	val _ = trace function_ends ("Rep_Core: end get_attr_or_assoc :overloaded attributes/associationends found: " ^ Int.toString (List.length attr_or_assocend_list) ^ "\n")
     in
 	let 
 	    val x = upcast_att_aend attr_or_assocend_list source model
