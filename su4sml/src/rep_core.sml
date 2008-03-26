@@ -599,6 +599,8 @@ val associationends_of: association list -> Classifier -> associationend list
 
 val inherited_associationends_of : Classifier -> transform_model -> associationend list
 
+val local_associationends_of  : association list -> Classifier -> associationend list
+
 val all_associationends_of : Classifier -> transform_model -> associationend list 
 
 (** 
@@ -780,6 +782,15 @@ val short_name_of_path  : Rep_OclType.Path -> string
  * TODO: Description
  *)
 val activity_graphs_of: Classifier -> Rep_ActivityGraph.ActivityGraph list 
+
+
+(*****************************************
+ * TEMPORARLY SIGNATURE,
+ * PLEASE DELETE IF NOT DELETED YET.
+ * JUST FOR DEBUGGING PROPOSES.
+ *****************************************)
+
+val parse_string  : char -> char list -> (char list * char list)
 
 exception InvalidArguments of string
 exception TemplateError of string 
@@ -1042,6 +1053,15 @@ fun type_of_parent (Class {parent,...}) =
 
 (* RETURN: OclType list *)
 
+fun parse_string c ([]) = ([],[])
+	      | parse_string c (h::tail) =
+		if (c = h) then
+		    ([],h::tail)
+		else
+ 		    (h::(#1 (parse_string c tail)),(#2 (parse_string c tail)))
+
+
+
 fun simple_type_of_path ["Integer"] = Integer
   | simple_type_of_path ["Boolean"] = Boolean
   | simple_type_of_path ["Real"] = Real
@@ -1059,12 +1079,6 @@ fun simple_type_of_path ["Integer"] = Integer
 	      | string_to_cons "Collection" typ = Collection (typ)
 	      | string_to_cons "OrderedSet" typ = OrderedSet (typ)
 	      | string_to_cons "Sequence" typ = Sequence (typ)	
-	    fun parse_string c ([]) = ([],[])
-	      | parse_string c (h::tail) =
-		if (c = h) then
-		    ([],h::tail)
-		else
- 		    (h::(#1 (parse_string c tail)),(#2 (parse_string c tail)))
 	    val tokens = parse_string (#"(") (String.explode set)
 	    val cons = (#1 tokens)
 	    (* delete first "(" and last ")" element *)
@@ -1096,12 +1110,6 @@ fun type_of_path ["Integer"] (model:transform_model) = Integer
 	      | string_to_cons "Collection" typ = Collection (typ)
 	      | string_to_cons "OrderedSet" typ = OrderedSet (typ)
 	      | string_to_cons "Sequence" typ = Sequence (typ)	
-	    fun parse_string c ([]) = ([],[])
-	      | parse_string c (h::tail) =
-		if (c = h) then
-		    ([],h::tail)
-		else
- 		    (h::(#1 (parse_string c tail)),(#2 (parse_string c tail)))
 	    val tokens = parse_string (#"(") (String.explode set)
 	    val cons = (#1 tokens)
 	    (* delete first "(" and last ")" element *)
@@ -1752,8 +1760,8 @@ fun local_associationends_of (all_associations:association list) (Class{name,ass
     in
         oppAends@filteredSelfAends
     end
-  | local_associationends_of all_associations (Primitive{name,associations,...}) = 
-    let 
+  | local_associationends_of all_associations (Primitive{name,associations,...}) = []
+    (* let 
 	val _ = trace wgen ("local_associationends_of 1 Primi... \n")
 	val oppAends = List.concat (map (oppositeAendsOfAssociation name all_associations) associations)
 	val _ = trace wgen ("local_associationends_of 2 primi ... \n")
@@ -1763,7 +1771,7 @@ fun local_associationends_of (all_associations:association list) (Class{name,ass
 	val _ = trace wgen ("local_associationends_of 4 primi ... \n")
     in
         oppAends@filteredSelfAends
-    end
+    end *)
   | local_associationends_of _ _ = error ("in local_associationends_of: This classifier has no associationends") (*FIXME: or rather []? *)
 fun associationends_of assocs classes = local_associationends_of assocs classes                             
     
@@ -3490,12 +3498,6 @@ fun string_to_type ["Integer"] = Integer
 	      | string_to_cons "Collection" typ = Collection (typ)
 	      | string_to_cons "OrderedSet" typ = OrderedSet (typ)
 	      | string_to_cons "Sequence" typ = Sequence (typ)	
-	    fun parse_string c ([]) = ([],[])
-	      | parse_string c (h::tail) =
-		if (c = h) then
-		    ([],h::tail)
-		else
- 		    (h::(#1 (parse_string c tail)),(#2 (parse_string c tail)))
 	    val tokens = parse_string (#"(") (String.explode set)
 	    val cons = (#1 tokens)
 	    (* delete first "(" and last ")" element *)
