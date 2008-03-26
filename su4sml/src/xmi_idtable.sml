@@ -259,14 +259,19 @@ fun filter_bodyconstraint t cs
 		    end) cs
 
 fun find_classifier_entries t xmiid =
-    (trace function_calls "find_classifier_entries\n";
-    (case valOf (HashTable.find t xmiid) 
-      of Type c => c
-       | _                => raise Option))
-    handle Option => error ("expected Classifier "^xmiid^" in table (in find_classifer_entries)")
-
-fun find_classifier t xmiid =
-    (case valOf (HashTable.find t xmiid) 
+    let
+	val _ = trace function_calls "Xmi_IDTable.find_classifier_entries \n"
+	val res = (case valOf (HashTable.find t xmiid) of 
+		      Type c => c
+		    | _  => raise Option
+		  ) handle Option => error ("expected Classifier "^xmiid^" in table (in find_classifer_entries)")
+	val _ = trace function_ends "end Xmi_IDTable.find_classifiers_entries \n"
+    in
+	res
+    end
+									  
+	fun find_classifier t xmiid =
+	    (case valOf (HashTable.find t xmiid) 
       of Type (_,_,_,c,_) => c
        | _                => raise Option) 
     handle Option => error ("expected Classifier "^xmiid^" in table (in find_classifer)")
@@ -390,18 +395,21 @@ fun insert_classifierInState table cls_id cis_id =
 (** insert an association into the hashtable *)
 fun insert_association table package_prefix (association:XMI.Association) = 
     let 
-	val _ = trace function_calls "insert_association\n"
+	val _ = trace function_calls ("Xmi_IDTable.insert_association\n")
 	val id      = #xmiid association
 	val name    = #name association
 	val path    = if (isSome name) then package_prefix@[valOf name]
 		      else package_prefix@["association_"^(next_unique_name table)]
-    in 
-	HashTable.insert table (id,Association(path,association))
-end
+	val res = HashTable.insert table (id,Association(path,association))
+	val _ = trace function_ends  ("Xmi_IDTable.insert_association\n")
+    in
+	res
+	
+    end
 
 
 fun insert_classifier table package_prefix class = 
-    let val _ = trace function_calls "insert_classifier\n"
+    let val _ = trace function_calls ("Xmi_IDTable.insert_classifier\n")
 	val id      = XMI.classifier_xmiid_of class
 	val name    = XMI.classifier_name_of class
 	val path    = package_prefix @ [name]
@@ -450,81 +458,99 @@ fun insert_classifier table package_prefix class =
 				   end
 				 | _ => ([],[])
 	val ag    = nil
-    in 
-	HashTable.insert table (id,Type (ocltype,assocs,acPath,class,ag));
-	case class 
-	 of XMI.Class c => (trace function_calls "insert_classifier: Class\n";
-			    List.app (insert_attribute table path) (#attributes c);
-			    List.app (insert_operation table path) (#operations c);
-			    List.app (insert_classifierInState table id) (#classifierInState c);
-			    ())
-	  | XMI.Primitive c => (List.app (insert_operation table path) (#operations c); ())
-	  | XMI.Enumeration c => (List.app (insert_operation table path) (#operations c); ())
-	  | XMI.Interface c => (List.app (insert_operation table path) (#operations c); ())
-	  | XMI.Collection c => (List.app (insert_operation table path) (#operations c); ())
-	  | XMI.Sequence c => (List.app (insert_operation table path) (#operations c); ())
-	  | XMI.Set c => (List.app (insert_operation table path) (#operations c); ())
-	  | XMI.Bag c => (List.app (insert_operation table path) (#operations c); ())
-	  | XMI.OrderedSet c => (List.app (insert_operation table path) (#operations c); ())
-	  | XMI.AssociationClass c => (trace function_calls "insert_classifier: AssociationClass\n";
-				       List.app (insert_attribute table path) (#attributes c);   
-				       List.app (insert_operation table path) (#operations c);              
-				       List.app (insert_classifierInState table id) [];
-				       insert_association table package_prefix (hd acAssoc);
-				       ()
-				      )
-	  | _ => ()
+	val res = 
+	    let
+		val _ = HashTable.insert table (id,Type (ocltype,assocs,acPath,class,ag))
+	    in
+		(case class 
+		  of XMI.Class c => (trace function_calls "insert_classifier: Class\n";
+				     List.app (insert_attribute table path) (#attributes c);
+				     List.app (insert_operation table path) (#operations c);
+				     List.app (insert_classifierInState table id) (#classifierInState c);
+				     ())
+		   | XMI.Primitive c => (List.app (insert_operation table path) (#operations c); ())
+		   | XMI.Enumeration c => (List.app (insert_operation table path) (#operations c); ())
+		   | XMI.Interface c => (List.app (insert_operation table path) (#operations c); ())
+		   | XMI.Collection c => (List.app (insert_operation table path) (#operations c); ())
+		   | XMI.Sequence c => (List.app (insert_operation table path) (#operations c); ())
+		   | XMI.Set c => (List.app (insert_operation table path) (#operations c); ())
+		   | XMI.Bag c => (List.app (insert_operation table path) (#operations c); ())
+		   | XMI.OrderedSet c => (List.app (insert_operation table path) (#operations c); ())
+		   | XMI.AssociationClass c => (trace function_calls "insert_classifier: AssociationClass\n";
+						List.app (insert_attribute table path) (#attributes c);   
+						List.app (insert_operation table path) (#operations c);              
+						List.app (insert_classifierInState table id) [];
+						insert_association table package_prefix (hd acAssoc);
+						()
+					       )
+		   | _ => ()
+		)
+	    end
+	val _ = trace function_ends ("end Xmi_IDTable.insert_classifier \n")
+    in
+	res
     end
-	
-
+    
+    
 (* recursively insert mapping of xmi.id's to model elements into Hashtable *)
 fun insert_package table package_prefix (XMI.Package p) =
     let
-	val _ = trace function_calls "insert_package\n"	
+	val _ = trace function_calls ("Xmi_IDTable.insert_package\n")
 	val full_name = package_prefix @ [#name p]
-    in 
-	trace function_calls "insert_package: generalizations\n";
-	List.app (insert_generalization table)           (#generalizations p);
-	trace function_calls "insert_package: constraints\n";
-	List.app (insert_constraint     table)           (#constraints p);
-	trace function_calls "insert_package: stereotypes\n";
-	List.app (insert_stereotype     table)           (#stereotypes p);
-	trace function_calls "insert_package: classifiers\n";
-	List.app (insert_classifier     table full_name) (#classifiers p);
-	trace function_calls "insert_package: associations\n";
-	List.app (insert_association    table full_name) (#associations p);
-	trace function_calls "insert_package: packages\n";
-	List.app (insert_package        table full_name) (#packages p);
-	trace function_calls "insert_package: activity_graphs\n";
-	List.app (insert_activity_graph table)           (#activity_graphs p);
-	trace function_calls "insert_package: dependencies\n";
-	List.app (insert_dependency     table)           (#dependencies p);
-	trace function_calls "insert_package: tag defenitions\n";
-	List.app (insert_tagdefinition  table)           (#tag_definitions p);
-	trace function_calls "insert_package: events\n";
-	List.app (insert_event          table)           (#events p);
-	trace function_calls "insert_package: insert package\n";
-	HashTable.insert table (#xmiid p,Package full_name)
+	val res = 
+	    let
+		val _ = List.app (insert_generalization table)           (#generalizations p)
+		val _ = trace 24 "insert_package: constraints\n"
+		val _ = List.app (insert_constraint     table)           (#constraints p)
+		val _ = trace 24 "insert_package: stereotypes\n"
+		val _ = List.app (insert_stereotype     table)           (#stereotypes p)
+		val _ = trace 24 "insert_package: classifiers\n"
+		val _ = List.app (insert_classifier     table full_name) (#classifiers p)
+		val _ = trace 24 "insert_package: associations\n"
+		val _ = List.app (insert_association    table full_name) (#associations p)
+		val _ = trace 24 "insert_package: packages\n"
+		val _ = List.app (insert_package        table full_name) (#packages p)
+		val _ = trace 24 "insert_package: activity_graphs\n"
+		val _ = List.app (insert_activity_graph table)           (#activity_graphs p)
+		val _ = trace 24 "insert_package: dependencies\n"
+		val _ = List.app (insert_dependency     table)           (#dependencies p)
+		val _ = trace 24 "insert_package: tag defenitions\n"
+		val _ = List.app (insert_tagdefinition  table)           (#tag_definitions p)
+		val _ = trace 24 "insert_package: events\n"
+		val _ = List.app (insert_event          table)           (#events p)
+		val _ = trace 24 "insert_package: insert package\n"
+	    in
+		HashTable.insert table (#xmiid p,Package full_name)
+	    end
+	val _ = trace function_ends ("Xmi_IDTable.insert_package \n")
+    in
+	res
     end 
-
+    
 (* We do not want the name of the model to be part of the package hierarchy, *)
 (* therefore we handle the top-level model seperately                        *)
 fun insert_model table (XMI.Package p) = 
     let 
-	val _ = trace function_calls "insert_model\n"
+	val _ = trace function_calls ("insert_model\n")
 	val full_name = nil
-    in 
-	List.app (insert_generalization table)           (#generalizations p);
-	List.app (insert_constraint     table)           (#constraints p);
-	List.app (insert_stereotype     table)           (#stereotypes p);
-	List.app (insert_classifier     table full_name) (#classifiers p);
-	List.app (insert_association    table full_name) (#associations p);
-	List.app (insert_package        table full_name) (#packages p);
-	List.app (insert_activity_graph table)           (#activity_graphs p);
-	List.app (insert_dependency     table)           (#dependencies p);
-	List.app (insert_tagdefinition  table)           (#tag_definitions p);
-	List.app (insert_event          table)           (#events p);
-	HashTable.insert table (#xmiid p,Package full_name)
+	val res = 
+	    let
+		val _ = List.app (insert_generalization table)           (#generalizations p)
+		val _ = List.app (insert_constraint     table)           (#constraints p)
+		val _ = List.app (insert_stereotype     table)           (#stereotypes p)
+		val _ = List.app (insert_classifier     table full_name) (#classifiers p)
+		val _ = List.app (insert_association    table full_name) (#associations p)
+		val _ = List.app (insert_package        table full_name) (#packages p)
+		val _ = List.app (insert_activity_graph table)           (#activity_graphs p)
+		val _ = List.app (insert_dependency     table)           (#dependencies p)
+		val _ = List.app (insert_tagdefinition  table)           (#tag_definitions p)
+		val _ = List.app (insert_event          table)           (#events p)
+	    in
+		HashTable.insert table (#xmiid p,Package full_name)
+	    end
+	val _ = trace function_ends ("Xmi_IDTable.insert_model\n")
+    in
+	res
     end 
 
 
