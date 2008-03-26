@@ -271,19 +271,24 @@ fun import xmifile oclfile excludePackages =
 	val model = case ocl of 
 			[] => xmi_cls
 		      | ocl => let
+			    val _         = init_offset()
+
 			    val _         = trace high "### Preprocess Context List ###\n"
 			    val fixed_ocl = Preprocessor.preprocess_context_list ocl ((OclLibrary.oclLib)@xmi_cls)
 			    val _         = trace high "### Finished Preprocess Context List ###\n\n"	
+			    val _         = init_offset()
 
 			    val _         = trace high "### Type Checking ###\n"
 			    val typed_cl  = TypeChecker.check_context_list fixed_ocl (((OclLibrary.oclLib)@xmi_cls),xmi_assocs);
 			    val _         = trace high "### Finished Type Checking ###\n\n"
+			    val _         = init_offset()
 
 			    val _         = print"### Updating Classifier List ###\n"
 			    val model     = Update_Model.gen_updated_classifier_list typed_cl ((OclLibrary.oclLib)@xmi_cls);
 			    val _         = trace high ("### Finished Updating Classifier List "
 							^(Int.toString(length model))
 							^ " Classifiers found (11 from 'oclLib') ###\n")
+			    val _         = init_offset()
 
 			    val _         = trace high "### Fixing Types ###\n"
 	                    val model = removeOclLibrary  model

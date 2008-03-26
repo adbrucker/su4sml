@@ -185,43 +185,48 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
 	
 (* RETURN: OclTerm (OperationCall/AttributeCall) *)
 fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
-    (trace function_calls ("AsSet_desugarator class= " ^ (string_of_OclType (type_of_term rterm)) ^ " , attr\n");
-    if (attr_or_meth = 0) 
-    then (* OperationCall *)
-	let
-	    val _ = trace low ("\n==> AsSet-desugarator: operation ... \n")
-	    val rtyp = Set(type_of_term rterm)
-	    val _ = trace low ("Type of source term " ^ string_of_OclType rtyp ^ " ---> try Set(" ^ string_of_OclType rtyp ^ ")\n")
-	    val class = class_of_term (Variable ("anonIterVar_" ^ (varcounter.nextStr()),rtyp)) model
-	    val ops = get_overloaded_methods class (List.last path) model
-	    val new_rterm = CollectionLiteral([CollectionItem(rterm,type_of_term rterm)],rtyp)
-	in
-	    if (List.length ops = 0)
-	    then
-		raise NoSuchOperationError ("interefere_methods: No operation signature matches given types (source: "^(Ocl2String.ocl2string false rterm)^").")
-	    else
-		upcast_op ops new_rterm rargs model
-	end
-    else (* AttributeCall *)
-	let
-	    val _ = trace low ("\n==> AsSet-desugarator: attribute/assocend\n")
-	    val rtyp = Set(type_of_term rterm)
-	    val _ = trace low (string_of_OclType rtyp ^ "\n")
-	    val class = class_of_term (Variable ("anonIterVar_" ^ (varcounter.nextStr()),Set(rtyp))) model
-	    val attrs = get_overloaded_attrs_or_assocends class (List.last path) model
-	    (* source term is a dummy-Term *) 
-	    val new_rterm = CollectionLiteral([CollectionItem(rterm,type_of_term rterm)],rtyp)
-	    val _ = trace low ("'AsSetError' ... \n")
-	in
-	    if (List.length attrs = 0) 
-	    then 
-		raise NoSuchAttributeError ("Attriubte '" ^ (List.last path) ^ "' does not exist ... \n") 
-	    else 
-		upcast_att_aend attrs new_rterm model
-	end)
-
+    let
+	val _ = (trace function_calls ("AsSet_desugarator class= " ^ (string_of_OclType (type_of_term rterm)) ^ " , attr\n"))
+	val res = if (attr_or_meth = 0) 
+		  then (* OperationCall *)
+		      let
+			  val _ = trace low ("\n==> AsSet-desugarator: operation ... \n")
+			  val rtyp = Set(type_of_term rterm)
+			  val _ = trace low ("Type of source term " ^ string_of_OclType rtyp ^ " ---> try Set(" ^ string_of_OclType rtyp ^ ")\n")
+			  val class = class_of_term (Variable ("anonIterVar_" ^ (varcounter.nextStr()),rtyp)) model
+			  val ops = get_overloaded_methods class (List.last path) model
+			  val new_rterm = CollectionLiteral([CollectionItem(rterm,type_of_term rterm)],rtyp)
+		      in
+			  if (List.length ops = 0)
+			  then
+			      raise NoSuchOperationError ("interefere_methods: No operation signature matches given types (source: "^(Ocl2String.ocl2string false rterm)^").")
+			  else
+			      upcast_op ops new_rterm rargs model
+		      end
+		  else (* AttributeCall *)
+		      let
+			  val _ = trace low ("\n==> AsSet-desugarator: attribute/assocend\n")
+			  val rtyp = Set(type_of_term rterm)
+			  val _ = trace low (string_of_OclType rtyp ^ "\n")
+			  val class = class_of_term (Variable ("anonIterVar_" ^ (varcounter.nextStr()),Set(rtyp))) model
+			  val attrs = get_overloaded_attrs_or_assocends class (List.last path) model
+			  (* source term is a dummy-Term *) 
+			  val new_rterm = CollectionLiteral([CollectionItem(rterm,type_of_term rterm)],rtyp)
+			  val _ = trace low ("'AsSetError' ... \n")
+		      in
+			  if (List.length attrs = 0) 
+			  then 
+			      raise NoSuchAttributeError ("Attriubte '" ^ (List.last path) ^ "' does not exist ... \n") 
+			  else 
+			      upcast_att_aend attrs new_rterm model
+		      end
+	val _ = trace function_ends ("AsSet_desugarator class= " ^ (string_of_OclType (type_of_term rterm)) ^ " , attr\n")
+    in
+	res
+    end
+    
 (* RETURN: OclTerm (OperationCall/AttributeCall) *)
-fun desugarator rterm path attr_or_meth rargs model = 
+	fun desugarator rterm path attr_or_meth rargs model = 
     FromSet_desugarator rterm path attr_or_meth rargs model  
     handle UpcastingError s => AsSet_desugarator rterm path attr_or_meth rargs model
 
@@ -297,11 +302,12 @@ and resolve_OclTerm (Literal (s,typ)) model =
   end
 | resolve_OclTerm (AttributeCall (term,_,attr_path,_)) (model as (cls,assocs)) =
   let 
-      val _ = trace medium ("RESOLVE AttributeCall: attribute name:  " ^ (List.last attr_path) ^ "\n")
+      val _ = trace wgen ("RESOLVE AttributeCall: attribute name:  " ^ (List.last attr_path) ^ "\n")
       (* resolve source term *)
       val rterm = resolve_OclTerm term model
-      val _ = trace low ("res AttCall (" ^ (List.last attr_path) ^ ") : rterm = " ^ Ocl2String.ocl2string false rterm ^ "\n")
-      val _ = trace low ("res AttCall (" ^ (List.last attr_path) ^ ") : rtype = " ^ string_of_OclType (type_of_term rterm) ^ "\n")
+      val _ = trace wgen ("res AttCall : arrow or not " ^ List.hd (attr_path) ^ "\n")
+      val _ = trace wgen ("res AttCall (" ^ (List.last attr_path) ^ ") : rterm = " ^ Ocl2String.ocl2string false rterm ^ "\n")
+      val _ = trace wgen ("res AttCall (" ^ (List.last attr_path) ^ ") : rtype = " ^ string_of_OclType (type_of_term rterm) ^ "\n")
   in
       let
       in

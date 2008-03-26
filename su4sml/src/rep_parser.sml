@@ -408,7 +408,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 				       classifierInState,activity_graphs,
 				       state_machines}) =
     let 
-	val _ = trace function_calls "transform_classifier: Class\n"
+	val _ = trace function_calls ("RepParser.transform_classifier: Class\n")
 	val _ = trace function_arguments ("class name: "^ name ^"\n")
         val assocs = find_classifier_associations t xmiid
 	val _ = trace high ("number of associations added: "^(Int.toString (List.length assocs))^"\n")
@@ -426,23 +426,26 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 (*        val navigable_aends    = filter #isNavigable (find_aends t xmiid)*)
 	val class_type = find_classifier_type t xmiid
 	val _ = print ("transform_classifier: adding "^name^"\n")
+	val res = 
+	    Rep.Class {name = (* type_of_classifier *) class_type,
+		       parent = case filtered_parents 
+				 of [] => NONE
+				  | xs => SOME ((* path_of_classifier *) (hd xs)),
+		       attributes = map (transform_attribute t) attributes,
+		       operations = map (transform_operation t) operations,
+		       invariant  = map ((transform_constraint t) o 
+					 (find_constraint t)) checked_invariants, 
+		       (* associationends = map (transform_aend t) navigable_aends, *)
+		       associations = assocs,
+		       stereotypes = map (find_stereotype t) stereotype, 
+		       interfaces = nil, (* FIX *)
+		       visibility = visibility:Rep_Core.Visibility,
+                       activity_graphs = List.concat [map (transform_activitygraph t) activity_graphs,
+						      map (transform_statemachine t) state_machines], 
+		       thyname = NONE}
+	val _ = trace function_ends ("RepParser.transform_classifier\n")
     in
-	Rep.Class {name = (* type_of_classifier *) class_type,
-		   parent = case filtered_parents 
-			     of [] => NONE
-			      | xs => SOME ((* path_of_classifier *) (hd xs)),
-		   attributes = map (transform_attribute t) attributes,
-		   operations = map (transform_operation t) operations,
-		   invariant  = map ((transform_constraint t) o 
-				     (find_constraint t)) checked_invariants, 
-		   (* associationends = map (transform_aend t) navigable_aends, *)
-		   associations = assocs,
-		   stereotypes = map (find_stereotype t) stereotype, 
-		   interfaces = nil, (* FIX *)
-		   visibility = visibility:Rep_Core.Visibility,
-                   activity_graphs = List.concat [map (transform_activitygraph t) activity_graphs,
-						  map (transform_statemachine t) state_machines], 
-		   thyname = NONE}
+	res
     end
   | transform_classifier t (XMI.AssociationClass {xmiid,name,isActive,visibility,
 						  isLeaf,generalizations,attributes,
@@ -450,7 +453,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 						  clientDependency,connection,
 						  supplierDependency,taggedValue}) =
     let 
-	val _ = trace function_calls "transform_classifier: AssociationClass\n"
+	val _ = trace function_calls ("RepParser.transform_classifier: AssociationClass\n")
 	val _ = trace function_arguments ("associationclass name: "^ name ^"\n")
 	val (_,assocs,assoc,_,_) = find_classifier_entries t xmiid
 	val _ = trace high ("number of associations added: "^(Int.toString (List.length assocs))^"\n")
@@ -465,77 +468,88 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 	(*val navigable_aends    = filter #isNavigable connection *)
 	val class_type = find_classifier_type t xmiid
 	val _ = print ("transform_classifier: adding "^name^"\n")
+	val res = 
+	    Rep.AssociationClass {name = (* type_of_classifier *)class_type,
+				  parent = case filtered_parents 
+					    of [] => NONE
+					     | xs => SOME ((*path_of_classifier *) (hd xs)),
+				  attributes = map (transform_attribute t) attributes,
+				  operations = map (transform_operation t) operations,
+				  invariant  = map ((transform_constraint t) o 
+						    (find_constraint t)) checked_invariants, 
+				  stereotypes = map (find_stereotype t) stereotype, 
+				  interfaces = nil (* FIX *),
+				  thyname = NONE,
+				  activity_graphs = [] (* FIXME *),
+				  associations = assocs,
+				  visibility = visibility,
+				  association = assoc}
+	val _ = trace function_ends ("RepParser.transform_classifier\n")
     in
-	Rep.AssociationClass {name = (* type_of_classifier *)class_type,
-			      parent = case filtered_parents 
-					of [] => NONE
-					 | xs => SOME ((*path_of_classifier *) (hd xs)),
-			      attributes = map (transform_attribute t) attributes,
-			      operations = map (transform_operation t) operations,
-			      invariant  = map ((transform_constraint t) o 
-						(find_constraint t)) checked_invariants, 
-			      stereotypes = map (find_stereotype t) stereotype, 
-			      interfaces = nil (* FIX *),
-			      thyname = NONE,
-			      activity_graphs = [] (* FIXME *),
-			      associations = assocs,
-			      visibility = visibility,
-			      association = assoc}
-
+	res
     end
   | transform_classifier t (XMI.Primitive {xmiid,name,generalizations,operations,invariant,taggedValue}) =
     let 
-	val _ = trace function_calls "transform_classifier: Primitive\n"
+	val _ = trace function_calls ("RepParser.transform_classifier: Primitive\n")
 	val _ = trace function_arguments ("primitive name: "^ name ^"\n")
 	val (_,assocs,_,_,_) = find_classifier_entries t xmiid
 	val _ = trace high ("number of associations added: "^(Int.toString (List.length assocs))^"\n")
 	val checked_invariants = filter_exists t invariant
-    in
-        Rep.Primitive {name = (* case *) find_classifier_type t xmiid (*of Rep_OclType.Classifier x => x
-																		 | _ => raise Option*) , 
-		       parent = NONE (* FIX *),
-					   operations = map (transform_operation t) operations,
-		       associations = assocs
-		       (*associations = map (transform_aend t) 
-					 (find_aends t xmiid), *),
+	val res = 
+            Rep.Primitive {name = (* case *) find_classifier_type t xmiid (*of Rep_OclType.Classifier x => x
+									     | _ => raise Option*) , 
+			   parent = NONE (* FIX *),
+			   operations = map (transform_operation t) operations,
+			   associations = assocs
+			 (*associations = map (transform_aend t) 
+					      (find_aends t xmiid), *),
 											 invariant = map ((transform_constraint t) o 
-															  (find_constraint t)) checked_invariants,
-		       stereotypes = nil (*FIX *),
-		       interfaces = nil (* FIX *),
-											 thyname = NONE}
+													  (find_constraint t)) checked_invariants,
+			   stereotypes = nil (*FIX *),
+			   interfaces = nil (* FIX *),
+			   thyname = NONE}
+	val _ = trace function_ends ("RepParser.transform_classifier\n")
+    in
+	res
     end
   | transform_classifier t (XMI.Enumeration {xmiid,name,generalizations,
 					     operations,literals,invariant}) =
     let 
-	val _ = trace function_calls "transform_classifier: Enumeration\n"
+	val _ = trace function_calls ("RepParser.transform_classifier: Enumeration\n")
 	val checked_invariants = filter_exists t invariant
+	val res = 
+            Rep.Enumeration {name = (* case *) find_classifier_type t xmiid (* of Rep_OclType.Classifier x => x
+										| _ => raise Option *), 
+			     parent = NONE,    (* FIX *)
+							    literals = literals,
+			     operations = map (transform_operation t) operations,
+			     invariant =   map ((transform_constraint t) o 
+						(find_constraint t)) checked_invariants,
+			     stereotypes = nil, (* FIX *)
+			     interfaces = nil, (* FIX *)
+		             thyname = NONE}
+	val _ = trace function_ends ("RepParser.transform_classifier\n")
     in
-        Rep.Enumeration {name = (* case *) find_classifier_type t xmiid (* of Rep_OclType.Classifier x => x
-								            | _ => raise Option *), 
-			 parent = NONE,    (* FIX *)
-			 literals = literals,
-			 operations = map (transform_operation t) operations,
-			 invariant =   map ((transform_constraint t) o 
-					    (find_constraint t)) checked_invariants,
-			 stereotypes = nil, (* FIX *)
-			 interfaces = nil, (* FIX *)
-		         thyname = NONE}
+	res
     end
   | transform_classifier t (XMI.Interface { xmiid, name, generalizations, operations, invariant,
 		                            ...}) =
     let 
-	val _ = trace function_calls "transform_classifier: Interface\n"
+	val _ = trace function_calls ("RepParser.transform_classifier: Interface\n")
         val checked_invariants = filter_exists t invariant
-    in 
-        Rep.Interface { name        = find_classifier_type t xmiid,
-	                parents     = map ((find_classifier_type t) o (find_parent t)) 
-			                  generalizations,
-	                operations  = map (transform_operation t) operations,
-	                stereotypes = [], (* map (find_stereotype t) stereotype,*)
-	                invariant   = map ((transform_constraint t) o 
-					   (find_constraint t)) checked_invariants,
-	                thyname     = NONE 
-                      }
+	val res = 
+            Rep.Interface { name        = find_classifier_type t xmiid,
+	                    parents     = map ((find_classifier_type t) o (find_parent t)) 
+			                      generalizations,
+	                    operations  = map (transform_operation t) operations,
+	                    stereotypes = [], (* map (find_stereotype t) stereotype,*)
+	                    invariant   = map ((transform_constraint t) o 
+					       (find_constraint t)) checked_invariants,
+	                    thyname     = NONE 
+			  }
+	val _ = trace function_ends ("RepParser.transform_classifier\n")
+    in
+	res
     end
   | transform_classifier t (_) = error "Not supported Classifier type found."
 			               
@@ -544,7 +558,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 fun transform_association t ({xmiid,name,connection}:XMI.Association):
     Rep.association =
     let 
-      val _ = trace function_calls "transform_association\n"
+      val _ = trace function_calls ("RepParser.transform_association\n")
       val _ = trace function_arguments ("transform_association xmiid: "
                                         ^xmiid^"\n")
       val associationPath = find_association_path t xmiid
@@ -555,19 +569,21 @@ fun transform_association t ({xmiid,name,connection}:XMI.Association):
                      (Int.toString (List.length associationPath)) ^"\n")
       val (associationEnds,qualifierPairs) = 
           ListPair.unzip (map (transform_aend t associationPath) connection)
+      val res = 
+	  {name = associationPath (* path_of_association *),
+	   aends = associationEnds,
+	   qualifiers = qualifierPairs,
+	   aclass = NONE (* regular association *)}
+      val _ = trace function_ends ("RepParser.transform_association\n")
     in
-      {name = associationPath (* path_of_association *),
-       aends = associationEnds,
-       qualifiers = qualifierPairs,
-       aclass = NONE (* regular association *)}
+	res
     end
 
 fun transformAssociationFromAssociationClass t (XMI.AssociationClass 
                                                     {xmiid,connection,...}):
     Rep.association =
     let
-      val _ = trace function_calls "transformAssociationFromAassociation\
-                                   \Class\n"
+      val _ = trace function_calls ("RepParser.transformAssociationFromAassociation Class\n")
       val id = xmiid^"_association"
       val associationPath = find_association_path t id
       val _ = trace low ("transform_association path: "^
@@ -577,6 +593,7 @@ fun transformAssociationFromAssociationClass t (XMI.AssociationClass
       val (associationEnds,qualifierPairs) = 
           ListPair.unzip (map (transform_aend t associationPath) connection)
       val aClass =  SOME (path_of_OclType (find_classifier_type t xmiid))
+      val _  = trace function_ends ("RepParser.transformAssociationFromAssociationClass\n")
     in
       {name = associationPath (* path_of_association *),
        aends = associationEnds,
@@ -588,7 +605,7 @@ fun transformAssociationFromAssociationClass t (XMI.AssociationClass
 fun transform_package t (XMI.Package p) :transform_model =
     let 
       (* we do not transform the ocl library *)
-      val _ = trace function_calls "transform_package\n"
+      val _ = trace function_calls ("RepParser.transform_package\n")
       val filteredPackages = 
           filter (fn (XMI.Package x) => 
 		     ((#name x <> "oclLib") andalso (#name x <> "UML_OCL")))
@@ -603,8 +620,10 @@ fun transform_package t (XMI.Package p) :transform_model =
           ListPair.unzip (map (transform_package t) filteredPackages)
       val associations = local_associations @ (List.concat res_associations)
       val classifiers =local_classifiers @ (List.concat res_classifiers)
-    in 
-      (classifiers, associations )
+      val res  = (classifiers, associations )
+      val _ = trace function_ends ("RepParser.transform_package\n")
+    in
+	res
     end
         
 
@@ -676,15 +695,15 @@ fun transformXMI_ext ({classifiers,constraints,packages,stereotypes,
 		end
 	    val _ = map printClassifier classifiers
 	  in
-	    trace function_calls "\n### transformXMI_ext done\n\n";
+	    trace 27 "\n### transformXMI_ext done\n\n";
 	    (classifiers,associations)
 	  end
     in 
-      trace function_calls "### transformXMI: populate hash table\n";
+      trace 27 "### transformXMI: populate hash table\n";
       insert_model xmiid_table model        (* fill xmi.id table *);
-      trace function_calls "### transformXMI: fix associations\n";
+      trace 27 "### transformXMI: fix associations\n";
       fix_associations xmiid_table model    (* handle associations *);  
-      trace function_calls "### transformXMI: transform XMI into Rep\n";
+      trace 27 "### transformXMI: transform XMI into Rep\n";
       test2 (transform_package xmiid_table model) (* transform classifiers *)
     end
 

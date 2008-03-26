@@ -7,7 +7,7 @@ open ModelImport
 open Rep_Core
 
 
-
+val _ = init_offset()
 
 (* set debugging settings *)
 val _ = Control.Print.printDepth:=20
@@ -18,7 +18,7 @@ val ocl = ""
 *)
 
 val zargo = "../../examples/SimpleChair/SimpleChair.zargo"
-val ocl = "../../examples/SimpleChair/test.ocl" 
+val ocl = "../../examples/SimpleChair/test.ocl"
 val remP = ["AbstractSimpleChair02", "AbstractSimpleChair03","AbstractSimpleChair04","ConcreteSimpleChair01","ConcreteSimpleChair02"] ;
 
 
@@ -29,7 +29,7 @@ val zargo = "../../examples/ebank/ebank.zargo"
 val ocl="../../examples/ebank/ebank.ocl"
 *)
 (** import model *)
-val i_model = import zargo "" []
+val i_model = import zargo ocl []
 val (clist,alist) = normalize_ext i_model
 val model = ((clist@oclLib),(alist))
 val classifiers = removeOclLibrary clist

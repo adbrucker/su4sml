@@ -47,18 +47,50 @@ fun (x |> f) = f x;
 
 (* minimal tracing support (modifed version of ocl_parser tracing *)
 val log_level = ref 6
-fun trace lev s = if (lev  <= !log_level ) then print(s) else ()
+
+val line_offset = ref 4
+
+fun get_spaces 0 = ""
+  | get_spaces x = (" ")^(get_spaces (x-1))
+
+fun init_offset () = line_offset:=4
+
+fun get_offset () = get_spaces (!line_offset)
+
+fun inc_offset () = line_offset := (!line_offset)+1
+
+fun dec_offset () = line_offset := (!line_offset)-1
 
 (* debugging-levels *)
 val zero = 0
 val exce = 0
-val function_calls = 5
-val function_arguments = 6
 val high = 10
 val medium = 20
+val function_calls = 25
+val function_ends = 26
+val function_arguments = 27
 val low = 100
 val development = 200
 val wgen = 50
+
+fun trace lev s = 
+    case lev of 
+	25 => 
+	let
+	    val _ = if (lev  <= !log_level ) then print((get_offset())^s) else ()
+	in
+	    inc_offset()
+	end
+      | 26 => 
+	let
+	    val x = dec_offset()
+	in
+	    if (lev  <= !log_level ) then print((get_offset())^s) else ()
+	end
+      | x => 
+	if x < 50 
+	then (if (lev  <= !log_level ) then print(s) else ())
+	else (if (lev  <= !log_level ) then print((get_offset())^s) else ())
 
 
 (* HOLOCL_HOME resp. SU4SML_HOME should point to the top-level directory *)
