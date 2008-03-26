@@ -132,15 +132,20 @@ type attribute = Rep_Core.attribute
 
 (*
 TEMPLATE FOR TERM:
-fun embed_atPre_expressions (Varible (str,type)) = 
-  | embed_atPre_expressions (Literal (str,type)) =
-  | embed_atPre_expressions (CollectionLiteral (collpart,typ)) = 
-  | embed_atPre_expressions (If (cond,cond_type,then_e,then_type,else_e,else_type,res_type)) path meth_name model= 
-  | embed_atPre_expressions (AttributeCall (sterm,styp,p,res_typ)) path meth_name model =
-  | embed_atPre_expressions (OperationCall (sterm,styp,pa,para,res_typ)) path meth_name model = 
-  | embed_atPre_expressions (OperationWithType (sterm,stype,para_name,para_type,res_type)) path meth_name model = 
-  | embed_atPre_expressions (Let (var_name,var_type,rhs,rhs_type,in_e,in_type)) path meth_name model =
-  | embed_atPre_expressions (Iterator (name,iter_vars,sterm,stype,body_e,body_type,res_type)) path meth_name model = 
+fun fun_name (Varible (str,type)) = 
+  | fun_name (Literal (str,type)) =
+  | fun_name (CollectionLiteral (collpart,typ)) = 
+  | fun_name (If (cond,cond_type,then_e,then_type,else_e,else_type,res_type)) = 
+  | fun_name (AttributeCall (sterm,styp,p,res_typ)) =
+  | fun_name (OperationCall (sterm,styp,pa,para,res_typ)) = 
+  | fun_name (OperationWithType (sterm,stype,para_name,para_type,res_type)) =
+  | fun_name (Let (var_name,var_type,rhs,rhs_type,in_e,in_type)) =
+  | fun_name (Iterator (name,iter_vars,sterm,stype,body_e,body_type,res_type)) =
+  | fun_name (Iterate (iter_vars,result_var,sterm,stype,body_term,body_type,res)) = 
+  | fun_name (AssociatonEndCall(sterm,stype,path,res)) = 
+  | fun_name (Predicate (sterm,stype,path,args)) = 
+  | fun_name (QualifiedAssociationEndCall(sterm,stype,qualifiers,path,res)) =
+
 *)
 
 (* RETURN: bool *)
@@ -394,6 +399,157 @@ check_for_self arg_list typ (AttributeCall (Variable("dummy_source",_),_,path,_)
 
 
 
+
+
+fun prefix_OperationWithType_CollectionPart prefix (CollectionItem(term,typ)) = 
+    let
+	val new_term = prefix_OperationWithType prefix term
+    in
+	(CollectionItem(new_term,type_of_term new_term))
+    end
+  | prefix_OperationWithType_CollectionPart prefix (CollectionRange(term1,term2,typ)) = 
+    let
+	val new_term1 = prefix_OperationWithType prefix term1
+	val new_term2 = prefix_OperationWithType prefix term2
+    in
+	(CollectionRange(new_term1,new_term2,type_of_term new_term1))
+    end
+
+and prefix_OperationWithType prefix (Variable (str,typ)) = (Variable (str,typ))
+  | prefix_OperationWithType prefix (Literal (str,typ)) = (Literal (str,typ))
+  | prefix_OperationWithType prefix (CollectionLiteral (collparts,typ)) =
+    let
+	val new_collparts = List.map (fn a => prefix_OperationWithType_CollectionPart prefix a) collparts
+	val new_type = type_of_CollPart (List.hd(new_collparts))
+    in
+	CollectionLiteral(new_collparts,new_type)
+    end
+  | prefix_OperationWithType prefix (If (cond,cond_type,then_e,then_type,else_e,else_type,res_type)) = 
+    let
+	val new_cond = prefix_OperationWithType prefix cond
+	val new_cond_type = type_of_term new_cond
+	val new_then_e = prefix_OperationWithType prefix then_e
+	val new_then_type = type_of_term new_then_e
+	val new_else_e = prefix_OperationWithType prefix else_e
+	val new_else_type = type_of_term new_else_e
+	val new_res_type = new_then_type
+    in
+	(If (new_cond,new_cond_type,new_then_e,new_then_type,new_else_e,new_else_type,new_res_type))
+    end
+  | prefix_OperationWithType prefix (QualifiedAssociationEndCall(sterm,stype,qualifiers,path,res)) =
+    let
+	val new_term = prefix_OperationWithType prefix sterm
+	val new_type = type_of_term new_term
+	val new_qualifiers = List.map (fn (a,b) => 
+					  let
+					      val new_a = prefix_OperationWithType prefix a
+					      val new_a_type = type_of_term a
+					  in
+					      (new_a,new_a_type)
+					  end
+				      ) qualifiers
+    in
+	QualifiedAssociationEndCall(new_term,new_type,new_qualifiers,path,res)
+    end
+  | prefix_OperationWithType prefix (AttributeCall (sterm,styp,p,res_typ)) =
+    let
+	val new_term = prefix_OperationWithType prefix sterm
+	val new_type = type_of_term new_term
+    in
+	AttributeCall(new_term,new_type,p,res_typ)
+    end
+  | prefix_OperationWithType prefix (AssociationEndCall(sterm,stype,path,res)) = 
+    let
+	val new_term = prefix_OperationWithType prefix sterm
+	val new_type = type_of_term new_term
+    in
+	AssociationEndCall(new_term,new_type,path,res)
+    end
+
+  | prefix_OperationWithType prefix (OperationCall (sterm,styp,pa,args,res_typ)) = 
+    (* if it is an OperationWithType,
+     * then it gets parsed like:
+     * 
+     *
+     *     OperationCall 
+     *	         (source_term,
+     *		  DummyT,
+     *		  ["oclIsTypeOf"], 
+     *		  [(AttributeCall(Variable ("dummy_source",DummyT),DummyT,["Chair"],DummyT),DummyT)],
+     *		  DummyT)
+     *)
+    (
+     case args of 
+	 [(AttributeCall(Variable("dummy_source",DummyT),DummyT,path,DummyT),DummyT)] => 
+         (** OperationWithType **)
+	 let
+	     val new_term = prefix_OperationWithType prefix sterm
+	     val new_type = type_of_term new_term
+	     val new_path = prefix_path prefix path 
+	     val new_args = [(AttributeCall(Variable("dummy_source",DummyT),DummyT,new_path,DummyT),DummyT)]
+	 in
+	     (OperationCall(new_term,new_type,pa,new_args,res_typ))
+	 end
+       | x =>
+	 (** OperationCall **)
+	 let
+	     val new_term = prefix_OperationWithType prefix sterm
+	     val new_type = type_of_term new_term
+	     val new_args = List.map (fn (a,b) => 
+					 let
+					     val new_a = prefix_OperationWithType prefix a
+					     val new_a_type = type_of_term new_a
+					 in
+					     (new_a,new_a_type)
+					 end ) args
+	in
+	     OperationCall(new_term,new_type,pa,new_args,res_typ)
+	 end
+    )
+  | prefix_OperationWithType prefix (Predicate (sterm,stype,path,args)) = 
+    let
+	val new_term = prefix_OperationWithType prefix sterm
+	val new_type = type_of_term new_term
+	val new_args = List.map (fn (a,b) => 
+				    let
+					val new_a = prefix_OperationWithType prefix a
+					val new_a_type = type_of_term new_a
+				    in
+					(new_a,new_a_type)
+				    end ) args
+    in
+	Predicate (new_term,new_type,path,new_args)
+    end
+  | prefix_OperationWithType prefix (Let (var_name,var_type,rhs,rhs_type,in_e,in_type)) =
+    let
+	val new_rhs = prefix_OperationWithType prefix rhs
+	val new_rhs_type = type_of_term new_rhs
+	val new_in_e = prefix_OperationWithType prefix in_e
+	val new_in_type = type_of_term new_in_e
+    in
+	(Let(var_name,var_type,new_rhs,new_rhs_type,new_in_e,new_in_type))
+    end
+  | prefix_OperationWithType prefix (Iterator (name,iter_vars,sterm,stype,body_e,body_type,res_type)) =
+    let
+	val new_term = prefix_OperationWithType prefix sterm
+	val new_type = type_of_term new_term
+	val new_body = prefix_OperationWithType prefix body_e
+	val new_body_type = type_of_term new_body
+	val new_res_type = res_type
+    in
+	Iterator(name,iter_vars,new_term,new_type,new_body,new_body_type,res_type)
+    end
+  | prefix_OperationWithType prefix (Iterate (iter_vars,res_string,res_type,res_term,sterm,stype,body_term,body_type,res)) = 
+    let
+	val new_term = prefix_OperationWithType prefix sterm
+	val new_type = type_of_term new_term
+	val new_res_term = prefix_OperationWithType prefix res_term
+	val new_body = prefix_OperationWithType prefix body_term
+	val new_body_type = type_of_term new_body
+    in
+	Iterate(iter_vars,res_string,res_type,new_res_term,new_term,new_type,new_body,new_body_type,res)
+    end
+
 (* RETURN: Context *)
 fun preprocess_context (Cond (path,op_name,op_sign,result_type,cond,pre_name,expr)) model = 
     let
@@ -409,16 +565,18 @@ fun preprocess_context (Cond (path,op_name,op_sign,result_type,cond,pre_name,exp
 	val eexpr = embed_method_arguments prefixed_op_sign vexpr
         (* embed '@pre'-expressions *)
 	val pexpr = embed_atPre_expressions eexpr
+	val ppexpr = prefix_OperationWithType path pexpr
     in
-	(Cond (path,op_name,prefixed_op_sign,prefixed_result_type,cond,pre_name,(check_for_self prefixed_op_sign (Classifier (path)) pexpr model)))
+	(Cond (path,op_name,prefixed_op_sign,prefixed_result_type,cond,pre_name,(check_for_self prefixed_op_sign (Classifier (path)) ppexpr model)))
     end
 | preprocess_context (Inv (path,string,term)) model =
     let
 	val _ = trace zero ("Preprocess context: Inv (...)" ^ "\n")
         (* embed '@pre'-expressions *)
 	val pexpr = embed_atPre_expressions term
+	val ppexpr = prefix_OperationWithType path pexpr
     in
-	(Inv (path,string,(check_for_self [] (Classifier (path)) pexpr model)))
+	(Inv (path,string,(check_for_self [] (Classifier (path)) ppexpr model)))
     end
 | preprocess_context (Attr (path,typ,aoa,expr)) model = 
     let
@@ -437,6 +595,7 @@ fun preprocess_context (Cond (path,op_name,op_sign,result_type,cond,pre_name,exp
 
 (* RETURN: Context list *)
 fun preprocess_context_list [] model = [] 
-| preprocess_context_list (h::context_list_tail) model = (preprocess_context h model)::(preprocess_context_list context_list_tail model)
+  | preprocess_context_list (h::context_list_tail) model = 
+    (preprocess_context h model)::(preprocess_context_list context_list_tail model)
 
 end

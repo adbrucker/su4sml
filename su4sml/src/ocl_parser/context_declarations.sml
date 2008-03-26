@@ -61,7 +61,7 @@ sig
 			Rep_OclType.OclType *				(* result *)
 			ConditionType *                			(* {Pre | Post | Body} *)
 			string option *					(* name of precondition *)
-			Rep_OclTerm.OclTerm		 		(* preondition expression *)
+			Rep_OclTerm.OclTerm		 		(* condition expression *)
        | Guard of	string list *		              			(* context *) (* not yet supported *)
 			string option *					(* name *)
 			Rep_OclTerm.OclTerm				(* expression *)

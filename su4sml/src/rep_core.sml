@@ -358,6 +358,11 @@ val substitute_templ_para      : Rep_OclType.OclType -> Rep_OclType.OclType -> R
  *)
 val prefix_type             : string list -> Rep_OclType.OclType -> Rep_OclType.OclType
 
+(** 
+ * Prefix a given path with a prefix.
+ *)
+val prefix_path             : string list -> string list -> string list
+
 (**
  * Collections of Collections are flattened according to Ocl 2.0 Standard.
  *)
@@ -2954,6 +2959,22 @@ fun get_operation op_name class model =
     end
 
 fun get_attribute att_name (list:attribute list) = List.find (fn a => (#name a) = att_name) list
+
+fun is_prefix x [] = false
+  | is_prefix [h1] [h2] =
+    if h1 = h2 
+    then true
+    else false
+  | is_prefix (h1::tail1) (h2::tail2) = 
+    if (h1 = h2)
+    then is_prefix tail1 tail2
+    else false
+
+fun prefix_path prefix [] = prefix
+  | prefix_path prefix path = 
+    if (is_prefix prefix path)
+    then path
+    else prefix@path
 
 fun prefix_type [] typ = typ
   | prefix_type h (Classifier (path)) = Classifier (h@[List.last path])
