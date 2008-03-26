@@ -1131,7 +1131,7 @@ and class_of_term source (c:Classifier list, a:association list) =
 		  | substitute_parent (OrderedSet(t)) typ = SOME(Set(typ))
 		  | substitute_parent (Bag(t)) typ = SOME(Collection(typ))
 		  | substitute_parent (Sequence(t)) typ = SOME(Collection(typ))
-		  | substitute_parent x typ = raise TemplateInstantiationError ("Parent tmpl type must be a collection.\n")
+		  | substitute_parent x typ = raise TemplateoInstantiationError ("Parent tmpl type must be a collection.\n")
 
 		and substitute_operations typ [] = []
 		  | substitute_operations typ ((oper:operation)::tail) =
@@ -1705,7 +1705,15 @@ fun incomingAendsOfAssociation name allAssociations associationPath =
 fun local_associationends_of (all_associations:association list) (Class{name,associations,...}):associationend list = 
     let 
 	val _ = trace wgen ("local_associationends_of 1 ... \n")
-	val oppAends = List.concat (map (oppositeAendsOfAssociation name all_associations) associations)
+	val _ = trace wgen ("classifier = " ^ (string_of_OclType name) ^ "\n")
+	val oppAends = List.concat (List.map (fn a => 
+						 let
+						     val _ = trace wgen ("Association path = ")
+						     val _ = trace wgen (string_of_path a ^ "\n")
+						 in
+						     (oppositeAendsOfAssociation name all_associations a)
+						 end
+					     ) associations)
 	val _ = trace wgen ("local_associationends_of 2 ... \n")
 	val selfAends = map (incomingAendsOfAssociation name all_associations) associations
 	val _ = trace wgen ("local_associationends_of 3 ... \n")
