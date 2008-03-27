@@ -286,7 +286,7 @@ val visibility_of : Classifier -> Visibility
  *****************************************)
 
 
-val string_to_type : string list -> Rep_OclType.OclType
+val string_to_type : string -> Rep_OclType.OclType
 
 (**
  * Returns the type of a classifier.
@@ -352,6 +352,12 @@ val type_of_template_parameter      : Rep_OclType.OclType -> Rep_OclType.OclType
  * Replace the template parameter with another type.
  *)
 val substitute_templ_para      : Rep_OclType.OclType -> Rep_OclType.OclType -> Rep_OclType.OclType
+
+
+(** 
+ * Substitute a package name of a path. 
+ *)
+val substitute_package        : Rep_OclType.Path -> Rep_OclType.Path -> Rep_OclType.Path -> Rep_OclType.Path
 
 (**
  * Prefixes a type with a given package name.
@@ -809,6 +815,7 @@ exception NoModelReferenced of string
 exception NoCollectionTypeError of Rep_OclType.OclType
 exception AttributeAssocEndNameClash of string
 exception ParentsOfError of string
+exception Rep_CoreError of string
 end
 
 structure Rep_Core  :  REP_CORE = 
@@ -937,6 +944,9 @@ exception OperationNotFoundError of string
 exception AttributeNotFoundError of string
 exception AttributeAssocEndNameClash of string
 exception ParentsOfError of string
+exception Rep_CoreError of string
+
+
 val OclLibPackage = "oclLib"
 val OclAnyC = Class{name=Rep_OclType.OclAny,parent=NONE,attributes=[],
 		    operations=[], interfaces=[],
@@ -1031,10 +1041,10 @@ fun attributes_of class = local_attributes_of class
 
 fun class_of_design_model path (model as (clist,alist)) = 
     let
-	val _ = trace wgen ("path of class = " ^ (String.concat (path)) ^ "\n")
+	val _ = trace rep_core ("path of class = " ^ (String.concat (path)) ^ "\n")
     in
 	case (List.find (fn a => (type_of a) = Classifier (path)) clist) of
-	    NONE => raise TemplateInstantiationError (String.concat path)
+	    NONE => raise GetClassifierError (String.concat path)
 	  | SOME(x) => x
     end
 
@@ -1098,6 +1108,7 @@ fun simple_type_of_path ["Integer"] = Integer
   | simple_type_of_path (list:Path) = Classifier (list)
 
 
+
 fun type_of_path ["Integer"] (model:transform_model) = Integer
   | type_of_path ["Boolean"] (model:transform_model) = Boolean
   | type_of_path ["Real"] (model:transform_model) = Real
@@ -1140,7 +1151,7 @@ fun type_of_path ["Integer"] (model:transform_model) = Integer
 and class_of_term source (c:Classifier list, a:association list) =
     let
 	val typ = type_of_term (source)
-	val _ = trace wgen ("type_of_term term = " ^ (string_of_OclType typ) ^ "\n")
+	val _ = trace rep_core ("type_of_term term = " ^ (string_of_OclType typ) ^ "\n")
 	fun class_of_t typ m = 
 	    hd (List.filter (fn a => if ((type_of a) = typ) then true else false) m)
 	fun substitute_classifier typ classifier =
@@ -1211,10 +1222,10 @@ and class_of_term source (c:Classifier list, a:association list) =
 			  (* else error *)
 			  | _ => raise TemplateInstantiationError ("Template type not of type: Sequence, Set, OrderedSet, Collection or Bag")
 		    end
-		val _ = trace wgen ("substitute classifier: parameter type: " ^ string_of_OclType typ ^ " template type: " ^ string_of_OclType (type_of classifier) ^ "\n") 
+		val _ = trace rep_core ("substitute classifier: parameter type: " ^ string_of_OclType typ ^ " template type: " ^ string_of_OclType (type_of classifier) ^ "\n") 
                 (* val typ = parameter type *)
 		val styp = substitute_typ typ (type_of classifier)
-		val _ = trace wgen ("substitute_classifier: end substitute_type \n")
+		val _ = trace rep_core ("substitute_classifier: end substitute_type \n")
 		val ops = substitute_operations typ (local_operations_of classifier)
 		val _ = trace 100 ("substitute parent.\n")
 			
@@ -1278,7 +1289,7 @@ and class_of_term source (c:Classifier list, a:association list) =
 	  | OclVoid => class_of_t OclVoid c
 	  | OclAny => 
 	    let 
-		val _ = trace wgen ("type is OclAny")
+		val _ = trace rep_core ("type is OclAny")
 	    in
 		class_of_t OclAny c
 	    end
@@ -1308,14 +1319,14 @@ and class_of_term source (c:Classifier list, a:association list) =
 
 and class_of (name:Path) (model as (clist,alist)) = 
      let
-	 val _ = trace wgen ("top level package: " ^ (List.hd (name)) ^ "\n")
-	 val _ = trace wgen ("remaining package: " ^ (String.concat (List.tl name)) ^ "\n") 
+	 val _ = trace rep_core ("top level package: " ^ (List.hd (name)) ^ "\n")
+	 val _ = trace rep_core ("remaining package: " ^ (String.concat (List.tl name)) ^ "\n") 
      in
 	 class_of_term (Variable("x",type_of_path name model)) model
 	 handle TemplateInstantiationError s =>
 		let
-		    val _ = trace wgen ("The path of the template parameter is not in the desing model.\n")
-		    val _ = trace wgen ("Path = " ^ s ^ "\n")
+		    val _ = trace rep_core ("The path of the template parameter is not in the desing model.\n")
+		    val _ = trace rep_core ("Path = " ^ s ^ "\n")
 		in
 		    raise TemplateError ("shit\n")
 		end
@@ -1605,7 +1616,7 @@ fun parent_of_template (cl as Class{parent,...}:Classifier) (model:transform_mod
 fun parents_of_help (C:Classifier) (model:transform_model) = 
     let
 	val this_type = type_of C
-	val _ = trace wgen ("type of C = " ^ (string_of_OclType this_type) ^ "\n")
+	val _ = trace rep_core ("type of C = " ^ (string_of_OclType this_type) ^ "\n")
     in
 	case this_type of
 	    OclAny => []
@@ -1666,9 +1677,9 @@ fun parents_of_help (C:Classifier) (model:transform_model) =
 	      end
 	    | some_type => 
 	      let 
-		  val _ = trace wgen ("parent_of_template \n")
+		  val _ = trace rep_core ("parent_of_template \n")
 		  val parent = parent_of_template C model
-		  val _ = trace wgen ("parent_of_template end, classifier = " ^ (String.concat (name_of parent)) ^ "\n")
+		  val _ = trace rep_core ("parent_of_template end, classifier = " ^ (String.concat (name_of parent)) ^ "\n")
 	      in
 		  [parent]@(parents_of_help parent model)
 	      end
@@ -1680,7 +1691,7 @@ fun parent_of (C:Classifier) model = parent_of_template C model
 
 fun parents_of (C:Classifier) model = 
     let
-	val _ = trace wgen ("parents_of ... \n")
+	val _ = trace rep_core ("parents_of ... \n")
     in
 	(if (parents_of_help C model = [])
 	then
@@ -1731,50 +1742,50 @@ fun incomingAendsOfAssociation name allAssociations associationPath =
 
 fun local_associationends_of (all_associations:association list) (Class{name,associations,...}):associationend list = 
     let 
-	val _ = trace wgen ("local_associationends_of 1 ... \n")
-	val _ = trace wgen ("classifier = " ^ (string_of_OclType name) ^ "\n")
+	val _ = trace rep_core ("local_associationends_of 1 ... \n")
+	val _ = trace rep_core ("classifier = " ^ (string_of_OclType name) ^ "\n")
 	val oppAends = List.concat (List.map (fn a => 
 						 let
-						     val _ = trace wgen ("Association path = ")
-						     val _ = trace wgen (string_of_path a ^ "\n")
+						     val _ = trace rep_core ("Association path = ")
+						     val _ = trace rep_core (string_of_path a ^ "\n")
 						 in
 						     (oppositeAendsOfAssociation name all_associations a)
 						 end
 					     ) associations)
-	val _ = trace wgen ("local_associationends_of 2 ... \n")
+	val _ = trace rep_core ("local_associationends_of 2 ... \n")
 	val selfAends = map (incomingAendsOfAssociation name all_associations) associations
-	val _ = trace wgen ("local_associationends_of 3 ... \n")
+	val _ = trace rep_core ("local_associationends_of 3 ... \n")
 	val filteredSelfAends = List.concat (List.filter (fn x => length x >= 2) selfAends)
-	val _ = trace wgen ("local_associationends_of 4 ... \n")
+	val _ = trace rep_core ("local_associationends_of 4 ... \n")
     in
         oppAends@filteredSelfAends
     end
   | local_associationends_of all_associations (AssociationClass{name,associations,association,...}) = 
     (* association only contains endpoints to the other, pure classes *)
     let
-	val _ = trace wgen ("local_associationends_of 1 AssoCl ... \n")
+	val _ = trace rep_core ("local_associationends_of 1 AssoCl ... \n")
 	val assocs = if List.exists (fn x => x = association ) associations 
                      then associations
 		     else association::associations
-	val _ = trace wgen ("local_associationends_of 2 AssoCl ... \n")
+	val _ = trace rep_core ("local_associationends_of 2 AssoCl ... \n")
 	val oppAends = List.concat (map (oppositeAendsOfAssociation name all_associations) assocs)
-	val _ = trace wgen ("local_associationends_of 3 AssoCl ... \n")
+	val _ = trace rep_core ("local_associationends_of 3 AssoCl ... \n")
 	val selfAends = map (incomingAendsOfAssociation name all_associations) associations
-	val _ = trace wgen ("local_associationends_of 4 AssoCl ... \n")
+	val _ = trace rep_core ("local_associationends_of 4 AssoCl ... \n")
 	val filteredSelfAends = List.concat (List.filter (fn x => length x >= 2) selfAends)
-	val _ = trace wgen ("local_associationends_of 5 AssoCl ... \n")
+	val _ = trace rep_core ("local_associationends_of 5 AssoCl ... \n")
     in
         oppAends@filteredSelfAends
     end
   | local_associationends_of all_associations (Primitive{name,associations,...}) = []
     (* let 
-	val _ = trace wgen ("local_associationends_of 1 Primi... \n")
+	val _ = trace rep_core ("local_associationends_of 1 Primi... \n")
 	val oppAends = List.concat (map (oppositeAendsOfAssociation name all_associations) associations)
-	val _ = trace wgen ("local_associationends_of 2 primi ... \n")
+	val _ = trace rep_core ("local_associationends_of 2 primi ... \n")
 	val selfAends = map (incomingAendsOfAssociation name all_associations) associations
-	val _ = trace wgen ("local_associationends_of 3 primi ... \n")
+	val _ = trace rep_core ("local_associationends_of 3 primi ... \n")
 	val filteredSelfAends = List.concat (List.filter (fn x => length x >= 2) selfAends)
-	val _ = trace wgen ("local_associationends_of 4 primi ... \n")
+	val _ = trace rep_core ("local_associationends_of 4 primi ... \n")
     in
         oppAends@filteredSelfAends
     end *)
@@ -1784,7 +1795,7 @@ fun associationends_of assocs classes = local_associationends_of assocs classes
 (* get all inherited operations of a classifier, without the local operations *)
 fun inherited_operations_of class (model as (clist,alist)) =
     let
-	val _ = trace wgen ("inh ops 0\n")
+	val _ = trace rep_core ("inh ops 0\n")
 	val c_parents = parents_of class model
 	val _ = trace 50 ("inh ops: parents = " ^ (String.concat (List.map (fn a => (string_of_path (name_of a))) c_parents)) ^ " \n")
 	val ops_of_par = (List.map (operations_of) c_parents)
@@ -1795,11 +1806,11 @@ fun inherited_operations_of class (model as (clist,alist)) =
 
 fun inherited_attributes_of class (model as (clist,alist)) = 
     let
-	val _ = trace wgen ("inh att 0\n")
+	val _ = trace rep_core ("inh att 0\n")
 	val c_parents = parents_of class model
-	val _ = trace wgen ("inh att 0\n")
+	val _ = trace rep_core ("inh att 0\n")
 	val atts_of_par = (List.map (attributes_of) c_parents)
-	val _ = trace wgen ("inh att 0\n")
+	val _ = trace rep_core ("inh att 0\n")
     in
 	if (List.length(atts_of_par) = 0)
 	then []
@@ -1808,12 +1819,12 @@ fun inherited_attributes_of class (model as (clist,alist)) =
 	
 fun inherited_associationends_of class (model as (clist,alist)) =
     let
-	val _ = trace wgen ("inh assoEnd 0\n")
+	val _ = trace rep_core ("inh assoEnd 0\n")
 	val c_parents = parents_of class model
-	val _ = trace wgen ("inh assoEnd 1: parents = " ^ (String.concat (List.map (fn a => string_of_path (name_of a)) (c_parents))) ^ "\n")
+	val _ = trace rep_core ("inh assoEnd 1: parents = " ^ (String.concat (List.map (fn a => string_of_path (name_of a)) (c_parents))) ^ "\n")
 	val assE_of_par = (List.map (associationends_of alist) c_parents)
-	val _ = trace wgen ("inh assoEnd 2\n")
-	val _ = trace wgen ("inh assoEnd 3:  assocEnds of parents: " ^ (String.concat (List.map (fn a => (name_of_aend a)) (List.concat assE_of_par))) ^ "\n")
+	val _ = trace rep_core ("inh assoEnd 2\n")
+	val _ = trace rep_core ("inh assoEnd 3:  assocEnds of parents: " ^ (String.concat (List.map (fn a => (name_of_aend a)) (List.concat assE_of_par))) ^ "\n")
     in
 	if (List.length(assE_of_par) = 0)
 	then []
@@ -1844,11 +1855,11 @@ fun all_attributes_of class model =
 fun all_associationends_of class (model as (clist,alist)) = 
     let
 	val la = local_associationends_of alist class
-	val _ = trace wgen ("all assocEnds of classifier : " ^ (String.concat (name_of class)) ^ "\n")
-	val _ = trace wgen ("name of loacal assends: " ^ (String.concat (List.map (fn a => (name_of_aend a)) la)) ^ "\n")
+	val _ = trace rep_core ("all assocEnds of classifier : " ^ (String.concat (name_of class)) ^ "\n")
+	val _ = trace rep_core ("name of loacal assends: " ^ (String.concat (List.map (fn a => (name_of_aend a)) la)) ^ "\n")
 	val ia = inherited_associationends_of class model
-	val _ = trace wgen ("name of inherited assends: " ^ (String.concat (List.map (fn a => (name_of_aend a)) ia)) ^ "\n")
-	val _ = trace wgen ("all assocEnds \n")
+	val _ = trace rep_core ("name of inherited assends: " ^ (String.concat (List.map (fn a => (name_of_aend a)) ia)) ^ "\n")
+	val _ = trace rep_core ("all assocEnds \n")
     in
 	embed_local_assocEnds la ia model
     end
@@ -2605,6 +2616,16 @@ fun package_of (Class{name,...}) =
 fun classes_of_package pkg (model as (clist,alist)) = 
     List.filter (fn a => package_of a = pkg) clist
        
+
+
+fun substitute_package [] tpackage [] = raise Rep_CoreError ("Not possible to substitute package since names belongs to package itself and not a class of it.\n")
+  | substitute_package [] tpackage path = tpackage@path
+  | substitute_package x tpackage [] = raise Rep_CoreError ("Not Possible to substitute Package since package longer than path.\n")
+  | substitute_package (hf::fpackage) (tpackage) (hp::path) = 
+    if (hf = hp) 
+    then substitute_package fpackage tpackage path
+    else (hp::path)
+
 fun parent_short_name_of C =  
     (case (parent_name_of C) of
        [] => error "in Rep.parent_short_name_of: empty type"
@@ -3253,12 +3274,12 @@ fun end_of_recursion classifier =
 
 fun get_overloaded_methods class op_name model = 
     let
-	val _ = trace wgen ("get_overloaded_methods, look for operation = " ^ op_name ^ "\n")
+	val _ = trace rep_core ("get_overloaded_methods, look for operation = " ^ op_name ^ "\n")
 	val parents = parents_of class model
 	val loc_ops = List.map (fn a => (class,a)) (local_operations_of class)
 	val cl_op_list = (loc_ops)@(List.concat (List.map (fn a => (List.map (fn b => (a,b)) (all_operations_of a model))) parents))
 	val cls_ops = List.filter (fn (a,b) => if (name_of_op b = op_name) then true else false) cl_op_list
-	val _ = trace wgen ("number of overloaded operations found = " ^ Int.toString(List.length(cls_ops)) ^ "\n")
+	val _ = trace rep_core ("number of overloaded operations found = " ^ Int.toString(List.length(cls_ops)) ^ "\n")
     in
 	cls_ops
     end
@@ -3303,18 +3324,18 @@ fun get_overloaded_methods class op_name ([],_) = raise NoModelReferenced ("in '
 
 fun get_overloaded_attrs_or_assocends class attr_name (model as (clist,alist)) = 
     let
-	val _ = trace wgen ("get_overloaded_attrs_or_assocends, look for attr_or_assoc = " ^ attr_name ^ "\n")
+	val _ = trace rep_core ("get_overloaded_attrs_or_assocends, look for attr_or_assoc = " ^ attr_name ^ "\n")
 	val parents = parents_of class model
         (* Attributes *)
 	val loc_atts = List.map (fn a => (class,a)) (local_attributes_of class)
 	val cl_att_list = (loc_atts)@(List.concat (List.map (fn a => (List.map (fn b => (a,b)) (all_attributes_of a model))) parents))
 	val cls_atts = 	List.filter (fn (a,b) => if (name_of_att b = attr_name) then true else false) cl_att_list
         (* Associations *)
-	val _ = trace wgen ("middle get_overloaded_attrs_or_assocends \n")
+	val _ = trace rep_core ("middle get_overloaded_attrs_or_assocends \n")
 	val loc_assE = List.map (fn a => (class,a)) (local_associationends_of alist class)   
 	val cl_assE_list = (loc_assE)@(List.concat (List.map (fn a => (List.map (fn b => (a,b)) (all_associationends_of a model))) parents))
 	val cls_assEs = List.filter (fn (a,b) => if (name_of_aend b = attr_name) then true else false) cl_assE_list
-	val _ = trace wgen ("end get_overloaded_attrs_or_assocends\n")
+	val _ = trace rep_core ("end get_overloaded_attrs_or_assocends\n")
     in
 	(** ATTENTION: undefined in standard if assocEnds and attributes are allowed for same naem **)
 	if (List.length(cls_atts) = 0) 
@@ -3507,36 +3528,59 @@ fun all_invariants_of class model =
     (local_invariants_of class)@(inherited_invariants_of class model)
 
 
-fun string_to_type ["Integer"] = Integer
-  | string_to_type ["Boolean"] = Boolean
-  | string_to_type ["Real"] = Real
-  | string_to_type ["OclAny"] = OclAny
-  | string_to_type ["DummyT"] = DummyT
-  | string_to_type ["String"] = String
-  | string_to_type ["OclVoid"] = OclVoid
-  | string_to_type (("oclLib")::tail) = string_to_type tail
-  | string_to_type [set] = 
-    if (List.exists (fn a => if (a = (#"(")) then true else false) (String.explode set)) then
-	(* set *)
-	let
-	    fun string_to_cons "Set" typ = Set(typ)
-	      | string_to_cons "Bag" typ = Bag(typ)
-	      | string_to_cons "Collection" typ = Collection (typ)
-	      | string_to_cons "OrderedSet" typ = OrderedSet (typ)
-	      | string_to_cons "Sequence" typ = Sequence (typ)	
-	    val tokens = parse_string (#"(") (String.explode set)
-	    val cons = (#1 tokens)
-	    (* delete first "(" and last ")" element *)
-	    val tail = List.tl (real_path (#2 tokens))
-	    val _ = TextIO.output(TextIO.stdOut,"tail "^ (String.implode tail) ^ "\n")
-
-	in
-	    string_to_cons (String.implode cons) (string_to_type ([String.implode tail]))
-	end
-    else
-	Classifier ([set])
-  | string_to_type list = Classifier (list)
-
+fun string_to_type "Integer" = Integer
+  | string_to_type "Boolean" = Boolean
+  | string_to_type "Real" = Real
+  | string_to_type "OclAny" = OclAny
+  | string_to_type "DummyT" = DummyT
+  | string_to_type "String" = String
+  | string_to_type "OclVoid" = OclVoid
+  | string_to_type complex_type =
+    let
+	fun string_to_cons "Set" typ = Set(typ)
+	  | string_to_cons "Bag" typ = Bag(typ)
+	  | string_to_cons "Collection" typ = Collection (typ)
+	  | string_to_cons "OrderedSet" typ = OrderedSet (typ)
+	  | string_to_cons "Sequence" typ = Sequence (typ)
+	
+	fun string_to_package string = 
+	    if (List.exists (fn a => if (a = (#".")) then true else false) (String.explode string)) 
+	    then 
+		let
+		    (* The Type has a package prefixed *)
+		    val tokens = parse_string (#".") (String.explode string)
+		    val package_part = String.implode (#1 tokens)
+		    (* delete the "." *)
+		    val tail = List.tl (#2 tokens)
+		in
+		    [package_part]@(string_to_package (String.implode (tail)))
+		end		
+	    else
+		[string]
+    in
+	if (List.exists (fn a => if (a = (#"(")) then true else false) (String.explode complex_type)) 
+	then
+	    (* The Type is a collection type. *)
+	    let
+		val tokens = parse_string (#"(") (String.explode complex_type)
+		val cons = (#1 tokens)
+		(* delete first "(" and last ")" element *)
+		val tail = List.tl (real_path (#2 tokens))
+		val _ = trace important ("tail "^ (String.implode tail) ^ "\n")
+	    in
+		string_to_cons (String.implode cons) (string_to_type (String.implode tail))
+	    end
+	else
+	    (
+	     if (List.exists (fn a => if (a = (#".")) then true else false) (String.explode complex_type))
+	     then
+		 (* The Type has a package prefixed. *) 
+		 Classifier (string_to_package complex_type)
+	     else
+		 (* The Type is just one Class, without Collection and without a package.*)
+		 Classifier ([complex_type])
+		)
+    end
 
 fun all_packages_of_model ([],alist) = []
   | all_packages_of_model (model as (h::clist,alist):transform_model) =
@@ -3545,4 +3589,3 @@ fun all_packages_of_model ([],alist) = []
 
 
 end
-
