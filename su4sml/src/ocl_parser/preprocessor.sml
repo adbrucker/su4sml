@@ -400,7 +400,7 @@ check_for_self arg_list typ (AttributeCall (Variable("dummy_source",_),_,path,_)
 
 
 
-
+(* 
 fun prefix_OperationWithType_CollectionPart prefix (CollectionItem(term,typ)) = 
     let
 	val new_term = prefix_OperationWithType prefix term
@@ -549,6 +549,7 @@ and prefix_OperationWithType prefix (Variable (str,typ)) = (Variable (str,typ))
     in
 	Iterate(iter_vars,res_string,res_type,new_res_term,new_term,new_type,new_body,new_body_type,res)
     end
+*)
 
 (* RETURN: Context *)
 fun preprocess_context (Cond (path,op_name,op_sign,result_type,cond,pre_name,expr)) model = 
@@ -565,18 +566,16 @@ fun preprocess_context (Cond (path,op_name,op_sign,result_type,cond,pre_name,exp
 	val eexpr = embed_method_arguments prefixed_op_sign vexpr
         (* embed '@pre'-expressions *)
 	val pexpr = embed_atPre_expressions eexpr
-	val ppexpr = prefix_OperationWithType path pexpr
     in
-	(Cond (path,op_name,prefixed_op_sign,prefixed_result_type,cond,pre_name,(check_for_self prefixed_op_sign (Classifier (path)) ppexpr model)))
+	(Cond (path,op_name,prefixed_op_sign,prefixed_result_type,cond,pre_name,(check_for_self prefixed_op_sign (Classifier (path)) pexpr model)))
     end
 | preprocess_context (Inv (path,string,term)) model =
     let
 	val _ = trace zero ("Preprocess context: Inv (...)" ^ "\n")
         (* embed '@pre'-expressions *)
 	val pexpr = embed_atPre_expressions term
-	val ppexpr = prefix_OperationWithType path pexpr
     in
-	(Inv (path,string,(check_for_self [] (Classifier (path)) ppexpr model)))
+	(Inv (path,string,(check_for_self [] (Classifier (path)) pexpr model)))
     end
 | preprocess_context (Attr (path,typ,aoa,expr)) model = 
     let

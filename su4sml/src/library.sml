@@ -63,19 +63,31 @@ fun dec_offset () = line_offset := (!line_offset)-2
 
 (* debugging-levels *)
 val zero = 0
-val exce = 0
+val exce = 6
 val high = 10
 val medium = 20
 val function_calls = 25
 val function_ends = 26
 val function_arguments = 27
+val important = 40
+val wgen = 50
+val type_checker = 60
+val rep_core = 80
 val low = 100
 val development = 200
-val wgen = 50
+
 
 fun trace lev s = 
-    case lev of 
-	25 => 
+    case lev of
+	6 => 
+	let
+	    val s1 = ("\n\n\n##################################################\n")
+	    val s2 =       ("##############  EXCEPTION MESSAGE ################\n")
+	    val s3 =       ("##################################################\n\n")
+	in
+	    if (lev  <= !log_level ) then print(s1^s2^s3^s) else ()
+	end
+      |	25 => 
 	let
 	    val _ = if (lev  <= !log_level ) then print((get_offset())^s) else ()
 	in

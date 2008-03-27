@@ -695,7 +695,7 @@ type_specifier:                           simple_type_specifier_cs              
 *)
 
 (* RETURN: OclType *)
-simple_type_specifier_cs :                simple_name                                                           (trace wgen ("simple_type_name_specifier_cs : " ^ simple_name ^ "\n");string_to_type [simple_name])                                                          
+simple_type_specifier_cs :                simple_name                                                           (trace wgen ("simple_type_name_specifier_cs : " ^ simple_name ^ "\n");string_to_type simple_name)                                                          
 
 
 (* RETURN: (string * OclType * OclTerm) list *)
