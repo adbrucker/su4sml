@@ -404,6 +404,12 @@ val correct_type_for_CollLiteral : Rep_OclType.OclType -> Rep_OclTerm.Collection
  *)
 val isColl_Type      : Rep_OclType.OclType -> bool
 
+(** 
+ * Type a value (basic) type?
+ *)
+val isValueType : Rep_OclType.OclType -> bool
+
+
 (*****************************************
  *             TERMS/EXPRESSIONS         *
  *****************************************)
@@ -1586,6 +1592,22 @@ fun isColl_Type (Set(x)) = true
   | isColl_Type (Bag(x)) = true
   | isColl_Type (Collection(x)) = true
   | isColl_Type _ = false
+
+
+fun isValueType Integer         = true
+  | isValueType String          = true
+  | isValueType Real            = true
+  | isValueType Boolean         = true
+  | isValueType (Set(t))        = false
+  | isValueType (OrderedSet(t)) = false
+  | isValueType (Bag(t))        = false
+  | isValueType (Sequence(t))   = false
+  | isValueType OclAny          = false
+  | isValueType (Classifier s)  = false
+  | isValueType DummyT          = false
+  | isValueType OclVoid         = false
+  | isValueType t               = error ("Error in isValueType(_,"^(string_of_OclType t)^")")
+
 
 
 
