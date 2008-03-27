@@ -30,10 +30,10 @@ val ocl="../../examples/ebank/ebank.ocl"
 
 (** ISP **)
 val zargo = "../../examples/isp/isp.zargo"
-val ocl="../../examples/isp/test.ocl"
+val ocl="../../examples/isp/isp.ocl"
 
 (** import model *)
-val i_model = import zargo "" []
+val i_model = import zargo ocl []
 val (clist,alist) = normalize_ext i_model
 val model = ((clist@oclLib),(alist))
 val classifiers = removeOclLibrary clist
