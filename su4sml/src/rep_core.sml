@@ -2223,7 +2223,7 @@ fun normalize (all_associations:association list)
                                             thyname,visibility, activity_graphs})) =
     (* FIXME: how to handle AssociationClass.association? *)
     let
-	val _ = trace function_calls ("Rep_Core normalize: associationclass\n")
+	val _ = trace function_calls ("Rep_Core.normalize  AssociationClass\n")
 	val _ = trace function_arguments 
                       ("number of associations: "^
                        (Int.toString (List.length associations ))^"\n")
@@ -2231,27 +2231,29 @@ fun normalize (all_associations:association list)
                                     
 	val aendPathPairs = (bidirectionalPairs name all_associations
                                                 associations)
+	val res = 
+	    AssociationClass {
+	    name   = name,
+	    parent = parent,
+	    attributes = append (map (convert_aend (List.last (path_of_OclType 
+								   name)))
+				     (associationends_of all_associations AC))
+				attributes,
+	    operations = operations,
+	    invariant = append (List.concat(
+				map (aend_to_inv (path_of_OclType name)) 
+				    aendPathPairs))
+			       (map aendToAttCall invariant),
+	    stereotypes = stereotypes,
+	    interfaces = interfaces,
+	    thyname = thyname,
+	    activity_graphs = activity_graphs,
+	    associations = [],
+	    visibility=visibility,
+	    association = [] (* FIXME? *)}
 	val _ = trace function_ends ("Rep_Core.normalize")
     in
-	AssociationClass {
-	name   = name,
-	parent = parent,
-	attributes = append (map (convert_aend (List.last (path_of_OclType 
-                                                               name)))
-				 (associationends_of all_associations AC))
-                            attributes,
-	operations = operations,
-	invariant = append (List.concat(
-                            map (aend_to_inv (path_of_OclType name)) 
-				aendPathPairs))
-			   (map aendToAttCall invariant),
-	stereotypes = stereotypes,
-	interfaces = interfaces,
-	thyname = thyname,
-	activity_graphs = activity_graphs,
-	associations = [],
-	visibility=visibility,
-	association = [] (* FIXME? *)}
+	res
     end
   | normalize all_associations (Primitive p) =
     (* Primitive's do not have attributes, so we have to convert *)
@@ -3339,7 +3341,7 @@ fun get_overloaded_methods class op_name ([],_) = raise NoModelReferenced ("in '
 
 fun get_overloaded_attrs_or_assocends class attr_name (model as (clist,alist)) = 
     let
-	val _ = trace rep_core ("get_overloaded_attrs_or_assocends, look for attr_or_assoc = " ^ attr_name ^ "\n")
+	val _ = trace function_calls ("Rep_Core.get_overloaded_attrs_or_assocends, look for attr_or_assoc = " ^ attr_name ^ "\n")
 	val parents = parents_of class model
         (* Attributes *)
 	val loc_atts = List.map (fn a => (class,a)) (local_attributes_of class)
@@ -3377,76 +3379,6 @@ fun get_overloaded_attrs_or_assocends class attr_name (model as (clist,alist)) =
     in
 	res
     end
-    
-(* RETURN: (Classifier * attribute option * association option) list *)
-(*
-fun get_overloaded_attrs_or_assocends class attr_name ([],_) = raise NoModelReferenced ("in 'get_overloaded_attrs' ... \n")
-  | get_overloaded_attrs_or_assocends class attr_name (model as (classifiers,associations)) =
-   let
-       val _ = trace function_calls ("\nget_overloaded_attrs_or_assocends\n")
-       val _ = trace function_arguments ("class: "^(string_of_path (name_of class))^"\n")
-       val _ = trace function_arguments ("attr_name: "^attr_name^"\n")
-       val _ = trace function_arguments ("class's associations:\n")
-       val _ = map (trace function_arguments o 
-		    (fn name => string_of_path name ^ "\n")) (associations_of class)
-       val _ = trace function_arguments ("class's attributes:\n")
-       val _ = map (trace function_arguments o 
-		    (fn {name,...} => name ^ "\n")) (attributes_of class)
-       val _ = trace function_arguments ("class's operations:\n")
-       val _ = map (trace function_arguments o 
-		    (fn {name,...} => name ^ "\n")) (local_operations_of class)
-       val _ = trace function_arguments ("associations:\n")
-       val _ = map (trace function_arguments o 
-		    (fn {name,...} => string_of_path name ^"\n")) associations
-       val attrs = attributes_of class
-       val _ = print "attrs hallo: \n"
-       val _ = map (print o (fn {name,...} => name^"\n")) attrs
-       val assocends = associationends_of associations class
-       val _ = trace low ("assocends:\n")
-       val _ = trace low ("sizes: "^(Int.toString (List.length attrs))^", "^
-			  (Int.toString( List.length assocends))^"\n")
-       val _ = trace low ("Look for attributes/assocends : Class: " ^ string_of_OclType (type_of class) ^ " \n")
-       val attrs2 = List.filter (fn a => (if ((#name a) = attr_name) then true else false)) attrs
-       val assocends2 = List.filter (fn {name,...} => (List.last name)=attr_name) assocends
-       val _ = trace low ("Name of attr/assocend         : " ^ attr_name  ^ "   Found " ^ Int.toString (List.length attrs2) ^
-			  " attribute(s), " ^ Int.toString (List.length assocends2) ^  " assocend(s) \n")
-       val parent = parent_of class model
-       val _ = trace low ("Parent class                  : " ^ string_of_OclType(type_of parent) ^ "\n\n")
-       val _ = trace low ("Size of attrs2: "^(Int.toString (List.length attrs2))^"\n")
-       val _ = trace low ("Size of assocends2: "^(Int.toString (List.length assocends2))^"\n")	       
-       val cl_at = List.map (fn a => (class,SOME(a),NONE)) attrs2
-       val cl_as = List.map (fn a => (class,NONE,SOME(a))) assocends2
-       val _ = trace low ("search done\n")
-   in
-       if (class = class_of_type OclAny model) then
-	   (* end of hierarchie *)
-	   if (List.length attrs2 = 0) 
-	   then if (List.length assocends2 = 0) 
-		then []
-		else
-		    [(class,NONE,SOME(List.hd(assocends2)))]
-	   else [(class,SOME(List.hd(attrs2)),NONE)]
-       else
-	   (
-	    if (end_of_recursion class)
-	    then (* end of collection hierarchie *)
-		if (List.length attrs2 = 0)
-		then if (List.length assocends2 = 0)
-		     then []
-		     else [(class,NONE,SOME(List.hd(assocends2)))]
-		else [(class,SOME(List.hd(attrs2)),NONE)]
-	    else (* go up the hierarchie tree *)
-		(
-		 if (List.length attrs2 = 0)
-		 then if (List.length assocends2 = 0)
-		      then (get_overloaded_attrs_or_assocends parent attr_name model)
-		      else (cl_as)@(get_overloaded_attrs_or_assocends parent attr_name model)
-		 else
-		     (cl_at)@(get_overloaded_attrs_or_assocends parent attr_name model)
-		)
-	   )
-   end
-*)
 	
 fun get_meth source op_name args (model as (classifiers,associations))=
     (* object type *)
@@ -3462,18 +3394,18 @@ fun get_meth source op_name args (model as (classifiers,associations))=
 
 fun get_attr_or_assoc source attr_name (model as (classifiers,associations)) =
     let 
-	val _ = trace function_calls ("Rep_Core: get_attr_or_assoc\n")
-	val _ = trace low ("GET ATTRIBUTES OR ASSOCENDS: source term.\n")
+	val _ = trace function_calls ("Rep_Core.get_attr_or_assoc\n")
+	val _ = trace rep_core ("GET ATTRIBUTES OR ASSOCENDS: source term.\n")
 	val class = class_of_term source model
 	val attr_or_assocend_list = get_overloaded_attrs_or_assocends class attr_name model
 	val res = 
 	    let 
 		val x = upcast_att_aend attr_or_assocend_list source model
-		val _ = trace low ("\nReturn type of attribute: " ^ string_of_OclType (type_of_term x) ^ "\n\n")
+		val _ = trace rep_core ("Return type of attribute: " ^ string_of_OclType (type_of_term x) ^ "\n\n")
 	    in
 		x
 	    end
-	val _ = trace function_ends ("Rep_Core: end get_attr_or_assoc :overloaded attributes/associationends found: " ^ Int.toString (List.length attr_or_assocend_list) ^ "\n")
+	val _ = trace function_ends ("Rep_Core.end get_attr_or_assoc\n")
     in
 	res
     end

@@ -125,7 +125,7 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
     then (* OperationCall *)
 	let
 	    (* check 'fromSet' *)
-	    val _ = trace low ("==> FromSet-desugarator: operation ... \n")
+	    val _ = trace type_checker ("==> FromSet-desugarator: operation ... \n")
 	    val new_type = type_of_template_parameter (type_of_term rterm)
 	    val iterVar = (("anonIterVar_" ^ (varcounter.nextStr())),new_type)
 	    val class = class_of_term (Variable (iterVar)) model
@@ -144,7 +144,7 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
     else (* AttributeCall *)
 	let
 	    (* check 'fromSet' *)
-	    val _ = trace low ("==> FromSet-desugarator: attribute/assocend ... \n")
+	    val _ = trace type_checker ("==> FromSet-desugarator: attribute/assocend ... \n")
 	    val new_type = type_of_template_parameter (type_of_term rterm)
 	    val iterVar = (("anonIterVar_" ^ (varcounter.nextStr())),new_type)
 	    val class = class_of_term (Variable (iterVar)) model
@@ -194,9 +194,9 @@ fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
 	val res = if (attr_or_meth = 0) 
 		  then (* OperationCall *)
 		      let
-			  val _ = trace low ("==> AsSet-desugarator: operation ... \n")
+			  val _ = trace type_checker ("==> AsSet-desugarator: operation ... \n")
 			  val rtyp = Set(type_of_term rterm)
-			  val _ = trace low ("Type of source term " ^ string_of_OclType rtyp ^ " ---> try Set(" ^ string_of_OclType rtyp ^ ")\n")
+			  val _ = trace type_checker ("Type of source term " ^ string_of_OclType rtyp ^ " ---> try Set(" ^ string_of_OclType rtyp ^ ")\n")
 			  val class = class_of_term (Variable ("anonIterVar_" ^ (varcounter.nextStr()),rtyp)) model
 			  val ops = get_overloaded_methods class (List.last path) model
 			  val new_rterm = CollectionLiteral([CollectionItem(rterm,type_of_term rterm)],rtyp)
@@ -209,14 +209,14 @@ fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
 		      end
 		  else (* AttributeCall *)
 		      let
-			  val _ = trace low ("==> AsSet-desugarator: attribute/assocend\n")
+			  val _ = trace type_checker ("==> AsSet-desugarator: attribute/assocend\n")
 			  val rtyp = Set(type_of_term rterm)
-			  val _ = trace low (string_of_OclType rtyp ^ "\n")
+			  val _ = trace type_checker (string_of_OclType rtyp ^ "\n")
 			  val class = class_of_term (Variable ("anonIterVar_" ^ (varcounter.nextStr()),Set(rtyp))) model
 			  val attrs = get_overloaded_attrs_or_assocends class (List.last path) model
 			  (* source term is a dummy-Term *) 
 			  val new_rterm = CollectionLiteral([CollectionItem(rterm,type_of_term rterm)],rtyp)
-			  val _ = trace low ("'AsSetError' ... \n")
+			  val _ = trace type_checker ("'AsSetError' ... \n")
 		      in
 			  if (List.length attrs = 0) 
 			  then 
@@ -350,18 +350,18 @@ and resolve_OclTerm (Literal (s,typ)) model =
 			 (
 			  (
 			   let
-			       val _ = trace low ("==> 2-dim Inheritance check: ma attribute/assocend\n")
+			       val _ = trace type_checker ("==> 2-dim Inheritance check: ma attribute/assocend\n")
 			       val rtyp = type_of_term rterm
-			       val _ = trace low (string_of_OclType rtyp ^ "manu \n")
+			       val _ = trace type_checker (string_of_OclType rtyp ^ "manu \n")
 			       val templ_type = type_of_template_parameter rtyp
 			       val pclass = class_of_term (Variable ("x",templ_type)) model
-			       val _ = trace low ("manu 2")
+			       val _ = trace type_checker ("manu 2")
 			       val ntempl_type = type_of_parent pclass 
-			       val _ = trace low ("manu 3")
+			       val _ = trace type_checker ("manu 3")
 			       val new_type = substitute_templ_para rtyp ntempl_type
 			       val new_class = class_of_term (Variable ("x",new_type)) model
 			       val attrs = get_overloaded_attrs_or_assocends new_class (List.last attr_path) model
-			       val _ = trace low ("parent type of term:" ^ string_of_OclType new_type ^ "\n")
+			       val _ = trace type_checker ("parent type of term:" ^ string_of_OclType new_type ^ "\n")
 			   in
 			       if (List.length attrs = 0) 
 			       then raise TC_DesugaratorCall (rterm,attr_path,1,[],model) 
@@ -419,7 +419,7 @@ let
       val _ = trace type_checker ("Path of the given type: " ^ string_of_path (path) ^ "\n")
       val typ  = type_of_path path model
 		handle GetClassifierError s => raise TC_OperationWithTypeError ("Wrong or ommited package in a OperationWithType call. Please ajust the the package of the type.\n" ^ "OclTerm is: " ^ ocl2string true opcall ^ "\n")
-      val _ = trace low ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
+      val _ = trace type_checker ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
       val res = OperationWithType (rterm,rtyp,"oclIsKindOf",typ,Boolean)
       val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
   in
@@ -442,7 +442,7 @@ let
       val _ = trace type_checker ("Path of the given type: " ^ string_of_path (path) ^ "\n")
       val typ  = type_of_path path model
 		handle GetClassifierError s => raise TC_OperationWithTypeError ("Wrong or ommited package in a OperationWithType call. Please ajust the the package of the type.\n" ^ "OclTerm is: " ^ ocl2string true opcall ^ "\n")
-      val _ = trace low ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
+      val _ = trace type_checker ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
       val res = OperationWithType (rterm,rtyp,"oclAsType",typ,typ)
       val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
   in
@@ -455,7 +455,7 @@ let
       (* resolve source term *)
       val rterm = resolve_OclTerm term model
       val rtyp = type_of_term rterm
-      val _ = trace low  ("res OpCall: Type of source : " ^ string_of_OclType rtyp ^ "\n")
+      val _ = trace type_checker  ("res OpCall: Type of source : " ^ string_of_OclType rtyp ^ "\n")
       val res = OperationCall (rterm,rtyp,[OclLibPackage,"OclAny","atPre"],[],rtyp)
       val _ = trace function_ends ("TypeChecker.resovle_OclTerm\n")
   in
@@ -466,10 +466,10 @@ let
       val _ = trace function_calls ("TypeChecker.resolve_OclTerm, OperatioCall: name = " ^ (List.last (meth_path)) ^ ", " ^ ocl2string true term ^ "\n")
       (* resolve source term *)
       val rterm = resolve_OclTerm term model
-      val _ = trace low  ("res OpCall: Type of source : " ^ string_of_OclType (type_of_term rterm) ^ "\n")
+      val _ = trace type_checker  ("res OpCall: Type of source : " ^ string_of_OclType (type_of_term rterm) ^ "\n")
       (* resolve arguments *)
       val rargs = resolve_arguments args model
-      val _ = trace low  ("res OpCall: args resolved ...\n")
+      val _ = trace type_checker  ("res OpCall: args resolved ...\n")
       val res = 
 	  let
 	  in
@@ -483,17 +483,17 @@ let
 			 (     
 			  (
 			   let
-			       val _ = trace low ("==> 2-dim Inheritance check: attribute/assocend\n")
+			       val _ = trace type_checker ("==> 2-dim Inheritance check: attribute/assocend\n")
 			       val rtyp = type_of_term rterm
-			       val _ = trace low (string_of_OclType rtyp ^ "\n")
+			       val _ = trace type_checker (string_of_OclType rtyp ^ "\n")
 			       val templ_type = type_of_template_parameter rtyp
 			       val pclass = class_of_term (Variable ("x",templ_type)) model
 			       val ntempl_type = type_of_parent pclass 
-			       val _ = trace low (string_of_OclType ntempl_type ^ "\n")
+			       val _ = trace type_checker (string_of_OclType ntempl_type ^ "\n")
 			       val new_type = substitute_templ_para rtyp ntempl_type
 			       val new_class = class_of_term (Variable ("x",new_type)) model
 			       val ops = get_overloaded_methods new_class (List.last meth_path) model
-			       val _ = trace low ("parent type of term: " ^ string_of_OclType new_type ^ "\n")
+			       val _ = trace type_checker ("parent type of term: " ^ string_of_OclType new_type ^ "\n")
 			   in
 			       if (List.length ops = 0) 
 			       then raise TC_DesugaratorCall (rterm, meth_path, 0, rargs, model) 
@@ -516,34 +516,34 @@ let
       val _ = trace function_calls ("TypeChecker.resolve_OclTerm,  Itertor: name = " ^ name ^ "\n")
       val rterm = resolve_OclTerm source_term model
       val rtyp = type_of_term rterm
-      val _ = trace low ("res Iter (" ^ name ^ "): source type " ^ string_of_OclType (type_of_term  rterm) ^ "\n\n")
+      val _ = trace type_checker ("res Iter (" ^ name ^ "): source type " ^ string_of_OclType (type_of_term  rterm) ^ "\n\n")
       (* get source classifier *)
       val source_class = class_of_term rterm model
-      val _ = trace low ("res Iter (" ^ name ^ "): type of classifier: " ^ string_of_OclType (type_of source_class) ^ "\n")
+      val _ = trace type_checker ("res Iter (" ^ name ^ "): type of classifier: " ^ string_of_OclType (type_of source_class) ^ "\n")
       (* prefix types *)
       val prfx = (package_of_template_parameter (type_of source_class))
-      val _ = trace low ("res Iter (" ^ name ^ "): Type prefixed ... \n")
+      val _ = trace type_checker ("res Iter (" ^ name ^ "): Type prefixed ... \n")
       val piter_vars = List.map (fn (a,b) => (a,prefix_type prfx b)) iter_vars
       val piter_types = List.map (fn (a,b) => b) piter_vars 
-      val _ = trace low ("res Iter (" ^ name ^ "): first iter types: " ^ string_of_OclType (List.hd piter_types) ^ "\n") 
+      val _ = trace type_checker ("res Iter (" ^ name ^ "): first iter types: " ^ string_of_OclType (List.hd piter_types) ^ "\n") 
       (* check if iterator types correspond to source type *)
       val static_iter_type = type_of_template_parameter (type_of (source_class))
-      val _ = trace low ("Length of iter_types: " ^ Int.toString (List.length piter_types) ^ "\n")
-      val _ = trace low ("parent of classifier: " ^ string_of_OclType (type_of_parent source_class) ^ "\n")
-      val _ = trace low ("\nstatic iter type : " ^ string_of_OclType static_iter_type ^ "  \n")
-      val _ = trace low ("iter types: " ^ string_of_OclType (List.hd piter_types) ^ "\n")
+      val _ = trace type_checker ("Length of iter_types: " ^ Int.toString (List.length piter_types) ^ "\n")
+      val _ = trace type_checker ("parent of classifier: " ^ string_of_OclType (type_of_parent source_class) ^ "\n")
+      val _ = trace type_checker ("static iter type : " ^ string_of_OclType static_iter_type ^ "  \n")
+      val _ = trace type_checker ("iter types: " ^ string_of_OclType (List.hd piter_types) ^ "\n")
       val h2 = List.map (fn a => conforms_to a static_iter_type model) (piter_types)
       val check = List.all (fn a => a=true) h2
       val res = 
 	  if (check) then
 	      let
-		  val _ = trace low  ("res Iter: types conforms \n")
+		  val _ = trace type_checker  ("res Iter: types conforms \n")
 		  val bound_expr = embed_bound_variables piter_vars expr
-		  val _ = trace low ("res Iter: term : " ^ Ocl2String.ocl2string false bound_expr ^ "\n")
+		  val _ = trace type_checker ("res Iter: term : " ^ Ocl2String.ocl2string false bound_expr ^ "\n")
 		  val rexpr = resolve_OclTerm bound_expr model
-		  val _ = trace low (" manuel " ^ string_of_OclType (type_of_term rexpr) ^ "\n")
-		  val _ = trace low (" ma     " ^ string_of_OclType (Set(static_iter_type)) ^ "\n")
-		  val _ = trace low  ("res Iter: Iterator name = " ^ name ^ " \n\n\n")
+		  val _ = trace type_checker (" manuel " ^ string_of_OclType (type_of_term rexpr) ^ "\n")
+		  val _ = trace type_checker (" ma     " ^ string_of_OclType (Set(static_iter_type)) ^ "\n")
+		  val _ = trace type_checker  ("res Iter: Iterator name = " ^ name ^ " \n\n\n")
 	      in
 		  (
 		   case name of
@@ -691,8 +691,8 @@ let
     val oper = get_operation op_name classifier model
     val check1 = (op_sign = (#arguments oper))
     val check2 = (result_type = (#result oper))
-    val _ = trace low ("check1 = " ^ Bool.toString check1 ^ ", check2 = " ^ Bool.toString check2 ^ "\n")
-    val _ = List.map (fn (a,b) => (trace low (a ^ ":" ^ (string_of_OclType b) ^ "   "))) op_sign
+    val _ = trace type_checker ("check1 = " ^ Bool.toString check1 ^ ", check2 = " ^ Bool.toString check2 ^ "\n")
+    val _ = List.map (fn (a,b) => (trace type_checker (a ^ ":" ^ (string_of_OclType b) ^ "   "))) op_sign
 in
     if check1  andalso check2 
     then
@@ -706,16 +706,16 @@ end
       val _ = trace function_calls ("TypeChecker.check_context STARTS TYPECHECKING ...\n")
       val _ = trace type_checker ("init/derive           : " ^ Ocl2String.ocl2string false expr ^ "\n")
       val classifier = class_of_type (Classifier (real_path path)) model
-      val _ = trace low ( "classifier found ... " ^ "\n")
+      val _ = trace type_checker ( "classifier found ... " ^ "\n")
       val attr_list = attributes_of classifier
-      val _ = trace low ( "attr_list found ... " ^ "\n")
+      val _ = trace type_checker ( "attr_list found ... " ^ "\n")
       val attr = valOf (get_attribute (List.last path) attr_list)
-      val _ = trace low ( "attribute found ... " ^ "\n")
+      val _ = trace type_checker ( "attribute found ... " ^ "\n")
       val res = 
 	  if (typ = #attr_type attr)
 	  then
 	      let
-		  val _ = trace low (" ... " ^ "\n")
+		  val _ = trace type_checker (" ... " ^ "\n")
 	      in
 		  (SOME ((Attr (path,(#attr_type attr),attrorassoc,resolve_OclTerm expr model))))
 	      end
