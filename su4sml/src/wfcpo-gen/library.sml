@@ -75,8 +75,6 @@ sig
     val go_up_hierarchy           : Rep_Core.Classifier -> (Rep_Core.Classifier -> bool) ->  Rep.Model -> Rep_Core.Classifier
     (** get the relative path according to the package *)
     val rel_path_of               : Rep_OclType.Path -> Rep_OclType.Path -> Rep_OclType.Path
-    (** Substitute a package name of a path. *)
-    val substitute_package        : Rep_OclType.Path -> Rep_OclType.Path -> Rep_OclType.Path -> Rep_OclType.Path
     (** Substitute (string,Type) args as (Variable(s,Type),Type) args.*)
     val args2varargs              : (string * Rep_OclType.OclType) list -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list
     (** Add self as argument *)
@@ -227,15 +225,6 @@ fun rel_path_of [] name = name
   | rel_path_of [x] name = if (x = List.hd (name)) then (List.tl (name)) else raise WFCPOG_LibraryError ("rel_path_of only possible for name with same package/prefix")
   | rel_path_of pkg name =
     if (List.hd(pkg) = List.hd(name)) then (rel_path_of (List.tl pkg) (List.tl name)) else raise WFCPOG_LibraryError ("rel_path_of only possible for name with same package/prefix")
-
-
-fun substitute_package [] tpackage [] = raise WFCPOG_LibraryError ("Not possible to substitute package since names belongs to package itself and not a class of it.\n")
-  | substitute_package [] tpackage path = tpackage@path
-  | substitute_package x tpackage [] = raise WFCPOG_LibraryError ("Not Possible to substitute Package since package longer than path.\n")
-  | substitute_package (hf::fpackage) (tpackage) (hp::path) = 
-    if (hf = hp) 
-    then substitute_package fpackage tpackage path
-    else (hp::path)
 
 fun args2varargs [] = []
   | args2varargs ((a,b)::tail) = (Variable(a,b),b)::(args2varargs tail)
