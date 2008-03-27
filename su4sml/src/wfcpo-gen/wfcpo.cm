@@ -52,6 +52,7 @@ Group is
   $smlnj/ml-yacc/ml-yacc-lib.cm
 #endif
 	
+"holocl_namespace.sml"
 "datatab.sml"
 "naming.sml"
 "library.sml"

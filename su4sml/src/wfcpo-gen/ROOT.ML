@@ -39,6 +39,7 @@
  ******************************************************************************)
 (* $Id$ *)
 	 
+use "holocl_namespace.sml";
 use "datatab.sml";
 use "naming.sml";
 use "library.sml";
