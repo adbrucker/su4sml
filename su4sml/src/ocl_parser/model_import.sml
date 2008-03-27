@@ -264,8 +264,11 @@ fun removeOclLibrary model =
 fun import xmifile oclfile excludePackages = 
     let
         val xmi = parseUML xmifile
+	val _ = init_offset()
 	val ocl = parseOCL oclfile
+	val _ = init_offset()
 	val ((xmi_cls,xmi_assocs),ocl) = removePackages (xmi,ocl) excludePackages
+	val _ = init_offset()
 
 
 	val model = case ocl of 

@@ -72,6 +72,7 @@ val function_arguments = 27
 val important = 40
 val wgen = 50
 val type_checker = 60
+val preprocessor = 61
 val rep_core = 80
 val low = 100
 val development = 200

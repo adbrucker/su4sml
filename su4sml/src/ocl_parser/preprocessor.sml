@@ -199,7 +199,7 @@ and embed_atPre_expressions (Variable (str,typ)) = (Variable (str,typ))
 (* RETURN: OclTerm *)
 fun embed_bound_variable (str,typ) (Variable(s,t)) = 
     let
-	val _ = trace zero ("1 Bound variable '" ^ s ^ "' in 'AttributeCall': " ^ Ocl2String.ocl2string false (Variable(s,t)) ^ "\n")
+	val _ = trace preprocessor ("1 Bound variable '" ^ s ^ "' in 'AttributeCall': " ^ Ocl2String.ocl2string false (Variable(s,t)) ^ "\n")
     in
 	if (str = s ) then
 	    Variable(s,typ)
@@ -208,7 +208,7 @@ fun embed_bound_variable (str,typ) (Variable(s,t)) =
     end
 | embed_bound_variable (s,typ) (AttributeCall (sterm,styp,path,rtyp)) =
   let
-	val _ = trace zero ("2 Bound variable '" ^ s ^ "' in 'AttributeCall': " ^ Ocl2String.ocl2string false (AttributeCall (sterm,styp,path,rtyp)) ^ "\n")
+	val _ = trace preprocessor ("2 Bound variable '" ^ s ^ "' in 'AttributeCall': " ^ Ocl2String.ocl2string false (AttributeCall (sterm,styp,path,rtyp)) ^ "\n")
   in
       if (List.last path = s) then
 	  (* embed variable *)
@@ -218,13 +218,13 @@ fun embed_bound_variable (str,typ) (Variable(s,t)) =
   end
 | embed_bound_variable (s,typ) (OperationCall (sterm,styp,path,args,rtyp)) =
   let
-      	val _ = trace zero ("Bound variable '" ^ s ^ "' in 'OperationCall': " ^ Ocl2String.ocl2string false (OperationCall (sterm,styp,path,args,rtyp)) ^ "\n")
+      	val _ = trace preprocessor ("Bound variable '" ^ s ^ "' in 'OperationCall': " ^ Ocl2String.ocl2string false (OperationCall (sterm,styp,path,args,rtyp)) ^ "\n")
   in
       (OperationCall (embed_bound_variable (s,typ) sterm,styp,path,embed_bound_args (s,typ) args ,rtyp))
   end
 | embed_bound_variable (s,typ) (Iterator (name,iter_list,sterm,styp,expr,expr_typ,rtyp)) =
   let
-      	val _ = trace zero ("Bound variable '" ^ s ^ "' in 'Iterator': " ^ Ocl2String.ocl2string false (Iterator (name,iter_list,sterm,styp,expr,expr_typ,rtyp)) ^ "\n")
+      	val _ = trace preprocessor ("Bound variable '" ^ s ^ "' in 'Iterator': " ^ Ocl2String.ocl2string false (Iterator (name,iter_list,sterm,styp,expr,expr_typ,rtyp)) ^ "\n")
   in
       (Iterator (name,iter_list,embed_bound_variable (s,typ) sterm,styp,embed_bound_variables iter_list (embed_bound_variable (s,typ) expr),expr_typ,rtyp))
   end
@@ -236,14 +236,14 @@ fun embed_bound_variable (str,typ) (Variable(s,t)) =
   end
 | embed_bound_variable (s,typ) (Let (var_name,var_type,rhs,rhs_type,in_e,in_type)) =
   let
-      val _ = trace zero ("Bound variable '" ^ s ^ "' in 'Let': " ^ Ocl2String.ocl2string false (Let (var_name,var_type,rhs,rhs_type,in_e,in_type)) ^ "\n")
+      val _ = trace preprocessor ("Bound variable '" ^ s ^ "' in 'Let': " ^ Ocl2String.ocl2string false (Let (var_name,var_type,rhs,rhs_type,in_e,in_type)) ^ "\n")
       val embed_in_e = embed_bound_variable (var_name,var_type) in_e
   in
       (Let (var_name,var_type,embed_bound_variable (s,typ) rhs,rhs_type,embed_bound_variable (s,typ) embed_in_e,in_type))
   end
 | embed_bound_variable (s,typ) (If (cond,cond_type,then_e,then_type,else_e,else_type,res_type)) =
   let 
-      val _ = trace zero ("Bound variable '" ^ s ^ "' in 'If'  ..." ^ "\n")
+      val _ = trace preprocessor ("Bound variable '" ^ s ^ "' in 'If'  ..." ^ "\n")
   in
       (If (embed_bound_variable (s,typ) cond,cond_type,embed_bound_variable (s,typ) then_e,then_type,embed_bound_variable (s,typ) else_e,else_type,res_type))
   end
@@ -293,15 +293,16 @@ and generate_variables (Literal (paras)) path meth_name model = Literal (paras)
     (If (generate_variables cond path meth_name model,cond_type,generate_variables then_e path meth_name model,then_type,generate_variables else_e path meth_name model,else_type,res_type))
   | generate_variables (AttributeCall (_,_,["result"],_)) path meth_name model =
     let
-	val _ = trace low ("generate_variable: AttributeCall\n")
+	val _ = trace function_calls ("Preprocessor.generate_variables: AttributeCall\n")
 	val _ = List.app (print o (fn x => x^"\n") o string_of_path o name_of ) model
 	(* val classifier = obsolete_obsolete_class_of path model *)
 	val classifier = class_of path (model,[])
 	val _ = trace low "classifier found\n"
 	val meth = get_operation meth_name classifier (model,[])
-	val _ = trace zero ("a result call resolved ..." ^ "\n")
+	val res = (Variable ("result",(#result (meth))))
+	val _ = trace function_ends ("Preprocessor.generate_variables\n")
     in
-	(Variable ("result",(#result (meth))))
+	res
     end
   | generate_variables (AttributeCall (sterm,styp,p,res_typ)) path meth_name model =
     (AttributeCall (generate_variables sterm path meth_name model,styp,p,res_typ))
@@ -327,32 +328,44 @@ fun fetch (x,((y1,y2)::tail)) =
 
 (* RETURN: OclTerm list *)
 fun check_for_self_paras arg_list typ [] model = []
-| check_for_self_paras arg_list typ ((term,t)::tail) model = ((check_for_self arg_list typ term model),t)::(check_for_self_paras arg_list typ tail model)
-and
+| check_for_self_paras arg_list typ ((term,t)::tail) model = 
+  let
+      val _ = trace function_calls ("Preprocessor.check_for_self_paras\n")
+      val res = ((check_for_self arg_list typ term model),t)::(check_for_self_paras arg_list typ tail model)
+      val _ = trace function_ends ("Preprocessor.check_for_self_paras\n")
+  in
+      res
+  end
 
 (* RETURN: OclTerm *)
-check_for_self arg_list typ (AttributeCall (Variable("dummy_source",_),_,path,_))  model=
+and check_for_self arg_list typ (AttributeCall (Variable("dummy_source",_),_,path,_))  model=
     let
+	val _ = trace function_calls ("Preprocessor.check_for_self: dummy_source AttributeCall\n")
 	val test = (member (List.last path) (List.map (#1) arg_list))
-        val _ = trace zero ("member? "^ Bool.toString (test) ^ "\n")
+        val _ = trace preprocessor ("member? "^ Bool.toString (test) ^ "\n")
+	val res = 
+	    if (List.last path = "self") then
+		(* 'self' is writen in the ocl file *)
+		(Variable ("self",typ))
+	    else
+		(AttributeCall (Variable ("self",typ),DummyT,path,DummyT))
+	val _ = trace function_ends ("Preprocessor.check_for_self\n")
     in
-	if (List.last path = "self") then
-	    (* 'self' is writen in the ocl file *)
-	    (Variable ("self",typ))
-	else
-	    (AttributeCall (Variable ("self",typ),DummyT,path,DummyT))
+	res
     end
 | check_for_self arg_list typ (AttributeCall (source_term,source_typ,path,ret_typ)) model = 
   let
-      val _ = trace zero ("check_for_self: complex AttributeCall "^ "\n")
+      val _ = trace function_calls ("Preprocessor.check_for_self: complex AttributeCall\n")
+      val res = (AttributeCall (check_for_self arg_list typ source_term model,source_typ,path,ret_typ))
+      val _ = trace function_ends ("Preprocessor.check_for_self\n")
   in
-      (AttributeCall (check_for_self arg_list typ source_term model,source_typ,path,ret_typ))
+      res
   end
 (* OperationCall *)
 | check_for_self arg_list typ (OperationCall (Variable ("dummy_source",_),source_type,path,paras,ret_typ)) model = 
   let
       val test = (member (List.last path) (List.map (#1) arg_list))
-      val _ = trace zero ("member2? "^ Bool.toString (test) ^ "\n")
+      val _ = trace preprocessor ("member2? "^ Bool.toString (test) ^ "\n")
   in
       if (member (List.last path) (List.map (#1) arg_list)) 
       then
@@ -364,36 +377,48 @@ check_for_self arg_list typ (AttributeCall (Variable("dummy_source",_),_,path,_)
   end
 | check_for_self arg_list typ (OperationCall (source_term,source_typ,path,paras,ret_typ))  model = 
   let
-      val _ = trace zero ("check_for_self: complex OperationCall "^ "\n")
+      val _ = trace function_calls ("Preprocessor.check_for_self complex OperationCall\n")
+      val res = (OperationCall (check_for_self arg_list typ source_term model ,source_typ,path,check_for_self_paras arg_list typ paras model,ret_typ))
+      val _ = trace function_ends ("Preprocessor.check_for_self\n")
   in
-      (OperationCall (check_for_self arg_list typ source_term model ,source_typ,path,check_for_self_paras arg_list typ paras model,ret_typ))
+      res
   end
 | check_for_self arg_list typ (Iterator (name,iter_var,sterm,styp,expr,expr_typ,res_typ)) model = 
   let
-      val _ = trace zero ("check_for_self: Iterator "^ "\n")
+      val _ = trace function_calls ("Preprocessor.check_for_self: Iterator(...)\n")
+      val res = (Iterator (name,iter_var,(check_for_self arg_list typ sterm model),styp,(check_for_self arg_list typ expr model),expr_typ,res_typ))
+      val _ = trace function_ends ("Preprocessor.check_for_self\n")
   in
-      (Iterator (name,iter_var,(check_for_self arg_list typ sterm model),styp,(check_for_self arg_list typ expr model),expr_typ,res_typ))
+      res
   end
 | check_for_self arg_list typ (Iterate (iter_vars,acc_name,acc_type,acc_term,sterm,stype,bterm,btype,res_type)) model = 
   let
-      val _ = trace zero ("check_for_self: Iterate "^ "\n")
+      val _ = trace function_calls ("Preprocessor.check_for_self  Iterate \n")
+      val res = (Iterate (iter_vars,acc_name,acc_type,acc_term,(check_for_self arg_list typ sterm model),stype,(check_for_self arg_list typ bterm model),btype,res_type))
+      val _ = trace function_ends("Preprocessor.check_for_self\n")
   in
-      (Iterate (iter_vars,acc_name,acc_type,acc_term,(check_for_self arg_list typ sterm model),stype,(check_for_self arg_list typ bterm model),btype,res_type))
+      res    
   end
 | check_for_self arg_list typ (Let (str,ttyp,rhs_term,rhs_typ,in_term,in_typ)) model =
   let
+      val _ = trace function_calls ("Preprocessor.check_for_self Let (...)\n")
       val self_rhs_term = check_for_self arg_list typ rhs_term model
       val self_in_term = check_for_self arg_list typ in_term model
+      val res = (Let (str,ttyp,self_rhs_term,rhs_typ,self_in_term,in_typ))
+      val _ = trace function_ends ("Preprocessor.check_for_self\n")
   in
-      (Let (str,ttyp,self_rhs_term,rhs_typ,self_in_term,in_typ))
+      res
   end
 | check_for_self arg_list typ (If (cond,cond_typ,expr1,typ1,expr2,typ2,res_typ)) model =
   let
+      val _ = trace function_calls ("Preprocessor.check_for_self If (...)\n")
       val self_cond = check_for_self arg_list typ cond model
       val self_expr1 = check_for_self arg_list typ expr1 model
       val self_expr2 = check_for_self arg_list typ expr2 model
-  in
-      (If (self_cond,cond_typ,self_expr1,typ1,self_expr2,typ2,res_typ))
+      val res = (If (self_cond,cond_typ,self_expr1,typ1,self_expr2,typ2,res_typ))
+      val _ = trace function_ends ("Preprocessor.check_for_self\n")
+  in 
+      res
   end
 | check_for_self arg_list typ term model = term
 
@@ -555,9 +580,10 @@ and prefix_OperationWithType prefix (Variable (str,typ)) = (Variable (str,typ))
 fun preprocess_context (Cond (path,op_name,op_sign,result_type,cond,pre_name,expr)) model = 
     let
 	(* embed 'result' variable *)
-	val _ = trace zero ("Embed result variable \n")
+	val _ = trace function_calls ("Preprocessor.preprocess_context Cond(...)\n")
+	val _ = trace preprocessor ("Embed result variable \n")
 	val vexpr = generate_variables expr path op_name model
-	val _ = trace zero ("Variable 'result' embeded ... \n")
+	val _ = trace preprocessor ("Variable 'result' embeded ... \n")
 	(* embed method arguments *)
 	val class = class_of_type  (Classifier (path)) (model,[])
 	val prfx  = package_of class
@@ -566,35 +592,49 @@ fun preprocess_context (Cond (path,op_name,op_sign,result_type,cond,pre_name,exp
 	val eexpr = embed_method_arguments prefixed_op_sign vexpr
         (* embed '@pre'-expressions *)
 	val pexpr = embed_atPre_expressions eexpr
+	val res = 
+	    (Cond (path,op_name,prefixed_op_sign,prefixed_result_type,cond,pre_name,(check_for_self prefixed_op_sign (Classifier (path)) pexpr model)))
+	val _ = trace function_ends ("Preprocessor.preprocess_context\n")
     in
-	(Cond (path,op_name,prefixed_op_sign,prefixed_result_type,cond,pre_name,(check_for_self prefixed_op_sign (Classifier (path)) pexpr model)))
+	res
     end
 | preprocess_context (Inv (path,string,term)) model =
     let
-	val _ = trace zero ("Preprocess context: Inv (...)" ^ "\n")
+	val _ = trace function_calls ("Preprocessor.preprocess_context Inv (...)\n")
         (* embed '@pre'-expressions *)
 	val pexpr = embed_atPre_expressions term
+	val res = (Inv (path,string,(check_for_self [] (Classifier (path)) pexpr model)))
+	val _ = trace function_ends ("Preprocessor.preprocess_context\n")
     in
-	(Inv (path,string,(check_for_self [] (Classifier (path)) pexpr model)))
+	res
     end
 | preprocess_context (Attr (path,typ,aoa,expr)) model = 
     let
-	val _ = trace zero ("Preprocess context: Attr"^ "\n")
+	val _ = trace function_calls ("Preprocessor.preprocess_context Attr(...)\n")
         (* embed '@pre'-expressions *)
 	val pexpr = embed_atPre_expressions expr
+	val res = (Attr (path,typ,aoa,check_for_self [] (Classifier (path)) pexpr model))
+	val _ = trace function_ends ("Preprocessor.preprocess_context\n")
     in
-	(Attr (path,typ,aoa,check_for_self [] (Classifier (path)) pexpr model))
-  end
+	res
+    end
 | preprocess_context c  model = 
     let
-	val _ = trace zero ("Preprocess context: others" ^ "\n")
+	val _ = trace function_calls ("Preprocessor.preprocess_context: others" ^ "\n")
+	val res = c
+	val _ = trace function_ends ("Preprocessor.preprocess_context\n")
     in
-	c
+	res
     end
 
 (* RETURN: Context list *)
 fun preprocess_context_list [] model = [] 
   | preprocess_context_list (h::context_list_tail) model = 
-    (preprocess_context h model)::(preprocess_context_list context_list_tail model)
-
-end
+    let
+	val _ = trace function_calls ("Preprocessor.preprocess_context_list\n")
+	val res = (preprocess_context h model)::(preprocess_context_list context_list_tail model)
+	val _ = trace function_ends ("Preprocessor.preprocess_context_list\n")
+    in
+	res
+    end
+ end

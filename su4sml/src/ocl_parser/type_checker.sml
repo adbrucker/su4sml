@@ -380,27 +380,22 @@ and resolve_OclTerm (Literal (s,typ)) model =
 (* built in Operations not include in Library: oclIsKindOf, oclIsTypOf, oclAsType *) 
 (* OperationWithType Calls *)
 (* OCLISTYPEOF *)
-| resolve_OclTerm (opcall as OperationCall (term,_,["oclIsTypeOf"],[(AttributeCall (Variable ("self",vtyp),_,[string_path], _),argt)],_)) (model as (cls,assocs)) =
+| resolve_OclTerm (opcall as OperationCall (term,_,["oclIsTypeOf"],[(AttributeCall (source,_,[string_path], _),arg_type)],_)) (model as (cls,assocs)) =
   let
+      fun attributes_to_path (Variable (x,y)) = (* end of package *) []
+	| attributes_to_path (AttributeCall(source,_,[package_part],res_typ)) = 
+	  (package_part)::(attributes_to_path source)
       (* prefix type of iterator variable *)
       val _ = trace function_calls ("TypeChecker.resolve_OclTerm, OperationCallWithType = oclIsTypeOf, " ^ ocl2string true term ^"\n")
       val rterm = resolve_OclTerm term model
       val _ = trace low ("res OpCall: oclIsTypeOf 2:  " ^ "\n")
       val rtyp = type_of_term rterm
       val _ = trace low ("res OpCall: oclIsTypeOf 3: "  ^ "\n")
-
-      val class = class_of_term rterm model
-      (* Path is maybe wrong, because: 
-       *  i.)  the package of the context was ommited
-       *  ii.) the package of another context was ommited
-       * here we handle this cases.
-       *)
-      val correct_type = string_to_type string_path
-      val _ = trace type_checker ("type of WithType: " ^ string_of_OclType correct_type ^ "\n")
-      val ctyp = type_of (class_of_type correct_type model)
-	  handle Empty => raise TC_OperationWithTypeError ("Wrong or ommited package in a OperationWithType call. Please ajust the the package of the type.\n" ^ "OclTerm is: " ^ ocl2string true opcall ^ "\n")
+      val path = attributes_to_path source
+      val typ  = type_of_path path model
+		handle GetClassifierError s => raise TC_OperationWithTypeError ("Wrong or ommited package in a OperationWithType call. Please ajust the the package of the type.\n" ^ "OclTerm is: " ^ ocl2string true opcall ^ "\n")
       val _ = trace low ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
-      val res = OperationWithType (rterm,rtyp,"oclIsTypeOf",ctyp,Boolean)
+      val res = OperationWithType (rterm,rtyp,"oclIsTypeOf",typ,Boolean)
       val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
   in
       res
@@ -710,7 +705,7 @@ end
 
 | check_context (Attr (path,typ,attrorassoc,expr)) (model as (cls,assocs)) =
   let
-      val _ = trace high ("Starts typechecking: ")
+      val _ = trace function_calls ("TypeChecker.check_context STARTS TYPECHECKING ...\n")
       val _ = trace type_checker ("init/derive           : " ^ Ocl2String.ocl2string false expr ^ "\n")
       val classifier = class_of_type (Classifier (real_path path)) model
       val _ = trace low ( "classifier found ... " ^ "\n")
@@ -718,23 +713,28 @@ end
       val _ = trace low ( "attr_list found ... " ^ "\n")
       val attr = valOf (get_attribute (List.last path) attr_list)
       val _ = trace low ( "attribute found ... " ^ "\n")
+      val res = 
+	  if (typ = #attr_type attr)
+	  then
+	      let
+		  val _ = trace low (" ... " ^ "\n")
+	      in
+		  (SOME ((Attr (path,(#attr_type attr),attrorassoc,resolve_OclTerm expr model))))
+	      end
+	  else
+	      NONE
+      val _ = trace function_ends ("TypeChecker.check_context\n\n\n")
   in
-      if (typ = #attr_type attr)
-      then
-	  let
-	      val _ = trace low (" ... " ^ "\n")
-	  in
-	      (SOME ((Attr (path,(#attr_type attr),attrorassoc,resolve_OclTerm expr model))))
-	  end
-      else
-	  NONE
+      res
   end
 | check_context (Inv (path,name,expr)) model = 
   let
-      val _ = trace high ("Starts typechecking: ")
+      val _ = trace function_calls ("TypeChecker.check_context STARTS TYPECHECKING ...\n")
       val _ = trace type_checker ("inv                   : " ^ Ocl2String.ocl2string false expr ^ "\n")
-  in
-      (SOME (Inv (path,name, resolve_OclTerm expr model)))
+      val res = (SOME (Inv (path,name, resolve_OclTerm expr model)))
+      val _ = trace function_ends ("TypeChecker.check_context\n\n\n")
+  in 
+      res
   end
 | check_context (Empty_context (s,t)) _ = raise TC_NotYetSupportedError ("Empty_context not supported.\n")
 (* SOME (Empty_context (s,t)) *)
