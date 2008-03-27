@@ -67,7 +67,11 @@ end
  * A map to store the relation of values calculated before the function
  * call which are used in @pre terms.
  *)
-structure preMap = struct open library
+structure preMap = 
+struct 
+open Rep_Help_Functions
+open Rep_Logger
+
 val entries : (string * int) list ref = ref nil
 
 (** Insert a new entry - if an entry with the same key already exists, it will be removed. *)
@@ -93,7 +97,14 @@ end
  * Conversion of OCL expressions to Java code which makes use of the
  * Dresden standard ocl library. 
  *)
-structure Ocl2DresdenJava = struct open library open Rep_OclType open Rep_OclTerm open Rep_Core open Ocl2String
+structure Ocl2DresdenJava = 
+struct 
+open Rep_Help_Functions
+open Rep_Logger
+open Rep_OclType 
+open Rep_OclTerm 
+open Rep_Core 
+open Ocl2String
 
 (** 
  * Convert an oclterm to Java. 'on' should be the object which represents

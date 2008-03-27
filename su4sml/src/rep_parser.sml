@@ -49,7 +49,7 @@ structure RepParser :
               (* generic exception if something is wrong *)
           end  =
 struct
-open library
+open Rep_Logger
 
 open Xmi_IDTable
 

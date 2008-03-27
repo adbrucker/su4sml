@@ -67,8 +67,8 @@ structure XmlTreeHelper : sig
     val some_id': XmlTree.Attribute list -> string 
 end =
 struct
- 
-open library
+open Rep_Help_Functions 
+open Rep_Logger
 open XmlTree
 
 infix 1 |>

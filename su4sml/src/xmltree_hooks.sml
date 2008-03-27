@@ -41,7 +41,7 @@
 
 structure XmlTreeHooks : Hooks =
 struct
-open IgnoreHooks XmlTree UniChar HookData library
+open IgnoreHooks XmlTree UniChar HookData Rep_Logger
 
 type AppData = Dtd.Dtd * Tree list * (Tag * Tree list) list
 type AppFinal = Tree

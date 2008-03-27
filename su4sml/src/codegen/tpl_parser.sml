@@ -61,7 +61,7 @@ end
 
 structure Tpl_Parser :  TPL_PARSER = 
 struct
-open library
+open Rep_Logger
 open Gcg_Helper
 
 val tplStream = ref (TextIO.openString "@// dummy template\n");

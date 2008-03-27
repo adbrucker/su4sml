@@ -240,7 +240,7 @@ end
 structure Transform_Library:TRANSFORM_LIBRARY =
 struct
 
-open library
+open Rep_Logger
 open StringHandling
 open Rep_OclTerm
 open Rep_OclHelper

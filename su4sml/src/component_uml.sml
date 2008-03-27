@@ -43,7 +43,7 @@
 (** Auxiliary structure to specialize the resource type for ComponentUML. *)
 structure ComponentUMLResource = 
 struct
-
+open Rep_Logger
 (** The type of resource, plus a path name specifiying the resource. 
  * Resource types can be entities, methods, and attributes.
  * FIX: using Path for methods is unsafe, there can be severable  
@@ -72,24 +72,24 @@ val root_stereotypes = ["compuml.entity"]
                        
 (** The list of all attributes of an entity. *)
 fun entity_contained_attributes (Entity c) = map EntityAttribute (Rep.attributes_of c)
-  | entity_contained_attributes _ = library.error "in entity_contained_attributes: \
+  | entity_contained_attributes _ = error "in entity_contained_attributes: \
                                                   \argument is not an entity"
 
 (** the list of all methods of an entity *)
 fun entity_contained_methods (Entity c) = map EntityMethod (Rep.operations_of c)
-  | entity_contained_methods _ = library.error "in entity_contained_methods: \   
+  | entity_contained_methods _ = error "in entity_contained_methods: \   
                                                \argument is not an entity"
 
 (** The list of all side-effect free methods of an entity. *)
 fun entity_contained_read_methods (Entity c) =
     map EntityMethod (List.filter #isQuery (Rep.operations_of c))
-  | entity_contained_read_methods _ = library.error "in entity_contained_read_methods: \
+  | entity_contained_read_methods _ = error "in entity_contained_read_methods: \
                                                     \argument is not an entity"
 		                              
 (** The list of all methods with side-effects of an entity *)
 fun entity_contained_update_methods (Entity c) =
     map EntityMethod (List.filter (not o #isQuery) (Rep.operations_of c))
-  | entity_contained_update_methods _ = library.error 
+  | entity_contained_update_methods _ = error 
                                             "in entity_contained_update_methods: \
                                             \argument is not an entity"
 
@@ -113,7 +113,7 @@ fun parse_entity_action root att_name "create"     =
 	SimpleAction ("delete", (Entity root)) 
   | parse_entity_action root att_name "fullaccess" =
 	CompositeAction ("fullaccess", (Entity root)) 	
-  | parse_entity_action root att_name s = library.error ("in parse_entity_action: \
+  | parse_entity_action root att_name s = error ("in parse_entity_action: \
                                                          \unknown action type "^s)
 	
 (** parses an entity attribute action permission attribute. *)
@@ -121,21 +121,21 @@ fun parse_attribute_action root name "read"       =
     (SimpleAction ("read", 
                    (EntityAttribute ((hd o List.filter (fn x => #name x = name)) 
 					 (Rep.attributes_of root))))
-     handle Empty => library.error ("in parse_attribute_action: \
+     handle Empty => error ("in parse_attribute_action: \
                                     \did not find attribute "^name))
   | parse_attribute_action root name "update"     =
     ( SimpleAction ("update", 
                     (EntityAttribute ((hd o List.filter (fn x => #name x = name)) 
                                           (Rep.attributes_of root))))
-      handle Empty => library.error ("in parse_attribute_action: \
+      handle Empty => error ("in parse_attribute_action: \
                                      \did not find attribute "^name))
   | parse_attribute_action root name "fullaccess" =
     ( CompositeAction ("fullaccess", 
                        (EntityAttribute ((hd o List.filter (fn x => #name x = name)) 
                                              (Rep.attributes_of root))))
-      handle Empty => library.error ("in parse_attribute_action: \
+      handle Empty => error ("in parse_attribute_action: \
                                      \did not find attribute "^name))
-  | parse_attribute_action root name s = library.error ("in parse_attribute_action: \
+  | parse_attribute_action root name s = error ("in parse_attribute_action: \
                                                         \unknown action type "^s^
                                                         "for attribute action "^name)
 
@@ -144,8 +144,8 @@ fun parse_method_action root name "execute"
   = (SimpleAction ("execute", 
                    (EntityMethod ((hd o List.filter (fn x => #name x = name)) 
                                       (Rep.operations_of root))))
-     handle Empty => library.error ("in parse_method_action: did not find method "^name))
-  | parse_method_action roor name s = library.error ("unknown action type "^s^
+     handle Empty => error ("in parse_method_action: did not find method "^name))
+  | parse_method_action roor name s = error ("unknown action type "^s^
                                                      "for method action "^name)
 
 (**
@@ -156,7 +156,7 @@ fun parse_action root (att:Rep.attribute) =
     let val att_name = #name att
 	val att_type = #attr_type att
         val cls_path = case att_type of Rep_OclType.Classifier x => x
-                                      | _ => library.error "type of permission attribute \
+                                      | _ => error "type of permission attribute \
                                                            \is not a classifier"
 	val action_name = hd (rev cls_path) 
         fun resource_path name = (hd o List.tl) (String.tokens (fn x => x= #".") name)
@@ -167,10 +167,10 @@ fun parse_action root (att:Rep.attribute) =
            parse_method_action root (resource_path att_name) action_name
 	 | "dialect.entityattributeaction" => 
            parse_attribute_action root (resource_path att_name) action_name 
-	 | s => library.error ("in ComponentUML.parse_action: "^
+	 | s => error ("in ComponentUML.parse_action: "^
 			       "permission attribute "^att_name^"has unexpected stereotype "^s)
     end
-    handle ex => (library.error_msg "in ComponentUML.parse_action: \
+    handle ex => (error_msg "in ComponentUML.parse_action: \
                                     \could not parse permission attribute"; raise ex)
 
 fun action_type_of (SimpleAction (t,_)) = t
@@ -219,7 +219,7 @@ fun subordinated_actions (SimpleAction _) = nil
   | subordinated_actions (CompositeAction ("full_access", a as (EntityAttribute ae)))
     = [SimpleAction ("read", a),
        SimpleAction ("update", a)]
-  | subordinated_actions (CompositeAction (s,_)) = library.error ("in subordinated_actions: \
+  | subordinated_actions (CompositeAction (s,_)) = error ("in subordinated_actions: \
                                                                   \unsupported composite action \
                                                                   \type "^s)
 end

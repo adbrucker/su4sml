@@ -54,7 +54,7 @@ end
 functor GCG_Core (C: CARTRIDGE): GCG  = 
 struct
 
-open library
+open Rep_Logger
 
 val curFile = ref ""
 val out = ref TextIO.stdOut

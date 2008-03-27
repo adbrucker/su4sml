@@ -75,7 +75,7 @@ functor SecureUML_Cartridge(structure SuperCart : BASE_CARTRIDGE;
                             structure D: DESIGN_LANGUAGE) : SECUREUML_CARTRIDGE =
 struct
 
-open library
+open Rep_Logger
 structure Security = SecureUML(structure Design = D)
 
 (*type Model = Rep.Classifier list * Security.Configuration*)

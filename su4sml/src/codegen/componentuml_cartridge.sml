@@ -45,7 +45,7 @@ struct
 structure SuperCart = SecureUML_Cartridge(structure SuperCart=S; structure D=ComponentUML)
 
 structure Design = SuperCart.Security.Design
-open library
+open Rep_Logger
 
 (* TODO: fill out *)
 type environment = { curPermissionList : SuperCart.Security.Permission list option, 
