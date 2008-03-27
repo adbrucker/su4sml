@@ -60,7 +60,7 @@ Group is
 #endif
     ../lib/fxp/src/fxlib.cm
   rep_logger.sml
-  rep_help_functions.sml
+  rep_helper.sml
   listeq.sml 
   stringHandling.sml
   xmi_ocl.sml 
