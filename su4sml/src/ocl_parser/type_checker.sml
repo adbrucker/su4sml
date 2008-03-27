@@ -420,7 +420,7 @@ let
       val typ  = type_of_path path model
 		handle GetClassifierError s => raise TC_OperationWithTypeError ("Wrong or ommited package in a OperationWithType call. Please ajust the the package of the type.\n" ^ "OclTerm is: " ^ ocl2string true opcall ^ "\n")
       val _ = trace low ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
-      val res = OperationWithType (rterm,rtyp,"oclIsTypeOf",typ,Boolean)
+      val res = OperationWithType (rterm,rtyp,"oclIsKindOf",typ,Boolean)
       val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
   in
       res
@@ -443,7 +443,7 @@ let
       val typ  = type_of_path path model
 		handle GetClassifierError s => raise TC_OperationWithTypeError ("Wrong or ommited package in a OperationWithType call. Please ajust the the package of the type.\n" ^ "OclTerm is: " ^ ocl2string true opcall ^ "\n")
       val _ = trace low ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
-      val res = OperationWithType (rterm,rtyp,"oclIsTypeOf",typ,Boolean)
+      val res = OperationWithType (rterm,rtyp,"oclAsType",typ,typ)
       val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
   in
       res
