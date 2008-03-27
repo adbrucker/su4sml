@@ -835,7 +835,8 @@ end
 
 structure Rep_Core  :  REP_CORE = 
 struct
-open library
+open Rep_Logger
+open Rep_Help_Functions
 open Rep_OclTerm
 open Rep_OclType
 open XMI_DataTypes

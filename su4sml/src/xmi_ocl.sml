@@ -1,3 +1,4 @@
+
 (*****************************************************************************
  * su4sml --- a SML repository for managing (Secure)UML/OCL models
  *             http://projects.brucker.ch/su4sml/
@@ -129,7 +130,7 @@ fun expression_source_of (AssociationEndCallExp{source,...}) = source
   | expression_source_of (OperationWithTypeArgExp{source,...}) = source 
   | expression_source_of (IterateExp{source,...})       = source
   | expression_source_of (IteratorExp{source,...})      = source
-  | expression_source_of _                              = library.error "expression has no source"
+  | expression_source_of _                              = Rep_Logger.error ("expression has no source")
 
 (* from UML 1.5 Core: --------------------------------------------------------
  * A constraint is a semantic condition or restriction expressed in text.
