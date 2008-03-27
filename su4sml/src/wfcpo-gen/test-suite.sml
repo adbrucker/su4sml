@@ -9,7 +9,7 @@ end
 structure WFCPOG_TestSuite : WFCPOG_TESTSUITE =
 struct
 
-open library
+open Rep_Logger
 open WFCPOG_Registry
 open WFCPOG
 open OclLibrary

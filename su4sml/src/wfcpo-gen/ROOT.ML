@@ -50,9 +50,9 @@ use "liskov_constraint.sml";
 use "data_model_consistency.sml";
 use "constructor_consistency.sml";
 use "operational_consistency.sml";
-use "refine_constraint.sml";
+(* TODO: use "refine_constraint.sml"; *)
 use "command_query_consistency.sml";
-use "taxonomy_consistency.sml";
+(* TODO: use "taxonomy_consistency.sml"; *)
 use "interface_consistency.sml";
 
 (* wccpog toplevel *)

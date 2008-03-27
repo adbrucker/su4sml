@@ -51,7 +51,7 @@ structure Data_Model_Consistency_Constraint : DATA_MODEL_CONSISTENCY_CONSTRAINT 
 struct
 
 (* su4sml *)
-open library
+open Rep_Logger
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType

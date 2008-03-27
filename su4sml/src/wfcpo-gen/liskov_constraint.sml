@@ -71,7 +71,7 @@ struct
 
 exception WFCPOG_LiskovError of string
 (* su4sml *)
-open library
+open Rep_Logger
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType

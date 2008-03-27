@@ -55,7 +55,7 @@ structure Constructor_Constraint : CONSTRUCTOR_CONSTRAINT =
 struct
 
 (* SU4SML *)
-open library
+open Rep_Logger
 open Rep_Core
 open Rep
 open Rep_OclTerm

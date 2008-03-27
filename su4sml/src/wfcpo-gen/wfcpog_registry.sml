@@ -41,11 +41,12 @@
 
 signature WFCPOG_REGISTRY = 
 sig
-
+(* WHY?: 
     structure LSK_Data     : WFPO_DATA
     structure TAX_Data     : WFPO_DATA
     structure RFM_Data     : WFPO_DATA
-    
+    *)
+
     val supported          : WFCPOG.wfpo list
     val wfpos              : WFCPOG.wfpo list ref
     val add_wfpo           : WFCPOG.wfpo -> unit
@@ -68,10 +69,10 @@ struct
 
 exception WFCPOG_RegistryError of string
 structure LSK_Data = Liskov_Constraint.LSK_Data
-structure TAX_Data = Taxonomy_Constraint.TAX_Data
+(*structure TAX_Data = Taxonomy_Constraint.TAX_Data
 structure RFM_Data = Refine_Constraint.RFM_Data
-
-open library
+*)
+open Rep_Logger
 open WFCPOG
 
 val wfpos = ref ([]:(WFCPOG.wfpo list))
@@ -256,7 +257,7 @@ val supported = [
      recommends      = [],
      apply           = WFCPOG.WFC(Visibility_Constraint.are_conditions_visible),
      data = Datatab.empty
-    },
+    }(*,
     WFCPOG.WFPO{
      identifier      = "tax", (* identifier                     *) 
      name            = "Max Depth",
@@ -276,7 +277,7 @@ val supported = [
      recommends      = [],
      apply           = WFCPOG.WFC(Refine_Constraint.check_syntax),
      data            = Datatab.empty
-    }(*, 
+    }*)(*, 
     WFCPOG.WFPO {
      identifier      = "ref_po", 
      name            = "OO Refinement",

@@ -63,7 +63,7 @@ structure Taxonomy_Constraint:TAXONOMY_CONSTRAINT =
 struct
 
 (* su4sml *)
-open library
+open Rep_Logger
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType

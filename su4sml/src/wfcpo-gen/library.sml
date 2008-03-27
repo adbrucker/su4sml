@@ -86,7 +86,8 @@ structure WFCPOG_Library:WFCPOG_LIBRARY =
 struct
 
 (* SU4SML *)
-open library
+open Rep_Help_Functions
+open Rep_Logger
 open Rep_Core
 open Rep 
 open Rep_OclType
