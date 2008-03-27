@@ -69,7 +69,8 @@ end
 
 structure Base_Cartridge : BASE_CARTRIDGE =
 struct
-open library
+
+open Rep_Logger
 (* translation functions *)
 (* type translation table *)
 
