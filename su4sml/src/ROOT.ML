@@ -40,7 +40,7 @@
 (* $Id$ *)
 
 use "rep_logger.sml";
-use "rep_help_functions.sml"
+use "rep_help_functions.sml";
 use "stringHandling.sml";
 
 (* ****************************************************** *)
