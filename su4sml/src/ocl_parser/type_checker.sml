@@ -125,7 +125,7 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
     then (* OperationCall *)
 	let
 	    (* check 'fromSet' *)
-	    val _ = trace low ("\n==> FromSet-desugarator: operation ... \n")
+	    val _ = trace low ("==> FromSet-desugarator: operation ... \n")
 	    val new_type = type_of_template_parameter (type_of_term rterm)
 	    val iterVar = (("anonIterVar_" ^ (varcounter.nextStr())),new_type)
 	    val class = class_of_term (Variable (iterVar)) model
@@ -144,7 +144,7 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
     else (* AttributeCall *)
 	let
 	    (* check 'fromSet' *)
-	    val _ = trace low ("\n==> FromSet-desugarator: attribute/assocend ... \n")
+	    val _ = trace low ("==> FromSet-desugarator: attribute/assocend ... \n")
 	    val new_type = type_of_template_parameter (type_of_term rterm)
 	    val iterVar = (("anonIterVar_" ^ (varcounter.nextStr())),new_type)
 	    val class = class_of_term (Variable (iterVar)) model
@@ -194,7 +194,7 @@ fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
 	val res = if (attr_or_meth = 0) 
 		  then (* OperationCall *)
 		      let
-			  val _ = trace low ("\n==> AsSet-desugarator: operation ... \n")
+			  val _ = trace low ("==> AsSet-desugarator: operation ... \n")
 			  val rtyp = Set(type_of_term rterm)
 			  val _ = trace low ("Type of source term " ^ string_of_OclType rtyp ^ " ---> try Set(" ^ string_of_OclType rtyp ^ ")\n")
 			  val class = class_of_term (Variable ("anonIterVar_" ^ (varcounter.nextStr()),rtyp)) model
@@ -209,7 +209,7 @@ fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
 		      end
 		  else (* AttributeCall *)
 		      let
-			  val _ = trace low ("\n==> AsSet-desugarator: attribute/assocend\n")
+			  val _ = trace low ("==> AsSet-desugarator: attribute/assocend\n")
 			  val rtyp = Set(type_of_term rterm)
 			  val _ = trace low (string_of_OclType rtyp ^ "\n")
 			  val class = class_of_term (Variable ("anonIterVar_" ^ (varcounter.nextStr()),Set(rtyp))) model
@@ -350,7 +350,7 @@ and resolve_OclTerm (Literal (s,typ)) model =
 			 (
 			  (
 			   let
-			       val _ = trace low ("\n==> 2-dim Inheritance check: ma attribute/assocend\n")
+			       val _ = trace low ("==> 2-dim Inheritance check: ma attribute/assocend\n")
 			       val rtyp = type_of_term rterm
 			       val _ = trace low (string_of_OclType rtyp ^ "manu \n")
 			       val templ_type = type_of_template_parameter rtyp
@@ -483,7 +483,7 @@ let
 			 (     
 			  (
 			   let
-			       val _ = trace low ("\n==> 2-dim Inheritance check: attribute/assocend\n")
+			       val _ = trace low ("==> 2-dim Inheritance check: attribute/assocend\n")
 			       val rtyp = type_of_term rterm
 			       val _ = trace low (string_of_OclType rtyp ^ "\n")
 			       val templ_type = type_of_template_parameter rtyp
