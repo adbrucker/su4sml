@@ -71,7 +71,8 @@ end
 
 structure TypeChecker:TYPECHECKER  = 
  struct
-open library
+
+open Rep_Logger
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType
