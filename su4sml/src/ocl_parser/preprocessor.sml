@@ -49,7 +49,8 @@ end
 
 structure Preprocessor:PREPROCESSOR  = 
  struct
-open library
+open Rep_Help_Functions
+open Rep_Logger
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType

@@ -42,7 +42,7 @@
 structure SecureUML2HolOcl:sig 
     val transform : Rep_SecureUML_ComponentUML.Model -> Rep.Model 
 end = struct 
-open library
+open Rep_Logger
 open Rep_Core
 open XMI_DataTypes
 open Rep_OclTerm

@@ -49,7 +49,7 @@ structure OclParser : sig
 		   val parse_contextlist: string -> Context.context list
 end = 
 struct
- open library 
+ open Rep_Logger
  open Context
  
   structure OclParserLrVals =

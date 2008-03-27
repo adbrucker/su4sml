@@ -70,7 +70,7 @@ THIS POINTS HAVE TO BE NOTICED TO UNDERSTAND THE SEMANTICS OF:
 *)
 
 
-open library
+open Rep_Logger
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType

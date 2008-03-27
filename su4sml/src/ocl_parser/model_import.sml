@@ -58,7 +58,7 @@ open List
 open Posix.Error
 
 (* su4sml *)
-open library
+open Rep_Logger
 open Rep_Core
      
 (* OclParser *)

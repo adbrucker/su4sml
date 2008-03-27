@@ -60,7 +60,7 @@ end
 structure Update_Model:UPDATE_MODEL =
 struct
 
-open library;
+open Rep_Logger
 open Rep_Core;
 open Context;
 

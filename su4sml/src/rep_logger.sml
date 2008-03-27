@@ -87,6 +87,7 @@ fun get_spaces 0 = ""
   | get_spaces x = (" ")^(get_spaces (x-1))
 
 fun init_offset () = line_offset:=4
+ 
 
 fun get_offset () = get_spaces (!line_offset)
 
@@ -229,9 +230,6 @@ fun error_msg s = print (s^"\n")
 
 (** output an error message and Fail *)
 fun error s = (print (s^"\n"); raise Fail s)
-
-fun uncurry f (x,y) = f x y
-fun curry f x y     = f (x,y)
 
 fun remove_dup [] = []
   | remove_dup (h::tail) = if (member h tail) then (remove_dup tail) else ((h)::(remove_dup tail))
