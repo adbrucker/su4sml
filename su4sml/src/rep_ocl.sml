@@ -119,7 +119,9 @@ end
 
 structure Rep_OclType : REP_OCL_TYPE =
 struct
+open Rep_Help_Functions
 open Rep_Logger
+
 type Path = string list
 	    
 	    
@@ -129,11 +131,6 @@ datatype OclType    =  Integer | Real | String | Boolean | OclAny
 		     | Collection of OclType | OclVoid | DummyT
 		     | Classifier of Path
 		     | TemplateParameter of string
-
-fun foldr1 f l =
-    let fun itr [x] = x
-          | itr (x::l) = f(x, itr l)
-    in  itr l  end;
 
 
 (** Convert Path to a string using given separator *)

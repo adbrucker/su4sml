@@ -44,8 +44,10 @@ sig
     val init_offset                : unit -> unit
 
     val error                      : string -> 'a
-
-
+    val error_msg                  : string -> unit
+    val print_stderr               : TextIO.vector -> unit
+    val warn                       : string -> unit
+    val info                       : string -> unit
     val log_level                  : int ref
 
     val line_offset                   : int ref
@@ -67,11 +69,13 @@ sig
     val low                        : int
     val development                : int
 
+    val su4sml_home                : unit -> string
+
 end
 structure Rep_Logger:REP_LOGGER =
 struct
-infix |>
-fun (x |> f) = f x;
+
+
 
 
 (* minimal tracing support (modifed version of ocl_parser tracing *)
@@ -206,10 +210,6 @@ fun ap_some f (SOME x) = SOME(f x)
 fun separate s (x :: (xs as _ :: _)) = x :: s :: separate s xs
   | separate _ xs = xs;
 (* fun suffix sfx s = s ^ sfx;*)
-
-fun take (n, []) = []
-  | take (n, x :: xs) =
-    if n > 0 then x :: take (n - 1, xs) else [];
     
 fun space_implode a bs = implode (separate a bs);
 
@@ -229,15 +229,6 @@ fun error_msg s = print (s^"\n")
 
 (** output an error message and Fail *)
 fun error s = (print (s^"\n"); raise Fail s)
-
-
-fun fst (x, y) = x
-                 
-fun snd (x, y) = y
-
-fun join s nil = ""
-  | join s (h::nil) = h
-  | join s (h::t) = h^s^(join s t)
 
 fun uncurry f (x,y) = f x y
 fun curry f x y     = f (x,y)

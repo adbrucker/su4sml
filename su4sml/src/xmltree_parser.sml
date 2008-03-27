@@ -43,8 +43,8 @@ structure XmlTreeParser : sig
     val readFile : string -> XmlTree.Tree
 end = 
 struct
+open Rep_Logger
 open XmlTree
-open library
 exception FileNotFound of string
 
 structure Parser = Parse (structure Dtd = Dtd

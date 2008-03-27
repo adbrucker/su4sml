@@ -43,7 +43,8 @@ structure XmiParser : sig
     val readFile: string -> XMI.XmiContent
 end =
 struct
-open library
+open Rep_Help_Functions
+open Rep_Logger
 open XmlTree
 open XmlTreeHelper
 

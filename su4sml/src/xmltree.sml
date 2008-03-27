@@ -57,7 +57,7 @@ structure XmlTree : sig
     val value_of          : string -> Attribute list -> string
     val has_attribute     : string -> Tree -> bool         
 end = struct 
-open library
+open Rep_Logger
 infix 1 |>
                        
 (** A name-value pair. *)
