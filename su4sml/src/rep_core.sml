@@ -3579,7 +3579,7 @@ fun string_to_type "Integer" = Integer
 	     else
 		 (* The Type is just one Class, without Collection and without a package.*)
 		 Classifier ([complex_type])
-s 		)
+		)
     end
 
 fun all_packages_of_model ([],alist) = []

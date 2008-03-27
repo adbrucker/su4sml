@@ -424,8 +424,7 @@ collection_type_specifier_cs :            collection_type_identifier_cs PAREN_OP
 (* RETURN: string *)
 collection_type_identifier_cs:          SET                                                                     (SET)
                                       | BAG                                                                     (BAG)
-                                      | SEQUENCE                                                                (SEQUENCE)
-                                      | COLLECTION                                                              (COLLECTION)
+                                      | SEQUENCE                                                                (SEQUENCE)                                      | COLLECTION                                                              (COLLECTION)
                                       | ORDERED_SET                                                             (ORDERED_SET)         
 
 (* Part of OCL2.0 concrete syntax, but unused by now *)

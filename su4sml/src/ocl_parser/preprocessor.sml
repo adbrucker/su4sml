@@ -148,104 +148,192 @@ fun fun_name (Varible (str,type)) =
 
 *)
 
-(* RETURN: bool *)
-fun member x [] = false
-| member x (h::tail) = 
-    if (x = h) then
-	true
-    else 
-	member x tail
-
 (* RETURN: OclTerm *)
 fun embed_atPre_expressions_collpart (CollectionItem (term,typ)) = 
-    (CollectionItem (embed_atPre_expressions term,typ))
+    let
+	val _ = trace function_calls ("Preprocessor.embed_atPre_expression_collpart CollectionItem(...)\n")
+	val res = (CollectionItem (embed_atPre_expressions term,typ))
+	val _ = trace function_ends ("Preprocessor.embed_atPre_expression_collpart\n")
+    in
+	res
+    end
   | embed_atPre_expressions_collpart (CollectionRange (term1,term2,typ)) = 
-    (CollectionRange (embed_atPre_expressions term1, embed_atPre_expressions term2, typ))
+    let
+	val _ = trace function_calls ("Preprocessor.embed_atPre_expression_collpart CollectionRange(...)\n")
+	val res = (CollectionRange (embed_atPre_expressions term1, embed_atPre_expressions term2, typ))
+	val _ = trace function_ends ("Preprocessor.embed_atPre_expression_collpart\n")
+    in
+	res
+    end
 
-and embed_atPre_expressions (Variable (str,typ)) = (Variable (str,typ))
-  | embed_atPre_expressions (Literal (str,typ)) = (Literal (str,typ))
+and embed_atPre_expressions (Variable (str,typ)) = 
+    let
+	val _ = trace function_calls ("Preprocessor.embed_atPre_expressions Variable(...)\n")
+	val res = (Variable (str,typ))
+	val _ = trace function_ends ("Preprocessor.embed_atPre_expressions\n")
+    in
+	res
+    end
+  | embed_atPre_expressions (Literal (str,typ)) = 
+    let
+	val _ = trace function_calls ("Preprocessor.embed_atPre_expressions Literal(...)\n")
+	val res = (Literal (str,typ))
+	val _ = trace function_ends ("Preprocessor.embed_atPre_expressions\n")
+    in
+	res
+    end
   | embed_atPre_expressions (CollectionLiteral (collpart,typ)) = 
-    (CollectionLiteral (List.map (embed_atPre_expressions_collpart) collpart,typ))
+    let
+	val _ = trace function_calls ("Preprocessor.embed_atPre_expressions CollectionLiteral(...)\n")
+	val res = (CollectionLiteral (List.map (embed_atPre_expressions_collpart) collpart,typ))
+	val _ = trace function_ends ("Preprocessor.embed_atPre_expressions\n")
+    in
+	res
+    end
   | embed_atPre_expressions (If (cond,cond_type,then_e,then_type,else_e,else_type,res_type)) =
-    (If (embed_atPre_expressions cond,cond_type,embed_atPre_expressions then_e,then_type,embed_atPre_expressions else_e,else_type,res_type))
+    let
+	val _ = trace function_calls ("Preprocessor.embed_atPre_expressions Variable(...)\n")
+	val res = (If (embed_atPre_expressions cond,cond_type,embed_atPre_expressions then_e,then_type,embed_atPre_expressions else_e,else_type,res_type))
+	val _ = trace function_ends ("Preprocessor.embed_atPre_expressions\n")
+    in
+	res
+    end
   | embed_atPre_expressions (AttributeCall (sterm,styp,p,res_typ)) =
-    if (List.last (p) = "atPre")
-    then (* atPre Call *)
-	(
-	 if (List.length p = 1) 	 
-	 then (* self *)
-	     (OperationCall (sterm,styp,[OclLibPackage,"OclAny","atPre"],[],DummyT))
-	 else (* contains at least one 'normal' attribute *)
-	     (AttributeCall (OperationCall (embed_atPre_expressions sterm,styp,[OclLibPackage,"OclAny","atPre"],[],DummyT),styp,real_path p,res_typ))
+    let
+	val _ = trace function_calls ("Preprocessor.embed_atPre_expressions AttributeCall(...)\n")
+	val res =
+	    if (List.last (p) = "atPre")
+	    then (* atPre Call *)
+		(
+		 if (List.length p = 1) 	 
+		 then (* self *)
+		     (OperationCall (sterm,styp,[OclLibPackage,"OclAny","atPre"],[],DummyT))
+		 else (* contains at least one 'normal' attribute *)
+		     (AttributeCall (OperationCall (embed_atPre_expressions sterm,styp,[OclLibPackage,"OclAny","atPre"],[],DummyT),styp,real_path p,res_typ))
 	)
-    else (* normal Call *) 
-	(AttributeCall (embed_atPre_expressions sterm,styp,p,res_typ))
+	    else (* normal Call *) 
+		(AttributeCall (embed_atPre_expressions sterm,styp,p,res_typ))
+	val _ = trace function_ends ("Preprocessor.embed_atPre_expressions\n")
+    in
+	res
+    end
   | embed_atPre_expressions (OperationCall (sterm,styp,pa,para,res_typ)) =
     let
+	val _ = trace function_calls ("Preprocessor.embed_atPre_expressions OperationCall(...)\n")
 	val atpre_para = List.map (fn (a,b) => (embed_atPre_expressions a,b)) para
+	val res = 
+	    if (List.last (pa) = "atPre")
+	    then (OperationCall (OperationCall (embed_atPre_expressions sterm,styp,real_path pa,atpre_para,res_typ),DummyT,[OclLibPackage,"OclAny","atPre"],[],DummyT))
+	    else (OperationCall (embed_atPre_expressions sterm,styp,pa,atpre_para,res_typ))
+	val _ = trace function_ends ("Preprocessor.embed_atPre_expressions\n")
     in
-	if (List.last (pa) = "atPre")
-	then (OperationCall (OperationCall (embed_atPre_expressions sterm,styp,real_path pa,atpre_para,res_typ),DummyT,[OclLibPackage,"OclAny","atPre"],[],DummyT))
-	else (OperationCall (embed_atPre_expressions sterm,styp,pa,atpre_para,res_typ))
+	res
     end
   | embed_atPre_expressions (OperationWithType (sterm,stype,para_name,para_type,res_type)) = 
-    (OperationWithType (embed_atPre_expressions sterm,stype,para_name,para_type,res_type))
+    let
+	val _ = trace function_calls ("Preprocessor.embed_atPre_expressions OperationWithType(...)\n")
+	val res = (OperationWithType (embed_atPre_expressions sterm,stype,para_name,para_type,res_type))
+	val _ = trace function_ends ("Preprocessor.embed_atPre_expressions\n")
+    in
+	res
+    end
   | embed_atPre_expressions (Let (var_name,var_type,rhs,rhs_type,in_e,in_type)) =
-    (Let (var_name,var_type,embed_atPre_expressions rhs,rhs_type,embed_atPre_expressions in_e,in_type))
+    let
+	val _ = trace function_calls ("Preprocessor.embed_atPre_expressions Let(...)\n")
+	val res = (Let (var_name,var_type,embed_atPre_expressions rhs,rhs_type,embed_atPre_expressions in_e,in_type))
+	val _ = trace function_ends ("Preprocessor.embed_atPre_expressions\n")
+    in
+	res
+    end
   | embed_atPre_expressions (Iterator (name,iter_vars,sterm,stype,body_e,body_type,res_type)) = 
-    (Iterator (name,iter_vars,embed_atPre_expressions sterm,stype,embed_atPre_expressions body_e,body_type,res_type))
+    let
+	val _ = trace function_calls ("Preprocessor.embed_atPre_expressions Iterator(...)\n")
+	val res = (Iterator (name,iter_vars,embed_atPre_expressions sterm,stype,embed_atPre_expressions body_e,body_type,res_type))
+	val _ = trace function_ends ("Preprocessor.embed_atPre_expressions\n")
+    in
+	res
+    end
   | embed_atPre_expressions (Iterate (iter_vars,acc_var_name,acc_var_type,acc_var_term,sterm,stype,bterm,btype,res_type)) = 
-    (Iterate (iter_vars,acc_var_name,acc_var_type,acc_var_term,embed_atPre_expressions sterm,stype,embed_atPre_expressions bterm,btype,res_type))
+    let
+	val _ = trace function_calls ("Preprocessor.embed_atPre_expressions Iterate(...)\n")
+	val res = (Iterate (iter_vars,acc_var_name,acc_var_type,acc_var_term,embed_atPre_expressions sterm,stype,embed_atPre_expressions bterm,btype,res_type))
+	val _ = trace function_ends ("Preprocessor.embed_atPre_expression\n")
+    in
+	res
+    end
 (* RETURN: OclTerm *)
 fun embed_bound_variable (str,typ) (Variable(s,t)) = 
     let
+	val _ = trace function_calls ("Preprocessor.embed_bound_variable Variable(...)\n")
 	val _ = trace preprocessor ("1 Bound variable '" ^ s ^ "' in 'AttributeCall': " ^ Ocl2String.ocl2string false (Variable(s,t)) ^ "\n")
+	val res = 
+	    if (str = s ) then
+		Variable(s,typ)
+	    else
+		Variable(s,t)
+	val _ = trace function_ends ("Preprocessor.embed_bound_variable\n")
     in
-	if (str = s ) then
-	    Variable(s,typ)
-	else
-	    Variable(s,t)
+	res
     end
-| embed_bound_variable (s,typ) (AttributeCall (sterm,styp,path,rtyp)) =
-  let
+  | embed_bound_variable (s,typ) (AttributeCall (sterm,styp,path,rtyp)) =
+    let
+        val _ = trace function_calls ("Preprocessor.embed_bound_variable AttributeCall(...)\n")
 	val _ = trace preprocessor ("2 Bound variable '" ^ s ^ "' in 'AttributeCall': " ^ Ocl2String.ocl2string false (AttributeCall (sterm,styp,path,rtyp)) ^ "\n")
-  in
-      if (List.last path = s) then
-	  (* embed variable *)
-	  (Variable (s,typ))
-      else
-	  (AttributeCall (embed_bound_variable (s,typ) sterm,styp,path,rtyp))
-  end
-| embed_bound_variable (s,typ) (OperationCall (sterm,styp,path,args,rtyp)) =
+	val res = 
+	    if (List.last path = s) then
+		(* embed variable *)
+		(Variable (s,typ))
+	    else
+		(AttributeCall (embed_bound_variable (s,typ) sterm,styp,path,rtyp))
+	val _ = trace function_ends ("Preprocessor.embed_bound_variable\n")
+    in
+	res
+    end
+  | embed_bound_variable (s,typ) (OperationCall (sterm,styp,path,args,rtyp)) =
+    let
+	val _ = trace function_calls ("Preprocessor.embed_bound_variable AttributeCall(...)\n")
+	val _ = trace preprocessor ("Bound variable '" ^ s ^ "' in 'OperationCall': " ^ Ocl2String.ocl2string false (OperationCall (sterm,styp,path,args,rtyp)) ^ "\n")
+	val res = (OperationCall (embed_bound_variable (s,typ) sterm,styp,path,embed_bound_args (s,typ) args ,rtyp))
+	val _ = trace function_ends ("Preprocessor.embed_bound_variable\n")
+    in
+	res
+    end
+  | embed_bound_variable (s,typ) (Iterator (name,iter_list,sterm,styp,expr,expr_typ,rtyp)) =
   let
-      	val _ = trace preprocessor ("Bound variable '" ^ s ^ "' in 'OperationCall': " ^ Ocl2String.ocl2string false (OperationCall (sterm,styp,path,args,rtyp)) ^ "\n")
+      val _ = trace function_calls ("Preprocessor.embed_bound_variable AttributeCall(...)\n")
+      val _ = trace preprocessor ("Bound variable '" ^ s ^ "' in 'Iterator': " ^ Ocl2String.ocl2string false (Iterator (name,iter_list,sterm,styp,expr,expr_typ,rtyp)) ^ "\n")
+      val res = (Iterator (name,iter_list,embed_bound_variable (s,typ) sterm,styp,embed_bound_variables iter_list (embed_bound_variable (s,typ) expr),expr_typ,rtyp))
+      val _ = trace function_ends ("Preprocessor.embed_bound_variable\n")
   in
-      (OperationCall (embed_bound_variable (s,typ) sterm,styp,path,embed_bound_args (s,typ) args ,rtyp))
-  end
-| embed_bound_variable (s,typ) (Iterator (name,iter_list,sterm,styp,expr,expr_typ,rtyp)) =
-  let
-      	val _ = trace preprocessor ("Bound variable '" ^ s ^ "' in 'Iterator': " ^ Ocl2String.ocl2string false (Iterator (name,iter_list,sterm,styp,expr,expr_typ,rtyp)) ^ "\n")
-  in
-      (Iterator (name,iter_list,embed_bound_variable (s,typ) sterm,styp,embed_bound_variables iter_list (embed_bound_variable (s,typ) expr),expr_typ,rtyp))
+      res
   end
 | embed_bound_variable (s,typ) (Iterate (iter_vars,acc_name,acc_type,acc_term,sterm,stype,bterm,btype,res_type)) =
   let
+      val _ = trace function_calls ("Preprocessor.embed_bound_variable AttributeCall(...)\n")
       val  _ = trace medium ("Bound variable '" ^ s ^ "' in 'Iterate': " ^ Ocl2String.ocl2string false (Iterate (iter_vars,acc_name,acc_type,acc_term,sterm,stype,bterm,btype,res_type)) ^ "\n")
+      val res = (Iterate (iter_vars,acc_name,acc_type,acc_term,embed_bound_variable (s,typ) sterm,stype,embed_bound_variable (s,typ) bterm,btype,res_type))
+      val _ = trace function_ends ("Preprocessor.embed_bound_variable\n")
   in
-     (Iterate (iter_vars,acc_name,acc_type,acc_term,embed_bound_variable (s,typ) sterm,stype,embed_bound_variable (s,typ) bterm,btype,res_type))
+      res
   end
 | embed_bound_variable (s,typ) (Let (var_name,var_type,rhs,rhs_type,in_e,in_type)) =
   let
+      val _ = trace function_calls ("Preprocessor.embed_bound_variable AttributeCall(...)\n")
       val _ = trace preprocessor ("Bound variable '" ^ s ^ "' in 'Let': " ^ Ocl2String.ocl2string false (Let (var_name,var_type,rhs,rhs_type,in_e,in_type)) ^ "\n")
       val embed_in_e = embed_bound_variable (var_name,var_type) in_e
+      val res = (Let (var_name,var_type,embed_bound_variable (s,typ) rhs,rhs_type,embed_bound_variable (s,typ) embed_in_e,in_type))
+      val _ = trace function_ends ("Preprocessor.embed_bound_variable\n")
   in
-      (Let (var_name,var_type,embed_bound_variable (s,typ) rhs,rhs_type,embed_bound_variable (s,typ) embed_in_e,in_type))
+      res
   end
 | embed_bound_variable (s,typ) (If (cond,cond_type,then_e,then_type,else_e,else_type,res_type)) =
-  let 
+  let
+      val _ = trace function_calls ("Preprocessor.embed_bound_variable AttributeCall(...)\n") 
       val _ = trace preprocessor ("Bound variable '" ^ s ^ "' in 'If'  ..." ^ "\n")
+      val res = (If (embed_bound_variable (s,typ) cond,cond_type,embed_bound_variable (s,typ) then_e,then_type,embed_bound_variable (s,typ) else_e,else_type,res_type))
+      val _ = trace function_ends ("Preprocessor.embed_bound_variable\n")
   in
-      (If (embed_bound_variable (s,typ) cond,cond_type,embed_bound_variable (s,typ) then_e,then_type,embed_bound_variable (s,typ) else_e,else_type,res_type))
+      res
   end
 | embed_bound_variable (s,typ) term = term
 

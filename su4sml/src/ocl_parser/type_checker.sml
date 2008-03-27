@@ -382,16 +382,41 @@ and resolve_OclTerm (Literal (s,typ)) model =
 (* OCLISTYPEOF *)
 | resolve_OclTerm (opcall as OperationCall (term,_,["oclIsTypeOf"],[(AttributeCall (source,_,[string_path], _),arg_type)],_)) (model as (cls,assocs)) =
   let
-      fun attributes_to_path (Variable (x,y)) = (* end of package *) []
-	| attributes_to_path (AttributeCall(source,_,[package_part],res_typ)) = 
-	  (package_part)::(attributes_to_path source)
+      fun attributes_to_path (Variable (x,y)) = []
+	| attributes_to_path (AttributeCall(Variable(x,y),_,[correct_package_part],res_typ)) = [correct_package_part]
+	| attributes_to_path (AttributeCall(term,_,[correct_package_part],res_typ)) = 
+	  (correct_package_part)::(attributes_to_path term)
       (* prefix type of iterator variable *)
       val _ = trace function_calls ("TypeChecker.resolve_OclTerm, OperationCallWithType = oclIsTypeOf, " ^ ocl2string true term ^"\n")
       val rterm = resolve_OclTerm term model
-      val _ = trace low ("res OpCall: oclIsTypeOf 2:  " ^ "\n")
+      val _ = trace type_checker ("res OpCall: oclIsTypeOf 2:  " ^ "\n")
       val rtyp = type_of_term rterm
-      val _ = trace low ("res OpCall: oclIsTypeOf 3: "  ^ "\n")
-      val path = attributes_to_path source
+      val _ = trace type_checker ("res OpCall: oclIsTypeOf 3: "  ^ "\n")
+      val path = (attributes_to_path source)@[string_path]
+      val _ = trace type_checker ("Path of the given type: " ^ string_of_path (path) ^ "\n")
+      val typ  = type_of_path path model
+		handle GetClassifierError s => raise TC_OperationWithTypeError ("Wrong or ommited package in a OperationWithType call. Please ajust the the package of the type.\n" ^ "OclTerm is: " ^ ocl2string true opcall ^ "\n")
+      val _ = trace type_checker ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
+      val res = OperationWithType (rterm,rtyp,"oclIsTypeOf",typ,Boolean)
+      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
+  in
+      res
+  end  
+(* OCLISKINDOF *)
+| resolve_OclTerm (opcall as OperationCall (term,_,["oclIsKindOf"],[(AttributeCall (source,_,[string_path], _),arg_type)],_)) (model as (cls,assocs)) =
+let
+      fun attributes_to_path (Variable (x,y)) = []
+	| attributes_to_path (AttributeCall(Variable(x,y),_,[correct_package_part],res_typ)) = [correct_package_part]
+	| attributes_to_path (AttributeCall(term,_,[correct_package_part],res_typ)) = 
+	  (correct_package_part)::(attributes_to_path term)
+      (* prefix type of iterator variable *)
+      val _ = trace function_calls ("TypeChecker.resolve_OclTerm, OperationCallWithType = oclIsTypeOf, " ^ ocl2string true term ^"\n")
+      val rterm = resolve_OclTerm term model
+      val _ = trace type_checker ("res OpCall: oclIsTypeOf 2:  " ^ "\n")
+      val rtyp = type_of_term rterm
+      val _ = trace type_checker ("res OpCall: oclIsTypeOf 3: "  ^ "\n")
+      val path = (attributes_to_path source)@[string_path]
+      val _ = trace type_checker ("Path of the given type: " ^ string_of_path (path) ^ "\n")
       val typ  = type_of_path path model
 		handle GetClassifierError s => raise TC_OperationWithTypeError ("Wrong or ommited package in a OperationWithType call. Please ajust the the package of the type.\n" ^ "OclTerm is: " ^ ocl2string true opcall ^ "\n")
       val _ = trace low ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
@@ -399,53 +424,26 @@ and resolve_OclTerm (Literal (s,typ)) model =
       val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
   in
       res
-  end  
-(* OCLISKINDOF *)
-| resolve_OclTerm (opcall as OperationCall (term,_,["oclIsKindOf"],[(AttributeCall (Variable ("self",_),_,[string_path], _),argt)],_)) (model as (cls,assocs)) =
-let
-      (* prefix type of iterator variable *)
-      val _ = trace function_calls ("TypeChecker.resolve_OclTerm, OperationCallWithType = oclIsTypeOf, " ^ ocl2string true term ^"\n")
-      val rterm = resolve_OclTerm term model
-      val _ = trace low ("res OpCall: oclIsTypeOf 2:  " ^ "\n")
-      val rtyp = type_of_term rterm
-      val _ = trace low ("res OpCall: oclIsTypeOf 3: "  ^ "\n")
-
-      val class = class_of_term rterm model
-      (* Path is maybe wrong, because: 
-       *  i.)  the package of the context was ommited
-       *  ii.) the package of another context was ommited
-       * here we handle this cases.
-       *)
-      val correct_type = string_to_type string_path
-      val ctyp = type_of (class_of_type correct_type model)
-	  handle Empty => raise TC_OperationWithTypeError ("Wrong or ommited package in a OperationWithType call. Please ajust the the package of the type.\n" ^ "OclTerm is: " ^ ocl2string true opcall ^ "\n")
-      val _ = trace low ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
-      val res = OperationWithType (rterm,rtyp,"oclIsTypeOf",ctyp,Boolean)
-      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
-  in
-      res
   end
 (* OCLASTYPE *)
-| resolve_OclTerm (opcall as OperationCall (term,_,["oclAsType"],[(AttributeCall (Variable ("self",_),_,[string_path], _),argt)],_)) (model as (cls,assocs)) =
+| resolve_OclTerm (opcall as OperationCall (term,_,["oclAsType"],[(AttributeCall (source,_,[string_path], _),arg_type)],_)) (model as (cls,assocs)) =
 let
+      fun attributes_to_path (Variable (x,y)) = []
+	| attributes_to_path (AttributeCall(Variable(x,y),_,[correct_package_part],res_typ)) = [correct_package_part]
+	| attributes_to_path (AttributeCall(term,_,[correct_package_part],res_typ)) = 
+	  (correct_package_part)::(attributes_to_path term)
       (* prefix type of iterator variable *)
       val _ = trace function_calls ("TypeChecker.resolve_OclTerm, OperationCallWithType = oclIsTypeOf, " ^ ocl2string true term ^"\n")
       val rterm = resolve_OclTerm term model
-      val _ = trace low ("res OpCall: oclIsTypeOf 2:  " ^ "\n")
+      val _ = trace type_checker ("res OpCall: oclIsTypeOf 2:  " ^ "\n")
       val rtyp = type_of_term rterm
-      val _ = trace low ("res OpCall: oclIsTypeOf 3: "  ^ "\n")
-
-      val class = class_of_term rterm model
-      (* Path is maybe wrong, because: 
-       *  i.)  the package of the context was ommited
-       *  ii.) the package of another context was ommited
-       * here we handle this cases.
-       *)
-      val correct_type = string_to_type string_path
-      val ctyp = type_of (class_of_type correct_type model)
-	  handle Empty => raise TC_OperationWithTypeError ("Wrong or ommited package in a OperationWithType call. Please ajust the the package of the type.\n" ^ "OclTerm is: " ^ ocl2string true opcall ^ "\n")
+      val _ = trace type_checker ("res OpCall: oclIsTypeOf 3: "  ^ "\n")
+      val path = (attributes_to_path source)@[string_path]
+      val _ = trace type_checker ("Path of the given type: " ^ string_of_path (path) ^ "\n")
+      val typ  = type_of_path path model
+		handle GetClassifierError s => raise TC_OperationWithTypeError ("Wrong or ommited package in a OperationWithType call. Please ajust the the package of the type.\n" ^ "OclTerm is: " ^ ocl2string true opcall ^ "\n")
       val _ = trace low ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
-      val res = OperationWithType (rterm,rtyp,"oclIsTypeOf",ctyp,Boolean)
+      val res = OperationWithType (rterm,rtyp,"oclIsTypeOf",typ,Boolean)
       val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
   in
       res
