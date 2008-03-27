@@ -57,6 +57,7 @@ type testcase = {
      name : string,
      uml  : string,
      ocl  : string,
+     exclude : string list,
      result : result
 }
 
@@ -72,75 +73,97 @@ val initResult = {
     }:result
 
 
-val prefix = "../../examples/"
+val prefix = "../../../examples/"
 
 val testcases = [
    {
     name = "overriding",
     uml  = prefix^"overriding/overriding.zargo",
     ocl  = prefix^"overriding/overriding.ocl",
+    exclude = [],
     result = initResult
    }:testcase,
    {
     name = "Company",
     uml  = prefix^"company/company.zargo",
     ocl  = prefix^"company/company.ocl",
+    exclude = [],
     result = initResult
    }:testcase,
    {
     name = "ebank",
     uml  = prefix^"ebank/ebank.zargo",
     ocl  = prefix^"ebank/ebank.ocl",
+    exclude = [],
     result = initResult
    }:testcase,
    {
     name = "encoding_example",
     uml  = prefix^"encoding_example/encoding_example.zargo",
     ocl  = prefix^"encoding_example/encoding_example.ocl",
+    exclude = [],
     result = initResult
    }:testcase,
    {
     name = "isp",
     uml  = prefix^"isp/isp.zargo",
     ocl  = prefix^"isp/isp.ocl",
+    exclude = [],
     result = initResult
    }:testcase,
    {
     name = "Royals and Loyals",
     uml  = prefix^"royals_and_loyals/royals_and_loyals.zargo",
     ocl  = prefix^"royals_and_loyals/royals_and_loyals.ocl",
+    exclude = [],
     result = initResult
    }:testcase,  
    {
     name = "simple",
     uml  = prefix^"simple/simple.zargo",
     ocl  = prefix^"simple/simple.ocl",
+    exclude = [],
     result = initResult
    }:testcase,
    {
     name = "stack",
     uml  = prefix^"stack/stack.zargo",
     ocl  = prefix^"stack/stack.ocl",
+    exclude = [],
     result = initResult
    }:testcase,
    {
     name = "digraph",
     uml  = prefix^"digraph/digraph.zargo",
     ocl  = prefix^"digraph/digraph.ocl",
+    exclude = [],
     result = initResult
    }:testcase,
    {
     name = "vehicles",
     uml  = prefix^"vehicles/vehicles.zargo",
     ocl  = prefix^"vehicles/vehicles.ocl",
+    exclude = [],
     result = initResult
-   }:testcase (*,
+   }:testcase ,
    {
-    name = "SimpleChair",
+    name = "SimpleChair (AbstractsimpleChair01)",
     uml  = prefix^"SimpleChair/SimpleChair.zargo",
-    ocl  = "",
+    ocl  = "AbstractSimpleChair01.ocl",
+    exclude = ["AbstractSimpleChair02", "AbstractSimpleChair03", 
+	       "AbstractSimpleChair04",  "ConcreteSimpleChair01", 
+	       "ConcreteSimpleChair02"],
     result = initResult
-   }:testcase *)
+   }:testcase,
+   {
+    name = "SimpleChair (AbstractSimpleChair04)",
+    uml  = prefix^"SimpleChair/SimpleChair.zargo",
+    ocl  = "AbstractSimpleChair04.ocl",
+    exclude = ["AbstractSimpleChair01", "AbstractSimpleChair02", 
+	       "AbstractSimpleChair03",  "ConcreteSimpleChair01", 
+	       "ConcreteSimpleChair02"],
+    result = initResult
+   }:testcase 
 ]
 
 
@@ -152,7 +175,7 @@ fun test (tc:testcase) =
 	val ocl = ModelImport.parseOCL (#ocl tc)
 	    handle _ => [] 
 	val OclParse = if ocl = [] then false else true
-	val (xmi,ocl) = ModelImport.removePackages (xmi,ocl) []
+	val (xmi,ocl) = ModelImport.removePackages (xmi,ocl) (#exclude tc)
 	    handle _ => (([],[]),[])  
 
 	val _         = print "### Preprocess Context List ###\n"
@@ -193,6 +216,7 @@ fun test (tc:testcase) =
 	     name = #name tc,
 	     uml  = #uml tc,
 	     ocl  = #ocl tc,
+	     exclude  = #exclude tc,
 	     result = 
 	     {
 	      parse      = OclParse,
