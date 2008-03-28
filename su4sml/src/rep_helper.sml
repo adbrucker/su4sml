@@ -1,7 +1,6 @@
 signature REP_HELP_FUNCTIONS =
 sig
 
-    
     (**
      * Filter a list (OBSOLETE?)
      *)
@@ -180,5 +179,6 @@ fun join s nil = ""
 
 fun uncurry f (x,y) = f x y
 fun curry f x y     = f (x,y)
+
 
 end

@@ -134,7 +134,7 @@ fun removePackages (uml,ocl) packageList =
 	 * (Rep_Core.package_of cl = p)) model *)
 	fun filter_package (all_classifiers,all_associations) p = 
 	    let
-		val 
+
 		(* FIXME: correct handling for reflexive assocs + !isNavigable *)
 		fun valid_assoc {name,aends,qualifiers,aclass} = 
                     List.length aends > 1

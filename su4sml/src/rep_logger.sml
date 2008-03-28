@@ -75,7 +75,7 @@ end
 structure Rep_Logger:REP_LOGGER =
 struct
 
-
+open Rep_Help_Functions
 
 
 (* minimal tracing support (modifed version of ocl_parser tracing *)
@@ -180,13 +180,6 @@ fun append xs ys = xs @ ys;
 fun find _ []        = Option.NONE
   | find p (x :: xs) = if p x then Option.SOME x else find p xs;
     
-fun member x [] = false
-| member x (h::tail) = 
-    if (x = h) then
-	true
-    else 
-	member x tail
-
 fun swap1 f a b c = f c b a
 
 (* fun getenv var =
