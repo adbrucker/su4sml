@@ -1,7 +1,7 @@
 (* open structures *)
 
 (* SU4SML *)
-open library
+open Rep_Logger
 open OclLibrary
 open ModelImport
 open Rep_Core
@@ -16,11 +16,11 @@ val _ = Control.Print.printLength:=30
 val zargo = "../../../examples/meeting/Meeting.zargo"
 val ocl = ""
 *)
-(* 
+
 val zargo = "../../examples/SimpleChair/SimpleChair.zargo"
 val ocl = "../../examples/SimpleChair/AbstractSimpleChair01.ocl"
 val remP = ["AbstractSimpleChair02", "AbstractSimpleChair03","AbstractSimpleChair04","ConcreteSimpleChair01","ConcreteSimpleChair02"] ;
-*)
+
 
 (*
 (** EBANK **)
@@ -47,15 +47,15 @@ val ocl="../../examples/simple/simple.ocl"
 val zargo = "../../examples/digraph/digraph.zargo"
 val ocl = "../../examples/digraph/digraph.ocl"
 *)
-
+(*
 (** VEHICLES **)
 val zargo = "../../examples/vehicles/vehicles.zargo"
 val ocl = "../../examples/vehicles/vehicles.ocl"
-
+*)
 
 
 (** import model *)
-val i_model = import zargo ocl []
+val i_model = import zargo ocl remP
 val (clist,alist) = normalize_ext i_model
 val model = ((clist@oclLib),(alist))
 val classifiers = removeOclLibrary clist
