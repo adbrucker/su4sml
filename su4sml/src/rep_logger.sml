@@ -224,7 +224,4 @@ fun error_msg s = print (s^"\n")
 (** output an error message and Fail *)
 fun error s = (print (s^"\n"); raise Fail s)
 
-fun remove_dup [] = []
-  | remove_dup (h::tail) = if (member h tail) then (remove_dup tail) else ((h)::(remove_dup tail))
-
 end
