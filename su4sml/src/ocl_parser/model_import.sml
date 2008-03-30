@@ -45,10 +45,12 @@ sig
     val parseUML         : string -> Rep_Core.transform_model
     val parseOCL         : string -> Context.context list
     val import           : string -> string -> string list -> Rep_Core.transform_model
-    val removePackages   : (Rep_Core.transform_model * Context.context list) 
+(*    val removePackages   : (Rep_Core.transform_model * Context.context list) 
 			   -> string list
-			   -> (Rep_Core.transform_model * Context.context list)
-    val removeOclLibrary : Rep_Core.Classifier list -> Rep_Core.Classifier list
+			   -> (Rep_Core.transform_model * Context.context list) *)
+    val removePackages   : string list -> Rep_Core.transform_model 
+			   -> Rep_Core.transform_model
+    val removeOclLibrary : Rep_Core.Classifier list  -> Rep_Core.Classifier list
 end
 
 structure ModelImport : MODEL_IMPORT =
@@ -126,7 +128,7 @@ fun parseOCL oclFile =
     in
 	ocl
     end
-
+(*
 fun removePackages (uml,ocl) packageList = 
     let
 	(* filter package and update associations 
@@ -247,8 +249,28 @@ fun removePackages (uml,ocl) packageList =
     in
 	(uml,ocl)
     end
+*)
+
+
+fun removePackages packageList (cl,al) =
+    let
+        fun filter_package_assoc model p = filter 
+					 (fn a => not ((rev o tl o rev) (Rep_Core.name_of_association a) = p)) model
+        fun filter_package model p = filter (fn cl => not (Rep_Core.package_of cl = p)) model
+        val _ =  trace high "### Excluding Packages ###\n"
+        fun stringToPath s = (String.tokens (fn s => (s = (#":"))) s)
+        val cl =foldr (fn (p,m) => filter_package m (stringToPath  p)) cl packageList
+        val al =foldr (fn (p,m) => filter_package_assoc m (stringToPath  p)) al packageList
+        val _ =  trace high ("### Finished excluding Packages ("
+                 ^(Int.toString(length cl))
+                 ^ " Classifiers found ###\n\n")
+        (* TODO: Implement check for dangeling references/Types and Ocl Expressions *)
+    in
+        (cl,al)
+    end
+
     
-fun removeOclLibrary model = 
+fun removeOclLibrary (model) = 
     let
         fun filter_template model = 
 	    let
@@ -259,7 +281,7 @@ fun removeOclLibrary model =
 	    end
         fun filter_oclLib model = filter (not o OclLibrary.is_oclLib) model
     in 
-	(filter_oclLib o filter_template) model
+	((filter_oclLib o filter_template) model)
     end
 
 fun import xmifile oclfile excludePackages = 
@@ -267,13 +289,12 @@ fun import xmifile oclfile excludePackages =
         val xmi = parseUML xmifile
 	val _ = init_offset()
 	val ocl = parseOCL oclfile
-	val _ = init_offset()
-	val ((xmi_cls,xmi_assocs),ocl) = removePackages (xmi,ocl) excludePackages
+        val (xmi_cls, xmi_assocs) = xmi
 	val _ = init_offset()
 
 
 	val model = case ocl of 
-			[] => xmi_cls
+			[] => (xmi_cls,xmi_assocs)
 		      | ocl => let
 			    val _         = init_offset()
 
@@ -296,19 +317,18 @@ fun import xmifile oclfile excludePackages =
 
 			    val _         = trace high "### Fixing Types ###\n"
 	                    val model = removeOclLibrary  model
+                            val model = removePackages excludePackages (model,xmi_assocs)
 			    (*
 			    val model     = FixTyping.transform_ocl_spec FixTyping.transformForHolOcl model 
 			    *)
 			    val _         = trace high "### Finished Fixing Types ###\n\n"
-
-
 			in 
 			    model 
 			end
 			      
     in
 	(* FIXME: propagate associations into the ocl_parser *)
-       (model,xmi_assocs)
+       model
     end
     
 end

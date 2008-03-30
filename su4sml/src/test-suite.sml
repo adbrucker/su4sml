@@ -49,6 +49,8 @@ type result = {
      preprocess : bool,
      typecheck  : bool,
      update     : bool,
+     transform  : bool,
+     rmpkg      : bool,
      codegen    : bool,
      msg        : string
 }
@@ -68,7 +70,9 @@ val initResult = {
      preprocess = false,
      typecheck  = false,
      update     = false,
+     transform  = false,
      codegen     = false,
+     rmpkg       = false,
      msg        = ""
     }:result
 
@@ -147,18 +151,23 @@ val testcases = [
     result = initResult
    }:testcase ,
    {
+    name = "Invoicing Orders",
+    uml  = prefix^"InvoicingOrders/InvoicingOrders.zargo",
+    ocl  = prefix^"InvoicingOrders/InvoicingOrders.ocl",
+    exclude = [],
+    result = initResult
+   }:testcase,
+   {
     name = "SimpleChair (AbstractsimpleChair01)",
     uml  = prefix^"SimpleChair/SimpleChair.zargo",
-    ocl  = "AbstractSimpleChair01.ocl",
-    exclude = ["AbstractSimpleChair02", "AbstractSimpleChair03", 
-	       "AbstractSimpleChair04",  "ConcreteSimpleChair01", 
-	       "ConcreteSimpleChair02"],
+    ocl  = prefix^"SimpleChair/AbstractSimpleChair01.ocl",
+    exclude = [],
     result = initResult
    }:testcase,
    {
     name = "SimpleChair (AbstractSimpleChair04)",
     uml  = prefix^"SimpleChair/SimpleChair.zargo",
-    ocl  = "AbstractSimpleChair04.ocl",
+    ocl  = prefix^"SimpleChair/AbstractSimpleChair04.ocl",
     exclude = ["AbstractSimpleChair01", "AbstractSimpleChair02", 
 	       "AbstractSimpleChair03",  "ConcreteSimpleChair01", 
 	       "ConcreteSimpleChair02"],
@@ -175,9 +184,10 @@ fun test (tc:testcase) =
 	val ocl = ModelImport.parseOCL (#ocl tc)
 	    handle _ => [] 
 	val OclParse = if ocl = [] then false else true
+	(*
 	val (xmi,ocl) = ModelImport.removePackages (xmi,ocl) (#exclude tc)
 	    handle _ => (([],[]),[])  
-
+        *)
 	val _         = print "### Preprocess Context List ###\n"
 	val fixed_ocl = Preprocessor.preprocess_context_list 
 			    ocl ((OclLibrary.oclLib)@(#1 xmi))
@@ -199,7 +209,24 @@ fun test (tc:testcase) =
 	val modelUpdate = if model = [] then false else true
 	val _         = print "### Finished Updating Classifier List ###\n"
 
-  	val model     = ModelImport.removeOclLibrary model
+  	val cl     = ModelImport.removeOclLibrary (model)
+
+	val _         = print"### Transform Model (remove associations) ###\n"
+	val cl        = FixTyping.transform_ocl_spec FixTyping.transformForHolOcl 
+			   (#1 (Rep_Core.normalize_ext (cl, #2 xmi)))
+	                handle _ => []   
+	val transform = if cl = [] then false else true
+	val _         = print "### Finished Transform Model (after transformation) ###\n"
+
+	val _         = print"### RemovingPackages ###\n"
+	val clrm      = ModelImport.removePackages (#exclude tc) (cl, #2xmi)
+	                handle _ => (([],[]):Rep_Core.transform_model)   
+	val rmPkg = if (#exclude tc) = [] then true 
+		    else if (List.length cl) > (List.length (#1 clrm))
+		    then true 
+		    else false
+	val _   = print "### Finished Removing Packages ###\n"
+
 
 	val CodeGen = 
 	    let 
@@ -223,6 +250,8 @@ fun test (tc:testcase) =
 	      preprocess = OclParse andalso OclPreprocess,
 	      typecheck  = OclParse andalso OclPreprocess andalso OclTC,
 	      update     = OclParse andalso OclPreprocess andalso OclTC andalso modelUpdate,
+	      transform  = OclParse andalso OclPreprocess andalso OclTC andalso modelUpdate andalso transform, 
+	      rmpkg      = OclParse andalso OclPreprocess andalso OclTC andalso modelUpdate andalso transform andalso rmPkg, 
 	      codegen    = OclParse andalso OclPreprocess andalso OclTC andalso modelUpdate andalso CodeGen, 
 	      msg        = ""
 	     }:result
@@ -238,13 +267,17 @@ fun printResult (tc:testcase) =
 	val _   = print ("   preprocess:  "^(printBool (#preprocess res))^"\n")
 	val _   = print ("   typecheck:   "^(printBool (#typecheck res))^"\n")
 	val _   = print ("   update:      "^(printBool (#update res))^"\n")
+	val _   = print ("   transform:   "^(printBool (#transform res))^"\n")
+	val _   = print ("   rm pkg:      "^(printBool (#rmpkg res))^"\n")
 	val _   = print ("   codegen:     "^(printBool (#codegen res))^"\n\n")
-	val _   = print ("   ==> overall: "^(printBool ((#parse res) 
+	val _   = print ("   ==> summary: "^(printBool ((#parse res) 
 							andalso (#preprocess res) 
 							andalso (#typecheck res) 
 							andalso (#update res) 
-							andalso (#codegen res)))^"\n")
-
+							andalso (#codegen res)
+							andalso (#transform res)
+							andalso (#rmpkg res)
+					    ))^"\n")
     in
 	()
     end
