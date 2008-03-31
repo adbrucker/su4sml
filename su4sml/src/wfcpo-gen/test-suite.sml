@@ -1,7 +1,7 @@
 signature WFCPOG_TESTSUITE =
 sig
     val runTests          : WFCPOG.wfpo list -> WFCPOG.wfpo list -> unit
-    val runTest           : WFCPOG.wfpo list -> WFCPOG.wfpo list -> unit
+    val runTest           : string -> WFCPOG.wfpo list -> WFCPOG.wfpo list -> unit
     val set_printDepth    : int -> unit
     val set_printLength   : int -> unit
 end
@@ -158,9 +158,10 @@ fun print_tc (tc:testcase)=
 		start_tc^name
 	    end
 
-fun runTest wfs pos = 
+fun runTest name wfs pos = 
     let
-	val string = (print_tc testcase)^(test testcase wfs pos)
+	val tc = valOf (List.find (fn a => name = (#name a)) testcases)
+	val string = (print_tc tc)^(test tc wfs pos)
     in
 	if (String.isSubstring "[Error]" string)
 	then print(string^"\n\n !!!!!!!!!! WFCPOG still contains bugs !!!!!!!!!!!!!\n\n\n")

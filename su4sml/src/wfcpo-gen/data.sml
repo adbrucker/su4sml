@@ -30,8 +30,8 @@ val rfm_syn = WFCPOG_Registry.get_wfpo WFCPOG_Registry.supported "rfm_syn"
 val tax = WFCPOG_Registry.get_wfpo WFCPOG_Registry.supported "tax"
 
 
-
 val rfm_SC = WFCPOG_Registry.rename_wfpo "rfm_SC" (WFCPOG_Registry.RFM_Data.put ({key=10,rfm_tuples=[(["AbstractSimpleChair01"],["ConcreteSimpleChair01"])]}) rfm_syn)
+ 
 val md0 = WFCPOG_Registry.rename_wfpo "md0" (WFCPOG_Registry.TAX_Data.put ({key=9,max_depth=0}) tax)
 val md1 = WFCPOG_Registry.rename_wfpo "md1" (WFCPOG_Registry.TAX_Data.put ({key=9,max_depth=1}) tax)
 val md2 = WFCPOG_Registry.rename_wfpo "md2" (WFCPOG_Registry.TAX_Data.put ({key=9,max_depth=2}) tax)
@@ -42,6 +42,6 @@ val md6 = WFCPOG_Registry.rename_wfpo "md6" (WFCPOG_Registry.TAX_Data.put ({key=
 val md7 = WFCPOG_Registry.rename_wfpo "md7" (WFCPOG_Registry.TAX_Data.put ({key=9,max_depth=7}) tax)
 val md8 = WFCPOG_Registry.rename_wfpo "md8" (WFCPOG_Registry.TAX_Data.put ({key=9,max_depth=8}) tax)
 
-
+ 
 val wfs = [inf,vis,md0,md1,md2,md3,md4,md5,md6,md7,md8,rfm_SC]
 val pos = [lsk,cm,sm,om,cmd,quy]

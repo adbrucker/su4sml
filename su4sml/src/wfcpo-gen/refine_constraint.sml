@@ -103,11 +103,10 @@ fun map_public_classes fromPath toPath (model as (clist,alist)) =
 	group_cl abs_c conc_c 
 	handle ClassGroupError (clist,s) => 
 	       let
-		   val _ = trace exce ("\n\n#####################################################################\n")
-		   val _ = trace exce ("#####################################################################\n\n")
-		   val _ = trace exce ("SYNTAX ERROR: Class consistency \n\n")
-		   val _ = trace exce ("The following public classes are not included in the refined class:\n\n") 
-		   val _ = trace exce (String.concat (List.map (fn a => (" * " ^ (string_of_path (name_of a)) ^ "\n")) clist))
+		   val s1 = ("SYNTAX ERROR: Class consistency \n\n")
+		   val s2 = ("The following public classes are not included in the refined class:\n\n") 
+		   val s3 = (String.concat (List.map (fn a => (" * " ^ (string_of_path (name_of a)) ^ "\n")) clist))
+		   val _ = trace exce (s1^s2^s3)
 	       in 
 		   raise WFCPOG_RefineError ("Please adjust model...\n")
 	       end     
@@ -116,31 +115,33 @@ fun map_public_classes fromPath toPath (model as (clist,alist)) =
 fun map_public_ops [] = [[]]
   | map_public_ops ((f,t)::tail) = 
     let
-	val _ = trace zero ("MAP_PUBLIC_OPS ... \n")
+	val _ = trace function_calls ("Refine_Constraint.map_public_ops\n")
 	val f_ops = List.filter (is_visible_op) (operations_of f)
 	val t_ops = List.filter (is_visible_op) (operations_of t)
 	val _ = trace zero ("Number of operations of f_class(" ^ (string_of_path (name_of f)) ^ ") = " ^ Int.toString (List.length(f_ops)) ^ "\n")
 	val _ = trace zero ("Number of operations of t_class(" ^ (string_of_path (name_of t)) ^ ") = " ^ Int.toString (List.length(t_ops)) ^ "\n")
+	val res = 
+	    [(List.map (fn (a,b) => (f,t,a,b)) (group_op f_ops t_ops
+						handle OpGroupError (oplist,s) => 
+						       let
+							   val s1 = ("SYNTAX ERROR: Operation consistency \n\n")
+							   val s2 = ("FromClass = " ^ (string_of_path (name_of f)) ^ "\n")
+							   val s3 = ("ToClass = " ^ (string_of_path (name_of t)) ^ "\n")
+							   val s4 = ("The following public operations are not included in the refined classes:\n\n") 
+							   val s5 = (String.concat (List.map (fn a => (" * " ^ (operation2string a) ^ "\n")) oplist))
+							   val _ = trace exce (s1^s2^s3^s4^s5)
+						       in 
+							   raise WFCPOG_RefineError ("Please adjust model...\n")
+						       end     
+	    ))]
+	    @(map_public_ops tail)
+	val _ = trace function_ends ("Refine_Constraint.map_public_op\n")
     in
-	[(List.map (fn (a,b) => (f,t,a,b)) (group_op f_ops t_ops
-					    handle OpGroupError (oplist,s) => 
-	       let
-		   val _ = trace exce  ("\n\n#####################################################################\n")
-		   val _ = trace exce ("#####################################################################\n\n")
-		   val _ = trace exce ("SYNTAX ERROR: Operation consistency \n\n")
-		   val _ = trace exce ("FromClass = " ^ (string_of_path (name_of f)) ^ "\n")
-		   val _ = trace exce ("ToClass = " ^ (string_of_path (name_of t)) ^ "\n")
-		   val _ = trace exce ("The following public operations are not included in the refined classes:\n\n") 
-		   val _ = trace exce (String.concat (List.map (fn a => (" * " ^ (operation2string a) ^ "\n")) oplist))
-	       in 
-		   raise WFCPOG_RefineError ("Please adjust model...\n")
-	       end     
-	 ))]
-	@(map_public_ops tail)
+	res 
     end
-
-
-
+    
+    
+    
 fun map_types [] fP tP model = []
   | map_types ((h1:Classifier,h2:Classifier,h3:operation,h4:operation)::tail) fP tP model =
     let

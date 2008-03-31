@@ -41,11 +41,11 @@
 
 signature WFCPOG_REGISTRY = 
 sig
-(* WHY?: 
+
     structure LSK_Data     : WFPO_DATA
     structure TAX_Data     : WFPO_DATA
     structure RFM_Data     : WFPO_DATA
-    *)
+
 
     val supported          : WFCPOG.wfpo list
     val wfpos              : WFCPOG.wfpo list ref
@@ -69,9 +69,9 @@ struct
 
 exception WFCPOG_RegistryError of string
 structure LSK_Data = Liskov_Constraint.LSK_Data
-(*structure TAX_Data = Taxonomy_Constraint.TAX_Data
+structure TAX_Data = Taxonomy_Constraint.TAX_Data
 structure RFM_Data = Refine_Constraint.RFM_Data
-*)
+
 open Rep_Logger
 open WFCPOG
 
@@ -85,7 +85,7 @@ fun add_wfpo wfpo = ((wfpos := [wfpo]@(!wfpos));())
 
 fun del_wfpo wfpo_id = ((wfpos := List.filter (fn w => not ((WFCPOG.id_of w) = (wfpo_id)) ) 
 			   (!wfpos));())
-fun get_wfpo [] x = raise WFCPOG_RegistryError ("No such ID found in given list!\n")
+fun get_wfpo [] x = raise WFCPOG_RegistryError ("No ID = " ^ x ^ " found in given list!\n")
   | get_wfpo (h::tail) x = 
     if (id_of h = x) 
     then h
@@ -257,9 +257,9 @@ val supported = [
      recommends      = [],
      apply           = WFCPOG.WFC(Visibility_Constraint.are_conditions_visible),
      data = Datatab.empty
-    }(*,
+    },
     WFCPOG.WFPO{
-     identifier      = "tax", (* identifier                     *) 
+     identifier      = "tax", 
      name            = "Max Depth",
      description     = "Max Depth",
      recommended     = true,
@@ -277,7 +277,7 @@ val supported = [
      recommends      = [],
      apply           = WFCPOG.WFC(Refine_Constraint.check_syntax),
      data            = Datatab.empty
-    }*)(*, 
+    }(*, 
     WFCPOG.WFPO {
      identifier      = "ref_po", 
      name            = "OO Refinement",
