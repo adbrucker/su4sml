@@ -240,6 +240,13 @@ fun ocl2string show_types oclterm =
       (* Catch out                          *)
       (**************************************)
       (* Error                              *)
+      | Tuple(x) =>
+	let 
+	    val x = String.concat (List.map (fn (a,b,c) => a^":"^(string_of_OclType c)^"='"^(ocl2string false b)^"',") x)
+	    val size = String.size x
+	in
+	    "Tuple{"^(String.substring(x,0,size-1))^"}\n"
+	end
       | _ => error "error: unknown OCL-term in in ocl2string"
     end
 end
