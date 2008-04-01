@@ -299,16 +299,29 @@ and resolve_OclTerm (Literal (s,typ)) model =
   in
       res
   end
+(* TupleLiteral *)
+  | resolve_OclTerm (TupleLiteral(fst,ftype,snd,stype)) model =
+    let
+	val _ = trace function_calls ("TypeChecker.resolve_OclTerm TupleLiteral " ^ ocl2string false (TupleLiteral(fst,stype,snd,stype)) ^ "\n")
+	val rfst = resolve_OclTerm fst model
+	val rftype = type_of_term rfst
+	val rsnd = resolve_OclTerm snd model
+	val rstype = type_of_term rsnd
+	val res = TupleLiteral(rfst,rftype,rsnd,rstype)
+	val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
+    in
+	res
+    end
 (* Variable *)
-| resolve_OclTerm (Variable ("self",typ)) model = 
-  let
-      val _ = trace function_calls ("TypeChecker.resolve_OclTerm Variable " ^ ocl2string false (Variable("self",typ)) ^ "\n")
-      val res = (Variable ("self",typ)) 
-      val _ = trace function_ends ("TypeChecker.resolve_OclTerm Variable " ^ ocl2string false (Variable("self",typ)) ^ "\n")
-  in
-      res
-  end
-| resolve_OclTerm (Variable (name,typ)) model = 
+  | resolve_OclTerm (Variable ("self",typ)) model = 
+    let
+	val _ = trace function_calls ("TypeChecker.resolve_OclTerm Variable " ^ ocl2string false (Variable("self",typ)) ^ "\n")
+	val res = (Variable ("self",typ)) 
+	val _ = trace function_ends ("TypeChecker.resolve_OclTerm Variable " ^ ocl2string false (Variable("self",typ)) ^ "\n")
+    in
+	res
+    end
+  | resolve_OclTerm (Variable (name,typ)) model = 
   let
       val _ = trace function_calls ("TypeChecker.resolve_OclTerm Variable " ^ ocl2string false (Variable(name,typ)) ^ "\n")
       val res = Variable (name,typ)
