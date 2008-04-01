@@ -49,7 +49,7 @@ sig
 		         | Set of OclType | Sequence of OclType
 		         | OrderedSet of OclType | Bag of OclType 
 		         | Collection of OclType
-			 | Tuple of (OclType * OclType)
+			 | TupleType of (string * OclType) list 
 		         | Classifier of Path | OclVoid | DummyT | TemplateParameter of string
 
     val short_name_of_OclType: OclType -> string
@@ -71,9 +71,8 @@ include REP_OCL_TYPE
 
 datatype OclTerm = 
 	       Literal of string * OclType         (* Literal with type  *)
-	     | TupleLiteral of 
-	               OclTerm * OclType           (* first of typle     *)
-		     * OclTerm * OclType           (* second of typle    *)
+	     | Tuple of 
+	             (string * OclTerm * OclType ) list     
 	     | CollectionLiteral of CollectionPart list 
 				    * OclType      (* content with type  *)
 	     | If of OclTerm * OclType             (* condition          *)
@@ -145,7 +144,7 @@ datatype OclType    =  Integer | Real | String | Boolean | OclAny
 		     | Set of OclType | Sequence of OclType
 		     | OrderedSet of OclType | Bag of OclType 
 		     | Collection of OclType | OclVoid | DummyT
-		     | Tuple of (OclType * OclType)
+		     | TupleType of (string * OclType) list
 		     | Classifier of Path
 		     | TemplateParameter of string
 
@@ -225,9 +224,8 @@ open Rep_OclType
 
 datatype OclTerm = 
 	       Literal of string * OclType         (* Literal with type  *)
-	     | TupleLiteral of 
-	               OclTerm * OclType           (* first of typle     *)
-		     * OclTerm * OclType           (* second of typle    *)
+	     | Tuple of 
+	             (string * OclTerm * OclType) list
 	     | CollectionLiteral of CollectionPart list 
 				    * OclType      (* content with type  *)
 	     | If of OclTerm * OclType             (* condition          *)

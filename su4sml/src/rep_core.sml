@@ -992,7 +992,7 @@ fun type_of (Class{name,...})            = name
   | type_of (Template{classifier,...})   = type_of classifier 
 
 fun type_of_term (Literal (s,typ)) = typ
-  | type_of_term (TupleLiteral(fst,ftype,snd,stype)) = Tuple(ftype,stype)
+  | type_of_term (Tuple(x)) = TupleType (List.map (fn (a,b,c) => (a,c)) x)
   | type_of_term (AttributeCall (t,typ,p,res_typ)) = res_typ
   | type_of_term (AssociationEndCall (t,typ,p,res_typ)) = res_typ
   | type_of_term (OperationCall (t,typ,p,l,res_typ)) = res_typ

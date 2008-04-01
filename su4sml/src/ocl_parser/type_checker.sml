@@ -300,14 +300,16 @@ and resolve_OclTerm (Literal (s,typ)) model =
       res
   end
 (* TupleLiteral *)
-  | resolve_OclTerm (TupleLiteral(fst,ftype,snd,stype)) model =
+  | resolve_OclTerm (Tuple(x)) model =
     let
-	val _ = trace function_calls ("TypeChecker.resolve_OclTerm TupleLiteral " ^ ocl2string false (TupleLiteral(fst,stype,snd,stype)) ^ "\n")
-	val rfst = resolve_OclTerm fst model
-	val rftype = type_of_term rfst
-	val rsnd = resolve_OclTerm snd model
-	val rstype = type_of_term rsnd
-	val res = TupleLiteral(rfst,rftype,rsnd,rstype)
+	val _ = trace function_calls ("TypeChecker.resolve_OclTerm TupleLiteral " ^ ocl2string false (Tuple(x)) ^ "\n")
+	val res = Tuple (List.map (fn (a,b,c) => 
+				  let
+				      val rterm = resolve_OclTerm b model
+				      val rtype = type_of_term rterm
+				  in
+				      (a,rterm,rtype)
+				  end) x)
 	val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
     in
 	res
