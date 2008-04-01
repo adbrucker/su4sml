@@ -70,7 +70,7 @@ struct
 exception WFCPOG_RegistryError of string
 structure LSK_Data = Liskov_Constraint.LSK_Data
 structure TAX_Data = Taxonomy_Constraint.TAX_Data
-structure RFM_Data = Refine_Constraint.RFM_Data
+structure RFM_Data = WFCPOG_Refine_Constraint.RFM_Data
 
 open Rep_Logger
 open WFCPOG
@@ -275,7 +275,7 @@ val supported = [
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.WFC(Refine_Constraint.check_syntax),
+     apply           = WFCPOG.WFC(WFCPOG_Refine_Constraint.check_syntax),
      data            = Datatab.empty
     }(*, 
     WFCPOG.WFPO {

@@ -122,9 +122,9 @@ fun deep_of_classifier x (Class{parent,...}) (model as (clist,alist)) =
 fun has_maxDepth_help depth [] model = true
   | has_maxDepth_help depth (h::classes) (model as (clist,alist)) = 
     let 
-	val _ = trace 50 ("look for deep ...\n")
+	val _ = trace wgen ("look for deep ...\n")
 	val d = deep_of_classifier 0 h model
-	val _ = trace 50 ("deep of classifier " ^ (String.concat (Rep_Core.name_of h)) ^ " = " ^ (Int.toString d) ^ "\n")
+	val _ = trace wgen ("deep of classifier " ^ (String.concat (Rep_Core.name_of h)) ^ " = " ^ (Int.toString d) ^ "\n")
     in
 	if (d > depth) 
 	then false
@@ -133,13 +133,13 @@ fun has_maxDepth_help depth [] model = true
     
 fun has_maxDepth wfpo (model as (clist,alist)) =
     let
-	val _ = trace 50 ("remove oclLib ...\n")
+	val _ = trace wgen ("remove oclLib ...\n")
 	val classes = removeOclLibrary clist
-	val _ = trace 50 ("oclLib removed ...\n")
+	val _ = trace wgen ("oclLib removed ...\n")
 	val tax_args = TAX_Data.get wfpo
-	val _ = trace 50 ("args extracted ...\n")
+	val _ = trace wgen ("args extracted ...\n")
 	val depth = (#max_depth tax_args)
-	val _ = trace 50 ("depth = " ^ (Int.toString (depth)) ^ "\n")
+	val _ = trace wgen ("depth = " ^ (Int.toString (depth)) ^ "\n")
     in
 	has_maxDepth_help depth classes model 
     end
