@@ -275,7 +275,9 @@ fun get_holocl_abstraction_relation abs_package conc_package model =
 fun get_holocl_invariant class model = 
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.get_holocl_invariant\n")
-	val res = Predicate(Variable("x",typ),typ,hol_name,args)
+	val hol_name = mk_def_of (name_of class)
+	val typ = type_of class
+	val res = Predicate(Variable("x",typ),typ,hol_name,[])
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.get_holocl_invariant\n")
     in
 	res
@@ -305,7 +307,7 @@ fun pre_state_valid hol_operation ((Tuple(tuple)):OclTerm) V =
         (* (string * term * type) *)
 	val (sigma'_name,sigma'_term,sigma'_type) = List.last tuple
 	(* sigma is_element_of V *)
-	val s_E_V = Predicate(V,DummyT,
+(*	val s_E_V = Predicate(V,DummyT, *)
 	val m_valid = M_valid hol_operation (Tuple(tuple))
 	val exists = Iterator("holOclLib.exists",[(sigma'_name,sigma'_type)],V,Boolean,m_valid,Boolean,Boolean)
 	val res = Iterator("holOclLib.forAll",[(sigma_name,sigma_type)],V,Boolean,exists,Boolean,Boolean)
