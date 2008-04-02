@@ -75,7 +75,7 @@ end
 structure Rep_Logger:REP_LOGGER =
 struct
 
-open Rep_Help_Functions
+open Rep_Helper
 
 
 (* minimal tracing support (modifed version of ocl_parser tracing *)
