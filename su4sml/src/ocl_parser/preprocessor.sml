@@ -49,7 +49,7 @@ end
 
 structure Preprocessor:PREPROCESSOR  = 
  struct
-open Rep_Help_Functions
+open Rep_Helper
 open Rep_Logger
 open Rep_Core
 open Rep_OclTerm

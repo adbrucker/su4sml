@@ -42,7 +42,7 @@
 (** "pretty printing" for OCL expressions. *)
 structure Ocl2String = 
 struct
-open Rep_Help_Functions
+open Rep_Helper
 open Rep_Logger
 open Rep_OclType
 open Rep_OclTerm

@@ -134,7 +134,7 @@ end
 
 structure Rep_OclType : REP_OCL_TYPE =
 struct
-open Rep_Help_Functions
+open Rep_Helper
 open Rep_Logger
 
 type Path = string list

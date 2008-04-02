@@ -67,8 +67,10 @@ end
  *) 
 functor SecureUML(structure Design: DESIGN_LANGUAGE):SECUREUML =
 struct
-open Rep_Help_Functions
+open Rep_Helper
 open Rep_Logger
+
+
 structure Design : DESIGN_LANGUAGE = Design
 
 type User = string

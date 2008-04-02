@@ -41,7 +41,7 @@
 
 structure Xmi_IDTable = 
 struct
-open Rep_Help_Functions
+open Rep_Helper
 open Rep_Logger
 
 (**

@@ -1,4 +1,4 @@
-signature REP_HELP_FUNCTIONS =
+signature REP_HELPER =
 sig
 
     (**
@@ -54,7 +54,7 @@ sig
     val uncurry                 : ('a -> 'b -> 'c) -> 'a * 'b -> 'c
 
 end
-structure Rep_Help_Functions:REP_HELP_FUNCTIONS=
+structure Rep_Helper:REP_HELPER =
 struct 
  
 infix |>

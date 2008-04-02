@@ -109,7 +109,7 @@ struct
 datatype transformFlag = BinaryAssociationsOnly
 type modelTransformation = Rep_Core.transform_model * transformFlag list
 			   -> Rep_Core.transform_model * transformFlag list
-open Rep_Help_Functions
+open Rep_Helper
 open Rep_Logger
 open Transform_Library
 open Rep_OclTerm

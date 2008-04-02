@@ -69,7 +69,7 @@ end
  *)
 structure preMap = 
 struct 
-open Rep_Help_Functions
+open Rep_Helper
 open Rep_Logger
 
 val entries : (string * int) list ref = ref nil
@@ -99,7 +99,7 @@ end
  *)
 structure Ocl2DresdenJava = 
 struct 
-open Rep_Help_Functions
+open Rep_Helper
 open Rep_Logger
 open Rep_OclType 
 open Rep_OclTerm 
