@@ -41,7 +41,6 @@
 	 
 use "holocl_namespace.sml";
 use "datatab.sml";
-use "naming.sml";
 use "library.sml";
 use "wfcpog.sml";
 
@@ -51,12 +50,11 @@ use "liskov_constraint.sml";
 use "data_model_consistency.sml";
 use "constructor_consistency.sml";
 use "operational_consistency.sml";
-(* TODO: use "refine_constraint.sml"; *)
+use "refine_constraint.sml";
 use "command_query_consistency.sml";
-(* TODO: use "taxonomy_consistency.sml"; *)
+use "taxonomy_consistency.sml";
 use "interface_consistency.sml";
 
 (* wccpog toplevel *)
 use "wfcpog_registry.sml";
-use "wfcpog_constraint_library.sml";
 

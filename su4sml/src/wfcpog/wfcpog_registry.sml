@@ -41,11 +41,11 @@
 
 signature WFCPOG_REGISTRY = 
 sig
-
+(*
     structure WFCPOG_LSK_Data     : WFCPOG_DATA
     structure WFCPOG_TAX_Data     : WFCPOG_DATA
     structure WFCPOG_RFM_Data     : WFCPOG_DATA
-
+*)
 
     val supported          : WFCPOG.wfpo list
     val wfpos              : WFCPOG.wfpo list ref
@@ -68,11 +68,11 @@ structure WFCPOG_Registry :WFCPOG_REGISTRY  =
 struct
 
 exception WFCPOG_RegistryError of string
-
+(*
 structure WFCPOG_LSK_Data = WFCPOG_Liskov_Constraint.WFCPOG_LSK_Data
 structure WFCPOG_TAX_Data = WFCPOG_Taxonomy_Constraint.WFCPOG_TAX_Data
 structure WFCPOG_RFM_Data = WFCPOG_Refine_Constraint.WFCPOG_RFM_Data
-
+*)
 open Rep_Logger
 open WFCPOG
 
