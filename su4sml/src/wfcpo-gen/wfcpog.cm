@@ -70,4 +70,3 @@ Group is
 
 (* wccpog toplevel *)
 "wfcpog_registry.sml"
-"wfcpog_constraint_library.sml"
