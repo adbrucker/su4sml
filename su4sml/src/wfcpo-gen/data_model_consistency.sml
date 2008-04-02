@@ -40,14 +40,14 @@
 (* $Id: context_declarations.sml 6727 2007-07-30 08:43:40Z brucker $ *)
 
 (** Implementation of the Liskov Substitiution Principle. *)
-signature DATA_MODEL_CONSISTENCY_CONSTRAINT = 
+signature WFCPOG_DATA_MODEL_CONSISTENCY_CONSTRAINT = 
 sig
     (** sub constraint, included in liskov.*)
     val class_model_consistency        : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
     (** sub constraint, included in liskov.*)
     val strong_model_consistency       : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
 end
-structure Data_Model_Consistency_Constraint : DATA_MODEL_CONSISTENCY_CONSTRAINT = 
+structure WFCPOG_Data_Model_Consistency_Constraint : WFCPOG_DATA_MODEL_CONSISTENCY_CONSTRAINT = 
 struct
 
 (* su4sml *)

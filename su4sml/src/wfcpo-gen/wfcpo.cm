@@ -54,7 +54,6 @@ Group is
 	
 "holocl_namespace.sml"
 "datatab.sml"
-"naming.sml"
 "library.sml"
 "wfcpog.sml"
 
@@ -72,4 +71,3 @@ Group is
 (* wccpog toplevel *)
 "wfcpog_registry.sml"
 "wfcpog_constraint_library.sml"
-

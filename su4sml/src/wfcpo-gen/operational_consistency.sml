@@ -40,7 +40,7 @@
 (* $Id: context_declarations.sml 6727 2007-07-30 08:43:40Z brucker $ *)
 
 (** Implementation of the wellformed constraint for a constructor *)
-signature OPERATIONAL_CONSTRAINT = 
+signature WFCPOG_OPERATIONAL_CONSTRAINT = 
 sig
     (** sub constraint, included in operational consistency.*)
     val generate_secureUML_creators_po      : Rep_Core.Classifier -> Rep.Model -> Rep_OclTerm.OclTerm list
@@ -53,7 +53,7 @@ sig
     val generate_pos                        : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
 
 end
-structure Operational_Constraint : OPERATIONAL_CONSTRAINT = 
+structure WFCPOG_Operational_Constraint : WFCPOG_OPERATIONAL_CONSTRAINT = 
 struct
 
 
@@ -68,7 +68,6 @@ open Rep_OclType
 open ModelImport
 
 (* WFCPO *)
-open WFCPO_Naming
 open WFCPOG_Library
 
 exception WFCPO_OperationalError

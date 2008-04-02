@@ -40,13 +40,13 @@
 (* $Id: context_declarations.sml 6727 2007-07-30 08:43:40Z brucker $ *)
 
 (** Implementation of the Liskov Substitiution Principle. *)
-signature COMMAND_QUERY_CONSTRAINT =
+signature WFCPOG_COMMAND_QUERY_CONSTRAINT =
 sig
     val ops_are_query            : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
 						
     val ops_are_command          : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
 end
-structure Command_Query_Constraint:COMMAND_QUERY_CONSTRAINT = 
+structure WFCPOG_Command_Query_Constraint:WFCPOG_COMMAND_QUERY_CONSTRAINT = 
 struct
 
 (* su4sml *)
@@ -61,7 +61,6 @@ open ModelImport
 
 (* wfcpo-gen *)
 open WFCPOG_Library
-open WFCPO_Naming
 
 exception WFCPO_QueryCommandError of string
 

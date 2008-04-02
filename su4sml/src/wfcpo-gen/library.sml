@@ -56,7 +56,7 @@ sig
     (** Get the term of a certain postcondition.*)
     val term_of_postcondition     : (string option * Rep_OclTerm.OclTerm) -> Rep_OclTerm.OclTerm
     (** Wrap a predicate over an OclTerm.*)
-    val wrap_predicate            : Rep_OclTerm.OclTerm -> string option -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list -> Rep_OclTerm.OclTerm
+(*    val wrap_predicate            : Rep_OclTerm.OclTerm -> string option -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list -> Rep_OclTerm.OclTerm *)
     (** Conjugate a list of terms to one single term.*)							 
     val conjugate_terms           : Rep_OclTerm.OclTerm list -> Rep_OclTerm.OclTerm
     (** *)
@@ -86,7 +86,7 @@ structure WFCPOG_Library:WFCPOG_LIBRARY =
 struct
 
 (* SU4SML *)
-open Rep_Help_Functions
+open Rep_Helper
 open Rep_Logger
 open Rep_Core
 open Rep 
@@ -97,8 +97,6 @@ open Rep2String
 open XMI_DataTypes
 (* OclParser *)
 
-(* WFCPO-Gen *)
-open WFCPO_Naming
 
 
 exception WFCPOG_LibraryError of string 
@@ -117,9 +115,10 @@ fun term_of_postcondition ((a:string option),(t:OclTerm)) = t
     OperationCall (
 *)
 
+(*
 fun wrap_predicate term (NONE) args = Predicate (term,type_of_term term,[generate_name "gen_name"],args)
   | wrap_predicate term (SOME(x)) args = Predicate (term,type_of_term term,[x],args)
-
+*)
 fun conjugate_terms [] = raise WFCPOG_LibraryError ("Empty list not conjugateable. \n")
   | conjugate_terms [x:OclTerm] = (x)
   | conjugate_terms ((h:OclTerm)::tail) = 

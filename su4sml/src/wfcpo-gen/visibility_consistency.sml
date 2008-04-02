@@ -40,14 +40,14 @@
 (* $Id: context_declarations.sml 6727 2007-07-30 08:43:40Z brucker $ *)
 
 (** Implementation of the Liskov Substitiution Principle. *)
-signature VISIBILITY_CONSTRAINT =
+signature WFCPOG_VISIBILITY_CONSTRAINT =
 sig
     val are_conditions_visible : WFCPOG.wfpo -> Rep.Model -> bool
 
 
 
 end
-structure Visibility_Constraint:VISIBILITY_CONSTRAINT = 
+structure WFCPOG_Visibility_Constraint:WFCPOG_VISIBILITY_CONSTRAINT = 
 struct
 
 (* su4sml *)
@@ -63,7 +63,6 @@ open ModelImport
 
 (* wfcpo-gen *)
 open WFCPOG_Library
-open WFCPO_Naming
 
 exception WFCPO_VisibilityError of string
 

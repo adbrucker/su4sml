@@ -40,10 +40,10 @@
 (* $Id: context_declarations.sml 6727 2007-07-30 08:43:40Z brucker $ *)
 
 (** Implementation of the Liskov Substitiution Principle. *)
-signature TAXONOMY_CONSTRAINT =
+signature WFCPOG_TAXONOMY_CONSTRAINT =
 sig 
     type TAX_args      
-    structure TAX_Data :
+    structure WFCPOG_TAX_Data :
 	      sig
 		  type T = TAX_args
 		  val get : WFCPOG.wfpo -> T
@@ -59,7 +59,7 @@ sig
     exception WFCPOG_TaxonomyError of string
 end
 
-structure Taxonomy_Constraint:TAXONOMY_CONSTRAINT = 
+structure WFCPOG_Taxonomy_Constraint:WFCPOG_TAXONOMY_CONSTRAINT = 
 struct
 
 (* su4sml *)
@@ -75,7 +75,6 @@ open ModelImport
 
 (* wfcpo-gen *)
 open WFCPOG_Library
-open WFCPO_Naming
 open Datatab
 
 exception WFCPOG_TaxonomyError of string
@@ -85,7 +84,7 @@ type TAX_args = {
      max_depth : int
 }
 
-structure TAX_Data = WfpoDataFun
+structure WFCPOG_TAX_Data = WFCPOG_DataFun
 (struct
  val name =" tax";
  type T = TAX_args;
@@ -136,7 +135,7 @@ fun has_maxDepth wfpo (model as (clist,alist)) =
 	val _ = trace wgen ("remove oclLib ...\n")
 	val classes = removeOclLibrary clist
 	val _ = trace wgen ("oclLib removed ...\n")
-	val tax_args = TAX_Data.get wfpo
+	val tax_args = WFCPOG_TAX_Data.get wfpo
 	val _ = trace wgen ("args extracted ...\n")
 	val depth = (#max_depth tax_args)
 	val _ = trace wgen ("depth = " ^ (Int.toString (depth)) ^ "\n")

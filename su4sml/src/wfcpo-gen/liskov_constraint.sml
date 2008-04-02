@@ -40,11 +40,11 @@
 (* $Id: context_declarations.sml 6727 2007-07-30 08:43:40Z brucker $ *)
 
 (** Implementation of the Liskov Substitiution Principle. *)
-signature LISKOV_CONSTRAINT =
+signature WFCPOG_LISKOV_CONSTRAINT =
 sig
     type Liskov_args
     
-    structure LSK_Data :
+    structure WFCPOG_LSK_Data :
 	      sig
 		  type T = Liskov_args
 		  val get : WFCPOG.wfpo -> T
@@ -66,7 +66,7 @@ sig
     (** all three subconstraints together *)
     val generate_po                 : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
 end 
-structure Liskov_Constraint : LISKOV_CONSTRAINT = 
+structure WFCPOG_Liskov_Constraint : WFCPOG_LISKOV_CONSTRAINT = 
 struct
 
 exception WFCPOG_LiskovError of string
@@ -82,7 +82,6 @@ open ModelImport
 
 (* wfcpo-gen *)
 open WFCPOG_Library
-open WFCPO_Naming
 open Datatab
 exception WFCPO_LiskovError of string
 
@@ -91,7 +90,7 @@ type Liskov_args = {
      size:int
 }
 		   
-structure LSK_Data = WfpoDataFun
+structure WFCPOG_LSK_Data = WFCPOG_DataFun
 			  (struct
 			   type T =  Liskov_args;
 			   val empty = ({model="", size=0});
@@ -121,9 +120,9 @@ fun generate_return_value typ oper sub_class super_class model =
 	    1 => 
 	    let
                 (* preconditions of super type in one term *)
-		val term_super = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[(generate_opt_name "gen_pre" a)],(args2varargs (arguments_of_op op_of_super))))) (precondition_of_op op_of_super))
+		val term_super = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[("dummy_name")],(args2varargs (arguments_of_op op_of_super))))) (precondition_of_op op_of_super))
                 (* preconditions of sub type in one term *)
-		val term_sub = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[(generate_opt_name "gen_pre" a)],(args2varargs (arguments_of_op oper))))) (precondition_of_op oper))
+		val term_sub = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[("dummy_name")],(args2varargs (arguments_of_op oper))))) (precondition_of_op oper))
 	    in 
 		OperationCall(term_super,Boolean,["Boolean","implies"],[(term_sub,type_of_term term_sub)],Boolean)
 	    end
@@ -139,9 +138,9 @@ fun generate_return_value typ oper sub_class super_class model =
 	  | 2 => 
 	    let 
 		(* postconditions of sub type in one term *)
-		val term_sub = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[(generate_opt_name "gen_post" a)],(args2varargs (arguments_of_op oper))))) (postcondition_of_op oper))
+		val term_sub = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[("dummy_name")],(args2varargs (arguments_of_op oper))))) (postcondition_of_op oper))
                 (* postconditions of super type in one term *)
-		val term_super = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[(generate_opt_name "gen_post" a)],(args2varargs (arguments_of_op op_of_super))))) (postcondition_of_op op_of_super))
+		val term_super = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[("dummy_name")],(args2varargs (arguments_of_op op_of_super))))) (postcondition_of_op op_of_super))
 	    in 
 		OperationCall(term_sub,Boolean,["Boolean","implies"],[(term_super,type_of_term term_super)],Boolean)
 	    end
@@ -194,7 +193,7 @@ fun conjugate_invariants_help [] model = []
 	(* get the invariants of all parents *)
 	val invariants = all_invariants_of class model
 	val c_name = string_of_path (name_of class)
-	val invs = List.map (fn (a,b) => Predicate(b,type_of_term b,[(generate_opt_name "inv" a)],[selfarg (type_of class)])) invariants
+	val invs = List.map (fn (a,b) => Predicate(b,type_of_term b,[("dummy_name")],[selfarg (type_of class)])) invariants
     in
 	if (List.length(invs) = 0)
 	then (conjugate_invariants_help clist model)

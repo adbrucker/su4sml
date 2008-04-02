@@ -40,7 +40,7 @@
 (* $Id: context_declarations.sml 6727 2007-07-30 08:43:40Z brucker $ *)
 
 (** Implementation of the wellformed constraint for a constructor *)
-signature CONSTRUCTOR_CONSTRAINT = 
+signature WFCPOG_CONSTRUCTOR_CONSTRAINT = 
 sig
     (** sub constraint, included in constructor consistency.*)
     val post_implies_invariant     : Rep.Model -> Rep_OclTerm.OclTerm list
@@ -51,7 +51,7 @@ sig
     (** Any kind of Exception *)
     exception WFCPO_ConstructorError of string
 end
-structure Constructor_Constraint : CONSTRUCTOR_CONSTRAINT = 
+structure WFCPOG_Constructor_Constraint : WFCPOG_CONSTRUCTOR_CONSTRAINT = 
 struct
 
 (* SU4SML *)
@@ -65,7 +65,6 @@ open Rep_OclType
 open ModelImport
 
 (* WFCPO *)
-open WFCPO_Naming
 open WFCPOG_Library
 
 exception WFCPO_ConstructorError of string
@@ -79,13 +78,15 @@ fun generate_return_value crea_op classifier model =
 	val invariants = all_invariants_of classifier model
 	val self_type = type_of classifier
 	val self_arg = Variable ("self",self_type)
-	val invs = List.map (fn (a,b) => wrap_predicate b a [(self_arg,self_type)]) invariants
+	(* TODO: wrap predicates *)
+	val invs = List.map (fn (a,b) => b) invariants
 	val final_inv = conjugate_terms invs
 	(* wrap postconditions *)
 	val sig_args = arguments_of_op crea_op
 	val args = (self_arg,self_type)::(List.map (fn (a,b) => (Variable(a,b),b)) sig_args)
 	val postconditions = postcondition_of_op crea_op
-	val posts = List.map (fn (a,b) => wrap_predicate b a args) postconditions
+        (* TODO: wrap predicates *)
+	val posts = List.map (fn (a,b) => b) postconditions
 	val final_post = conjugate_terms posts
     in
 	  OperationCall(final_post,Boolean,["Boolean","implies"],[(final_inv,type_of_term final_inv)],Boolean)

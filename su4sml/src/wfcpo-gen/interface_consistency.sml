@@ -40,17 +40,13 @@
 (* $Id: context_declarations.sml 6727 2007-07-30 08:43:40Z brucker $ *)
 
 (** Implementation of the Liskov Substitiution Principle. *)
-signature INTERFACE_CONSTRAINT =
+signature WFCPOG_INTERFACE_CONSTRAINT =
 sig
     val has_consistent_stereotypes      : WFCPOG.wfpo -> Rep.Model -> bool
 
     val is_nameclash_free               : WFCPOG.wfpo -> Rep.Model -> bool
-
-
-
-
 end
-structure Interface_Constraint:INTERFACE_CONSTRAINT =
+structure WFCPOG_Interface_Constraint:WFCPOG_INTERFACE_CONSTRAINT =
 struct 
 
 (* su4sml *)
@@ -65,7 +61,6 @@ open ModelImport
 
 (* wfcpo-gen *)
 open WFCPOG_Library
-open WFCPO_Naming
 
 exception WFCPOG_InterfaceError of string
 

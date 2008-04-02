@@ -1,8 +1,49 @@
+(*****************************************************************************
+ * su4sml --- a SML repository for managing (Secure)UML/OCL models
+ *             http://projects.brucker.ch/su4sml/
+ *                                                                            
+ * context_declarations.sml --- 
+ * This file is part of su4sml.
+ *
+ * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ *
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *
+ *     * Redistributions in binary form must reproduce the above
+ *       copyright notice, this list of conditions and the following
+ *       disclaimer in the documentation and/or other materials provided
+ *       with the distribution.
+ *
+ *     * Neither the name of the copyright holders nor the names of its
+ *       contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************)
+(* $Id: context_declarations.sml 6727 2007-07-30 08:43:40Z brucker $ *)
+
 signature WFCPOG_REFINE_CONSTRAINT =
 sig
     type RFM_args 
 
-    structure RFM_Data :
+    structure WFCPOG_RFM_Data :
 	      sig
 		  type T = RFM_args
 		  val get : WFCPOG.wfpo -> T
@@ -26,7 +67,7 @@ structure WFCPOG_Refine_Constraint : WFCPOG_REFINE_CONSTRAINT =
 struct
 
 (* su4sml *)
-open Rep_Help_Functions
+open Rep_Helper
 open Rep_Logger
 open Rep_Core
 open Rep_OclTerm
@@ -53,7 +94,7 @@ type RFM_args = {
 
 
 
-structure RFM_Data = WfpoDataFun
+structure WFCPOG_RFM_Data = WFCPOG_DataFun
 		     (struct
 		      type T = RFM_args;
 		      val empty = ({key=10,rfm_tuples=[([]:Path,[]:Path)]});
@@ -236,7 +277,7 @@ fun check_syntax' abs_path conc_path model =
 
 fun check_syntax wfpo (model:Rep.Model as (clist,alist)) = 
     let
-	val data = RFM_Data.get wfpo
+	val data = WFCPOG_RFM_Data.get wfpo
 	val packages = (#rfm_tuples data)
 	val abstract_packages = List.map (fn (a,b) => a) packages
 	val model_packages = all_packages_of_model model
@@ -393,7 +434,7 @@ fun generate_pos wfpo (model as (clist,alist)) =
 	val classes = removeOclLibrary clist
 	val _ = trace wgen ("oclLib removed ...\n")
 	val _ = trace wgen ("Extract args ...\n")
-	val rfm_args = RFM_Data.get wfpo
+	val rfm_args = WFCPOG_RFM_Data.get wfpo
 	val to_refine_packages = (#rfm_tuples rfm_args)
 	val _ = trace wgen("Args extracted ...\n")
 	val res = List.concat (List.map (fn (a,b) => refine_package a b model) to_refine_packages)

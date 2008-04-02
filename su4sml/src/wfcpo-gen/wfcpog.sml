@@ -120,7 +120,7 @@ fun name_of (WFPO{name=name,...}) = name
 end
 
 
-signature WFPO_DATA_ARGS =
+signature WFCPOG_DATA_ARGS =
 sig
   type T
   val empty: T
@@ -128,7 +128,7 @@ sig
   val extend: T -> T
 end;
 	  
-signature WFPO_DATA =
+signature WFCPOG_DATA =
 sig
   type T
   val get: WFCPOG.wfpo -> T
@@ -137,7 +137,7 @@ sig
 end;
 
 
-signature PRIVATE_WFPO_DATA =
+signature WFCPOG_PRIVATE_DATA =
 sig
   type serial
   exception error of string
@@ -147,7 +147,7 @@ sig
   val put : serial -> ('a -> Object.T) -> 'a -> WFCPOG.wfpo -> WFCPOG.wfpo
 end
 
-structure WfpoData:PRIVATE_WFPO_DATA = 
+structure WFCPOG_Data:WFCPOG_PRIVATE_DATA = 
 struct
 
 exception error of string
@@ -199,22 +199,22 @@ fun put k mk x =
     end
 end;
 
-functor WfpoDataFun(Data: WFPO_DATA_ARGS) : WFPO_DATA =
+functor WFCPOG_DataFun(Data: WFCPOG_DATA_ARGS) : WFCPOG_DATA =
 struct
 
-structure WfpoData = WfpoData;
+structure WFCPOG_Data = WFCPOG_Data;
 
 type T = Data.T;
 exception Data of T;
 
-val kind = WfpoData.declare
+val kind = WFCPOG_Data.declare
   (Data Data.empty)
   (fn Data x => Data (Data.copy x))
   (fn Data x => Data (Data.extend x))
   ;
 
-val get = WfpoData.get kind (fn Data x => x);
-val put = WfpoData.put kind Data;
+val get = WFCPOG_Data.get kind (fn Data x => x);
+val put = WFCPOG_Data.put kind Data;
 
 fun map f wfpo = put (f (get wfpo)) wfpo;
 

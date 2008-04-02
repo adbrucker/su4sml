@@ -42,9 +42,9 @@
 signature WFCPOG_REGISTRY = 
 sig
 
-    structure LSK_Data     : WFPO_DATA
-    structure TAX_Data     : WFPO_DATA
-    structure RFM_Data     : WFPO_DATA
+    structure WFCPOG_LSK_Data     : WFCPOG_DATA
+    structure WFCPOG_TAX_Data     : WFCPOG_DATA
+    structure WFCPOG_RFM_Data     : WFCPOG_DATA
 
 
     val supported          : WFCPOG.wfpo list
@@ -68,9 +68,10 @@ structure WFCPOG_Registry :WFCPOG_REGISTRY  =
 struct
 
 exception WFCPOG_RegistryError of string
-structure LSK_Data = Liskov_Constraint.LSK_Data
-structure TAX_Data = Taxonomy_Constraint.TAX_Data
-structure RFM_Data = WFCPOG_Refine_Constraint.RFM_Data
+
+structure WFCPOG_LSK_Data = WFCPOG_Liskov_Constraint.WFCPOG_LSK_Data
+structure WFCPOG_TAX_Data = WFCPOG_Taxonomy_Constraint.WFCPOG_TAX_Data
+structure WFCPOG_RFM_Data = WFCPOG_Refine_Constraint.WFCPOG_RFM_Data
 
 open Rep_Logger
 open WFCPOG
@@ -135,7 +136,7 @@ val supported = [
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.POG(Liskov_Constraint.weaken_precondition),
+     apply           = WFCPOG.POG(WFCPOG_Liskov_Constraint.weaken_precondition),
      data            = Datatab.empty
     }, 
     WFCPOG.WFPO{
@@ -145,7 +146,7 @@ val supported = [
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.POG(Liskov_Constraint.strengthen_postcondition),
+     apply           = WFCPOG.POG(WFCPOG_Liskov_Constraint.strengthen_postcondition),
      data            = Datatab.empty
     },
     WFCPOG.WFPO{
@@ -155,7 +156,7 @@ val supported = [
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.POG(Liskov_Constraint.conjugate_invariants),
+     apply           = WFCPOG.POG(WFCPOG_Liskov_Constraint.conjugate_invariants),
      data            = Datatab.empty
     },
     WFCPOG.WFPO{
@@ -165,7 +166,7 @@ val supported = [
      recommended     = true,
      depends         = ["lsk_pre","lsk_post"],
      recommends      = [],
-     apply           = WFCPOG.POG(Liskov_Constraint.conjugate_invariants),
+     apply           = WFCPOG.POG(WFCPOG_Liskov_Constraint.conjugate_invariants),
      data            = Datatab.empty
     },
     WFCPOG.WFPO{
@@ -175,7 +176,7 @@ val supported = [
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.WFC(Interface_Constraint.has_consistent_stereotypes),
+     apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.has_consistent_stereotypes),
      data            = Datatab.empty
     },
     WFCPOG.WFPO{
@@ -185,7 +186,7 @@ val supported = [
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.WFC(Interface_Constraint.is_nameclash_free),
+     apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.is_nameclash_free),
      data            = Datatab.empty
     },
     WFCPOG.WFPO{
@@ -195,7 +196,7 @@ val supported = [
      recommended     = true,
      depends         = ["inf_ster"],
      recommends      = [],
-     apply           = WFCPOG.WFC(Interface_Constraint.is_nameclash_free),
+     apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.is_nameclash_free),
      data            = Datatab.empty
     },
     WFCPOG.WFPO{
@@ -205,7 +206,7 @@ val supported = [
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.POG(Data_Model_Consistency_Constraint.class_model_consistency),
+     apply           = WFCPOG.POG(WFCPOG_Data_Model_Consistency_Constraint.class_model_consistency),
      data = Datatab.empty
     },
     WFCPOG.WFPO{
@@ -215,7 +216,7 @@ val supported = [
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.POG(Data_Model_Consistency_Constraint.strong_model_consistency),
+     apply           = WFCPOG.POG(WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency),
      data = Datatab.empty
     },
     WFCPOG.WFPO{
@@ -225,7 +226,7 @@ val supported = [
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.POG(Operational_Constraint.generate_pos),
+     apply           = WFCPOG.POG(WFCPOG_Operational_Constraint.generate_pos),
      data = Datatab.empty
     },
     WFCPOG.WFPO{
@@ -235,7 +236,7 @@ val supported = [
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.POG(Command_Query_Constraint.ops_are_command),
+     apply           = WFCPOG.POG(WFCPOG_Command_Query_Constraint.ops_are_command),
      data = Datatab.empty
     },
     WFCPOG.WFPO{
@@ -245,7 +246,7 @@ val supported = [
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.POG(Command_Query_Constraint.ops_are_query),
+     apply           = WFCPOG.POG(WFCPOG_Command_Query_Constraint.ops_are_query),
      data = Datatab.empty
     },
     WFCPOG.WFPO{
@@ -255,7 +256,7 @@ val supported = [
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.WFC(Visibility_Constraint.are_conditions_visible),
+     apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.are_conditions_visible),
      data = Datatab.empty
     },
     WFCPOG.WFPO{
@@ -265,7 +266,7 @@ val supported = [
      recommended     = true,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.WFC(Taxonomy_Constraint.has_maxDepth),
+     apply           = WFCPOG.WFC(WFCPOG_Taxonomy_Constraint.has_maxDepth),
      data = Datatab.empty
     }, 
     WFCPOG.WFPO{ 
