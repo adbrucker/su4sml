@@ -120,7 +120,7 @@ fun generate_return_value typ oper sub_class super_class model =
 	    1 => 
 	    let
                 (* preconditions of super type in one term *)
-		val term_super = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[("dummy_name")],(args2varargs (arguments_of_op op_of_super))))) (precondition_of_op op_of_super))
+		val term_super = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[mk_def_of ],(args2varargs (arguments_of_op op_of_super))))) (precondition_of_op op_of_super))
                 (* preconditions of sub type in one term *)
 		val term_sub = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[("dummy_name")],(args2varargs (arguments_of_op oper))))) (precondition_of_op oper))
 	    in 
