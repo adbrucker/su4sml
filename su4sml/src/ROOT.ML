@@ -143,7 +143,7 @@ use "ROOT.ML";
 OS.FileSys.chDir "..";
 (* ******************************************************** *)
 (* wfcpog-module                                           *)
-OS.FileSys.chDir "wfcpo-gen"; 
+OS.FileSys.chDir "wfcpog"; 
 use "ROOT.ML"; 
 OS.FileSys.chDir "..";
 
