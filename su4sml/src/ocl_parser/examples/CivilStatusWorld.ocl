@@ -7,15 +7,25 @@ attributes
   name:String
   alive:Boolean
 
---operations
+operations
+birth(aName:String)
+pre  freshUnlinkedPerson: name.isUndefined and alive.isUndefined and
+     wife.isUndefined and husband.isUndefined
+post nameAssigned: name=aName -- equivalent to 'aName=name'
 
---birth(aName:String)
---pre  freshUnlinkedPerson: name.isUndefined and alive.isUndefined and
---    wife.isUndefined and husband.isUndefined
---post nameAssigned: name=aName -- equivalent to 'aName=name'
 
---constraints
---inv nameDefined: name <> ''
+constraints
+inv nameDefined: name=aName 
+-- TODO: 
+--      ich weiss auch nicht, 
+--      warum er diese nicht einlesen kann.
+--      Denn der parser verwendet die selbe 
+--      non-terminal fuer die ganze Zeile
+--      wie der OclParser.
+--      Hast du echt ne idee?
+--      
+--      cheers manuel
+--inv hallo2: nameDefined: self.name = 'hallo'
+--inv nameDefined: self.shit = nix
 
 end
-
