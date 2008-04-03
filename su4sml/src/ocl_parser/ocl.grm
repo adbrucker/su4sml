@@ -64,8 +64,12 @@ open Rep_Logger
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType
+open XMI_DataTypes
+
 open Context
 
+type Visibility = Rep_Core.Visibility
+type Scope      = XMI_DataTypes.ScopeKind
 
 exception NotYetSupported of string 
 
@@ -162,8 +166,16 @@ exception NotYetSupported of string
         | REAL_LITERAL of string
         | STRING_LITERAL of string
 	| SIMPLE_NAME of string
-
-%nonterm START of context list
+        (* OclConsoleParser *)
+	| MODEL of string
+        | OPERATIONS of string
+        | ATTRIBUTES of string
+        | ASSOCIATIONS of string
+        | BETWEEN of string
+        | END of string
+        | CONSTRAINTS of string
+	| CLASS of string
+%nonterm START of (context list * Classifier list)
 	| OclExpression of Rep_OclTerm.OclTerm
 	| LiteralExp of OclTerm
 	| PrimitiveLiteralExp of Rep_OclTerm.OclTerm
@@ -171,7 +183,7 @@ exception NotYetSupported of string
 	| BooleanLiteralExp of Rep_OclTerm.OclTerm
 	| StringLiteralExp of Rep_OclTerm.OclTerm
 	| RealLiteralExp of Rep_OclTerm.OclTerm
-        | ocl_file of context list
+        | ocl_file of (context list * Classifier list)
         | package_constraint_list_cs_p of context list
         | package_constraint_list_cs of context list
         | path_name_cs of Path
@@ -277,12 +289,26 @@ exception NotYetSupported of string
         | variable_declaration_cs of (string*OclType)
         | variable_declaration_list_cs of (string*OclType)list
         | variable_declaration_list_tail_cs of (string*OclType)list
-        | logical_exp_tail_cs_p of (string*OclTerm)
+        | logical_exp_tail_cs_p of (string * OclTerm)
 	| type_argument
 	| classifier_context_declarations_cs
-
-
-
+        (* Extension OclConsoleParser *)
+        | model_spec_cs of Classifier list
+        | model_def_cs of Classifier list
+        | model_class_def_tail_cs_p of (Path * Classifier) list
+        | model_class_def_cs of (Path * Classifier)
+        | model_component_def_cs of (Classifier list)
+        | model_ops_spec_cs of Classifier
+	| model_op_def_cs of operation
+	| model_op_def_tail_cs_p of operation list
+        | model_op_const_def_cs of (ConditionType * string option * OclTerm)
+        | model_op_const_def_tail_cs_p of (ConditionType * string option * OclTerm) list
+        | model_atts_spec_cs of Classifier
+        | model_att_value_def_cs of attribute
+        | model_att_value_def_tail_cs_p of attribute list
+        | model_cons_spec_cs of Classifier
+        | model_cons_def_cs of (string option * OclTerm)
+        | model_cons_def_tail_cs_p of (string option * OclTerm) list
 
 %pos (int * int * int)
 
@@ -294,8 +320,10 @@ exception NotYetSupported of string
 START   : 			 ocl_file									(ocl_file)
 
 (* RETURN: context list *)				                                            
-ocl_file :                       package_constraint_list_cs_p							(package_constraint_list_cs_p)
-
+ocl_file :                       package_constraint_list_cs_p							(package_constraint_list_cs_p,[])
+			       | model_spec_cs    ([],model_spec_cs)
+                               | package_constraint_list_cs_p model_spec_cs                                                               (package_constraint_list_cs_p,model_spec_cs)
+                               | model_spec_cs package_constraint_list_cs_p (package_constraint_list_cs_p,model_spec_cs)
 (* RETURN: context list *)
 package_constraint_list_cs_p :   package_constraint_list_cs							(package_constraint_list_cs)
                                | package_constraint_list_cs package_constraint_list_cs_p			(package_constraint_list_cs@package_constraint_list_cs_p)
@@ -722,3 +750,79 @@ variable_declaration_list_cs :		  variable_declaration_cs                       
 
 (* RETURN: (string * OclType) list *)
 variable_declaration_list_tail_cs :       COMMA variable_declaration_list_cs            (variable_declaration_list_cs)
+
+(* RETURN: Classifier list *)
+model_spec_cs                 :    MODEL model_def_cs  END                (model_def_cs)
+
+(* RETURN: Classifier list *)
+model_def_cs                  :    simple_name model_class_def_tail_cs_p  (List.map (fn (a,b) => rename_classifier ([simple_name]@a) b) model_class_def_tail_cs_p)
+
+(* RETURN: (Path * Classifier) list *)
+model_class_def_tail_cs_p       :      model_class_def_cs ([model_class_def_cs])
+                                     | model_class_def_cs model_class_def_tail_cs_p ([model_class_def_cs]@(model_class_def_tail_cs_p))
+
+(* RETURN: (Path * Classifier) *)
+model_class_def_cs                :    CLASS simple_name model_component_def_cs ([simple_name],merge_classifiers (model_component_def_cs))
+
+
+
+(* RETURN: Classifier list *)
+model_component_def_cs :               model_ops_spec_cs                  ([model_ops_spec_cs])
+		                     | model_ops_spec_cs model_component_def_cs ([model_ops_spec_cs]@(model_component_def_cs))
+                                     | model_atts_spec_cs                 ([model_atts_spec_cs])
+				     | model_atts_spec_cs model_component_def_cs ([model_atts_spec_cs]@(model_component_def_cs))
+                                     | model_cons_spec_cs                 ([model_cons_spec_cs])
+				     | model_cons_spec_cs model_component_def_cs ([model_cons_spec_cs]@(model_component_def_cs))
+(* ACHIM TODO: 			     | model_assocs_spec_cs               ([model_assoc_spec_cs])
+                                     | model_assocs_spec_cs model_component_def_cs ([model_assoc_spec_cs]@(model_component_def_cs))
+*)
+
+(* RETURN: Classifier *)
+model_ops_spec_cs     :                OPERATIONS model_op_def_tail_cs_p (operations_to_classifier model_op_def_tail_cs_p)
+(* RETURN: operation list *)
+model_op_def_tail_cs_p   :             model_op_def_cs ([model_op_def_cs])
+                                     | model_op_def_cs model_op_def_tail_cs_p ([model_op_def_cs]@(model_op_def_tail_cs_p))
+
+(* RETURN: operation *)
+model_op_def_cs      :                 simple_name PAREN_OPEN formal_parameter_list_cs PAREN_CLOSE model_op_const_def_tail_cs_p ({name=simple_name,precondition=(dispatch_pre_or_post pre model_op_const_def_tail_cs_p),postcondition=(dispatch_pre_or_post post model_op_const_def_tail_cs_p),body=[],arguments=formal_parameter_list_cs,result=OclVoid,isQuery=false,scope=ClassifierScope:Rep_Core.Scope,stereotypes=[],visibility=public:Rep_Core.Visibility}:operation)
+		                     | simple_name PAREN_OPEN formal_parameter_list_cs PAREN_CLOSE operation_return_type_specifier_cs model_op_const_def_tail_cs_p ({name=simple_name,
+			   precondition=(dispatch_pre_or_post pre model_op_const_def_tail_cs_p),
+                           postcondition=(dispatch_pre_or_post post model_op_const_def_tail_cs_p),
+                           body=[],
+                           arguments=formal_parameter_list_cs,
+                           result=operation_return_type_specifier_cs,
+                           isQuery=false,
+                           scope=ClassifierScope:Rep_Core.Scope,
+                           stereotypes=[],
+                           visibility=public:Rep_Core.Visibility}:operation)
+
+
+(* RETURN: (ConditionType * string option * OclTerm) list  *)
+model_op_const_def_tail_cs_p :         model_op_const_def_cs ([model_op_const_def_cs])
+		                     | model_op_const_def_cs model_op_const_def_tail_cs_p ([model_op_const_def_cs]@(model_op_const_def_tail_cs_p))
+
+(* RETURN: (ConditionType * string option * OclTerm) *)
+model_op_const_def_cs   :              op_constraint_stereotype_cs COLON ocl_expression_cs                   (op_constraint_stereotype_cs,NONE,ocl_expression_cs)
+				     | op_constraint_stereotype_cs simple_name COLON ocl_expression_cs       (op_constraint_stereotype_cs,SOME(simple_name),ocl_expression_cs)
+
+(* RETURN: Classifier *)
+model_atts_spec_cs    :                 ATTRIBUTES model_att_value_def_tail_cs_p (attributes_to_classifier model_att_value_def_tail_cs_p)
+
+(* RETURN: attribute list *)
+model_att_value_def_tail_cs_p :        model_att_value_def_cs ([model_att_value_def_cs])
+                                     | model_att_value_def_cs model_att_value_def_tail_cs_p ([model_att_value_def_cs]@(model_att_value_def_tail_cs_p))
+(* RETURN: attribute *)
+model_att_value_def_cs :               formal_parameter_cs ({name=(#1 formal_parameter_cs),attr_type=(#2 formal_parameter_cs),visibility=public,scope=ClassifierScope,stereotypes=[],init=NONE})
+
+(* RETURN Classifier *)
+model_cons_spec_cs     :               CONSTRAINTS model_cons_def_tail_cs_p (constraints_to_classifier model_cons_def_tail_cs_p)
+
+
+(* RETURN: (string option * OclTerm) list *)
+model_cons_def_tail_cs_p :             model_cons_def_cs ([model_cons_def_cs])
+                                     | model_cons_def_cs model_cons_def_tail_cs_p ([model_cons_def_cs]@(model_cons_def_tail_cs_p))
+
+
+(* RETURN: (string option * OclTerm)  *)
+model_cons_def_cs  :                   classifier_constraint_cs COLON ocl_expression_cs (NONE,ocl_expression_cs)
+                                     | classifier_constraint_cs simple_name COLON ocl_expression_cs (SOME(simple_name),ocl_expression_cs)

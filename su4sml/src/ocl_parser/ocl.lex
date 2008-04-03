@@ -161,6 +161,15 @@ ws = [\ \t];
 
 "not"      => (Tokens.NOT(yytext,inputPos_half yypos,inputPos_half yypos));
 
+"model"    => (Tokens.MODEL(yytext,inputPos_half yypos,inputPos_half yypos));
+"class"    => (Tokens.CLASS(yytext,inputPos_half yypos,inputPos_half yypos));
+"attributes" => (Tokens.ATTRIBUTES(yytext,inputPos_half yypos,inputPos_half yypos));
+"operations" => (Tokens.OPERATIONS(yytext,inputPos_half yypos,inputPos_half yypos));
+"constraints" => (Tokens.CONSTRAINTS(yytext,inputPos_half yypos,inputPos_half yypos)); 
+"association" => (Tokens.ASSOCIATIONS(yytext,inputPos_half yypos,inputPos_half yypos));
+"between"     => (Tokens.BETWEEN(yytext,inputPos_half yypos,inputPos_half yypos));
+"end"         => (Tokens.END(yytext,inputPos_half yypos,inputPos_half yypos));
+
 
 {digit}+"."{digit}+(E|e)?({digit})*   => (Tokens.REAL_LITERAL(yytext,inputPos_half yypos,inputPos_half yypos));
 {digit}+                          => (Tokens.INTEGER_LITERAL(yytext,inputPos_half yypos,inputPos_half yypos));

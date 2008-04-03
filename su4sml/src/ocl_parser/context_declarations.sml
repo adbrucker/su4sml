@@ -89,6 +89,18 @@ sig
 
     (* values *)														  
     val OclLibPackage                   : string
+    
+    (* OclConsoleParser *)
+    val rename_classifier               : Rep_OclType.Path -> Rep_Core.Classifier -> Rep_Core.Classifier
+    val merge_classifiers               : Rep_Core.Classifier list -> Rep_Core.Classifier
+
+    val operations_to_classifier        : Rep_Core.operation list -> Rep_Core.Classifier 
+    val attributes_to_classifier        : Rep_Core.attribute list -> Rep_Core.Classifier
+    val constraints_to_classifier       : ((string option * Rep_OclTerm.OclTerm) list) -> Rep_Core.Classifier
+
+    val dispatch_pre_or_post            : ConditionType -> ((ConditionType * string option * Rep_OclTerm.OclTerm) list) -> (string option * Rep_OclTerm.OclTerm) list
+
+								     
 end
 structure Context:CONTEXT =
 struct
@@ -98,10 +110,14 @@ open Rep_Logger
 open Rep_Core
 open Rep_OclType
 open Rep_OclTerm
+open XMI_DataTypes
 open OclLibrary
 
      
 type operation = Rep_Core.operation
+
+type Visibility = Rep_Core.Visibility
+type Scope      = XMI_DataTypes.ScopeKind
 		 
 datatype ConditionType = pre | post | body
 				      
@@ -335,4 +351,143 @@ fun cxt_list2string ([]) = ""
   | cxt_list2string ((Guard(p,so,t))::tail) = 
     "guard: "^(Ocl2String.ocl2string false t)^"\n"^(cxt_list2string tail)		
 
+fun rename_classifier path (Class{name=name,parent=parent,attributes=attributes,operations=operations,associations=associations,invariant=invariant,stereotypes=stereotypes,interfaces=interfaces,thyname=thyname,visibility=visibility,activity_graphs=activity_graphs}) =
+    let
+	val _ = trace function_calls ("Context.rename_classifier\n")
+	val res = Class {
+		  name = Classifier (path),
+		  parent=parent,
+		  attributes=attributes,
+		  operations=operations,
+		  associations=associations,
+		  invariant=invariant,
+		  stereotypes=stereotypes,
+		  interfaces=interfaces,
+		  thyname=thyname,
+		  visibility=visibility,
+		  activity_graphs=activity_graphs
+		  }
+	val _ = trace function_ends ("Context.rename_classifier\n")
+    in
+	res
+    end
+
+fun merge_classifier ((a as Class{attributes=a_atts,operations=a_ops,invariant=a_invs,associations=a_assocs,...}),(b as Class{attributes=b_atts,operations=b_ops,invariant=b_invs,associations=b_assocs,...})) = 
+    let
+	val _ = trace function_calls ("Context.merge_classifier\n")
+	val res = Class {
+		  name = OclVoid,
+		  parent=NONE,
+		  attributes=a_atts@b_atts,
+		  operations=a_ops@b_ops,
+		  associations=a_assocs@b_assocs,
+		  invariant=a_invs@b_invs,
+		  stereotypes=[],
+		  interfaces=[],
+		  thyname=NONE,
+		  visibility=public:Rep_Core.Visibility,
+		  activity_graphs=[]
+		  }
+	val _ = trace function_ends ("Context.merge_classifier\n")
+    in
+	res
+    end
+
+fun merge_classifiers list =
+    let
+	val _ = trace function_calls ("Context.merge_classifiers\n")
+	val Empty_Class = Class{
+			  name = OclVoid,
+			  parent=NONE,
+			  attributes=[],
+			  operations=[],
+			  associations=[],
+			  invariant=[],
+			  stereotypes=[],
+			  interfaces=[],
+			  thyname=NONE,
+			  visibility=public:Rep_Core.Visibility,
+			  activity_graphs=[]
+			  }
+	val res = List.foldr (merge_classifier) Empty_Class list 
+	val _ = trace function_ends ("Context.merge_classifier\n")
+    in
+	res
+    end
+
+
+fun operations_to_classifier ops = 
+    let
+	val _ = trace function_calls ("Context.operation_to_classifier\n")
+	val res = Class{
+			  name = OclVoid,
+			  parent=NONE,
+			  attributes=[],
+			  operations=ops,
+			  associations=[],
+			  invariant=[],
+			  stereotypes=[],
+			  interfaces=[],
+			  thyname=NONE,
+			  visibility=public:Rep_Core.Visibility,
+			  activity_graphs=[]
+			  }
+	val _ = trace function_ends ("Context.operation_to_classifier\n")
+    in
+	res
+    end
+
+fun attributes_to_classifier atts = 
+    let
+	val _ = trace function_calls ("Context.attributes_to_classifier\n")
+	val res = Class{
+			  name = OclVoid,
+			  parent=NONE,
+			  attributes=atts,
+			  operations=[],
+			  associations=[],
+			  invariant=[],
+			  stereotypes=[],
+			  interfaces=[],
+			  thyname=NONE,
+			  visibility=public:Rep_Core.Visibility,
+			  activity_graphs=[]
+			  }
+	val _ = trace function_ends ("Context.attributes_to_classifier\n")
+    in
+	res
+    end
+
+fun constraints_to_classifier invs = 
+    let
+	val _ = trace function_calls ("Context.constraints_to_classifier\n")
+	val res = Class{
+			  name = OclVoid,
+			  parent=NONE,
+			  attributes=[],
+			  operations=[],
+			  associations=[],
+			  invariant=invs,
+			  stereotypes=[],
+			  interfaces=[],
+			  thyname=NONE,
+			  visibility=public:Rep_Core.Visibility,
+			  activity_graphs=[]
+			  }
+	val _ = trace function_ends ("Context.constraints_to_classifier\n")
+    in
+	res
+    end
+
+fun dispatch_pre_or_post (cond_type:ConditionType) (list:(ConditionType * string option * OclTerm) list) = 
+    let
+	val _ = trace function_calls ("Context.dispatch_pre_or_post")
+	val filter = List.filter (fn (a,b,c) => if cond_type = a
+						then true
+						else false) list
+	val res = List.map (fn (a,b,c) => (b,c)) filter
+	val _ = trace function_ends ("Context.dispatch_pre_or_post")
+    in
+	res
+    end
 end;

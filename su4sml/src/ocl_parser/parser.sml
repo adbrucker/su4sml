@@ -46,7 +46,7 @@
 structure OclParser : sig
     
 	           val parse : string -> unit
-		   val parse_contextlist: string -> Context.context list
+		   val parse_contextlist: string -> (Context.context list * Rep_Core.Classifier list)
 end = 
 struct
  open Rep_Logger
@@ -94,8 +94,10 @@ struct
 	      let 
 		  val _ = (OclParserLex.UserDeclarations.pos := (0,0,0);())
 		  val (res,lexer) = invoke lexer
+		  val cxt_list = (#1 res)
+		  val class_list = (#2 res)
 		  val (nextToken,lexer) = OclParserParser.Stream.get lexer
-                  val _ = TextIO.output(TextIO.stdOut,(cxt_list2string res) ^ "\n")
+                  val _ = TextIO.output(TextIO.stdOut,(cxt_list2string cxt_list) ^ "\n")
 	       in if OclParserParser.sameToken(nextToken,dummyEOF) then ()
 		  else loop lexer
 	      end

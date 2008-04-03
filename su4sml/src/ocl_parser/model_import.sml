@@ -44,6 +44,7 @@ signature MODEL_IMPORT =
 sig
     val parseUML         : string -> Rep_Core.transform_model
     val parseOCL         : string -> Context.context list
+    val parseModel       : string -> Rep_Core.Classifier list
     val import           : string -> string -> string list -> Rep_Core.transform_model
 (*    val removePackages   : (Rep_Core.transform_model * Context.context list) 
 			   -> string list
@@ -119,14 +120,27 @@ fun parseUML umlFile  =
 fun parseOCL oclFile =
     let
 	val _ =  trace high "### Parsing OCL File ###\n"
-	val ocl = case oclFile of 
-		      "" =>      []
+	val context_classes = case oclFile of 
+		      "" =>      ([],[])
 		    | filename => OclParser.parse_contextlist oclFile;
 	val _ =  trace high ("### Finished Parsing OCL File ("
-			^(Int.toString(length ocl))
+			^(Int.toString(length (#1 context_classes)))
 			^" Constraints Found) ###\n\n")
     in
-	ocl
+	(#1 context_classes)
+    end
+
+fun parseModel oclFile =  
+    let
+	val _ =  trace high "### Parsing OCL File ###\n"
+	val context_classes = case oclFile of 
+		      "" =>      ([],[])
+		    | filename => OclParser.parse_contextlist oclFile;
+	val _ =  trace high ("### Finished Parsing OCL File ("
+			^(Int.toString(length (#2 context_classes)))
+			^" Constraints Found) ###\n\n")
+    in
+	(#2 context_classes)
     end
 (*
 fun removePackages (uml,ocl) packageList = 
