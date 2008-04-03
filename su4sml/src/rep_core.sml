@@ -53,7 +53,7 @@ type operation = {
      result        : Rep_OclType.OclType,
      isQuery       : bool,
      scope         : Scope,
-		   stereotypes    : string list,
+     stereotypes   : string list,
      visibility    : Visibility	
 }     	
 

@@ -2,6 +2,14 @@ signature OclParser_TOKENS =
 sig
 type ('a,'b) token
 type svalue
+val CLASS: (string) *  'a * 'a -> (svalue,'a) token
+val CONSTRAINTS: (string) *  'a * 'a -> (svalue,'a) token
+val END: (string) *  'a * 'a -> (svalue,'a) token
+val BETWEEN: (string) *  'a * 'a -> (svalue,'a) token
+val ASSOCIATIONS: (string) *  'a * 'a -> (svalue,'a) token
+val ATTRIBUTES: (string) *  'a * 'a -> (svalue,'a) token
+val OPERATIONS: (string) *  'a * 'a -> (svalue,'a) token
+val MODEL: (string) *  'a * 'a -> (svalue,'a) token
 val SIMPLE_NAME: (string) *  'a * 'a -> (svalue,'a) token
 val STRING_LITERAL: (string) *  'a * 'a -> (svalue,'a) token
 val REAL_LITERAL: (string) *  'a * 'a -> (svalue,'a) token
