@@ -41,16 +41,13 @@
 
 signature WFCPOG_REGISTRY = 
 sig
-(*
-    structure WFCPOG_LSK_Data     : WFCPOG_DATA
-    structure WFCPOG_TAX_Data     : WFCPOG_DATA
-    structure WFCPOG_RFM_Data     : WFCPOG_DATA
-*)
-
     val supported          : WFCPOG.wfpo list
     val wfpos              : WFCPOG.wfpo list ref
     val add_wfpo           : WFCPOG.wfpo -> unit
     val del_wfpo           : WFCPOG.wfpo_id -> unit
+
+    val is_wfc             : WFCPOG.wfpo -> bool
+    val is_pog             : WFCPOG.wfpo -> bool
     
     val rename_wfpo        : string -> WFCPOG.wfpo -> WFCPOG.wfpo
     val get_wfpo           : WFCPOG.wfpo list -> WFCPOG.wfpo_id -> WFCPOG.wfpo
@@ -68,11 +65,7 @@ structure WFCPOG_Registry :WFCPOG_REGISTRY  =
 struct
 
 exception WFCPOG_RegistryError of string
-(*
-structure WFCPOG_LSK_Data = WFCPOG_Liskov_Constraint.WFCPOG_LSK_Data
-structure WFCPOG_TAX_Data = WFCPOG_Taxonomy_Constraint.WFCPOG_TAX_Data
-structure WFCPOG_RFM_Data = WFCPOG_Refine_Constraint.WFCPOG_RFM_Data
-*)
+
 open Rep_Logger
 open WFCPOG
 
@@ -103,6 +96,15 @@ fun rename_wfpo new_name (WFCPOG.WFPO{identifier=identifier,name=name,descriptio
       apply=apply,
       data=data
     }
+
+
+fun is_wfc (WFCPOG.WFPO wfpo) = case #apply wfpo of 
+				  WFCPOG.WFC _ => true
+				| _            => false
+
+fun is_pog (WFCPOG.WFPO wfpo) = case #apply wfpo of 
+				  WFCPOG.POG _ => true
+				| _            => false
     
 
 fun check_wfc model (wfc_sel)  = 
@@ -128,6 +130,7 @@ fun generate_po model (wfc_sel)  =
 
 fun generate_pos model wfcs = map (generate_po model) wfcs
 
+		       
 val supported = [ 
     WFCPOG.WFPO{
      identifier      = "lsk_pre",
