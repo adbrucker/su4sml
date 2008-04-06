@@ -48,6 +48,9 @@ sig
 
     val is_wfc             : WFCPOG.wfpo -> bool
     val is_pog             : WFCPOG.wfpo -> bool
+(*    val is_supported       : WFCPOG.wfpo -> bool *)
+    val is_supported_id    : WFCPOG.wfpo_id -> bool
+
     
     val rename_wfpo        : string -> WFCPOG.wfpo -> WFCPOG.wfpo
     val get_wfpo           : WFCPOG.wfpo list -> WFCPOG.wfpo_id -> WFCPOG.wfpo
@@ -105,7 +108,7 @@ fun is_wfc (WFCPOG.WFPO wfpo) = case #apply wfpo of
 fun is_pog (WFCPOG.WFPO wfpo) = case #apply wfpo of 
 				  WFCPOG.POG _ => true
 				| _            => false
-    
+
 
 fun check_wfc model (wfc_sel)  = 
     let 
@@ -292,4 +295,11 @@ val supported = [
      apply           = WFCPOG.POG(Refine_Constraint.refine_po),
      data            = Datatab.empty
     }*)]
+
+(*    
+fun is_supported wfpo       = List.exists (fn w => wfpo = w) supported
+*)
+fun is_supported_id wfpo_id = List.exists (fn w => wfpo_id = id_of w) supported
+
+
 end
