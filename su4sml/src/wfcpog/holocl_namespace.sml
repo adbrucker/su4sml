@@ -85,7 +85,11 @@ sig
     val strong_sve_2_of :Rep_OclType.Path -> Rep_OclType.Path
     val strict_sve_2_of :Rep_OclType.Path -> Rep_OclType.Path
 
+    val name_of_pre : Rep_Core.Classifier -> Rep_Core.operation -> Rep_OclType.Path
+    val name_of_post : Rep_Core.Classifier -> Rep_Core.operation -> Rep_OclType.Path
 end
+
+
 
 structure HolOcl_Namespace:HOLOCL_NAMESPACE = 
 struct 
@@ -215,5 +219,7 @@ fun ext_name_of path = if (path = (Rep_Core.name_of Rep_Core.OclAnyC)) (* hack *
 		  else rev (((hd (rev path))^"_ext")::(tl (rev path))) (* extC *)	
 
 
+fun name_of_pre C Op = hc_path l2 (pre_1_of  ((Rep_Core.name_of C)@[Rep_Core.mangled_name_of_op Op]))
+fun name_of_post C Op = hc_path l2 (post_1_of  ((Rep_Core.name_of C)@[Rep_Core.mangled_name_of_op Op]))
 
 end
