@@ -180,6 +180,14 @@ fun ocl2string show_types oclterm =
 							^"):"^(string_of_OclType t)
 						   else (ocl2string show_types src)^"."^(hd (rev op_name))
 							^"("^arglist show_types args^")"
+
+
+      | Predicate (src,styp,op_name,args) => if show_types 
+					    then (string_of_path op_name) 
+						 ^"("^arglist show_types ((src,styp)::args)^"):Boolean"
+					    else (string_of_path op_name) 
+						 ^"("^arglist show_types ((src,styp)::args)^")"
+
 							
       (**************************************)
       (* Variable                           *) 
