@@ -115,10 +115,6 @@ fun term_of_postcondition ((a:string option),(t:OclTerm)) = t
     OperationCall (
 *)
 
-(*
-fun wrap_predicate term (NONE) args = Predicate (term,type_of_term term,[generate_name "gen_name"],args)
-  | wrap_predicate term (SOME(x)) args = Predicate (term,type_of_term term,[x],args)
-*)
 fun conjugate_terms [] = raise WFCPOG_LibraryError ("Empty list not conjugateable. \n")
   | conjugate_terms [x:OclTerm] = (x)
   | conjugate_terms ((h:OclTerm)::tail) = 
