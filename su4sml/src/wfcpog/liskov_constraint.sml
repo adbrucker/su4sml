@@ -90,7 +90,10 @@ type Liskov_args = {
      model:string,
      size:int
 }
-		   
+	
+
+datatype lisk_type = weaken_pre | strengthen_post
+	   
 structure WFCPOG_LSK_Data = WFCPOG_DataFun
 			  (struct
 			   type T =  Liskov_args;
@@ -101,52 +104,53 @@ structure WFCPOG_LSK_Data = WFCPOG_DataFun
 	  
 
 fun print_liskov_args (args:Liskov_args) = 
-    print (concat["Lisov with args: size=\"",Int.toString (#size args), "\""," and model=\"", #model (args),"\"\n\n"]) 
+    print (concat["Lisov with args: size=\"",Int.toString (#size args), "\"",
+		  " and model=\"", #model (args),"\"\n\n"]) 
 
-fun generate_return_value typ oper sub_class super_class model = 
+fun generate_return_value typ oper sub_class super_class  model = 
     let
-	val op_of_super = get_operation (name_of_op oper) super_class model
-	val sub_name = string_of_path (name_of sub_class)
-	val super_name = string_of_path (name_of super_class)
-	val op_name = name_of_op oper
+      val op_of_super = get_operation (name_of_op oper) super_class model
+      val sub_name = string_of_path (name_of sub_class)
+      val super_name = string_of_path (name_of super_class)
+      val op_name = name_of_op oper
+      val super_type = Rep_Core.type_of super_class
+      val sub_type   = Rep_Core.type_of sub_class
     in
-	case typ of
-	    (* precondition *)
-	    (* DEFINITION (OOSC p.578): 
-	     
-             --------------------------------
-          |   super_pres -> sub_posts    |
-             ________________________________
-             *)	 
-	    1 => 
-	    let
-                (* preconditions of super type in one term *)
-		val term_super = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[]
-		(* [mk_def_of ] *),(args2varargs (arguments_of_op op_of_super))))) (precondition_of_op op_of_super))
-                (* preconditions of sub type in one term *)
-		val term_sub = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[("dummy_name")],(args2varargs (arguments_of_op oper))))) (precondition_of_op oper))
-	    in 
-		OperationCall(term_super,Boolean,["Boolean","implies"],[(term_sub,type_of_term term_sub)],Boolean)
-	    end
-
-	  (* postcondition *)
-	  (* DEFINITION (OOSC p.578): 
-
-             --------------------------------
-             |   sub_posts -> super_posts   |
-             ________________________________
-           *)
-
-	  | 2 => 
-	    let 
-		(* postconditions of sub type in one term *)
-		val term_sub = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[("dummy_name")],(args2varargs (arguments_of_op oper))))) (postcondition_of_op oper))
-                (* postconditions of super type in one term *)
-		val term_super = conjugate_terms (List.map (fn (a,b) => (Predicate(b,type_of_term b,[("dummy_name")],(args2varargs (arguments_of_op op_of_super))))) (postcondition_of_op op_of_super))
-	    in 
-		OperationCall(term_sub,Boolean,["Boolean","implies"],[(term_super,type_of_term term_super)],Boolean)
-	    end
-	  | x => raise WFCPO_LiskovError ("Wrong Argument for generate_return_value. Only 1 (pre) and 2 (post) allowed.\n")
+      case typ of
+	weaken_pre => 
+	(* DEFINITION (OOSC p.578): sub_pre -> super_pre*)
+	let
+	  val pre_super = Predicate(Variable("self_super",super_type),super_type, 
+				    name_of_pre super_class oper,
+				    args2varargs (arguments_of_op op_of_super)) 
+	  val pre_sub = Predicate(Variable("self_sub", sub_type),sub_type, 
+				  name_of_pre sub_class oper,
+				  args2varargs (arguments_of_op op_of_super)) 
+        in 
+	  
+	  (OperationCall (OperationCall(pre_super,Boolean,["oclLib","Boolean","implies"],
+					[(pre_sub,Boolean)],Boolean),
+			  Boolean,["holOclLib","Boolean","OclLocalValid"],
+			  [(Literal("\\<tau>",DummyT),DummyT)],Boolean))
+	end
+      | strengthen_post => 
+	(* DEFINITION (OOSC p.578): sub_posts -> super_post *)
+	let
+	  val post_super = Predicate(Variable("self_super",Rep_Core.type_of super_class),
+				     Rep_Core.type_of super_class, 
+				     name_of_post super_class oper,
+				     args2varargs ((arguments_of_op op_of_super)@[("result",DummyT)])) 
+	  val post_sub = Predicate(Variable("self_sub",Rep_Core.type_of sub_class),
+				   Rep_Core.type_of sub_class, 
+				   name_of_post sub_class oper,
+				   args2varargs ((arguments_of_op op_of_super)@[("result",DummyT)])) 
+        in 
+	  
+	  (OperationCall (OperationCall(post_sub,Boolean,["oclLib","Boolean","implies"],
+					[(post_super,Boolean)],Boolean),
+			  Boolean,["holOclLib","Boolean","OclLocalValid"],
+			  [(Literal("\\<tau>",DummyT),DummyT)],Boolean))
+	end
     end
     
 		 
@@ -157,7 +161,7 @@ fun weaken_precondition_help [] model = []
 	(* (operation of subclass, classifier of super class) *)
 	val raw_po = List.map (fn a => (a,(go_up_hierarchy class (class_contains_op a model) model))) mo
         (* proofs obligation for classifier [(term,constraint info)] *)
- 	val pos = List.map (fn (a,b) => generate_return_value 1 a class b model) raw_po
+ 	val pos = List.map (fn (a,b) => generate_return_value weaken_pre a class b model) raw_po
     in
 	pos@(weaken_precondition_help clist model)
     end
@@ -177,7 +181,7 @@ fun strengthen_postcondition_help [] model = []
 	(* (operation of subclass, classifier of super class) *)
 	val raw_po = List.map (fn a => (a,(go_up_hierarchy class (class_contains_op a model) model))) mo
         (* proof obligations for classifier [(term,constraint info)] *)
- 	val pos = List.map (fn (a,b) => generate_return_value 2 a class b model) raw_po
+ 	val pos = List.map (fn (a,b) => generate_return_value strengthen_post a class b model) raw_po
     in
 	pos@(strengthen_postcondition_help clist model)
     end
@@ -195,7 +199,7 @@ fun conjugate_invariants_help [] model = []
 	(* get the invariants of all parents *)
 	val invariants = all_invariants_of class model
 	val c_name = string_of_path (name_of class)
-	val invs = List.map (fn (a,b) => Predicate(b,type_of_term b,[("dummy_name")],[selfarg (type_of class)])) invariants
+	val invs = List.map (fn (a,b) => Predicate(b,type_of_term b,[("dummy_name5")],[selfarg (type_of class)])) invariants
     in
 	if (List.length(invs) = 0)
 	then (conjugate_invariants_help clist model)
