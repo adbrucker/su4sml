@@ -10,8 +10,9 @@ structure WFCPOG_TestSuite : WFCPOG_TESTSUITE =
 struct
 
 open Rep_Logger
-open WFCPOG_Registry
 open WFCPOG
+open WFCPOG_Refine_Constraint
+open WFCPOG_Registry
 open OclLibrary
 
 
@@ -23,7 +24,7 @@ type testcase =
      }
 
 exception TestSuitError of string
-exception WFCPOG_RefineError = Refine_Constraint.WFCPOG_RefineError
+
 
 val prefix = "../../../examples/"
 
