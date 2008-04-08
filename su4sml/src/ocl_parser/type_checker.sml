@@ -700,51 +700,53 @@ let
 
 (* RETURN: context option *)
 fun check_context (Cond (path,op_name,op_sign,result_type,cond,pre_name,expr)) (model as (cls,assocs)) =
-let
-    val _ = trace high ("Starts typechecking: ")
-    val _ = trace type_checker ("pre/post/body         : "  ^  Ocl2String.ocl2string false expr ^ "\n")
-    val classifier = class_of_type  (Classifier (path)) model
-    val oper = get_operation op_name classifier model
-    val check1 = (op_sign = (#arguments oper))
-    val check2 = (result_type = (#result oper))
-    val _ = trace type_checker ("check1 = " ^ Bool.toString check1 ^ ", check2 = " ^ Bool.toString check2 ^ "\n")
-    val _ = List.map (fn (a,b) => (trace type_checker (a ^ ":" ^ (string_of_OclType b) ^ "   "))) op_sign
-in
-    if check1  andalso check2 
-    then
-	(SOME((Cond (path,op_name,op_sign,(#result oper),cond,pre_name,resolve_OclTerm expr model)))) 
-  else
-	NONE
-end
-
-| check_context (Attr (path,typ,attrorassoc,expr)) (model as (cls,assocs)) =
-  let
-      val _ = trace function_calls ("TypeChecker.check_context STARTS TYPECHECKING ...\n")
-      val _ = trace type_checker ("init/derive           : " ^ Ocl2String.ocl2string false expr ^ "\n")
-      val classifier = class_of_type (Classifier (real_path path)) model
-      val _ = trace type_checker ( "classifier found ... " ^ "\n")
-      val attr_list = attributes_of classifier
-      val _ = trace type_checker ( "attr_list found ... " ^ "\n")
-      val attr = valOf (get_attribute (List.last path) attr_list)
-      val _ = trace type_checker ( "attribute found ... " ^ "\n")
-      val res = 
-	  if (typ = #attr_type attr)
-	  then
-	      let
-		  val _ = trace type_checker (" ... " ^ "\n")
-	      in
-		  (SOME ((Attr (path,(#attr_type attr),attrorassoc,resolve_OclTerm expr model))))
-	      end
-	  else
-	      NONE
-      val _ = trace function_ends ("TypeChecker.check_context\n\n\n")
-  in
-      res
-  end
-| check_context (Inv (path,name,expr)) model = 
-  let
-      val _ = trace function_calls ("TypeChecker.check_context STARTS TYPECHECKING ...\n")
-      val _ = trace type_checker ("inv                   : " ^ Ocl2String.ocl2string false expr ^ "\n")
+    let
+	val _ = trace function_calls ("TypeChecker.check_context Cond(...)\n")
+	val _ = trace type_checker ("pre/post/body         : "  ^  Ocl2String.ocl2string false expr ^ "\n")
+	val classifier = class_of_type  (Classifier (path)) model
+	val oper = get_operation op_name classifier model
+	val check1 = (op_sign = (#arguments oper))
+	val check2 = (result_type = (#result oper))
+	val _ = trace type_checker ("check1 = " ^ Bool.toString check1 ^ ", check2 = " ^ Bool.toString check2 ^ "\n")
+	val _ = List.map (fn (a,b) => (trace type_checker (a ^ ":" ^ (string_of_OclType b) ^ "   "))) op_sign
+	val res = 
+	    if check1  andalso check2 
+	    then
+		(SOME((Cond (path,op_name,op_sign,(#result oper),cond,pre_name,resolve_OclTerm expr model)))) 
+	    else
+		NONE
+	val _ = trace function_ends ("TypeChecker.check_context Cond(...)\n\n\n")
+    in
+	res
+    end
+  | check_context (Attr (path,typ,attrorassoc,expr)) (model as (cls,assocs)) =
+    let
+	val _ = trace function_calls ("TypeChecker.check_context Attr(..._)\n")
+	val _ = trace type_checker ("init/derive           : " ^ Ocl2String.ocl2string false expr ^ "\n")
+	val classifier = class_of_type (Classifier (real_path path)) model
+	val _ = trace type_checker ( "classifier found ... " ^ "\n")
+	val attr_list = attributes_of classifier
+	val _ = trace type_checker ( "attr_list found ... " ^ "\n")
+	val attr = valOf (get_attribute (List.last path) attr_list)
+	val _ = trace type_checker ( "attribute found ... " ^ "\n")
+	val res = 
+	    if (typ = #attr_type attr)
+	    then
+		let
+		    val _ = trace type_checker (" ... " ^ "\n")
+		in
+		    (SOME ((Attr (path,(#attr_type attr),attrorassoc,resolve_OclTerm expr model))))
+		end
+	    else
+		NONE
+	val _ = trace function_ends ("TypeChecker.check_context\n\n\n")
+    in
+	res
+    end
+  | check_context (Inv (path,name,expr)) model = 
+    let
+	val _ = trace function_calls ("TypeChecker.check_context Inv(...)\n")
+	val _ = trace type_checker ("inv                   : " ^ Ocl2String.ocl2string false expr ^ "\n")
       val res = (SOME (Inv (path,name, resolve_OclTerm expr model)))
       val _ = trace function_ends ("TypeChecker.check_context\n\n\n")
   in 

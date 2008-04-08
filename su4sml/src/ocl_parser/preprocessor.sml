@@ -380,11 +380,11 @@ and generate_variables (Literal (paras)) path meth_name model = Literal (paras)
     (CollectionLiteral  (generate_variables_coll_list collpart_list path meth_name model,typ))
   | generate_variables (If (cond,cond_type,then_e,then_type,else_e,else_type,res_type)) path meth_name model= 
     (If (generate_variables cond path meth_name model,cond_type,generate_variables then_e path meth_name model,then_type,generate_variables else_e path meth_name model,else_type,res_type))
-  | generate_variables (AttributeCall (_,_,["result"],_)) path meth_name model =
+  | generate_variables (AttributeCall (src,src_type,["result"],_)) path meth_name model =
     let
 	val _ = trace function_calls ("Preprocessor.generate_variables: AttributeCall\n")
+	val new_src = generate_variables src path meth_name model	
 	val _ = List.app (print o (fn x => x^"\n") o string_of_path o name_of ) model
-	(* val classifier = obsolete_obsolete_class_of path model *)
 	val classifier = class_of path (model,[])
 	val _ = trace low "classifier found\n"
 	val meth = get_operation meth_name classifier (model,[])
@@ -395,14 +395,26 @@ and generate_variables (Literal (paras)) path meth_name model = Literal (paras)
     end
   | generate_variables (AttributeCall (sterm,styp,p,res_typ)) path meth_name model =
     (AttributeCall (generate_variables sterm path meth_name model,styp,p,res_typ))
-  | generate_variables (OperationCall (sterm,styp,pa,para,res_typ)) path meth_name model = 
+  | generate_variables (OperationCall (sterm,styp,pa,paras,res_typ)) path meth_name model = 
     let 
-	val _ = print ("recursive embed 'result' ... \n")
-    in 
-	(OperationCall (generate_variables sterm path meth_name model,styp,pa,para,res_typ))
+	val _ = trace function_calls ("Preprocessor.generate_variables \n")
+	val new_para_terms = List.map (fn (a,b) => generate_variables (a) path meth_name model) paras
+	val new_paras = List.map (fn a => (a, type_of_term a)) new_para_terms
+	val res =  
+	    (OperationCall (generate_variables sterm path meth_name model,styp,pa,new_paras,res_typ))
+	val _ = trace function_ends ("Preprocessor.generate_variables\n")
+    in
+	res
     end
-  | generate_variables (OperationWithType (sterm,stype,para_name,para_term,res_type)) path meth_name model = 
-    (OperationWithType (generate_variables sterm path meth_name model,stype,para_name,para_term,res_type))
+  | generate_variables (OperationWithType (sterm,stype,para_name,para_type,res_typ)) path meth_name model =
+    let
+	val _ = trace function_calls ("Preprocessor.generate_variables \n")
+	val res =  
+	    (OperationWithType (generate_variables sterm path meth_name model,stype,para_name,para_type,res_typ))
+	val _ = trace function_ends ("Preprocessor.generate_variables\n")
+    in
+	res
+    end
   | generate_variables (Let (var_name,var_type,rhs,rhs_type,in_e,in_type)) path meth_name model =
     (Let (var_name,var_type,generate_variables rhs path meth_name model,rhs_type,generate_variables in_e path meth_name model,in_type))
   | generate_variables (Iterator (name,iter_vars,sterm,stype,body_e,body_type,res_type)) path meth_name model = 

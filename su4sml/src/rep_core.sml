@@ -3219,7 +3219,7 @@ fun upcast_op [] source args model =
     end
   | upcast_op ((class,meth)::class_meth_list) source args model =
     let
-	val _ = trace low ("\nInterfere method      : name : '" ^ name_of_op meth ^ "'\n")
+	val _ = trace low ("Interfere method      : name : '" ^ name_of_op meth ^ "'\n")
        val check_source = conforms_to (type_of_term source) (type_of class) model
        val check_args = upcastable_args (#arguments meth) args model
        val _ = trace low ("Upcastable ?       : Source conforms : "  ^ Bool.toString check_source ^ "   Args conforms : " ^ Bool.toString check_args ^ "\n")
