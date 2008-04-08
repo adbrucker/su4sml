@@ -19,8 +19,8 @@ val zargo = "../../../examples/meeting/Meeting.zargo"
 val ocl = ""
 *)
 
-val zargo = "../../../examples/stack_manu/stack.zargo"
-val ocl="../../../examples/stack_manu/stack.ocl"
+val zargo = "../../../hol-ocl/examples/overriding/overriding.zargo"
+val ocl="../../../hol-ocl/examples/overriding/overriding.ocl"
 
 (** import model *)
 val i_model = import zargo ocl [] 
