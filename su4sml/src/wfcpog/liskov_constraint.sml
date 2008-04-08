@@ -115,6 +115,9 @@ fun generate_return_value typ oper sub_class super_class  model =
       val op_name = name_of_op oper
       val super_type = Rep_Core.type_of super_class
       val sub_type   = Rep_Core.type_of sub_class
+      fun OclLocalValid t = (OperationCall (t,
+					    Boolean,["holOclLib","Boolean","OclLocalValid"],
+					    [(Literal("\\<tau>",DummyT),DummyT)],Boolean))
     in
       case typ of
 	weaken_pre => 
@@ -126,12 +129,10 @@ fun generate_return_value typ oper sub_class super_class  model =
 	  val pre_sub = Predicate(Variable("self_sub", sub_type),sub_type, 
 				  name_of_pre sub_class oper,
 				  args2varargs (arguments_of_op op_of_super)) 
+
         in 
-	  
-	  (OperationCall (OperationCall(pre_super,Boolean,["oclLib","Boolean","implies"],
-					[(pre_sub,Boolean)],Boolean),
-			  Boolean,["holOclLib","Boolean","OclLocalValid"],
-			  [(Literal("\\<tau>",DummyT),DummyT)],Boolean))
+	  OperationCall(OclLocalValid pre_super,Boolean,["holOclLib","Boolean","implies"],
+			[(OclLocalValid pre_sub,Boolean)],Boolean) 
 	end
       | strengthen_post => 
 	(* DEFINITION (OOSC p.578): sub_posts -> super_post *)
@@ -145,12 +146,9 @@ fun generate_return_value typ oper sub_class super_class  model =
 				   name_of_post sub_class oper,
 				   args2varargs ((arguments_of_op op_of_super)@[("result",DummyT)])) 
         in 
-	  
-	  (OperationCall (OperationCall(post_sub,Boolean,["oclLib","Boolean","implies"],
-					[(post_super,Boolean)],Boolean),
-			  Boolean,["holOclLib","Boolean","OclLocalValid"],
-			  [(Literal("\\<tau>",DummyT),DummyT)],Boolean))
-	end
+	  OperationCall(OclLocalValid post_sub,Boolean,["holOclLib","Boolean","implies"],
+			[(OclLocalValid post_super,Boolean)],Boolean) 
+	end	  
     end
     
 		 
