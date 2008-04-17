@@ -82,6 +82,7 @@ fun add_wfpo wfpo = ((wfpos := [wfpo]@(!wfpos));())
 
 fun del_wfpo wfpo_id = ((wfpos := List.filter (fn w => not ((WFCPOG.id_of w) = (wfpo_id)) ) 
 			   (!wfpos));())
+
 fun get_wfpo [] x = raise WFCPOG_RegistryError ("No ID = " ^ x ^ " found in given list!\n")
   | get_wfpo (h::tail) x = 
     if (id_of h = x) 
@@ -276,7 +277,7 @@ val supported = [
      data = Datatab.empty
     }, 
     WFCPOG.WFPO{ 
-     identifier      = "rfm_syn", 
+     identifier      = "rfm_wfc", 
      name            = "OO Refinement",  
      description     = "Check if public classes of aboriginal are also public in new Package",
      recommended     = false,
@@ -284,17 +285,17 @@ val supported = [
      recommends      = [],
      apply           = WFCPOG.WFC(WFCPOG_Refine_Constraint.check_syntax),
      data            = Datatab.empty
-    }(*, 
+    }, 
     WFCPOG.WFPO {
-     identifier      = "ref_po", 
+     identifier      = "rfm_pog", 
      name            = "OO Refinement",
      description     = "Generate Proof Obligations for OO data refinement",
      recommended     = true,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.POG(Refine_Constraint.refine_po),
+     apply           = WFCPOG.POG(WFCPOG_Refine_Constraint.generate_pos),
      data            = Datatab.empty
-    }*)]
+    }]
 
 (*    
 fun is_supported wfpo       = List.exists (fn w => wfpo = w) supported

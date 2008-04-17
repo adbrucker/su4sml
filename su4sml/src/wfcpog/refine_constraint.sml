@@ -287,10 +287,7 @@ fun check_syntax wfpo (model:Rep.Model as (clist,alist)) =
 	else raise WFCPOG_RefineError ("This specific constraint is not applicable for this model.\n")
     end
 
-
-
-(* TODO: *)
-fun get_holocl_operation oper class model = 
+fun get_holocl_operation var_name oper class model = 
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.get_holocl_operation\n") 
 	(** use Rep_Encoder to get operation as HOL-OCL-Term **)
@@ -298,115 +295,43 @@ fun get_holocl_operation oper class model =
 	val hol_name = mk_def_of (name_of class)@[(name_of_op oper)]
 	val args = List.map (fn (a,b) => (Variable(a,b),b)) (arguments_of_op oper)
 	val typ = type_of class
-	val res = Predicate(Variable("x",typ),typ,hol_name,args)
+	val predicate = Predicate(Variable(var_name,typ),typ,hol_name,args)
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.get_holocl_operation\n") 
     in
-	res
+	predicate
     end
 
-fun get_holocl_abstraction_relation abs_package conc_package model = 
+fun get_holocl_abstraction_relation  abs_class conc_class model =
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.get_holocl_abstraction_relation\n")
-	val res = Predicate(Variable("x",DummyT),DummyT,["AbstractionRelation"],[])
+	val predicate_name = ["R",(string_of_path abs_class),(string_of_path conc_class),"_def"]
+	val dummy_term = Variable("R",DummyT)
+	val predicate = Predicate(dummy_term,DummyT,predicate_name,[])
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.get_holocl_abstraction_relation\n")
     in
-	res
+	predicate
     end
 
-fun get_holocl_invariant class model = 
-    let
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.get_holocl_invariant\n")
-	val hol_name = mk_def_of (name_of class)
-	val typ = type_of class
-	val res = Predicate(Variable("x",typ),typ,hol_name,[])
-	val _ = trace function_ends ("WFCPOG_Refine_Constraint.get_holocl_invariant\n")
-    in
-	res
-    end
 
-fun M_valid (hol_operation:OclTerm) ((Tuple(tuple)):OclTerm) = 
-    let
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.M_valid\n")
-	(* evaluation to true *)
-	val t = OperationCall(hol_operation,Boolean,["holOclLib","Boolean","OclLocalValid"],[(Tuple(tuple),DummyT)],Boolean)
-	
-        (* evaluation to exception *)
-	val undef = OperationCall(hol_operation,DummyT,["oclLib","OclAny","oclIsUndefined"],[],Boolean)
-	val e = OperationCall(undef,Boolean,["holOclLib","Boolean","OclLocalValid"],[(Tuple(tuple),DummyT)],Boolean)
-	val res = disjugate_terms [t,e]
-	val _ = trace function_ends ("WFCPOG_Refine_Constraint.M_valid\n")
-    in
-	res
-    end
-
-(* valid pre states (in paper (55)) *)
-fun pre_state_valid hol_operation ((Tuple(tuple)):OclTerm) V =
-    let
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.valid_pre_states\n")
-	(* (string * term * type) *)
-	val (sigma_name,sigma_term,sigma_type) = List.hd tuple
-        (* (string * term * type) *)
-	val (sigma'_name,sigma'_term,sigma'_type) = List.last tuple
-	(* sigma is_element_of V *)
-(*	val s_E_V = Predicate(V,DummyT, *)
-	val m_valid = M_valid hol_operation (Tuple(tuple))
-	val exists = Iterator("holOclLib.exists",[(sigma'_name,sigma'_type)],V,Boolean,m_valid,Boolean,Boolean)
-	val res = Iterator("holOclLib.forAll",[(sigma_name,sigma_type)],V,Boolean,exists,Boolean,Boolean)
-	val _ = trace function_ends ("WFCPOG_Refine_Constraint.valid_pre_states\n")
-    in
-	res
-    end
-
-(* in paper (56) *)
-fun generate_po1 abs_tuple conc_tuple S T V R = Variable("dummy_term",DummyT)
-(*    let
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.generate_po1\n")
-	val pre_S = pre_state_valid S abs_tuple
-	val pre_T = pre_state_valid T conc_tuple
-		
-	val m_valid_T = M_valid T conc_tuple
-	val m_valid_S = M_valid S abs_tuple
-	val 
-
-
-	val _ = trace function_ends ("WFCPOG_Refine_Constraint.generate_po1\n")
-    in
-	res
-    end
-*)
-(* in paper (57) *)
-fun generate_po2 abs_tuple conc_tuple S T V R = Variable("dummy_term",DummyT)
-(*    let
-	val x = ...
-    in
-	
-    end
-*)
-fun refine_operation abs_oper conc_oper abs_class conc_class V R model = 
+fun refine_operation abs_oper conc_oper abs_class conc_class R model = 
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.refine_classifier\n")
-	val S = get_holocl_operation abs_oper abs_class model
-	val T = get_holocl_operation conc_oper conc_class model
-	val abs_tuple = Tuple[("sigma_a",Variable("sigma_a",DummyT),DummyT),("sigma_a'",Variable("sigma_a'",DummyT),DummyT)]
-	val conc_tuple = Tuple[("sigma_c",Variable("sigma_c",DummyT),DummyT),("sigma_c'",Variable("sigma_c'",DummyT),DummyT)]
-	val po1 = generate_po1 abs_tuple conc_tuple S T V R
-	val po2 = generate_po2 abs_tuple conc_tuple S T V R
-	val res = conjugate_terms [po1,po2]
+	val S = get_holocl_operation "S" abs_oper abs_class model
+	val T = get_holocl_operation "T" conc_oper conc_class model
+	val refine = OperationCall(S,DummyT,["holOclLib","methodology","refinement","OclForwardRefinement"],[(T,DummyT),(R,DummyT)],Boolean)
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.refine_classifier\n")	
     in
-	res
+	refine
     end
 
 fun refine_classifier abs_class conc_class R model = 
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.refine_classifier\n")
-        (* all valid states of class *)
-	val V = get_holocl_invariant abs_class model
 	val abs_ops = List.filter (is_visible_op) (all_operations_of abs_class model)
 	val conc_ops = List.filter (is_visible_op) (all_operations_of conc_class model)
 	val gops = group_op abs_ops conc_ops
     in
-	List.map (fn (a,b) => refine_operation a b abs_class conc_class V R model) (gops)
+	List.map (fn (a,b) => refine_operation a b abs_class conc_class R model) (gops)
     end
 
 fun refine_package abs_path conc_path (model as (clist,alist)) =
