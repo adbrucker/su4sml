@@ -48,8 +48,8 @@ val _ = trace high ("............. refinement constraints loaded ...\n")
 val tax = WFCPOG_Registry.get_wfpo WFCPOG_Registry.supported "tax"
 val _ = trace high ("............. taxonomy constraint loaded ...\n")
 
-val rfm_SC_wfc = WFCPOG_Registry.rename_wfpo "rfm_SC_wfc" (RFM_Data.put ({key=10,rfm_tuples=[(["AbstractSimpleChair01"],["ConcreteSimpleChair01"])]}) rfm_wfc)
-val rfm_SC_pog = WFCPOG_Registry.rename_wfpo "rfm_SC_pog" (RFM_Data.put ({key=10,rfm_tuples=[(["AbstractSimpleChair01"],["ConcreteSimpleChair01"])]}) rfm_pog)
+val rfm_SC_wfc = WFCPOG_Registry.rename_wfpo "rfm_SC_wfc" (RFM_Data.put ({key=10,rfm_tuples=[(["AbstractSimpleChair04"],["ConcreteSimpleChair02"])]}) rfm_wfc)
+val rfm_SC_pog = WFCPOG_Registry.rename_wfpo "rfm_SC_pog" (RFM_Data.put ({key=10,rfm_tuples=[(["AbstractSimpleChair04"],["ConcreteSimpleChair02"])]}) rfm_pog)
  
 val md0 = WFCPOG_Registry.rename_wfpo "md0" (TAX_Data.put ({key=9,max_depth=0}) tax)
 val md1 = WFCPOG_Registry.rename_wfpo "md1" (TAX_Data.put ({key=9,max_depth=1}) tax)

@@ -17,8 +17,8 @@ val zargo = "../../../../examples/meeting/Meeting.zargo"
 val ocl = ""
 *)
 val zargo = "../../../examples/SimpleChair/SimpleChair.zargo"
-val ocl = "../../../examples/SimpleChair/AbstractSimpleChair01.ocl"
-val remP = ["AbstractSimpleChair02", "AbstractSimpleChair03","AbstractSimpleChair04","ConcreteSimpleChair02"] ;
+val ocl = "../../../examples/SimpleChair/AbstractSimpleChair04.ocl"
+val remP = ["AbstractSimpleChair02", "AbstractSimpleChair03","AbstractSimpleChair01","ConcreteSimpleChair01"] ;
 
 (* 
 (** EBANK **)

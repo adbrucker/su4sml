@@ -322,7 +322,7 @@ fun get_holocl_operation var_name oper class model =
 fun get_holocl_abstraction_relation  abs_path conc_path class_name =
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.get_holocl_abstraction_relation\n")
-	val predicate_name = "R_"^(string_of_path abs_path)^"_"^(string_of_path conc_path)^class_name
+	val predicate_name = "R_"^(string_of_path abs_path)^"_"^(string_of_path conc_path)^"_"^class_name
 	val dummy_term = Variable("R",DummyT)
 	val predicate = Predicate(dummy_term,DummyT,[predicate_name],[])
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.get_holocl_abstraction_relation\n")
