@@ -61,6 +61,10 @@ val md6 = WFCPOG_Registry.rename_wfpo "md6" (TAX_Data.put ({key=9,max_depth=6}) 
 val md7 = WFCPOG_Registry.rename_wfpo "md7" (TAX_Data.put ({key=9,max_depth=7}) tax)
 val md8 = WFCPOG_Registry.rename_wfpo "md8" (TAX_Data.put ({key=9,max_depth=8}) tax)
 
- 
+(*  
 val wfs = [inf,vis,md0,md1,md2,md3,md4,md5,md6,md7,md8,rfm_SC_wfc]
 val pos = [lsk,cm,sm,om,cmd,quy]
+*)
+
+val wfs = [rfm_SC_wfc]
+val pos = [rfm_SC_pog]
