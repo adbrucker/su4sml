@@ -308,7 +308,7 @@ fun type_of (Literal                (_,t)) = t
   | type_of (Let            (_,_,_,_,_,t)) = t
   | type_of (Iterate  (_,_,_,_,_,_,_,_,t)) = t
   | type_of (Iterator     (_,_,_,_,_,_,t)) = t
-
+  | type_of (Predicate(_,_,_,_)) = Boolean
 (* or rather short_string_of ?*)
 fun term_name_of (Literal            _) = "Literal"
   | term_name_of (CollectionLiteral  _) = "CollectionLiteral"
