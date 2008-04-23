@@ -57,7 +57,7 @@ open Rep_OclTerm
 open Rep_OclType
 open ModelImport
 open Rep2String
-
+open HolOcl_Namespace
 (* ocl-parser *)
 open ModelImport
 open Context
