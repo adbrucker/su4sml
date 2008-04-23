@@ -16,10 +16,11 @@ val _ = Control.Print.printLength:=30
 val zargo = "../../../../examples/meeting/Meeting.zargo"
 val ocl = ""
 *)
+(*
 val zargo = "../../../examples/SimpleChair/SimpleChair.zargo"
 val ocl = "../../../examples/SimpleChair/AbstractSimpleChair04.ocl"
 val remP = ["AbstractSimpleChair02", "AbstractSimpleChair03","AbstractSimpleChair01","ConcreteSimpleChair01"] ;
-
+*)
 (* 
 (** EBANK **)
 val zargo = "../../../examples/ebank/ebank.zargo"
@@ -59,13 +60,11 @@ val ocl = "../../../examples/vehicles/vehicles.ocl"
 *)
 
 (** OVERRRIDING **)
-(* 
 val zargo = "../../../hol-ocl/examples/overriding/overriding.zargo"
 val ocl="../../../hol-ocl/examples/overriding/overriding.ocl"
 val remP = []
-*)
-(** import model *)
 
+(** import model *)
 val XMI = parseUML zargo
 val _ = init_offset()
 val OCL = parseOCL ocl

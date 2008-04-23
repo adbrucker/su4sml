@@ -90,6 +90,11 @@ val testcases = [
     name = "SimpleChair",
     uml  = prefix^"SimpleChair/SimpleChair.zargo",
     ocl  = prefix^"SimpleChair/ConcreteSimpleChair01.ocl"
+   }:testcase,
+   {
+    name = "overriding",
+    uml  = prefix^"overriding/overriding.zargo",
+    ocl  = prefix^"overriding/overriding.ocl"
    }:testcase
 ]
 
@@ -161,6 +166,7 @@ fun print_tc (tc:testcase)=
 
 fun runTest name wfs pos = 
     let
+	val _  = trace high ("runTest ...\n")
 	val tc = valOf (List.find (fn a => name = (#name a)) testcases)
 	val string = (print_tc tc)^(test tc wfs pos)
     in

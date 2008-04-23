@@ -81,7 +81,7 @@ fun c_allInstance_term (c:Classifier) =
 	val term = add_source (class,allInstances)
 	val term = add_source (allInstances,exists)
     in
-	OperationCall (term,type_of_term term,["holOclLib","Boolean","OclLocalValid"],[(Variable("tau",DummyT),DummyT)],Boolean)
+	OperationCall (term,type_of_term term,["holOclLib","Boolean","OclLocalValid"],[(Variable("\\<tau>",DummyT),DummyT)],Boolean)
     end
 
 (* E t. t |= c::allInstances()->exists(x|x.oclIsTypeOf(c)) *)
@@ -90,7 +90,7 @@ fun single_model_consistency (c:Classifier) (model as (clist,alist)) =
 	val _ = trace function_calls("WFCPOG_Data_Model_Consistency_Constraint.single_model_consistency\n")
 	val term = c_allInstance_term c
 	val dummy_body = Literal("dummy_body",DummyT)
-	val res = Iterator("holOclLib.exists",[("tau",DummyT)],term,DummyT,dummy_body,DummyT,Boolean)
+	val res = Iterator("holOclLib.exists",[("\\<tau>",DummyT)],term,DummyT,dummy_body,DummyT,Boolean)
 	val _ = trace function_ends("WFCPOG_Data_Model_Consistency_Constraint.single_model_consistency\n")
     in
 	res
@@ -114,7 +114,7 @@ fun strong_model_consistency_help classes model =
 	val terms = List.map (c_allInstance_term) classes
 	val n_term = nest_source terms
 	val dummy_body = Literal("dummy_body",DummyT)
-	val res = [("strong_model",Iterator("holOclLib.exists",[("tau",DummyT)],n_term,DummyT,dummy_body,DummyT,Boolean))]
+	val res = [("strong_model",Iterator("holOclLib.exists",[("\\<tau>",DummyT)],n_term,DummyT,dummy_body,DummyT,Boolean))]
 	val _ = trace function_ends("WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency\n")
     in
 	res

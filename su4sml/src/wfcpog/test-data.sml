@@ -66,5 +66,10 @@ val wfs = [inf,vis,md0,md1,md2,md3,md4,md5,md6,md7,md8,rfm_SC_wfc]
 val pos = [lsk,cm,sm,om,cmd,quy]
 *)
 
+(* 
 val wfs = [rfm_SC_wfc]
 val pos = [rfm_SC_pog]
+*)
+
+val wfs = []
+val pos = [cm,sm]
