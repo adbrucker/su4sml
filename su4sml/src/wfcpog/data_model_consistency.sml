@@ -81,7 +81,7 @@ fun c_allInstance_term (c:Classifier) =
 	val term = add_source (class,allInstances)
 	val term = add_source (allInstances,exists)
     in
-	OperationCall (term,type_of_term term,["holOclLib","Boolean","OclLocalValid"],[(Variable("\\<tau>",DummyT),DummyT)],Boolean)
+	OperationCall (term,type_of_term term,["holOclLib","Boolean","OclLocalValid"],[(Literal("\\<tau>",DummyT),DummyT)],Boolean)
     end
 
 (* E t. t |= c::allInstances()->exists(x|x.oclIsTypeOf(c)) *)
