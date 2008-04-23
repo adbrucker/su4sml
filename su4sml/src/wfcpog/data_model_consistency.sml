@@ -70,18 +70,21 @@ exception WFCPO_DataModelError
 
 
 fun c_allInstance_term (c:Classifier) =
-    let
-	(* create terms form right to left *)
-	val x = Variable("x",DummyT)
+    let 
+	val _ = trace function_calls ("WF_data_CS.c_allInstances\n")
+	val x = Variable ("x",DummyT)
+        (* get class as an holocl term *)
+	val holocl_class_name = get_class_of (name_of c)
+	val class_type = type_of c
+	val class_predicate = Predicate(Variable("c",class_type),class_type,holocl_class_name,[])
+	(* OclAny.allInstances() *)
+	val allInstances = OperationCall (class_predicate,DummyT,["oclLib","OclAny","allInstances"],[],DummyT)
+	(* x.oclIsTypeOf () *)
 	val oclIsTypeOf = OperationWithType (x,DummyT,"oclIsTypeOf",type_of c,Boolean)
-	val exists = Iterator("exists",[("x",DummyT)],Variable("dummy_source",DummyT),DummyT,oclIsTypeOf,Boolean,Boolean)
-	val allInstances = OperationCall (Variable("dummy_source",DummyT),DummyT,["oclLib","OclAny","allInstances"],[],Boolean)
-	val class = Literal("c",type_of c)
-	(* nest sources *)
-	val term = add_source (class,allInstances)
-	val term = add_source (allInstances,exists)
+	(* Iterator exists *)
+	val exists = Iterator("exists",[("x",DummyT)],allInstances,DummyT,oclIsTypeOf,Boolean,Boolean)
     in
-	OperationCall (term,type_of_term term,["holOclLib","Boolean","OclLocalValid"],[(Literal("\\<tau>",DummyT),DummyT)],Boolean)
+	exists
     end
 
 (* E t. t |= c::allInstances()->exists(x|x.oclIsTypeOf(c)) *)
