@@ -43,9 +43,6 @@
 signature WFCPOG_VISIBILITY_CONSTRAINT =
 sig
     val are_conditions_visible : WFCPOG.wfpo -> Rep.Model -> bool
-
-
-
 end
 structure WFCPOG_Visibility_Constraint:WFCPOG_VISIBILITY_CONSTRAINT = 
 struct
