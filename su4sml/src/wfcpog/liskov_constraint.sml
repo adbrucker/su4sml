@@ -55,16 +55,16 @@ sig
     val print_liskov_args : Liskov_args -> unit
    
     (** sub constraint, included in liskov.*)
-    val weaken_precondition         : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
+    val weaken_precondition         : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
 
     (** sub constraint, included in liskov.*)
-    val strengthen_postcondition    : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
+    val strengthen_postcondition    : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
 
     (** sub constraint, included in liskov.*)
-    val conjugate_invariants        : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
+    val conjugate_invariants        : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
 
     (** all three subconstraints together *)
-    val generate_po                 : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
+    val generate_po                 : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
 end 
 structure WFCPOG_Liskov_Constraint : WFCPOG_LISKOV_CONSTRAINT = 
 struct
@@ -159,7 +159,7 @@ fun weaken_precondition_help [] model = []
 	(* (operation of subclass, classifier of super class) *)
 	val raw_po = List.map (fn a => (a,(go_up_hierarchy class (class_contains_op a model) model))) mo
         (* proofs obligation for classifier [(term,constraint info)] *)
- 	val pos = List.map (fn (a,b) => generate_return_value weaken_pre a class b model) raw_po
+ 	val pos = List.map (fn (a,b) => (("lsk_pre_"^(string_of_path (name_of class))),generate_return_value weaken_pre a class b model)) raw_po
     in
 	pos@(weaken_precondition_help clist model)
     end
@@ -179,7 +179,7 @@ fun strengthen_postcondition_help [] model = []
 	(* (operation of subclass, classifier of super class) *)
 	val raw_po = List.map (fn a => (a,(go_up_hierarchy class (class_contains_op a model) model))) mo
         (* proof obligations for classifier [(term,constraint info)] *)
- 	val pos = List.map (fn (a,b) => generate_return_value strengthen_post a class b model) raw_po
+ 	val pos = List.map (fn (a,b) => (("lsk_post_"^(string_of_path (name_of class))),generate_return_value strengthen_post a class b model)) raw_po
     in
 	pos@(strengthen_postcondition_help clist model)
     end
@@ -197,11 +197,11 @@ fun conjugate_invariants_help [] model = []
 	(* get the invariants of all parents *)
 	val invariants = all_invariants_of class model
 	val c_name = string_of_path (name_of class)
-	val invs = List.map (fn (a,b) => Predicate(b,type_of_term b,name_of_inv class,[selfarg (type_of class)])) invariants
+	val invs = List.map (fn (a,b) => (Predicate(b,type_of_term b,name_of_inv class,[selfarg (type_of class)]))) invariants
     in
 	if (List.length(invs) = 0)
 	then (conjugate_invariants_help clist model)
-	else (conjugate_terms invs)::(conjugate_invariants_help clist model)
+	else (("lsk_inv_"^(string_of_path (name_of class))),conjugate_terms invs)::(conjugate_invariants_help clist model)
 	    
     end
 
