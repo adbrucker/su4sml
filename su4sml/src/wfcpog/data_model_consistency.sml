@@ -83,6 +83,7 @@ fun c_allInstance_term (c:Classifier) =
 	val oclIsTypeOf = OperationWithType (x,DummyT,"oclIsTypeOf",type_of c,Boolean)
 	(* Iterator exists *)
 	val exists = Iterator("exists",[("x",DummyT)],allInstances,DummyT,oclIsTypeOf,Boolean,Boolean)
+	val _ = trace function_ends ("WF_data_CS.c_allInstances\n")
     in
 	exists
     end
