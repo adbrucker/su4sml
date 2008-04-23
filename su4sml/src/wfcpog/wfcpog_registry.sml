@@ -57,8 +57,8 @@ sig
 							    
     val check_wfc          : Rep.Model -> WFCPOG.wfpo -> bool
     val check_wfcs         : Rep.Model -> WFCPOG.wfpo list -> bool
-    val generate_po        : Rep.Model -> WFCPOG.wfpo -> (WFCPOG.wfpo * Rep_OclTerm.OclTerm list) 
-    val generate_pos       : Rep.Model -> WFCPOG.wfpo list -> (WFCPOG.wfpo * Rep_OclTerm.OclTerm list) list
+    val generate_po        : Rep.Model -> WFCPOG.wfpo -> (WFCPOG.wfpo * (string * Rep_OclTerm.OclTerm) list) 
+    val generate_pos       : Rep.Model -> WFCPOG.wfpo list -> (WFCPOG.wfpo * (string * Rep_OclTerm.OclTerm) list) list
 
     exception WFCPOG_RegistryError of string
 end
@@ -209,7 +209,7 @@ val supported = [
     WFCPOG.WFPO{
      identifier      = "class_model", (* identifier                     *) 
      name            = "Data model consistency: class model",
-     description     = "Data model consistency; a classes should be able to be instantiated from a state.",
+     description     = "Data model consistency: a classes should be able to be instantiated from a state.",
      recommended     = false,
      depends         = [],
      recommends      = [],
