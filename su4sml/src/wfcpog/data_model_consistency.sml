@@ -87,9 +87,13 @@ fun c_allInstance_term (c:Classifier) =
 (* E t. t |= c::allInstances()->exists(x|x.oclIsTypeOf(c)) *)
 fun single_model_consistency (c:Classifier) (model as (clist,alist)) = 
     let
+	val _ = trace function_calls("WFCPOG_Data_Model_Consistency_Constraint.single_model_consistency\n")
 	val term = c_allInstance_term c
+	val dummy_body = Literal("dummy_body",DummyT)
+	val res = Iterator("holOclLib.exists",[("tau",DummyT)],term,DummyT,dummy_body,DummyT,Boolean)
+	val _ = trace function_ends("WFCPOG_Data_Model_Consistency_Constraint.single_model_consistency\n")
     in
-	OperationCall (Variable("tau",DummyT),DummyT,["holOclLib","Quantor","existence"],[(term,type_of_term term)],Boolean)
+	res
     end
 
 
@@ -106,10 +110,14 @@ fun class_model_consistency wfpo (model as (clist,alist)) =
 
 fun strong_model_consistency_help classes model = 
     let 
+	val _ = trace function_calls("WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency\n")
 	val terms = List.map (c_allInstance_term) classes
 	val n_term = nest_source terms
+	val dummy_body = Literal("dummy_body",DummyT)
+	val res = [("strong_model",Iterator("holOclLib.exists",[("tau",DummyT)],n_term,DummyT,dummy_body,DummyT,Boolean))]
+	val _ = trace function_ends("WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency\n")
     in
-	[("strong_model",OperationCall (Variable ("tau",DummyT),DummyT,["holOclLib","Quantor","existence"],[(n_term,type_of_term n_term)],Boolean))]
+	res
     end
 
 fun strong_model_consistency wfpo (model as (clist,alist)) = 
@@ -118,5 +126,4 @@ fun strong_model_consistency wfpo (model as (clist,alist)) =
     in
 	strong_model_consistency_help classifiers model
     end
-
 end;
