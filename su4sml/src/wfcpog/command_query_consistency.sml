@@ -42,9 +42,9 @@
 (** Implementation of the Liskov Substitiution Principle. *)
 signature WFCPOG_COMMAND_QUERY_CONSTRAINT =
 sig
-    val ops_are_query            : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
+    val ops_are_query            : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
 						
-    val ops_are_command          : WFCPOG.wfpo -> Rep.Model -> Rep_OclTerm.OclTerm list
+    val ops_are_command          : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
 end
 structure WFCPOG_Command_Query_Constraint:WFCPOG_COMMAND_QUERY_CONSTRAINT = 
 struct
@@ -116,7 +116,7 @@ fun ops_are_query_help [] model = []
   | ops_are_query_help (h::classes) (model as (clist,alist)) = 
     let
 	val qops = query_operations_of h model
-	val x = List.map (fn a => (post_implies_args_and_self_at_pre a h)) qops
+	val x = List.map (fn a => (("quy_"^(string_of_path(name_of h))),post_implies_args_and_self_at_pre a h)) qops
     in
 	(x)@(ops_are_query_help classes model)
     end
@@ -125,7 +125,7 @@ fun ops_are_command_help [] model = []
   | ops_are_command_help (h::classes) (model as (clist,alist)) =  
     let
 	val cops = command_operations_of h model
-	val x = List.map (fn a => (post_implies_not_args_or_not_self_at_pre a h)) cops 
+	val x = List.map (fn a => (("cmd_"^(string_of_path (name_of h))),post_implies_not_args_or_not_self_at_pre a h)) cops 
     in
 	(x)@(ops_are_command_help classes model)
     end
