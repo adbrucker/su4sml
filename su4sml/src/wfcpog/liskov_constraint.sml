@@ -197,7 +197,7 @@ fun conjugate_invariants_help [] model = []
 	(* get the invariants of all parents *)
 	val invariants = all_invariants_of class model
 	val c_name = string_of_path (name_of class)
-	val invs = List.map (fn (a,b) => (Predicate(b,type_of_term b,name_of_inv class,[selfarg (type_of class)]))) invariants
+ 	val invs = List.map (fn (a,b) => (Predicate(b,type_of_term b,name_of_inv class,[selfarg (type_of class)]))) invariants 
     in
 	if (List.length(invs) = 0)
 	then (conjugate_invariants_help clist model)

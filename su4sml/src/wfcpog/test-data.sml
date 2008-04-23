@@ -26,9 +26,10 @@ val sm = WFCPOG_Registry.get_wfpo WFCPOG_Registry.supported "strong_model"
 val _ = trace high ("............. data model constraint loaded ...\n")
 
 (** OPERATIONAL CONSTRAINT **)
+(*
 val om = WFCPOG_Registry.get_wfpo WFCPOG_Registry.supported "oper_model"
 val _ = trace high ("............. operational constraint loaded ...\n")
-
+*)
 (** COMMAND/QUERY CONSTRAINT **)
 val cmd = WFCPOG_Registry.get_wfpo WFCPOG_Registry.supported "cmd"
 val quy = WFCPOG_Registry.get_wfpo WFCPOG_Registry.supported "quy"

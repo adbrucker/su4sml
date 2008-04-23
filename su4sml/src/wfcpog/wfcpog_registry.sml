@@ -225,7 +225,7 @@ val supported = [
      recommends      = [],
      apply           = WFCPOG.POG(WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency),
      data = Datatab.empty
-    },
+    },(*
     WFCPOG.WFPO{
      identifier      = "oper_model", (* identifier                     *) 
      name            = "Operational model consistency",
@@ -235,7 +235,7 @@ val supported = [
      recommends      = [],
      apply           = WFCPOG.POG(WFCPOG_Operational_Constraint.generate_pos),
      data = Datatab.empty
-    },
+    },*)
     WFCPOG.WFPO{
      identifier      = "cmd", (* identifier                     *) 
      name            = "Query Command Constraint",
