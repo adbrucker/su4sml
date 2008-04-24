@@ -48,10 +48,6 @@ sig
     val overwrites_old_creators    : WFCPOG.wfpo -> Rep.Model -> bool
     (** sub constraint, included in constructor consistency.*)
     val attributes_are_inited      : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
-    (** all wfs of package constructor *)
-    val generate_wfs               : WFCPOG.wfpo -> Rep.Model -> bool
-    (** all pos of package constructor *)
-    val generate_pos               : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
     (** Any kind of Exception *) 
     exception WFCPO_ConstructorError of string
 end
@@ -141,24 +137,5 @@ fun attributes_are_inited wfpo (model as (clist,alist)) =
 	val classes = removeOclLibrary clist
     in
 	(attributes_are_inited_help classes model)
-    end
-
-fun generate_wfs wfpo (model:Rep.Model as (clist,alist)) = 
-    let
-	val _ = trace function_calls ("WP_constructor_CS.generate_wfs\n")
-	val res = overwrites_old_creators wfpo model
-	val _ = trace function_ends ("WP_constructor_CS.generate_wfs\n")
-    in
-	res
-    end
-
-fun generate_pos wfpo (model:Rep.Model as (clist,alist)) = 
-    let
-	val _ = trace function_calls ("WP_constructor_CS.generate_pos\n")
-	val res1 = post_implies_invariant wfpo model
-	val res2 = attributes_are_inited wfpo model
-	val _ = trace function_ends ("WP_constructor_CS.generate_pos\n")
-    in
-	res1@res2
     end
 end; 

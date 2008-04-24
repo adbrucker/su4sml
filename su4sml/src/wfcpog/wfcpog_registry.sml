@@ -41,31 +41,51 @@
 
 signature WFCPOG_REGISTRY = 
 sig
-    val supported_wfs      : WFCPOG.wfpo list
-    val supported_pos      : WFCPOG.wfpo list
+    (** Customized wfc and po list, at the beginning empty.*)
     val wfpos              : WFCPOG.wfpo list ref
+    (** Add wfpo to customized list.*)
     val add_wfpo           : WFCPOG.wfpo -> unit
+    (** Delete wfpo from customized list.*)
     val del_wfpo           : WFCPOG.wfpo_id -> unit
 
+
+    (** All the supported well-formedness checks. *)					       
+    val supported_wfs      : WFCPOG.wfpo list
+    (** All the supported proof obligations. *)
+    val supported_pos      : WFCPOG.wfpo list
+
+    (** Checks if the wfpo is a well-formedness check. *)
     val is_wfc             : WFCPOG.wfpo -> bool
+    (** Checks if the wfpo is a proof obligation.*)
     val is_pog             : WFCPOG.wfpo -> bool
 
+    (** Checks if a given name is a supported wfc.*)
     val wf_is_supported_id : WFCPOG.wfpo_id -> bool
+    (** Checks if a given name is a supported po.*)
     val po_is_supported_id : WFCPOG.wfpo_id -> bool
     
     val rename_wfpo        : string -> WFCPOG.wfpo -> WFCPOG.wfpo
     val get_wfpo           : WFCPOG.wfpo list -> WFCPOG.wfpo_id -> WFCPOG.wfpo
-							    
+							 
+    (** Execute a wfc.*)    
     val check_wfc          : Rep.Model -> WFCPOG.wfpo -> bool
+    (** Execute a list of wfcs.*)
     val check_wfcs         : Rep.Model -> WFCPOG.wfpo list -> bool
 
+    (** Execute all recommended wfcs.*)
     val check_recommended_wfcs : Rep.Model -> bool
 
-
+    (** Generate pos for a given wfpo.*)
     val generate_po        : Rep.Model -> WFCPOG.wfpo -> (WFCPOG.wfpo * (string * Rep_OclTerm.OclTerm) list) 
+    (** Generate pos for a list of wfpos.*)
     val generate_pos       : Rep.Model -> WFCPOG.wfpo list -> (WFCPOG.wfpo * (string * Rep_OclTerm.OclTerm) list) list
 
+    (** Generate all recommended pos.*)							      
     val generate_recommended_pos : Rep.Model -> (WFCPOG.wfpo * (string * Rep_OclTerm.OclTerm) list) list
+
+    (** Argument Wrappers *)
+    (** Create wfpo for wfc max_depth.*)
+    val create_wfc_tax     : int -> WFCPOG.wfpo
     exception WFCPOG_RegistryError of string
 end
 
@@ -157,7 +177,7 @@ val tax_workaround =
 val supported_wfs = [ 
     WFCPOG.WFPO{
      identifier      = "wfc_inf_ster",
-     name            = "WFC Interface Consistency (subconstraint)",
+     name            = "WFC Interface Consistency consistent stereotypes (subconstraint)",
      description     = "Checks if all operations of an interface don't have the stereotypes 'create' or 'destroy'.\n",
      recommended     = false,
      depends         = [],
@@ -167,7 +187,7 @@ val supported_wfs = [
     },
     WFCPOG.WFPO{
      identifier      = "wfc_inf_name",
-     name            = "WFC Interface Consistency (subconstraint)",
+     name            = "WFC Interface Consistency no nameclashes (subconstraint)",
      description     = "Checks for classes inheriting from more than one interface that there are no nameclashes.\n",
      recommended     = false,
      depends         = [],
@@ -199,7 +219,7 @@ val supported_wfs = [
     , 
     WFCPOG.WFPO{ 
      identifier      = "wfc_rfm", 
-     name            = "WFOO Refinement",  
+     name            = "WFC OO Refinement",  
      description     = "Checks if public classes of aboriginal package are also public in new package\n",
      recommended     = false,
      depends         = [],
@@ -209,12 +229,12 @@ val supported_wfs = [
     },
     WFCPOG.WFPO{ 
      identifier      = "wfc_cstr", 
-     name            = "Constructor Consistency",  
-     description     = "Check if public classes of aboriginal are also public in new Package",
-     recommended     = false,
+     name            = "WFC Constructor Consistency",  
+     description     = "Checks if a given class overwrites all old creators\n.",
+     recommended     = true,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.WFC(WFCPOG_Refine_Constraint.check_syntax),
+     apply           = WFCPOG.WFC(WFCPOG_Constructor_Constraint.overwrites_old_creators),
      data            = Datatab.empty
     }
 ]
@@ -309,6 +329,36 @@ val supported_pos = [
      recommends      = [],
      apply           = WFCPOG.POG(WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency),
      data = Datatab.empty
+    },
+    WFCPOG.WFPO{ 
+     identifier      = "cstr_post", 
+     name            = "Constructor Consistency post implies invariants(subconstraint)",  
+     description     = "Checks if the postcondition of any constructor operation imples the class' invariant.\n",
+     recommended     = false,
+     depends         = [],
+     recommends      = [],
+     apply           = WFCPOG.POG(WFCPOG_Constructor_Constraint.post_implies_invariant),
+     data            = Datatab.empty
+    },
+    WFCPOG.WFPO{ 
+     identifier      = "cstr_attr", 
+     name            = "WFC Constructor Consistency attributes are inited(subconstraint)",  
+     description     = "Checks if after the execution of any constructor operation all the attributes are initialized.\n",
+     recommended     = false,
+     depends         = [],
+     recommends      = [],
+     apply           = WFCPOG.POG(WFCPOG_Constructor_Constraint.attributes_are_inited),
+     data            = Datatab.empty
+    },
+    WFCPOG.WFPO{ 
+     identifier      = "cstr", 
+     name            = "WFC Constructor Consistency (complete)",
+     description     = "Checks two subconstraints: \n cstr_post : Checks if after the execution of any constructor operation all the attributes are initialized.\n cstr_attr: Checks if after the execution of any constructor operation all the attributes are initialized.\n",
+     recommended     = false,
+     depends         = ["cstr_post"],
+     recommends      = [],
+     apply           = WFCPOG.POG(WFCPOG_Constructor_Constraint.attributes_are_inited),
+     data            = Datatab.empty
     }
     (*,
     WFCPOG.WFPO{
