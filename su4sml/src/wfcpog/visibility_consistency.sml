@@ -202,10 +202,12 @@ fun are_conditions_visible_help [] model = true
 
 fun are_conditions_visible wfpo (model:Rep.Model as (clist,alist)) =
     let
-	val _ = trace 50 ("Visibility Constraint starts ...\n")
+	val _ = trace function_calls ("WF_visibility_CS.are_conditions_visible\n")
 	val classes = removeOclLibrary clist
 	val _ = trace 50 ("OclLibrary removed ...\n")
+	val res = are_conditions_visible_help classes model
+	val _ = trace function_ends ("WF_visibility_CS.are_conditions_visible\n")
     in
-	are_conditions_visible_help classes model
+	res
     end
 end;

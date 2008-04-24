@@ -43,12 +43,16 @@
 signature WFCPOG_CONSTRUCTOR_CONSTRAINT = 
 sig
     (** sub constraint, included in constructor consistency.*)
-    val post_implies_invariant     : Rep.Model -> Rep_OclTerm.OclTerm list
+    val post_implies_invariant     : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
     (** sub constraint, included in constructor consistency.*)
-    val overwrites_old_creators    : Rep.Model -> bool
+    val overwrites_old_creators    : WFCPOG.wfpo -> Rep.Model -> bool
     (** sub constraint, included in constructor consistency.*)
-    val attributes_are_inited      : Rep.Model -> bool
-    (** Any kind of Exception *)
+    val attributes_are_inited      : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
+    (** all wfs of package constructor *)
+    val generate_wfs               : WFCPOG.wfpo -> Rep.Model -> bool
+    (** all pos of package constructor *)
+    val generate_pos               : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
+    (** Any kind of Exception *) 
     exception WFCPO_ConstructorError of string
 end
 structure WFCPOG_Constructor_Constraint : WFCPOG_CONSTRUCTOR_CONSTRAINT = 
@@ -74,73 +78,87 @@ exception WFCPO_ConstructorError of string
 
 fun generate_return_value crea_op classifier model = 
     let
-	(* wrap invariants *)
-	val invariants = all_invariants_of classifier model
-	val self_type = type_of classifier
-	val self_arg = Variable ("self",self_type)
-	(* TODO: wrap predicates *)
-	val invs = List.map (fn (a,b) => b) invariants
-	val final_inv = conjugate_terms invs
-	(* wrap postconditions *)
-	val sig_args = arguments_of_op crea_op
-	val args = (self_arg,self_type)::(List.map (fn (a,b) => (Variable(a,b),b)) sig_args)
-	val postconditions = postcondition_of_op crea_op
-        (* TODO: wrap predicates *)
-	val posts = List.map (fn (a,b) => b) postconditions
-	val final_post = conjugate_terms posts
+	val invs1 = all_invariants_of classifier model
+	val invs2 = List.map (fn (a,b) => b) invs1
+	val invs = conjugate_terms invs2
+	val posts1 = postcondition_of_op crea_op
+	val posts2 = List.map (fn (a,b) => b) posts1
+	val posts = conjugate_terms posts2 
     in
-	  OperationCall(final_post,Boolean,["Boolean","implies"],[(final_inv,type_of_term final_inv)],Boolean)
+	  (("post_implies_inv_"^(string_of_path (name_of classifier))),OperationCall(posts,Boolean,["Boolean","implies"],[(invs,type_of_term invs)],Boolean))
     end
 
 fun post_implies_invariant_help [] model = []
   | post_implies_invariant_help (h::class) (model as (clist,alist)) = 
     let
-	val crea_ops = creation_operations_of h model
-	val pos = List.map (fn a => generate_return_value a h model) crea_ops		       
-							    
+	val creas = creation_operations_of h model
+	val pos = List.map (fn a => generate_return_value a h model) creas		    
     in
 	pos@(post_implies_invariant_help (class) model)
     end
 
 
-fun post_implies_invariant (model as (clist, alist)) =
+fun post_implies_invariant wfpo (model as (clist, alist)) =
     let
+	val _ = trace function_calls ("WP_constructor_CS.post_implies_invariant\n")
 	val class = removeOclLibrary clist
-    in
-	post_implies_invariant_help class model
+	val res = post_implies_invariant_help class model
+	val _ = trace function_ends ("WP_constructor_CS.post_implies_invariant\n")
+    in 
+	res
     end
 
 fun overwrites_old_creators_help [] model = [true]
-  | overwrites_old_creators_help (h::class) (model as (clist,alist)) = 
+  | overwrites_old_creators_help (h::classes) (model as (clist,alist)) = 
     let
-	val crea = creation_operations_of h model
+	val creas = creation_operations_of h model
 	val over_ops = modified_operations_of h model
     in
-	(List.all (fn a => List.exists (fn b => b =a) (over_ops)) crea)::(overwrites_old_creators_help class model)
+	(List.all (fn a => List.exists (fn b => b = a) (over_ops)) creas)::(overwrites_old_creators_help classes model)
     end
 
-fun overwrites_old_creators (model as (clist, alist)) = 
+fun overwrites_old_creators wfpo (model as (clist, alist)) = 
     let
 	val class = removeOclLibrary clist
     in
 	List.all (fn a => a) (overwrites_old_creators_help class model)
     end
 
-fun attributes_are_inited_help [] model = [true]
-  | attributes_are_inited_help (h::class) (model as (clist,alist)) = 
+fun attributes_are_inited_help [] model = []
+  | attributes_are_inited_help (h::classes) (model as (clist,alist)) = 
     let
-	val attrs = attributes_of h
-	fun inited NONE = false
-	  | inited (SOME(x)) = true
+	val _ = trace function_calls ("WP_constructor_CS.attributes_are_inited_help\n")
+	val creas = creation_operations_of h model
+	(* TODO:  express term *)
+	val _ = trace function_ends ("WP_constructor_CS.attributes_are_inited_help\n")
     in
-	(List.all (fn a => inited (#init a)) (attrs))::(attributes_are_inited_help class model)
+	[]:(string * OclTerm) list
     end
 
 
-fun attributes_are_inited (model as (clist,alist)) = 
+fun attributes_are_inited wfpo (model as (clist,alist)) = 
     let
-	val class = removeOclLibrary clist
+	val classes = removeOclLibrary clist
     in
-	List.all (fn a => a) (attributes_are_inited_help class model)
+	(attributes_are_inited_help classes model)
+    end
+
+fun generate_wfs wfpo (model:Rep.Model as (clist,alist)) = 
+    let
+	val _ = trace function_calls ("WP_constructor_CS.generate_wfs\n")
+	val res = overwrites_old_creators wfpo model
+	val _ = trace function_ends ("WP_constructor_CS.generate_wfs\n")
+    in
+	res
+    end
+
+fun generate_pos wfpo (model:Rep.Model as (clist,alist)) = 
+    let
+	val _ = trace function_calls ("WP_constructor_CS.generate_pos\n")
+	val res1 = post_implies_invariant wfpo model
+	val res2 = attributes_are_inited wfpo model
+	val _ = trace function_ends ("WP_constructor_CS.generate_pos\n")
+    in
+	res1@res2
     end
 end; 

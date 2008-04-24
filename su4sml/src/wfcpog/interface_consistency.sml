@@ -44,7 +44,7 @@ signature WFCPOG_INTERFACE_CONSTRAINT =
 sig
     val has_consistent_stereotypes      : WFCPOG.wfpo -> Rep.Model -> bool
 
-    val is_nameclash_free               : WFCPOG.wfpo -> Rep.Model -> bool
+    val is_nameclash_free               : WFCPOG.wfpo -> Rep.Model -> bool								      
 end
 structure WFCPOG_Interface_Constraint:WFCPOG_INTERFACE_CONSTRAINT =
 struct 

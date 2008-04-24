@@ -41,25 +41,31 @@
 
 signature WFCPOG_REGISTRY = 
 sig
-    val supported          : WFCPOG.wfpo list
+    val supported_wfs      : WFCPOG.wfpo list
+    val supported_pos      : WFCPOG.wfpo list
     val wfpos              : WFCPOG.wfpo list ref
     val add_wfpo           : WFCPOG.wfpo -> unit
     val del_wfpo           : WFCPOG.wfpo_id -> unit
 
     val is_wfc             : WFCPOG.wfpo -> bool
     val is_pog             : WFCPOG.wfpo -> bool
-(*    val is_supported       : WFCPOG.wfpo -> bool *)
-    val is_supported_id    : WFCPOG.wfpo_id -> bool
 
+    val wf_is_supported_id : WFCPOG.wfpo_id -> bool
+    val po_is_supported_id : WFCPOG.wfpo_id -> bool
     
     val rename_wfpo        : string -> WFCPOG.wfpo -> WFCPOG.wfpo
     val get_wfpo           : WFCPOG.wfpo list -> WFCPOG.wfpo_id -> WFCPOG.wfpo
 							    
     val check_wfc          : Rep.Model -> WFCPOG.wfpo -> bool
     val check_wfcs         : Rep.Model -> WFCPOG.wfpo list -> bool
+
+    val check_recommended_wfcs : Rep.Model -> bool
+
+
     val generate_po        : Rep.Model -> WFCPOG.wfpo -> (WFCPOG.wfpo * (string * Rep_OclTerm.OclTerm) list) 
     val generate_pos       : Rep.Model -> WFCPOG.wfpo list -> (WFCPOG.wfpo * (string * Rep_OclTerm.OclTerm) list) list
 
+    val generate_recommended_pos : Rep.Model -> (WFCPOG.wfpo * (string * Rep_OclTerm.OclTerm) list) list
     exception WFCPOG_RegistryError of string
 end
 
@@ -71,6 +77,7 @@ exception WFCPOG_RegistryError of string
 
 open Rep_Logger
 open WFCPOG
+open Datatab
 
 val wfpos = ref ([]:(WFCPOG.wfpo list))
 
@@ -134,8 +141,85 @@ fun generate_po model (wfc_sel)  =
 
 fun generate_pos model wfcs = map (generate_po model) wfcs
 
+
+val tax_workaround = 
+    WFCPOG.WFPO{
+     identifier      = "wfc_tax", 
+     name            = "WFC Taxonomy Consistency",
+     description     = "Checks if the inheritance hierarchy is not deeper than n (default value n=5)\n",
+     recommended     = true,
+     depends         = [],
+     recommends      = [],
+     apply           = WFCPOG.WFC(WFCPOG_Taxonomy_Constraint.has_maxDepth),
+     data            = Datatab.empty 
+    }
 		       
-val supported = [ 
+val supported_wfs = [ 
+    WFCPOG.WFPO{
+     identifier      = "wfc_inf_ster",
+     name            = "WFC Interface Consistency (subconstraint)",
+     description     = "Checks if all operations of an interface don't have the stereotypes 'create' or 'destroy'.\n",
+     recommended     = false,
+     depends         = [],
+     recommends      = [],
+     apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.has_consistent_stereotypes),
+     data            = Datatab.empty
+    },
+    WFCPOG.WFPO{
+     identifier      = "wfc_inf_name",
+     name            = "WFC Interface Consistency (subconstraint)",
+     description     = "Checks for classes inheriting from more than one interface that there are no nameclashes.\n",
+     recommended     = false,
+     depends         = [],
+     recommends      = [],
+     apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.is_nameclash_free),
+     data            = Datatab.empty
+    },
+    WFCPOG.WFPO{
+     identifier      = "wfc_inf",
+     name            = "WFC Interface Consistency (complete)",
+     description     = "Checking of two subconstraints: \n wfc_inf_ster: Checks if all operations of an interface don't have the stereotypes 'create' or 'destroy'. \n wfc_inf_name : Checks for classes inheriting from more than one interface that there are no nameclashes.\n",
+     recommended     = true,
+     depends         = ["inf_ster"],
+     recommends      = [],
+     apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.is_nameclash_free),
+     data            = Datatab.empty
+    },
+    WFCPOG.WFPO{
+     identifier      = "wfc_vis", 
+     name            = "WFC Visibility Consistency",
+     description     = "Checks if the accessed operations in preconditions/postconditions/invariants are visible.\n",
+     recommended     = true,
+     depends         = [],
+     recommends      = [],
+     apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.are_conditions_visible),
+     data = Datatab.empty
+    },
+    (WFCPOG_Taxonomy_Constraint.WFCPOG_TAX_Data.put ({key=9,max_depth=5}) tax_workaround)
+    , 
+    WFCPOG.WFPO{ 
+     identifier      = "wfc_rfm", 
+     name            = "WFOO Refinement",  
+     description     = "Checks if public classes of aboriginal package are also public in new package\n",
+     recommended     = false,
+     depends         = [],
+     recommends      = [],
+     apply           = WFCPOG.WFC(WFCPOG_Refine_Constraint.check_syntax),
+     data            = Datatab.empty
+    },
+    WFCPOG.WFPO{ 
+     identifier      = "wfc_cstr", 
+     name            = "Constructor Consistency",  
+     description     = "Check if public classes of aboriginal are also public in new Package",
+     recommended     = false,
+     depends         = [],
+     recommends      = [],
+     apply           = WFCPOG.WFC(WFCPOG_Refine_Constraint.check_syntax),
+     data            = Datatab.empty
+    }
+]
+
+val supported_pos = [
     WFCPOG.WFPO{
      identifier      = "lsk_pre",
      name            = "Liskov weaken_precondition",
@@ -175,67 +259,17 @@ val supported = [
      recommends      = [],
      apply           = WFCPOG.POG(WFCPOG_Liskov_Constraint.conjugate_invariants),
      data            = Datatab.empty
-    },
+    }, 
     WFCPOG.WFPO{
-     identifier      = "inf_ster",
-     name            = "Interfas has_consistent_stereotypes",
-     description     = "Checks if all operations of an interface do not have stereotypes create or destroy.",
-     recommended     = false,
-     depends         = [],
-     recommends      = [],
-     apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.has_consistent_stereotypes),
-     data            = Datatab.empty
-    },
-    WFCPOG.WFPO{
-     identifier      = "inf_name",
-     name            = "Interface is_nameclash_free",
-     description     = "Checks for classes inheriting from more than one interface that there are no nameclashes.",
-     recommended     = false,
-     depends         = [],
-     recommends      = [],
-     apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.is_nameclash_free),
-     data            = Datatab.empty
-    },
-    WFCPOG.WFPO{
-     identifier      = "inf",
-     name            = "Interface complete",
-     description     = "Checks has_consistent_stereotypes and is_nameclash_free",
+     identifier      = "rfm", 
+     name            = "OO Refinement",
+     description     = "Generate Proof Obligations for OO data refinement",
      recommended     = true,
-     depends         = ["inf_ster"],
+     depends         = [],
      recommends      = [],
-     apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.is_nameclash_free),
+     apply           = WFCPOG.POG(WFCPOG_Refine_Constraint.generate_pos),
      data            = Datatab.empty
     },
-    WFCPOG.WFPO{
-     identifier      = "class_model", (* identifier                     *) 
-     name            = "Data model consistency: class model",
-     description     = "Data model consistency: a classes should be able to be instantiated from a state.",
-     recommended     = false,
-     depends         = [],
-     recommends      = [],
-     apply           = WFCPOG.POG(WFCPOG_Data_Model_Consistency_Constraint.class_model_consistency),
-     data = Datatab.empty
-    },
-    WFCPOG.WFPO{
-     identifier      = "strong_model", (* identifier                     *) 
-     name            = "Data model consistency: strong model",
-     description     = "Data model consistency; all classes should be able to be instantiated from a state.",
-     recommended     = false,
-     depends         = [],
-     recommends      = [],
-     apply           = WFCPOG.POG(WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency),
-     data = Datatab.empty
-    },(*
-    WFCPOG.WFPO{
-     identifier      = "oper_model", (* identifier                     *) 
-     name            = "Operational model consistency",
-     description     = "Inserts the additional proof obligations resulting from the SecureUML transformation",
-     recommended     = false,
-     depends         = [],
-     recommends      = [],
-     apply           = WFCPOG.POG(WFCPOG_Operational_Constraint.generate_pos),
-     data = Datatab.empty
-    },*)
     WFCPOG.WFPO{
      identifier      = "cmd", (* identifier                     *) 
      name            = "Query Command Constraint",
@@ -257,50 +291,49 @@ val supported = [
      data = Datatab.empty
     },
     WFCPOG.WFPO{
-     identifier      = "vis", (* identifier                     *) 
-     name            = "Visibility Constraint",
-     description     = "Check if the accessed operations in preconditions/postconditions/invariants are visible.",
+     identifier      = "class_model", (* identifier                     *) 
+     name            = "Data model consistency: class model",
+     description     = "Data model consistency: a classes should be able to be instantiated from a state.",
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.are_conditions_visible),
+     apply           = WFCPOG.POG(WFCPOG_Data_Model_Consistency_Constraint.class_model_consistency),
      data = Datatab.empty
     },
     WFCPOG.WFPO{
-     identifier      = "tax", 
-     name            = "Max Depth",
-     description     = "Max Depth",
-     recommended     = true,
-     depends         = [],
-     recommends      = [],
-     apply           = WFCPOG.WFC(WFCPOG_Taxonomy_Constraint.has_maxDepth),
-     data = Datatab.empty
-    }, 
-    WFCPOG.WFPO{ 
-     identifier      = "rfm_wfc", 
-     name            = "OO Refinement",  
-     description     = "Check if public classes of aboriginal are also public in new Package",
+     identifier      = "strong_model", (* identifier                     *) 
+     name            = "Data model consistency: strong model",
+     description     = "Data model consistency; all classes should be able to be instantiated from a state.",
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.WFC(WFCPOG_Refine_Constraint.check_syntax),
-     data            = Datatab.empty
-    }, 
-    WFCPOG.WFPO {
-     identifier      = "rfm_pog", 
-     name            = "OO Refinement",
-     description     = "Generate Proof Obligations for OO data refinement",
-     recommended     = true,
+     apply           = WFCPOG.POG(WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency),
+     data = Datatab.empty
+    }
+    (*,
+    WFCPOG.WFPO{
+     identifier      = "oper_model", (* identifier                     *) 
+     name            = "Operational model consistency",
+     description     = "Inserts the additional proof obligations resulting from the SecureUML transformation",
+     recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.POG(WFCPOG_Refine_Constraint.generate_pos),
-     data            = Datatab.empty
-    }]
+     apply           = WFCPOG.POG(WFCPOG_Operational_Constraint.generate_pos),
+     data = Datatab.empty
+    }*)
+]
 
-(*    
-fun is_supported wfpo       = List.exists (fn w => wfpo = w) supported
-*)
-fun is_supported_id wfpo_id = List.exists (fn w => wfpo_id = id_of w) supported
+fun create_wfc_tax i =     (WFCPOG_Taxonomy_Constraint.WFCPOG_TAX_Data.put ({key=9,max_depth=i}) tax_workaround)
 
+fun wf_is_supported_id wfpo_id = List.exists (fn w => wfpo_id = id_of w) supported_wfs
+
+fun po_is_supported_id wfpo_id = List.exists (fn w => wfpo_id = id_of w) supported_pos
+
+fun is_recommended (WFCPOG.WFPO{recommended,...}) = recommended 
+
+
+fun check_recommended_wfcs model = check_wfcs model (List.filter (is_recommended) supported_wfs) 
+
+fun generate_recommended_pos model = generate_pos model (List.filter (is_recommended) supported_pos) 
 
 end
