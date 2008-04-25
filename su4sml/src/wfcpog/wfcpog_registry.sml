@@ -41,6 +41,19 @@
 
 signature WFCPOG_REGISTRY = 
 sig
+    (**
+     * Get information about the WFCPO-Generator
+     *)
+    (** README *)
+    val README             : unit -> unit
+    (** Infos about execution of wfcs and the supported wfc library.*)
+    val info_wfs          : unit -> unit
+    (** Infos about the generation of pos and the supported pos library.*)
+    val info_pos           : unit -> unit
+
+    (**
+     * Customize your own wfpo list:
+     *)
     (** Customized wfc and po list, at the beginning empty.*)
     val wfpos              : WFCPOG.wfpo list ref
     (** Add wfpo to customized list.*)
@@ -65,6 +78,7 @@ sig
     val po_is_supported_id : WFCPOG.wfpo_id -> bool
     
     val rename_wfpo        : string -> WFCPOG.wfpo -> WFCPOG.wfpo
+    (**  Get a wfpo from a given list by the id string.*)
     val get_wfpo           : WFCPOG.wfpo list -> WFCPOG.wfpo_id -> WFCPOG.wfpo
 							 
     (** Execute a wfc.*)    
@@ -386,4 +400,27 @@ fun check_recommended_wfcs model = check_wfcs model (List.filter (is_recommended
 
 fun generate_recommended_pos model = generate_pos model (List.filter (is_recommended) supported_pos) 
 
-end
+
+fun README () = 
+    let
+	val string = ("WFCPO-Generator\n")
+    in
+	print string
+    end
+
+
+fun info_wfs () = 
+    let
+	val string = ("...")
+    in
+	print string
+    end
+
+fun info_pos () = 
+    let
+	val string = ("...")
+    in
+	print string
+    end
+
+end;
