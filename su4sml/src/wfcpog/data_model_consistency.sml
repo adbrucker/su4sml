@@ -74,7 +74,7 @@ fun c_allInstance_term (c:Classifier) =
 	val _ = trace function_calls ("WF_data_CS.c_allInstances\n")
 	val x = Variable ("x",DummyT)
         (* get class as an holocl term *)
-	val holocl_class_name = mk_def_of (get_class_of (name_of c))
+	val holocl_class_name = get_class_of (name_of c)
 	val class_type = type_of c
 	val class_predicate = Predicate(Variable("c",class_type),class_type,holocl_class_name,[])
 	(* OclAny.allInstances() *)
