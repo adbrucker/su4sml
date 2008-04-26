@@ -159,7 +159,8 @@ fun weaken_precondition_help [] model = []
 	(* (operation of subclass, classifier of super class) *)
 	val raw_po = List.map (fn a => (a,(go_up_hierarchy class (class_contains_op a model) model))) mo
         (* proofs obligation for classifier [(term,constraint info)] *)
- 	val pos = List.map (fn (a,b) => (("lsk_pre_"^(string_of_path (name_of class))),generate_return_value weaken_pre a class b model)) raw_po
+ 	val pos = List.map (fn (a,b) => (((path_to_string (name_of class) "_")),
+	                                  generate_return_value weaken_pre a class b model)) raw_po
     in
 	pos@(weaken_precondition_help clist model)
     end
@@ -179,7 +180,8 @@ fun strengthen_postcondition_help [] model = []
 	(* (operation of subclass, classifier of super class) *)
 	val raw_po = List.map (fn a => (a,(go_up_hierarchy class (class_contains_op a model) model))) mo
         (* proof obligations for classifier [(term,constraint info)] *)
- 	val pos = List.map (fn (a,b) => (("lsk_post_"^(string_of_path (name_of class))),generate_return_value strengthen_post a class b model)) raw_po
+ 	val pos = List.map (fn (a,b) => (((path_to_string (name_of class) "_")),
+	                                 generate_return_value strengthen_post a class b model)) raw_po
     in
 	pos@(strengthen_postcondition_help clist model)
     end
@@ -201,7 +203,8 @@ fun conjugate_invariants_help [] model = []
     in
 	if (List.length(invs) = 0)
 	then (conjugate_invariants_help clist model)
-	else (("lsk_inv_"^(string_of_path (name_of class))),conjugate_terms invs)::(conjugate_invariants_help clist model)
+	else (((path_to_string (name_of class) "_")),
+	                               conjugate_terms invs)::(conjugate_invariants_help clist model)
 	    
     end
 

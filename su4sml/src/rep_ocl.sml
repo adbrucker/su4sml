@@ -57,6 +57,7 @@ sig
     val collection_type_of_OclType : OclType -> OclType
     val string_of_OclType : OclType -> string	
     val string_of_path    : Path -> string	
+    val path_to_string: Path -> string -> string
     val string_of_OclType_colon : OclType -> string
     val pathstring_of_path: Path -> string
     val is_Classifier     : OclType -> bool
