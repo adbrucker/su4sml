@@ -34,7 +34,7 @@ type testcase =
 exception TestSuitError of string
 
 
-val prefix = "../../../examples/"
+val prefix = "../../../hol-ocl/examples/"
 
 val testcase = 
     { 

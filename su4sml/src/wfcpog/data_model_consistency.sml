@@ -76,13 +76,13 @@ fun c_allInstance_term (c:Classifier) =
         (* get class as an holocl term *)
 	val holocl_class_name = get_class_of (name_of c)
 	val class_type = type_of c
-	val class_predicate = Predicate(Variable("c",class_type),class_type,holocl_class_name,[])
+	val class = Variable("c",class_type)
 	(* OclAny.allInstances() *)
-	val allInstances = OperationCall (class_predicate,DummyT,["oclLib","OclAny","allInstances"],[],DummyT)
+	val allInstances = OperationCall (class,class_type,["oclLib","OclAny","allInstances"],[],Set (class_type))
 	(* x.oclIsTypeOf () *)
 	val oclIsTypeOf = OperationWithType (x,DummyT,"oclIsTypeOf",type_of c,Boolean)
 	(* Iterator exists *)
-	val exists = Iterator("exists",[("x",DummyT)],allInstances,DummyT,oclIsTypeOf,Boolean,Boolean)
+	val exists = Iterator("exists",[("x",class_type)],allInstances,Set(class_type),oclIsTypeOf,Boolean,Boolean)
 	val _ = trace function_ends ("WF_data_CS.c_allInstances\n")
     in
 	exists
@@ -94,7 +94,7 @@ fun single_model_consistency (c:Classifier) (model as (clist,alist)) =
 	val _ = trace function_calls("WFCPOG_Data_Model_Consistency_Constraint.single_model_consistency\n")
 	val term = c_allInstance_term c
 	val dummy_body = Variable("dummy_body",DummyT)
-	val res = Iterator("holOclLib.exists",[("\\<tau>",DummyT)],term,DummyT,dummy_body,DummyT,Boolean)
+	val res = Iterator("holOclLib.exists",[("\\<tau>",DummyT)],term,Boolean,dummy_body,DummyT,Boolean)
 	val _ = trace function_ends("WFCPOG_Data_Model_Consistency_Constraint.single_model_consistency\n")
     in
 	res
@@ -118,7 +118,7 @@ fun strong_model_consistency_help classes model =
 	val terms = List.map (c_allInstance_term) classes
 	val n_term = nest_source terms
 	val dummy_body = Variable("dummy_body",DummyT)
-	val res = [("strong_model",Iterator("holOclLib.exists",[("\\<tau>",DummyT)],n_term,DummyT,dummy_body,DummyT,Boolean))]
+	val res = [("strong_model",Iterator("holOclLib.exists",[("\\<tau>",DummyT)],n_term,Boolean,dummy_body,DummyT,Boolean))]
 	val _ = trace function_ends("WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency\n")
     in
 	res
