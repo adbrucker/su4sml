@@ -46,16 +46,16 @@ val testcase =
 
 val testcases = [
    { 
-    name = "Stack Manuel",
+    name = "stack_manuel",
     uml  = prefix^"stack_manu/stack.zargo",
     ocl  = prefix^"stack_manu/stack.ocl"
    },{ 
-    name = "Stack",
+    name = "stack",
     uml  = prefix^"stack/stack.zargo",
     ocl  = prefix^"stack/stack.ocl"
    },
    {
-    name = "Company",
+    name = "company",
     uml  = prefix^"company/company.zargo",
     ocl  = prefix^"company/company.ocl"
    }:testcase,
@@ -75,7 +75,7 @@ val testcases = [
     ocl  = prefix^"isp/isp.ocl"
    }:testcase,*)
    {
-    name = "Royals and Loyals",
+    name = "royals_and_loyals",
     uml  = prefix^"royals_and_loyals/royals_and_loyals.zargo",
     ocl  = prefix^"royals_and_loyals/royals_and_loyals.ocl"
    }:testcase,  

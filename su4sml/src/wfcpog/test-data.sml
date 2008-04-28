@@ -89,4 +89,4 @@ val pos = [rfm_SC_pog]
 *)
 
 val wfs = []
-val pos = [po_cmd,po_quy]
+val pos = [po_cm,po_sm]
