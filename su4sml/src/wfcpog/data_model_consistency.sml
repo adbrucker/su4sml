@@ -79,8 +79,8 @@ fun c_allInstance_term (c:Classifier) =
 	val class = Variable("c",class_type)
 	(* OclAny.allInstances() *)
 	val allInstances = OperationCall (class,class_type,["oclLib","OclAny","allInstances"],[],Set (class_type))
-	(* x.oclIsTypeOf () *)
-	val oclIsTypeOf = OperationWithType (x,DummyT,"oclIsTypeOf",type_of c,Boolean)
+	(* x.oclIsTypeOf(c) *)
+	val oclIsTypeOf = OperationWithType (x,DummyT,"oclIsTypeOf",class_type,Boolean)
 	(* Iterator exists *)
 	val exists = Iterator("exists",[("x",class_type)],allInstances,Set(class_type),oclIsTypeOf,Boolean,Boolean)
 	val _ = trace function_ends ("WF_data_CS.c_allInstances\n")
@@ -93,8 +93,9 @@ fun single_model_consistency (c:Classifier) (model as (clist,alist)) =
     let
 	val _ = trace function_calls("WFCPOG_Data_Model_Consistency_Constraint.single_model_consistency\n")
 	val term = c_allInstance_term c
+	val local_valid = OperationCall(term,Boolean,["holOclLib","Boolean","OclLocalValid"],[(Literal("\\<tau>",DummyT),DummyT)],Boolean)
 	val dummy_body = Variable("dummy_body",DummyT)
-	val res = Iterator("holOclLib.exists",[("\\<tau>",DummyT)],term,Boolean,dummy_body,DummyT,Boolean)
+	val res = Iterator("holOclLib.exists",[("\\<tau>",DummyT)],local_valid,Boolean,dummy_body,DummyT,Boolean)
 	val _ = trace function_ends("WFCPOG_Data_Model_Consistency_Constraint.single_model_consistency\n")
     in
 	res
