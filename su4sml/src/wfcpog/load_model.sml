@@ -21,20 +21,23 @@ val zargo = "../../../examples/SimpleChair/SimpleChair.zargo"
 val ocl = "../../../examples/SimpleChair/AbstractSimpleChair04.ocl"
 val remP = ["AbstractSimpleChair02", "AbstractSimpleChair03","AbstractSimpleChair01","ConcreteSimpleChair01"] ;
 *)
-(* 
+
 (** EBANK **)
+(* 
 val zargo = "../../../examples/ebank/ebank.zargo"
 val ocl="../../../examples/ebank/ebank.ocl"
 val remP = []
 *)
-(*
+
 (** ISP **)
+(* 
 val zargo = "../../../examples/isp/isp.zargo"
 val ocl="../../../examples/isp/isp.ocl"
 *)
 
-(*
+
 (** ROYALS AND LOYASL **)
+(* 
 val zargo = "../../../examples/royals_and_loyals/royals_and_loyals.zargo"
 val ocl="../../../examples/royals_and_loyals/royals_and_loyals.ocl"
 val remP = []
@@ -53,8 +56,9 @@ val zargo = "../../../examples/digraph/digraph.zargo"
 val ocl = "../../../examples/digraph/digraph.ocl"
 val remP = []
 *)
-(*
+
 (** VEHICLES **)
+(* 
 val zargo = "../../../examples/vehicles/vehicles.zargo"
 val ocl = "../../../examples/vehicles/vehicles.ocl"
 *)

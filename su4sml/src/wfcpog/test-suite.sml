@@ -119,7 +119,6 @@ fun set_printLength x =
     in
 	print ("printLength set to " ^ (Int.toString (x)) ^ ".\n")
     end
-
 fun add_dot 1 = ["."]
   | add_dot x = (".")::(add_dot (x-1))
 
