@@ -55,16 +55,14 @@ sig
     val print_liskov_args : Liskov_args -> unit
    
     (** sub constraint, included in liskov.*)
-    val weaken_precondition         : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
+    val weaken_precondition         : WFCPOG.wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
 
     (** sub constraint, included in liskov.*)
-    val strengthen_postcondition    : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
+    val strengthen_postcondition    : WFCPOG.wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
 
     (** sub constraint, included in liskov.*)
-    val conjugate_invariants        : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
+    val conjugate_invariants        : WFCPOG.wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
 
-    (** all three subconstraints together *)
-    val generate_po                 : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
 end 
 structure WFCPOG_Liskov_Constraint : WFCPOG_LISKOV_CONSTRAINT = 
 struct
@@ -159,7 +157,7 @@ fun weaken_precondition_help [] model = []
 	(* (operation of subclass, classifier of super class) *)
 	val raw_po = List.map (fn a => (a,(go_up_hierarchy class (class_contains_op a model) model))) mo
         (* proofs obligation for classifier [(term,constraint info)] *)
- 	val pos = List.map (fn (a,b) => (((path_to_string (name_of class) "_")),
+ 	val pos = List.map (fn (a,b) => (["po_lsk_pre_"]@(name_of class)@["_"]@[name_of_op a],
 	                                  generate_return_value weaken_pre a class b model)) raw_po
     in
 	pos@(weaken_precondition_help clist model)
@@ -180,7 +178,7 @@ fun strengthen_postcondition_help [] model = []
 	(* (operation of subclass, classifier of super class) *)
 	val raw_po = List.map (fn a => (a,(go_up_hierarchy class (class_contains_op a model) model))) mo
         (* proof obligations for classifier [(term,constraint info)] *)
- 	val pos = List.map (fn (a,b) => (((path_to_string (name_of class) "_")),
+ 	val pos = List.map (fn (a,b) => (["po_lsk_post"]@["_"]@(name_of class)@["_"]@[name_of_op a],
 	                                 generate_return_value strengthen_post a class b model)) raw_po
     in
 	pos@(strengthen_postcondition_help clist model)
@@ -203,7 +201,7 @@ fun conjugate_invariants_help [] model = []
     in
 	if (List.length(invs) = 0)
 	then (conjugate_invariants_help clist model)
-	else (((path_to_string (name_of class) "_")),
+	else (["po_lsk_inv"]@["_"]@(name_of class)@["_"],
 	                               conjugate_terms invs)::(conjugate_invariants_help clist model)
 	    
     end
@@ -216,18 +214,5 @@ fun conjugate_invariants wfpo (model as (clist,alist)) =
 	conjugate_invariants_help cl model
     end
 
-fun generate_po wfpo (model as (clist,alist)) = 
-    let
-	val msg1 = ("\n\ngenerate_po: \n")
-	val x1 = weaken_precondition wfpo model
-	val msg2 = ("weaken the precondition: " ^ Int.toString(List.length(x1)) ^ " terms generated.\n") 
-	val x2 = strengthen_postcondition wfpo model 
-	val msg3 = ("strengthen the postcondition: " ^ Int.toString(List.length(x2)) ^ " terms generated.\n")
-	val x3 = conjugate_invariants wfpo model 
-	val msg4 = ("conjugate the invariants: " ^ Int.toString(List.length(x3)) ^ " terms generated.\n\n")
-	val _ = trace wgen (msg1^msg2^msg3^msg4)
-    in
-	x1@x2@x3
-    end
 end
 

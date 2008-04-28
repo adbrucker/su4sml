@@ -45,7 +45,7 @@ sig
   type wfpo_id = string
 
   datatype wf_or_po = WFC of wfpo -> Rep.Model -> bool
-		    | POG of wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
+		    | POG of wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
        and 
        wfpo = WFPO of {
        identifier      : wfpo_id,               (* identifier                     *) 
@@ -79,7 +79,7 @@ struct
 type wfpo_id = string
 
 datatype wf_or_po = WFC of wfpo -> Rep.Model -> bool
-		  | POG of wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
+		  | POG of wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
 and wfpo = WFPO of {
      identifier      : wfpo_id, (* identifier                     *) 
      name            : string,   (* short description (for output) *)

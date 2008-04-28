@@ -13,7 +13,7 @@ structure TAX_Data = WFCPOG_Taxonomy_Constraint.WFCPOG_TAX_Data
 
 
 (** LISKOV CONSTRAINT **)
-val lsk = get_wfpo supported_pos "lsk"
+val lsk = get_wfpo supported_pos "po_lsk"
 val _ = trace high ("............. liskov constraint loaded ...\n")
 
 
@@ -23,8 +23,8 @@ val inf = get_wfpo supported_wfs "wfc_inf"
 val _ = trace high ("............. interface constraint loaded ...\n")
 
 (** DATA MODEL CONSTRAINT **)
-val cm = get_wfpo supported_pos "class_model"
-val sm = get_wfpo supported_pos "strong_model"
+val cm = get_wfpo supported_pos "po_class_model"
+val sm = get_wfpo supported_pos "po_strong_model"
 val _ = trace high ("............. data model constraint loaded ...\n")
 
 (** OPERATIONAL CONSTRAINT **)
@@ -33,8 +33,8 @@ val om = WFCPOG_Registry.get_wfpo WFCPOG_Registry.supported "oper_model"
 val _ = trace high ("............. operational constraint loaded ...\n")
 *)
 (** COMMAND/QUERY CONSTRAINT **)
-val cmd = get_wfpo supported_pos "cmd"
-val quy = get_wfpo supported_pos "quy"
+val cmd = get_wfpo supported_pos "po_cmd"
+val quy = get_wfpo supported_pos "po_quy"
 val _ = trace high ("............. command/query constraints loaded ...\n")
 
 (** VISIBILITY CONSTRAINT **)
@@ -44,7 +44,7 @@ val _ = trace high ("............. visibility constraint loaded ...\n")
 (** REFINEMENT CONSTRAINT **)
 val rfm_wfc = get_wfpo supported_wfs "wfc_rfm"
 val _ = trace high ("............. refinement constraints loaded ...\n")
-val rfm_pog = get_wfpo supported_pos "rfm"
+val rfm_pog = get_wfpo supported_pos "po_rfm"
 val _ = trace high ("............. refinement constraints loaded ...\n")
 
 (* TAXONOMY CONSTRAINT *)

@@ -53,7 +53,7 @@ sig
 
     val check_syntax         : WFCPOG.wfpo -> Rep.Model -> bool
 
-    val generate_pos            : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list 
+    val generate_pos            : WFCPOG.wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list 
 
     exception WFCPOG_RefineError of string
     exception ClassGroupError of Rep_Core.Classifier list * string
@@ -340,7 +340,7 @@ fun refine_operation abs_oper conc_oper abs_class conc_class model =
 	val refine = OperationCall(S,DummyT,["holOclLib","methodology","refinement","OclForwardRefinement"],[(T,DummyT),(R,DummyT)],Boolean)
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.refine_classifier\n")	
     in
-	(("refine_"^(string_of_path (package_of abs_class))^"_"^(string_of_path (package_of conc_class))^"_"^(name_of_op abs_oper)),refine)
+	(["po_refine_"]@(package_of abs_class)@["__"]@(package_of conc_class)@["_"]@[name_of_op abs_oper],refine)
     end
 
 fun refine_classifier abs_class conc_class model = 

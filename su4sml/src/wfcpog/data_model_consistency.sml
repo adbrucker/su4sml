@@ -43,9 +43,9 @@
 signature WFCPOG_DATA_MODEL_CONSISTENCY_CONSTRAINT = 
 sig
     (** sub constraint, included in liskov.*)
-    val class_model_consistency        : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
+    val class_model_consistency        : WFCPOG.wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
     (** sub constraint, included in liskov.*)
-    val strong_model_consistency       : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
+    val strong_model_consistency       : WFCPOG.wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
 end
 structure WFCPOG_Data_Model_Consistency_Constraint : WFCPOG_DATA_MODEL_CONSISTENCY_CONSTRAINT = 
 struct
@@ -103,7 +103,7 @@ fun single_model_consistency (c:Classifier) (model as (clist,alist)) =
 
 fun class_model_consistency_help [] (model as (clist,alist)) = []
   | class_model_consistency_help (h::classes) (model as (clist,alist)) =
-    (("class_model_"^(string_of_path (name_of h)),single_model_consistency h model)::(class_model_consistency_help classes model))
+    (["po_class_model_"]@(name_of h),single_model_consistency h model)::(class_model_consistency_help classes model)
 
 fun class_model_consistency wfpo (model as (clist,alist)) = 
     let
@@ -118,7 +118,7 @@ fun strong_model_consistency_help classes model =
 	val terms = List.map (c_allInstance_term) classes
 	val n_term = nest_source terms
 	val dummy_body = Variable("dummy_body",DummyT)
-	val res = [("strong_model",Iterator("holOclLib.exists",[("\\<tau>",DummyT)],n_term,Boolean,dummy_body,DummyT,Boolean))]
+	val res = [(["po_strong_model"],Iterator("holOclLib.exists",[("\\<tau>",DummyT)],n_term,Boolean,dummy_body,DummyT,Boolean))]
 	val _ = trace function_ends("WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency\n")
     in
 	res

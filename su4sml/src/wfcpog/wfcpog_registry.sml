@@ -90,12 +90,12 @@ sig
     val check_recommended_wfcs : Rep.Model -> bool
 
     (** Generate pos for a given wfpo.*)
-    val generate_po        : Rep.Model -> WFCPOG.wfpo -> (WFCPOG.wfpo * (string * Rep_OclTerm.OclTerm) list) 
+    val generate_po        : Rep.Model -> WFCPOG.wfpo -> (WFCPOG.wfpo * (Rep_OclType.Path * Rep_OclTerm.OclTerm) list) 
     (** Generate pos for a list of wfpos.*)
-    val generate_pos       : Rep.Model -> WFCPOG.wfpo list -> (WFCPOG.wfpo * (string * Rep_OclTerm.OclTerm) list) list
+    val generate_pos       : Rep.Model -> WFCPOG.wfpo list -> (WFCPOG.wfpo * (Rep_OclType.Path * Rep_OclTerm.OclTerm) list) list
 
     (** Generate all recommended pos.*)							      
-    val generate_recommended_pos : Rep.Model -> (WFCPOG.wfpo * (string * Rep_OclTerm.OclTerm) list) list
+    val generate_recommended_pos : Rep.Model -> (WFCPOG.wfpo * (Rep_OclType.Path * Rep_OclTerm.OclTerm) list) list
 
     (** Argument Wrappers *)
     (** Create wfpo for wfc max_depth.*)
@@ -255,7 +255,7 @@ val supported_wfs = [
 
 val supported_pos = [
     WFCPOG.WFPO{
-     identifier      = "lsk_pre",
+     identifier      = "po_lsk_pre",
      name            = "Liskov weaken_precondition",
      description     = "Generate Proof Obligations for weaking precondition",
      recommended     = false,
@@ -265,7 +265,7 @@ val supported_pos = [
      data            = Datatab.empty
     }, 
     WFCPOG.WFPO{
-     identifier      = "lsk_post", 
+     identifier      = "po_lsk_post", 
      name            = "Liskov strengthen_postcondition",   (* short description (for output) *)
      description     = "Generate Proof Obligations following from strengthen_postcondition",
      recommended     = false,
@@ -275,7 +275,7 @@ val supported_pos = [
      data            = Datatab.empty
     },
     WFCPOG.WFPO{
-     identifier      = "lsk_inv", 
+     identifier      = "po_lsk_inv", 
      name            = "Liskov conjugate_invariants", 
      description     = "Generate Proof Obligations following from conjugate_invariants",
      recommended     = false,
@@ -285,17 +285,17 @@ val supported_pos = [
      data            = Datatab.empty
     },
     WFCPOG.WFPO{
-     identifier      = "lsk", 
+     identifier      = "po_lsk", 
      name            = "Liskov's subtitution principle", 
      description     = "Generate Proof Obligations following the idea from Barbara Liskov",
      recommended     = true,
-     depends         = ["lsk_pre","lsk_post"],
+     depends         = ["po_lsk_pre","po_lsk_post"],
      recommends      = [],
      apply           = WFCPOG.POG(WFCPOG_Liskov_Constraint.conjugate_invariants),
      data            = Datatab.empty
     }, 
     WFCPOG.WFPO{
-     identifier      = "rfm", 
+     identifier      = "po_rfm", 
      name            = "OO Refinement",
      description     = "Generate Proof Obligations for OO data refinement",
      recommended     = true,
@@ -305,7 +305,7 @@ val supported_pos = [
      data            = Datatab.empty
     },
     WFCPOG.WFPO{
-     identifier      = "cmd", (* identifier                     *) 
+     identifier      = "po_cmd", (* identifier                     *) 
      name            = "Query Command Constraint",
      description     = "Check if operations which are declared as command are really commands",
      recommended     = false,
@@ -315,7 +315,7 @@ val supported_pos = [
      data = Datatab.empty
     },
     WFCPOG.WFPO{
-     identifier      = "quy", (* identifier                     *) 
+     identifier      = "po_quy", (* identifier                     *) 
      name            = "Query Command Constraint",
      description     = "Check if operations which are declared as queries are really queries",
      recommended     = false,
@@ -325,7 +325,7 @@ val supported_pos = [
      data = Datatab.empty
     },
     WFCPOG.WFPO{
-     identifier      = "class_model", (* identifier                     *) 
+     identifier      = "po_class_model", (* identifier                     *) 
      name            = "Data model consistency: class model",
      description     = "Data model consistency: a classes should be able to be instantiated from a state.",
      recommended     = false,
@@ -335,7 +335,7 @@ val supported_pos = [
      data = Datatab.empty
     },
     WFCPOG.WFPO{
-     identifier      = "strong_model", (* identifier                     *) 
+     identifier      = "po_strong_model", (* identifier                     *) 
      name            = "Data model consistency: strong model",
      description     = "Data model consistency; all classes should be able to be instantiated from a state.",
      recommended     = false,
@@ -345,7 +345,7 @@ val supported_pos = [
      data = Datatab.empty
     },
     WFCPOG.WFPO{ 
-     identifier      = "cstr_post", 
+     identifier      = "po_cstr_post", 
      name            = "Constructor Consistency post implies invariants(subconstraint)",  
      description     = "Checks if the postcondition of any constructor operation imples the class' invariant.\n",
      recommended     = false,
@@ -355,7 +355,7 @@ val supported_pos = [
      data            = Datatab.empty
     },
     WFCPOG.WFPO{ 
-     identifier      = "cstr_attr", 
+     identifier      = "po_cstr_attr", 
      name            = "WFC Constructor Consistency attributes are inited(subconstraint)",  
      description     = "Checks if after the execution of any constructor operation all the attributes are initialized.\n",
      recommended     = false,
@@ -365,7 +365,7 @@ val supported_pos = [
      data            = Datatab.empty
     },
     WFCPOG.WFPO{ 
-     identifier      = "cstr", 
+     identifier      = "po_cstr", 
      name            = "WFC Constructor Consistency (complete)",
      description     = "Checks two subconstraints: \n cstr_post : Checks if after the execution of any constructor operation all the attributes are initialized.\n cstr_attr: Checks if after the execution of any constructor operation all the attributes are initialized.\n",
      recommended     = false,

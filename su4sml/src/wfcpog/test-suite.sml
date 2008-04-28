@@ -5,9 +5,9 @@ sig
     (** Executes a specified (string fst arg) test and returns a text output.*)
     val runTest           : string -> WFCPOG.wfpo list -> WFCPOG.wfpo list -> unit
     (** Executes a test on all (default) models and returns the proof obligations.*)
-    val execTests      : WFCPOG.wfpo list -> WFCPOG.wfpo list -> (string * Rep_OclTerm.OclTerm) list
+    val execTests      : WFCPOG.wfpo list -> WFCPOG.wfpo list -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
     (** Executes a specified (string fst arg) test and returns the proof obligations.*)
-    val execTest       : string -> WFCPOG.wfpo list -> WFCPOG.wfpo list -> (string * Rep_OclTerm.OclTerm) list
+    val execTest       : string -> WFCPOG.wfpo list -> WFCPOG.wfpo list -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
     (** Set Control.Print.printDepth. *)
     val set_printDepth    : int -> unit
     (** Set Control.Print.printLength. *)

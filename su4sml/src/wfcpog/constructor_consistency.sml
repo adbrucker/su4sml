@@ -43,11 +43,11 @@
 signature WFCPOG_CONSTRUCTOR_CONSTRAINT = 
 sig
     (** sub constraint, included in constructor consistency.*)
-    val post_implies_invariant     : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
+    val post_implies_invariant     : WFCPOG.wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
     (** sub constraint, included in constructor consistency.*)
     val overwrites_old_creators    : WFCPOG.wfpo -> Rep.Model -> bool
     (** sub constraint, included in constructor consistency.*)
-    val attributes_are_inited      : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
+    val attributes_are_inited      : WFCPOG.wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
     (** Any kind of Exception *) 
     exception WFCPO_ConstructorError of string
 end
@@ -81,7 +81,7 @@ fun generate_return_value crea_op classifier model =
 	val posts2 = List.map (fn (a,b) => b) posts1
 	val posts = conjugate_terms posts2 
     in
-	  (("post_implies_inv_"^(string_of_path (name_of classifier))),OperationCall(posts,Boolean,["Boolean","implies"],[(invs,type_of_term invs)],Boolean))
+	  (["po_cstr"]@["_"]@["post_implies_inv"]@["_"]@(name_of classifier),OperationCall(posts,Boolean,["Boolean","implies"],[(invs,type_of_term invs)],Boolean))
     end
 
 fun post_implies_invariant_help [] model = []
@@ -128,7 +128,7 @@ fun attributes_are_inited_help [] model = []
 	(* TODO:  express term *)
 	val _ = trace function_ends ("WP_constructor_CS.attributes_are_inited_help\n")
     in
-	[]:(string * OclTerm) list
+	[]:(Path * OclTerm) list
     end
 
 
