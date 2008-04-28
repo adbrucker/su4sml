@@ -51,7 +51,9 @@ Group is
   $smlnj/basis/basis.cm
   $smlnj/ml-yacc/ml-yacc-lib.cm
 #endif
-	
+
+"../rep_secureuml.sig"
+"../rep_secureuml.sml"	
 "holocl_namespace.sml"
 "datatab.sml"
 "library.sml"
@@ -67,6 +69,7 @@ Group is
 "command_query_consistency.sml"
 "taxonomy_consistency.sml"
 "interface_consistency.sml"
+"SecureUML_constraint.sml"
 
 (* wccpog toplevel *)
 "wfcpog_registry.sml"

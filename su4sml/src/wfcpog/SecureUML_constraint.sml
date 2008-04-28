@@ -47,7 +47,7 @@ sig
     structure WFCPOG_SSD_Data:
 	      sig
 		  type T = SSD_args
-		  val get : WFCPOG_wfpo -> T
+		  val get : WFCPOG.wfpo -> T
 		  val put : T -> WFCPOG.wfpo -> WFCPOG.wfpo
 		  val map : (T -> T) -> WFCPOG.wfpo -> WFCPOG.wfpo
 	      end
@@ -92,35 +92,52 @@ type SSD_args =
 structure WFCPOG_SSD_Data = WFCPOG_DataFun
 	             (struct
 		      type T = SSD_args;
-		      val empty = ({key=11,rfm_tuples=[[]:Permission list];
+		      val empty = ({key=11,mutex_perm_sets=[[]:Permission list]});
 		      fun copy T = T;
 		      fun extend T = T;
 		      end);
 
-fun separation_of_duty_help (cl::clist) model = []
-	
-fun binding_of_duty_help (cl::clist) model = []
+
+fun ssd_generate_pos [] classes model = []
+  | ssd_generate_pos perms class model = []
+
+
+fun separation_of_duty_help [] classes model = []:((Path * OclTerm) list )
+  | separation_of_duty_help (h::perm_sets) classes model =
+    let
+	val _ = trace function_calls ("WFCPOG_SecureUML_Constraint.separation_of_duty_help\n")
+	val x = ssd_generate_pos h classes model
+	val res = x@(separation_of_duty_help perm_sets classes model)
+	val _ = trace function_calls ("WFCPOG_SecureUML_Constraint.separation_of_duty_help\n")
+    in
+	res
+    end
+
+
+fun binding_of_duty_help [] (cl::clist) model = []
+						
 
 
 
 
-fun separation_of_duty wfpo model =  
+fun separation_of_duty wfpo (model as (clist,alist)) =  
     let 
-	val _ = trace function_call ("WFCPOG_SecureUML_Constraint.separation_of_duty\n")
+	val _ = trace function_calls ("WFCPOG_SecureUML_Constraint.separation_of_duty\n")
 	val _ = trace wgen ("remove OclLib ...\n")
 	val cl = removeOclLibrary clist
 	val _ = trace wgen ("oclLib removed ...\n")
 	val _ = trace wgen ("Extract args ...\n")
 	val ssd_args = WFCPOG_SSD_Data.get wfpo
-	val res = separation_of_duty_help cl model
+	val perm_sets = (#mutex_perm_sets ssd_args)
+	val res = separation_of_duty_help perm_sets cl model
 	val _ = trace function_ends ("WFCPOG_SecureUML_Constraint.separation_of_duty\n")
     in
 	res
     end
 
-fun binding_of_duty wfpo model = 
-    let 
-	val _ = trace function_call ("WFCPOG_SecureUML_Constraint.binding_of_duty\n")
+fun binding_of_duty wfpo (model as (clist,alist)) = []:((Path * OclTerm) list)
+(*    let 
+	val _ = trace function_calls ("WFCPOG_SecureUML_Constraint.binding_of_duty\n")
 	val _ = trace wgen ("remove OclLib ...\n")
 	val cl = removeOclLibrary clist
 	val res = binding_of_duty cl model
@@ -128,5 +145,5 @@ fun binding_of_duty wfpo model =
     in
 	res
     end
-
+*)
 end;
