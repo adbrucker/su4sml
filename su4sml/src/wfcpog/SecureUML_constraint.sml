@@ -86,17 +86,19 @@ exception WFCPO_SecureUMLError of string
 
 type SSD_args = 
      {key : int,
-      mutex_perm_sets: (SecureUML.Permission list) list
+      mutex_perm_sets: (Permission list) list
      }
 
+structure WFCPOG_SSD_Data = WFCPOG_DataFun
+	             (struct
+		      type T = SSD_args;
+		      val empty = ({key=11,rfm_tuples=[[]:Permission list];
+		      fun copy T = T;
+		      fun extend T = T;
+		      end);
 
-fun separation_of_duty_help (cl::clist) model = 
-    let
-    
-    in
-
-    end
-
+fun separation_of_duty_help (cl::clist) model = []
+	
 fun binding_of_duty_help (cl::clist) model = []
 
 
@@ -110,7 +112,6 @@ fun separation_of_duty wfpo model =
 	val _ = trace wgen ("oclLib removed ...\n")
 	val _ = trace wgen ("Extract args ...\n")
 	val ssd_args = WFCPOG_SSD_Data.get wfpo
-	val 
 	val res = separation_of_duty_help cl model
 	val _ = trace function_ends ("WFCPOG_SecureUML_Constraint.separation_of_duty\n")
     in
@@ -127,4 +128,5 @@ fun binding_of_duty wfpo model =
     in
 	res
     end
+
 end;
