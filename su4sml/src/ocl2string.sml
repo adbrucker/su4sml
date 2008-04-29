@@ -96,6 +96,7 @@ fun ocl2string show_types oclterm =
                                                             args)
     in
     case oclterm of 
+      
 	(**************************************)
 	(* Literal                            *)
 	(**************************************)
@@ -127,6 +128,43 @@ fun ocl2string show_types oclterm =
 						     then "(("^(ocl2string show_types src)^":"^(string_of_OclType styp)^")."
 							  ^(hd (rev path))^":"^(string_of_OclType ptyp)^")"
 						     else (ocl2string show_types src)^"."^(hd (rev path))
+							  
+      (**************************************)
+      (* HOL-HOL Extensions                 *)
+      (**************************************)
+      | OperationCall (src,styp,["holOclLib","Boolean","implies"],[(arg,atyp)],rtyp)
+        => string_of_infix show_types  src styp "-->"  arg atyp rtyp
+      | OperationCall (src,styp,["holOclLib","Boolean","and"],[(arg,atyp)],rtyp)
+        => string_of_infix show_types  src styp "/\\"  arg atyp rtyp
+      | OperationCall (src,styp,["holOclLib","Boolean","or"],[(arg,atyp)],rtyp)
+        => string_of_infix show_types  src styp "\\/"  arg atyp rtyp
+      | OperationCall (src,styp,["holOclLib","Boolean","or"],[(arg,atyp)],rtyp)
+        => string_of_infix show_types  src styp "HOLxor"  arg atyp rtyp
+      | OperationCall (src,styp,["holOclLib","Boolean","not"],[],rtyp)
+	=> string_of_prefix1 show_types src styp "!" rtyp
+      |  OperationCall
+             (src,styp,["holOclLib","Boolean","OclLocalValid"],[(Literal(arg,atyp),_)],rtyp)
+	 => string_of_infix show_types  (Literal(arg,atyp)) atyp "|=" src styp   rtyp
+      | Iterator ("holOclLib.exists",vars,src,styp,c,ctyp,rtyp) 
+	=> if show_types 
+	  then "Ex "^(cs_list (map (fn (a,t) => a^":"^(string_of_OclType t)) vars))
+	       ^" . "
+	       ^(ocl2string show_types src)^":"
+	       ^(string_of_OclType styp)
+	  else "Ex "^(cs_list (map (fn (a,t) => a) vars))
+	       ^" . "
+	       ^(ocl2string show_types src)
+     | Iterator ("holOclLib.forAll",vars,src,styp,c,ctyp,rtyp) 
+	=> if show_types 
+	  then "All "^(cs_list (map (fn (a,t) => a^":"^(string_of_OclType t)) vars))
+	       ^" . "
+	       ^(ocl2string show_types src)^":"
+	       ^(string_of_OclType styp)
+	  else "All "^(cs_list (map (fn (a,t) => a) vars))
+	       ^" . "
+	       ^(ocl2string show_types src)
+
+
       (**************************************)
       (* OperationCall                      *)
       (**************************************)
