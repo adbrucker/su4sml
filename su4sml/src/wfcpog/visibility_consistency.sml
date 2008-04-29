@@ -177,7 +177,15 @@ fun are_conditions_visible_help [] model = true
 					  val _ = trace 50 ("package operations = " ^ (name_of_op a) ^ "\n")
 					  val posts = postcondition_of_op a
 				      in
-					  List.map (fn (x,y) => expr_is_visible package y model) posts
+					  List.map (fn (x,y) => 
+						       let
+							   val _ = trace 50 ("next post: \n" )
+						       in
+							   if (expr_is_visible public y model)
+							   then true
+							   else raise WFCPOG.WFCPOG_WFC_FailedException ("WFC not hold in class " ^ (string_of_path (name_of h)) ^ " in the condition " ^ (valOf (x)) ^ " with term: " ^ (ocl2string false y) ^ "\n")
+						       end
+						   ) posts
 				      end
 				  ) (package_operations_of h model)
 	    val _ = trace 50 ("package operations done.\n\n")
@@ -186,7 +194,15 @@ fun are_conditions_visible_help [] model = true
 					  val _ = trace 50 ("protected operations " ^ (name_of_op a) ^ "\n")
 					  val posts = postcondition_of_op a
 				      in
-					  List.map (fn (x,y) => expr_is_visible protected y model) posts
+					  List.map (fn (x,y) => 
+						       let
+							   val _ = trace 50 ("next post: \n" )
+						       in
+							   if (expr_is_visible public y model)
+							   then true
+							   else raise WFCPOG.WFCPOG_WFC_FailedException ("WFC not hold in class " ^ (string_of_path (name_of h)) ^ " in the condition " ^ (valOf (x)) ^ " with term: " ^ (ocl2string false y) ^ "\n")
+						       end
+						   ) posts
 				      end
 				  ) (protected_operations_of h model)
 	    val _ = trace 50 ("protected operations done.\n\n")

@@ -72,17 +72,19 @@ exception WFCPO_DataModelError
 fun c_allInstance_term (c:Classifier) =
     let 
 	val _ = trace function_calls ("WF_data_CS.c_allInstances\n")
-	val x = Variable ("x",DummyT)
+	val uni_name_x = HolOcl_Namespace.gen_unique_string()
+	val x = Variable (uni_name_x,DummyT)
         (* get class as an holocl term *)
 	val holocl_class_name = get_class_of (name_of c)
 	val class_type = type_of c
-	val class = Variable("c",class_type)
+	val uni_name_c = HolOcl_Namespace.gen_unique_string()
+	val class = Variable(uni_name_c,class_type)
 	(* OclAny.allInstances() *)
 	val allInstances = OperationCall (class,class_type,["oclLib","OclAny","allInstances"],[],Set (class_type))
 	(* x.oclIsTypeOf(c) *)
 	val oclIsTypeOf = OperationWithType (x,DummyT,"oclIsTypeOf",class_type,Boolean)
 	(* Iterator exists *)
-	val exists = Iterator("exists",[("x",DummyT)],allInstances,Set(class_type),oclIsTypeOf,Boolean,Boolean)
+	val exists = Iterator("exists",[(uni_name_x,DummyT)],allInstances,Set(class_type),oclIsTypeOf,Boolean,Boolean)
 	val _ = trace function_ends ("WF_data_CS.c_allInstances\n")
     in
 	exists

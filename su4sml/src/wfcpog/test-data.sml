@@ -8,6 +8,10 @@ open WFCPOG_TestSuite
 structure RFM_Data = WFCPOG_Refine_Constraint.WFCPOG_RFM_Data
 structure TAX_Data = WFCPOG_Taxonomy_Constraint.WFCPOG_TAX_Data
 
+val _ = Control.Print.printDepth:=30
+val _ = Control.Print.printLength:=30
+
+
 (** ################# **)
 (** WELLFORMED-CHECKS **)
 (** ################# **)
@@ -88,17 +92,15 @@ val wfs = [wfc_rfm_SC]
 val pos = [po_rfm_SC]
 *)
 
-(*
 val wfs = []
-val pos = [po_cm]
-*)
+val pos = [po_cm,po_sm]
 
 (* 
 val wfs = []
 val pos = [po_cstr]
 *)
 
-
+(*
 val wfs = [wfc_vis]
 val pos = []
-
+*)
