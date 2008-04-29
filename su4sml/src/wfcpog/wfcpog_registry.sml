@@ -66,6 +66,8 @@ sig
     val supported_wfs      : WFCPOG.wfpo list
     (** All the supported proof obligations. *)
     val supported_pos      : WFCPOG.wfpo list
+    (** All the supported well-formedness checks and proof obligations together.*)
+    val supported          : WFCPOG.wfpo list 
 
     (** Checks if the wfpo is a well-formedness check. *)
     val is_wfc             : WFCPOG.wfpo -> bool
@@ -141,39 +143,6 @@ fun rename_wfpo new_name (WFCPOG.WFPO{identifier=identifier,name=name,descriptio
       apply=apply,
       data=data
     }
-
-
-fun is_wfc (WFCPOG.WFPO wfpo) = case #apply wfpo of 
-				  WFCPOG.WFC _ => true
-				| _            => false
-
-fun is_pog (WFCPOG.WFPO wfpo) = case #apply wfpo of 
-				  WFCPOG.POG _ => true
-				| _            => false
-
-
-fun check_wfc model (wfc_sel)  = 
-    let 
-	val _ = trace 50 (name_of wfc_sel ^ "..............")
-    in
-	case WFCPOG.apply_of wfc_sel of
-	    WFCPOG.WFC(a) => a wfc_sel model 
-	  | x => raise WFCPOG_RegistryError ("A assumed wfc " ^ (name_of wfc_sel) ^ " is not a wfc!\n")
-    end
-    
-fun check_wfcs model wfcs = List.all (fn v => (v = true)) (map (check_wfc model) wfcs) 
-
-
-fun generate_po model (wfc_sel)  = 
-    let
-	val _ = trace 50 (name_of wfc_sel ^ "...............")
-    in
-	case (WFCPOG.apply_of wfc_sel) of
-	    WFCPOG.POG (a) => (wfc_sel,a wfc_sel model)
-	  | x  => raise WFCPOG_RegistryError ("A assumed po " ^ (name_of wfc_sel) ^ " is not a po!\n")
-    end
-
-fun generate_pos model wfcs = map (generate_po model) wfcs
 
 
 val tax_workaround = 
@@ -386,6 +355,78 @@ val supported_pos = [
      data = Datatab.empty
     }*)
 ]
+
+val supported = supported_wfs@supported_pos
+
+
+fun is_wfc (WFCPOG.WFPO wfpo) = case #apply wfpo of 
+				  WFCPOG.WFC _ => true
+				| _            => false
+
+fun is_pog (WFCPOG.WFPO wfpo) = case #apply wfpo of 
+				  WFCPOG.POG _ => true
+				| _            => false
+
+
+(* RETURN: ( bool list , po list) *)
+fun process_depends [] model acc = acc 
+  | process_depends (h::tail) model  acc =
+    let
+	val wfpo  = get_wfpo supported h
+    in
+	case (WFCPOG.apply_of wfpo) of
+	    WFCPOG.WFC(a) => (process_depends tail model ((#1 acc)@[a wfpo model],(#2 acc)))
+	  | WFCPOG.POG(a) => (process_depends tail model ((#1 acc),(#2 acc)@(a wfpo model)))
+    end
+
+
+fun check_wfc model (wfc_sel as WFCPOG.WFPO{identifier,name,description,recommended,depends,recommends,apply,data}:WFCPOG.wfpo)  = 
+    let 
+	val _ = trace function_calls ("WFCPOG_Registry.check_wfc\n")
+	val _ = trace wgen (name_of wfc_sel ^ "..............")
+	val res = 
+	    case WFCPOG.apply_of wfc_sel of
+		WFCPOG.WFC(a) => if (depends = []) 
+				 then a wfc_sel model
+				 else 
+				     let
+					 val (wfs,pos) = process_depends depends model ([],[])
+				     in
+					 (List.all (fn a => a = true) wfs)
+				     end
+	      | x => raise WFCPOG_RegistryError ("A assumed wfc " ^ (name_of wfc_sel) ^ " is not a wfc!\n") 
+	val _ = trace function_ends ("WFCPOG_Registry.check_wfc\n")
+    in
+	res
+    end
+    
+fun check_wfcs model wfcs = List.all (fn v => (v = true)) (map (check_wfc model) wfcs) 
+
+
+fun generate_po model (wfc_sel as WFCPOG.WFPO{identifier,name,description,recommended,depends,recommends,apply,data}:WFCPOG.wfpo)  = 
+    let
+	val _ = trace function_calls ("WFCPOG_Registry.generate_po\n")
+	val _ = trace wgen (name_of wfc_sel ^ "...............")
+	val res = 
+	    case (WFCPOG.apply_of wfc_sel) of
+		WFCPOG.POG (a) => (* (wfc_sel,a wfc_sel model) *)
+		if (depends = [])
+		then (wfc_sel,a wfc_sel model)
+		else 
+		    let
+			val (wfs,pos) = process_depends depends model ([],[])
+		    in
+			if (List.all (fn a => a = true) wfs)
+			then (wfc_sel,pos@(a wfc_sel model))
+			else raise WFCPOG_RegistryError("A dependent wellformedness check of the po " ^ (name_of wfc_sel) ^ " is not true!\n")
+		    end
+	      | x  => raise WFCPOG_RegistryError ("A assumed po " ^ (name_of wfc_sel) ^ " is not a po!\n")
+	val _ = trace function_ends ("WFCPOG_Registry.generate_po\n")
+    in
+	res
+    end
+
+fun generate_pos model wfcs = map (generate_po model) wfcs
 
 fun create_wfc_tax i =     (WFCPOG_Taxonomy_Constraint.WFCPOG_TAX_Data.put ({key=9,max_depth=i}) tax_workaround)
 
