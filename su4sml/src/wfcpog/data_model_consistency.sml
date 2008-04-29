@@ -95,9 +95,9 @@ fun single_model_consistency (c:Classifier) (model as (clist,alist)) =
     let
 	val _ = trace function_calls("WFCPOG_Data_Model_Consistency_Constraint.single_model_consistency\n")
 	val term = c_allInstance_term c
-	val local_valid = OperationCall(term,Boolean,["holOclLib","Boolean","OclLocalValid"],[(Literal("\\<tau>",DummyT),DummyT)],Boolean)
+	val local_valid = OperationCall(term,Boolean,["holOclLib","Boolean","OclLocalValid"],[(Literal("\\<tau>",OclState),DummyT)],Boolean)
 	val dummy_source = Literal("",DummyT)
-	val res = Iterator("holOclLib.exists",[("\\<tau>",DummyT)],dummy_source,DummyT,local_valid,Boolean,Boolean)
+	val res = Iterator("holOclLib.exists",[("\\<tau>",OclState)],dummy_source,DummyT,local_valid,Boolean,Boolean)
 	val _ = trace function_ends("WFCPOG_Data_Model_Consistency_Constraint.single_model_consistency\n")
     in
 	res
@@ -119,10 +119,10 @@ fun strong_model_consistency_help classes model =
     let 
 	val _ = trace function_calls("WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency\n")
 	val terms = List.map (c_allInstance_term) classes
-	val local_valids = List.map (fn a => OperationCall(a,Boolean,["holOclLib","Boolean","OclLocalValid"],[(Literal("\\<tau>",DummyT),DummyT)],Boolean)) terms
+	val local_valids = List.map (fn a => OperationCall(a,Boolean,["holOclLib","Boolean","OclLocalValid"],[(Literal("\\<tau>",OclState),DummyT)],Boolean)) terms
 	val con_term = conjugate_terms local_valids
 	val dummy_source = Literal("",DummyT)
-	val res = Iterator("holOclLib.exists",[("\\<tau>",DummyT)],dummy_source,DummyT,con_term,Boolean,Boolean)
+	val res = Iterator("holOclLib.exists",[("\\<tau>",OclState)],dummy_source,DummyT,con_term,Boolean,Boolean)
 	val _ = trace function_ends("WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency\n")
     in
 	[(["po_strong_model"],res)]

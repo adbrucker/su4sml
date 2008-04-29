@@ -115,7 +115,7 @@ fun generate_return_value typ oper sub_class super_class  model =
       val sub_type   = Rep_Core.type_of sub_class
       fun OclLocalValid t = (OperationCall (t,
 					    Boolean,["holOclLib","Boolean","OclLocalValid"],
-					    [(Literal("\\<tau>",DummyT),DummyT)],Boolean))
+					    [(Literal("\\<tau>",OclState),DummyT)],Boolean))
     in
       case typ of
 	weaken_pre => 
