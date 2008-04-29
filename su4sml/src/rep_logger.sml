@@ -112,6 +112,21 @@ val low = 100
 val development = 200
 
 
+
+fun add_spaces [x] = [x]
+  | add_spaces (h::tail) = 
+    if (h = #"\n")
+    then ((#"\n")::(String.explode (get_offset())))@(add_spaces tail)
+    else (h)::(add_spaces tail)
+
+fun embed_newline s = 
+    let
+	val char_list = String.explode s
+    in
+	String.implode (add_spaces (char_list))
+    end
+
+
 fun trace lev s = 
     case lev of
 	6 => 
@@ -120,11 +135,15 @@ fun trace lev s =
 	    val s2 =       ("##############  EXCEPTION MESSAGE ################\n")
 	    val s3 =       ("##################################################\n\n")
 	in
-	    if (lev  <= !log_level ) then print(s1^s2^s3^s) else ()
+	    if (lev  <= !log_level ) 
+	    then print(s1^s2^s3^(embed_newline s)) 
+	    else ()
 	end
       |	25 => 
 	let
-	    val _ = if (lev  <= !log_level ) then print((get_offset())^s) else ()
+	    val _ = if (lev  <= !log_level ) 
+		    then print((get_offset())^(embed_newline s)) 
+		    else ()
 	in
 	    inc_offset()
 	end
@@ -132,12 +151,25 @@ fun trace lev s =
 	let
 	    val x = dec_offset()
 	in
-	    if (lev  <= !log_level ) then print((get_offset())^s) else ()
+	    if (lev  <= !log_level ) 
+	    then (print (get_offset()^(embed_newline s)))
+	    else ()
 	end
+
       | x => 
 	if x < 20 
-	then (if (lev  <= !log_level ) then print(s) else ())
-	else (if (lev  <= !log_level ) then print((get_offset())^s) else ())
+	then 
+	    (
+	     if (lev  <= !log_level) 
+	     then print(s) 
+	     else ()
+	    )
+	else 
+	    (
+	     if (lev  <= !log_level ) 
+	     then (print ((get_offset())^(embed_newline s)))
+	     else ()
+	    )
 
 
 (* HOLOCL_HOME resp. SU4SML_HOME should point to the top-level directory *)

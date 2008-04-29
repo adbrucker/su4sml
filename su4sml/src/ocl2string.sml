@@ -298,6 +298,7 @@ end
 (** "pretty printing" of Repository models *)
 structure Rep2String = 
 struct
+open Rep_Logger
 
 fun precond2string (SOME n,t) = "    pre "^n^":\n         "^ 
 				(Ocl2String.ocl2string false t)^"\n"
@@ -363,8 +364,8 @@ fun classifier2string (C as Rep.Class x) =
   | classifier2string (C as Rep.Template x) =
     "template of "^ (classifier2string (#classifier x))
 
-fun printClass (x:Rep.Classifier) = print (classifier2string x)
+fun printClass (x:Rep.Classifier) = trace medium (classifier2string x)
 
 fun printList (x:Rep.Classifier list) = 
-    print (String.concatWith "\n\n" (map classifier2string x ))
+    trace medium (String.concatWith "\n\n" (map classifier2string x ))
 end
