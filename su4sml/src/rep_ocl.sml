@@ -48,7 +48,7 @@ sig
     datatype OclType    =  Integer | Real | String | Boolean | OclAny 
 		         | Set of OclType | Sequence of OclType
 		         | OrderedSet of OclType | Bag of OclType 
-		         | Collection of OclType
+		         | Collection of OclType | OclState
 			 | TupleType of (string * OclType) list 
 		         | Classifier of Path | OclVoid | DummyT | TemplateParameter of string
 
@@ -145,7 +145,7 @@ datatype OclType    =  Integer | Real | String | Boolean | OclAny
 		     | Set of OclType | Sequence of OclType
 		     | OrderedSet of OclType | Bag of OclType 
 		     | Collection of OclType | OclVoid | DummyT
-		     | TupleType of (string * OclType) list
+		     | TupleType of (string * OclType) list | OclState
 		     | Classifier of Path
 		     | TemplateParameter of string
 
