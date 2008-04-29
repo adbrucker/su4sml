@@ -137,8 +137,6 @@ fun ocl2string show_types oclterm =
       | OperationCall (src,styp,["holOclLib","Boolean","and"],[(arg,atyp)],rtyp)
         => string_of_infix show_types  src styp "/\\"  arg atyp rtyp
       | OperationCall (src,styp,["holOclLib","Boolean","or"],[(arg,atyp)],rtyp)
-        => string_of_infix show_types  src styp "\\/"  arg atyp rtyp
-      | OperationCall (src,styp,["holOclLib","Boolean","or"],[(arg,atyp)],rtyp)
         => string_of_infix show_types  src styp "HOLxor"  arg atyp rtyp
       | OperationCall (src,styp,["holOclLib","Boolean","not"],[],rtyp)
 	=> string_of_prefix1 show_types src styp "!" rtyp
