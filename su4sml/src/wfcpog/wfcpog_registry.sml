@@ -86,7 +86,7 @@ sig
     (** Execute a wfc.*)    
     val check_wfc          : Rep.Model -> WFCPOG.wfpo -> bool
     (** Execute a wfc with verbose output in case of a false wfc. *)
-    (* val check_wfc_verbose  : Rep.Model -> WFCPOG.wfpo -> bool *)
+    val check_wfc_verbose  : Rep.Model -> WFCPOG.wfpo -> bool
     (** Execute a list of wfcs.*)
     val check_wfcs         : Rep.Model -> WFCPOG.wfpo list -> bool
 
@@ -415,6 +415,14 @@ fun check_wfc model (wfc_sel as WFCPOG.WFPO{identifier,name,description,recommen
 	res
     end
 
+fun check_wfc_verbose model wfc =
+    check_wfc model wfc 
+    handle WFCPOG_WFC_FailedException s => 
+	   let
+	       val _ = trace exce s 
+	   in
+	       false
+	   end
     
 fun check_wfcs model wfcs = List.all (fn v => (v = true)) (map (check_wfc model) wfcs) 
 

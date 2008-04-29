@@ -68,6 +68,8 @@ sig
   val apply_of : wfpo -> wf_or_po
   val id_of  : wfpo -> wfpo_id
   val name_of : wfpo -> string
+
+  exception WFCPOG_WFC_FailedException of string
 end
 
 
@@ -75,6 +77,7 @@ end
 structure WFCPOG:WFCPOG =
 struct
 
+exception WFCPOG_WFC_FailedException of string
 
 type wfpo_id = string
 

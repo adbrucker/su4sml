@@ -64,8 +64,14 @@ val ocl = "../../../examples/vehicles/vehicles.ocl"
 *)
 
 (** OVERRRIDING **)
+(*
 val zargo = "../../../hol-ocl/examples/overriding/overriding.zargo"
 val ocl="../../../hol-ocl/examples/overriding/overriding.ocl"
+val remP = []
+*)
+
+val zargo = "../../../hol-ocl/examples/stack_manu/stack.zargo"
+val ocl="../../../hol-ocl/examples/stack_manu/stack.ocl"
 val remP = []
 
 (** import model *)

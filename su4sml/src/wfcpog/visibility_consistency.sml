@@ -56,15 +56,15 @@ open Rep_OclTerm
 open Rep_OclType
 open Rep2String
 open XMI_DataTypes
-
+open Ocl2String
 (* oclparser *)
 open ModelImport
 
 (* wfcpo-gen *)
 open WFCPOG_Library
 
-exception WFCPO_VisibilityError of string
 
+exception WFCPOG_VisibilityError of string
 
 
 fun modificator_conforms_to private private = true
@@ -143,9 +143,6 @@ and expr_is_visible modif (Literal(s,typ)) model = true
     (expr_is_visible modif src model) andalso (expr_is_visible modif body model)
   | expr_is_visible modif (Iterator(name,vars,src,styp,body,btyp,rtyp)) model = 
     (expr_is_visible modif src model) andalso (expr_is_visible modif body model)
-
-
-
 fun are_conditions_visible_help [] model = true
   | are_conditions_visible_help (h::classes) (model as (clist,alist)) = 
     if (not (is_visible_cl h))
@@ -163,15 +160,13 @@ fun are_conditions_visible_help [] model = true
 					  val _ = trace 50 ("public operation = " ^ (name_of_op a) ^ "\n")
 					  val posts = postcondition_of_op a
 				      in
-					  (* TODO: bug must be here *)
-					  (* crashed after the third extraction of 
-					     OpCall from postcondition of 'isEmpty
-					   *)
 					  List.map (fn (x,y) => 
 						       let
 							   val _ = trace 50 ("next post: \n" )
 						       in
-							   expr_is_visible public y model
+							   if (expr_is_visible public y model)
+							   then true
+							   else raise WFCPOG.WFCPOG_WFC_FailedException ("WFC not hold in class " ^ (string_of_path (name_of h)) ^ " in the condition " ^ (valOf (x)) ^ " with term: " ^ (ocl2string false y) ^ "\n")
 						       end
 						   ) posts
 				      end

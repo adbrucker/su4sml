@@ -80,7 +80,7 @@ sig
     (** Add self as argument *)
     val selfarg                   : Rep_OclType.OclType -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType)
     (** Any kind of exceptions. *)
-    exception WFCPOG_LibraryError of string 
+    exception WFCPOG_LibraryError of string
 end
 structure WFCPOG_Library:WFCPOG_LIBRARY =
 struct

@@ -46,7 +46,7 @@ val testcase =
 
 val testcases = [
    { 
-    name = "stack_manuel",
+    name = "stack_manu",
     uml  = prefix^"stack_manu/stack.zargo",
     ocl  = prefix^"stack_manu/stack.ocl"
    },{ 

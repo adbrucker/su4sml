@@ -83,17 +83,22 @@ val wfs = [wfc_inf,wfc_vis]
 val pos = [po_lsk,po_cm,po_sm,po_cmd,po_quy]
 *)
 
-
+(* 
 val wfs = [wfc_rfm_SC]
 val pos = [po_rfm_SC]
+*)
 
-
-(* 
+(*
 val wfs = []
-val pos = [po_cm,po_sm]
+val pos = [po_cm]
 *)
 
 (* 
 val wfs = []
 val pos = [po_cstr]
 *)
+
+
+val wfs = [wfc_vis]
+val pos = []
+
