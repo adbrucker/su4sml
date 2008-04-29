@@ -78,15 +78,22 @@ val md7 = rename_wfpo "md7" (TAX_Data.put ({key=9,max_depth=7}) tax)
 val md8 = rename_wfpo "md8" (TAX_Data.put ({key=9,max_depth=8}) tax)
 *)
 
-(*  
-val wfs = [inf,vis,md0,md1,md2,md3,md4,md5,md6,md7,md8,rfm_SC_wfc]
-val pos = [lsk,cm,sm,om,cmd,quy]
+(* 
+val wfs = [wfc_inf,wfc_vis]
+val pos = [po_lsk,po_cm,po_sm,po_cmd,po_quy]
+*)
+
+
+val wfs = [wfc_rfm_SC]
+val pos = [po_rfm_SC]
+
+
+(* 
+val wfs = []
+val pos = [po_cm,po_sm]
 *)
 
 (* 
-val wfs = [rfm_SC_wfc]
-val pos = [rfm_SC_pog]
-*)
-
 val wfs = []
-val pos = [po_cm,po_sm]
+val pos = [po_cstr]
+*)

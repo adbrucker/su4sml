@@ -85,6 +85,8 @@ sig
 							 
     (** Execute a wfc.*)    
     val check_wfc          : Rep.Model -> WFCPOG.wfpo -> bool
+    (** Execute a wfc with verbose output in case of a false wfc. *)
+    (* val check_wfc_verbose  : Rep.Model -> WFCPOG.wfpo -> bool *)
     (** Execute a list of wfcs.*)
     val check_wfcs         : Rep.Model -> WFCPOG.wfpo list -> bool
 
@@ -183,7 +185,7 @@ val supported_wfs = [
      name            = "WFC Interface Consistency (complete)",
      description     = "Checking of two subconstraints: \n wfc_inf_ster: Checks if all operations of an interface don't have the stereotypes 'create' or 'destroy'. \n wfc_inf_name : Checks for classes inheriting from more than one interface that there are no nameclashes.\n",
      recommended     = true,
-     depends         = ["inf_ster"],
+     depends         = ["wfc_inf_ster"],
      recommends      = [],
      apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.is_nameclash_free),
      data            = Datatab.empty
@@ -268,7 +270,7 @@ val supported_pos = [
      name            = "OO Refinement",
      description     = "Generate Proof Obligations for OO data refinement",
      recommended     = true,
-     depends         = [],
+     depends         = ["wfc_rfm"],
      recommends      = [],
      apply           = WFCPOG.POG(WFCPOG_Refine_Constraint.generate_pos),
      data            = Datatab.empty
@@ -338,7 +340,7 @@ val supported_pos = [
      name            = "WFC Constructor Consistency (complete)",
      description     = "Checks two subconstraints: \n cstr_post : Checks if after the execution of any constructor operation all the attributes are initialized.\n cstr_attr: Checks if after the execution of any constructor operation all the attributes are initialized.\n",
      recommended     = false,
-     depends         = ["cstr_post"],
+     depends         = ["po_cstr_post"],
      recommends      = [],
      apply           = WFCPOG.POG(WFCPOG_Constructor_Constraint.attributes_are_inited),
      data            = Datatab.empty
@@ -372,25 +374,38 @@ fun is_pog (WFCPOG.WFPO wfpo) = case #apply wfpo of
 fun process_depends [] model acc = acc 
   | process_depends (h::tail) model  acc =
     let
+	val _ = trace function_calls ("WFCPOG_Registry.process_depends\n")
 	val wfpo  = get_wfpo supported h
+	val _ = trace wgen ("Dependent wfpo " ^ (name_of wfpo) ^ " found.\n")
+	val res = 
+	    case (WFCPOG.apply_of wfpo) of
+		WFCPOG.WFC(a) => (process_depends tail model ((#1 acc)@[a wfpo model],(#2 acc)))
+	      | WFCPOG.POG(a) => (process_depends tail model ((#1 acc),(#2 acc)@(a wfpo model)))
+	val _ = trace function_ends ("WFCPOG_Registry.process_depends\n")
     in
-	case (WFCPOG.apply_of wfpo) of
-	    WFCPOG.WFC(a) => (process_depends tail model ((#1 acc)@[a wfpo model],(#2 acc)))
-	  | WFCPOG.POG(a) => (process_depends tail model ((#1 acc),(#2 acc)@(a wfpo model)))
+	res
     end
 
 
 fun check_wfc model (wfc_sel as WFCPOG.WFPO{identifier,name,description,recommended,depends,recommends,apply,data}:WFCPOG.wfpo)  = 
     let 
 	val _ = trace function_calls ("WFCPOG_Registry.check_wfc\n")
-	val _ = trace wgen (name_of wfc_sel ^ "..............")
+	val _ = trace wgen (name_of wfc_sel ^ ".............." ^ "\n")
 	val res = 
 	    case WFCPOG.apply_of wfc_sel of
 		WFCPOG.WFC(a) => if (depends = []) 
-				 then a wfc_sel model
+				 then 
+				     let 
+					 val _ = trace wgen ("No dependent wfpos.\n")
+				     in
+					 a wfc_sel model
+				     end
 				 else 
 				     let
+					 val _ = trace wgen ("Dependent wfpos detected.\n")
+					 val _ = trace wgen ("Process dependencies ...\n")
 					 val (wfs,pos) = process_depends depends model ([],[])
+					 val _ = trace wgen ("Dependencies processed ...\n")
 				     in
 					 (List.all (fn a => a = true) wfs)
 				     end
@@ -399,6 +414,7 @@ fun check_wfc model (wfc_sel as WFCPOG.WFPO{identifier,name,description,recommen
     in
 	res
     end
+
     
 fun check_wfcs model wfcs = List.all (fn v => (v = true)) (map (check_wfc model) wfcs) 
 
