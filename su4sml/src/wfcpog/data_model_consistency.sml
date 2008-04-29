@@ -117,12 +117,13 @@ fun strong_model_consistency_help classes model =
     let 
 	val _ = trace function_calls("WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency\n")
 	val terms = List.map (c_allInstance_term) classes
-	val n_term = nest_source terms
-	val dummy_body = Variable("dummy_body",DummyT)
-	val res = [(["po_strong_model"],Iterator("holOclLib.exists",[("\\<tau>",DummyT)],n_term,Boolean,dummy_body,DummyT,Boolean))]
+	val local_valids = List.map (fn a => OperationCall(a,Boolean,["holOclLib","Boolean","OclLocalValid"],[(Literal("\\<tau>",DummyT),DummyT)],Boolean)) terms
+	val con_term = conjugate_terms local_valids
+	val dummy_source = Literal("",DummyT)
+	val res = Iterator("holOclLib.exists",[("\\<tau>",DummyT)],dummy_source,DummyT,con_term,Boolean,Boolean)
 	val _ = trace function_ends("WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency\n")
     in
-	res
+	[(["po_strong_model"],res)]
     end
 
 fun strong_model_consistency wfpo (model as (clist,alist)) = 
