@@ -94,8 +94,8 @@ fun single_model_consistency (c:Classifier) (model as (clist,alist)) =
 	val _ = trace function_calls("WFCPOG_Data_Model_Consistency_Constraint.single_model_consistency\n")
 	val term = c_allInstance_term c
 	val local_valid = OperationCall(term,Boolean,["holOclLib","Boolean","OclLocalValid"],[(Literal("\\<tau>",DummyT),DummyT)],Boolean)
-	val dummy_body = Variable("dummy_body",DummyT)
-	val res = Iterator("holOclLib.exists",[("\\<tau>",DummyT)],local_valid,Boolean,dummy_body,DummyT,Boolean)
+	val dummy_source = Literal("",DummyT)
+	val res = Iterator("holOclLib.exists",[("\\<tau>",DummyT)],dummy_source,DummyT,local_valid,Boolean,Boolean)
 	val _ = trace function_ends("WFCPOG_Data_Model_Consistency_Constraint.single_model_consistency\n")
     in
 	res
