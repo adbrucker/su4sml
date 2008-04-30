@@ -232,18 +232,41 @@ fun name_of_pre C Op = hc_path l2 (pre_1_of  ((Rep_Core.name_of C)@[Rep_Core.man
 fun name_of_post C Op = hc_path l2 (post_1_of  ((Rep_Core.name_of C)@[Rep_Core.mangled_name_of_op Op]))
 
 end
+signature REP_HOLOCL_HELPER =
+sig 
+    val holocl_and        : Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm
+    val holocl_and_all    : Rep_OclTerm.OclTerm list -> Rep_OclTerm.OclTerm 
+    val holocl_or         : Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm
+    val holocl_or_all     : Rep_OclTerm.OclTerm list -> Rep_OclTerm.OclTerm 
+    val holocl_implies    : Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm
+    val holocl_not        : Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm 
+    val holocl_xor        : Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm
 
-structure Rep_HolOcl_Helper = 
+end
+structure Rep_HolOcl_Helper:REP_HOLOCL_HELPER = 
 struct 
-open Rep_Core
+
 open Rep_OclType
 open Rep_OclTerm
 
 exception HolOcl_Helper_InvalidArguments of string
 
 
-fun ocl_opcall (source:OclTerm) f args t  = OperationCall (source, type_of_term source, f,
-                                                  map (fn x => (x,type_of_term x)) args,
+fun type_of_t (Literal                (_,t)) = t
+  | type_of_t (CollectionLiteral      (_,t)) = t
+  | type_of_t (If           (_,_,_,_,_,_,t)) = t
+  | type_of_t (AssociationEndCall (_,_,_,t)) = t
+  | type_of_t (AttributeCall      (_,_,_,t)) = t
+  | type_of_t (OperationCall    (_,_,_,_,t)) = t
+  | type_of_t (OperationWithType(_,_,_,_,t)) = t
+  | type_of_t (Variable               (_,t)) = t
+  | type_of_t (Let            (_,_,_,_,_,t)) = t
+  | type_of_t (Iterate  (_,_,_,_,_,_,_,_,t)) = t
+  | type_of_t (Iterator     (_,_,_,_,_,_,t)) = t
+  | type_of_t (Predicate(_,_,_,_)) = Boolean
+
+fun ocl_opcall (source:OclTerm) f args t  = OperationCall (source, type_of_t source, f,
+                                                  map (fn x => (x,type_of_t x)) args,
                                                   t)
 
 fun holocl_and a b        = ocl_opcall a ["holOclLib","Boolean","and"]     [b] Boolean
