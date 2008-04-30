@@ -57,9 +57,11 @@ sig
     val term_of_postcondition     : (string option * Rep_OclTerm.OclTerm) -> Rep_OclTerm.OclTerm
     (** Wrap a predicate over an OclTerm.*)
 (*    val wrap_predicate            : Rep_OclTerm.OclTerm -> string option -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list -> Rep_OclTerm.OclTerm *)
-    (** Conjugate a list of terms to one single term.*)							 
+    (** Conjungtion of a list of OclTerms to one single term.*)							 
     val conjugate_terms           : Rep_OclTerm.OclTerm list -> Rep_OclTerm.OclTerm
-    (** *)
+    (** Conjungtion of a list of HolOclTerms to one single term.*)
+    val conjugate_holoclterms     : Rep_OclTerm.OclTerm list -> Rep_OclTerm.OclTerm
+    (** Disjunction of a list of OclTerms to one single term.*)
     val disjugate_terms           : Rep_OclTerm.OclTerm list -> Rep_OclTerm.OclTerm
     (** Get an attribute by name. *)
     val get_attribute             : string -> Rep_Core.Classifier -> Rep.Model -> Rep_Core.attribute
@@ -123,6 +125,17 @@ fun conjugate_terms [] = raise WFCPOG_LibraryError ("Empty list not conjugateabl
     in
 	if (type_of_term h = Boolean)
 	then (OperationCall(h,type_of_term h,["oclLib","Boolean","and"],[(x,type_of_term x)],Boolean))
+	else raise WFCPOG_LibraryError ("type of term is not Boolean. \n") 
+    end
+
+fun conjugate_holoclterms [] = raise WFCPOG_LibraryError ("Empty list not conjugateable. \n")
+  | conjugate_holoclterms [x] = x
+  | conjugate_holoclterms (h::tail) = 
+    let
+	val x = conjugate_holoclterms tail
+    in
+	if (type_of_term h = Boolean)
+	then (OperationCall(h,type_of_term h,["holOclLib","Boolean","and"],[(x,type_of_term x)],Boolean))
 	else raise WFCPOG_LibraryError ("type of term is not Boolean. \n") 
     end
 
