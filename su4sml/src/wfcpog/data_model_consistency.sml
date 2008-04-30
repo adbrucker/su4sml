@@ -57,7 +57,8 @@ open Rep_OclTerm
 open Rep_OclType
 open ModelImport
 open Rep2String
-open HolOcl_Namespace
+open Rep_HolOcl_Namespace
+open Rep_HolOcl_Helper
 (* ocl-parser *)
 open ModelImport
 open Context
@@ -119,7 +120,7 @@ fun strong_model_consistency_help classes model =
 	val _ = trace function_calls("WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency\n")
 	val terms = List.map (c_allInstance_term) classes
 	val local_valids = List.map (fn a => OperationCall(a,Boolean,["holOclLib","Boolean","OclLocalValid"],[(Literal("\\<tau>",OclState),DummyT)],Boolean)) terms
-	val con_term = conjugate_holoclterms local_valids
+	val con_term = holocl_and_all local_valids
 	val dummy_source = Literal("",DummyT)
 	val res = Iterator("holOclLib.exists",[("\\<tau>",OclState)],dummy_source,DummyT,con_term,Boolean,Boolean)
 	val _ = trace function_ends("WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency\n")

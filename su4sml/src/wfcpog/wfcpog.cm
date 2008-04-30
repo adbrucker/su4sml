@@ -54,7 +54,7 @@ Group is
 
 "../rep_secureuml.sig"
 "../rep_secureuml.sml"	
-"holocl_namespace.sml"
+"rep_holocl.sml"
 "datatab.sml"
 "library.sml"
 "wfcpog.sml"

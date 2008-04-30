@@ -69,13 +69,12 @@ struct
 
 exception WFCPOG_LiskovError of string
 (* su4sml *)
-open HolOcl_Namespace
 open Rep_Logger
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType
 open Rep2String
-
+open Rep_HolOcl_Namespace
 (* oclparser *)
 open ModelImport
 

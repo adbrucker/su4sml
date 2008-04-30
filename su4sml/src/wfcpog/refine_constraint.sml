@@ -74,7 +74,7 @@ open Rep_OclTerm
 open Rep_OclType
 open Rep2String
 open ModelImport
-open HolOcl_Namespace
+open Rep_HolOcl_Namespace
 
 (* wfcpo-gen *)
 open WFCPOG_Library

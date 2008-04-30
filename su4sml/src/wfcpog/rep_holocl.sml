@@ -39,7 +39,7 @@
  ******************************************************************************)
 (* $Id: holocl_namespace.sml 7513 2008-03-27 06:27:50Z brucker $ *)
 
-signature HOLOCL_NAMESPACE =
+signature REP_HOLOCL_NAMESPACE =
 sig
     datatype Level = univ    (* universe toolbox *)
 		   | operation
@@ -93,7 +93,7 @@ end
 
 
 
-structure HolOcl_Namespace:HOLOCL_NAMESPACE = 
+structure Rep_HolOcl_Namespace:REP_HOLOCL_NAMESPACE = 
 struct 
     datatype Level = univ    (* universe toolbox *)
 		   | operation
@@ -233,26 +233,27 @@ fun name_of_post C Op = hc_path l2 (post_1_of  ((Rep_Core.name_of C)@[Rep_Core.m
 
 end
 
-structure HolOcl_Helper = 
+structure Rep_HolOcl_Helper = 
 struct 
+open Rep_Core
 open Rep_OclType
 open Rep_OclTerm
 
 exception HolOcl_Helper_InvalidArguments of string
 
 
-fun ocl_opcall source f args t  = OperationCalil (source, type_of source, f,
-                                                  map (fn x => (x,type_of x)) args,
+fun ocl_opcall (source:OclTerm) f args t  = OperationCall (source, type_of_term source, f,
+                                                  map (fn x => (x,type_of_term x)) args,
                                                   t)
 
 fun holocl_and a b        = ocl_opcall a ["holOclLib","Boolean","and"]     [b] Boolean
-fun holocl_and_all []     = raise (HolOcl_Helper_InvalidArguments ("holocl.holocl_and_all: empty argument list")
-  | holocl_and_all [a]    = a
-  | holocl_and_all (h::t) = holocl_and a (holocl_and_all t)
+fun holocl_and_all []     = raise (HolOcl_Helper_InvalidArguments ("holocl.holocl_and_all: empty argument list"))
+  | holocl_and_all [a:OclTerm]    = a
+  | holocl_and_all (h::t) = holocl_and h (holocl_and_all t)
 fun holocl_or  a b        = ocl_opcall a ["holOclLib","Boolean","or"]      [b] Boolean
-  | holocl_or_all []      = raise (HolOcl_Helper_InvalidArguments ("holocl.holocl_or_all: empty argument list")
-  | holocl_or_all [a]     = a
-  | holocl_or_all (h::t)  = holocl_or a (holocl_or_all t)
+fun holocl_or_all []      = raise (HolOcl_Helper_InvalidArguments ("holocl.holocl_or_all: empty argument list"))
+  | holocl_or_all [a:OclTerm]     = a
+  | holocl_or_all (h::t)  = holocl_or h (holocl_or_all t)
 fun holocl_implies a b    = ocl_opcall a ["holOclLib","Boolean","implies"] [b] Boolean
 fun holocl_xor a b        = ocl_opcall a ["holOclLib","Boolean","xor"]     [b] Boolean
 fun holocl_not a          = ocl_opcall a ["holOclLib","Boolean","not"]     []  Boolean
