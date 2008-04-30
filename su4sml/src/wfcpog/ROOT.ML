@@ -39,7 +39,7 @@
  ******************************************************************************)
 (* $Id$ *)
 	 
-use "holocl_namespace.sml";
+use "rep_holocl.sml";
 use "datatab.sml";
 use "library.sml";
 use "wfcpog.sml";
