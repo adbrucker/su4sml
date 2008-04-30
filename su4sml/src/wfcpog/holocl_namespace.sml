@@ -89,7 +89,6 @@ sig
     val name_of_pre : Rep_Core.Classifier -> Rep_Core.operation -> Rep_OclType.Path
     val name_of_post : Rep_Core.Classifier -> Rep_Core.operation -> Rep_OclType.Path
 
-    val gen_unique_string : unit -> string
 end
 
 
@@ -104,23 +103,6 @@ struct
 		   | l2      (* Level 2          *)
 
 
-
-val id = ref 0;
-
-fun gen_unique_string () = 
-    let
-	val _ = id:=(!id+1)
-    in
-	("var"^Int.toString(!id))
-    end
-
-fun init_id () =
-    let
-	val _ = id:= 0
-	val _ = Rep_Logger.trace 10 ("id reseted ...\n")
-    in
-	()
-    end
 
 fun listin _ []  = false
   | listin e (x::xs) = if e=x then true else listin e xs
