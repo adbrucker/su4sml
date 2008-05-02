@@ -55,13 +55,9 @@ sig
 
     val generate_pos            : WFCPOG.wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list 
 
-    exception WFCPOG_RefineError of string
+
     exception ClassGroupError of Rep_Core.Classifier list * string
     exception OpGroupError of Rep_Core.operation list * string
-    exception WFCPO_SyntaxError_ClassConsistency of (Rep_OclType.Path * Rep_Core.Classifier list)
-    exception WFCPO_SyntaxError_OpConsistency of (Rep_Core.Classifier * Rep_Core.operation list)
-    exception WFCPO_SyntaxError_TypeConsistency of (Rep_Core.Classifier * Rep_Core.Classifier * Rep_Core.operation * Rep_Core.operation)
-
 end
 structure WFCPOG_Refine_Constraint : WFCPOG_REFINE_CONSTRAINT =
 struct
@@ -79,13 +75,9 @@ open Rep_HolOcl_Namespace
 (* wfcpo-gen *)
 open WFCPOG_Library
 
-
-exception WFCPO_SyntaxError_ClassConsistency of (Path * Classifier list)
-exception WFCPO_SyntaxError_OpConsistency of (Classifier * operation list)
-exception WFCPO_SyntaxError_TypeConsistency of (Classifier * Classifier * operation * operation)
 exception ClassGroupError of Rep_Core.Classifier list * string
 exception OpGroupError of Rep_Core.operation list * string
-exception WFCPOG_RefineError of string
+
 
 type RFM_args = {
      key : int,
@@ -157,9 +149,8 @@ fun map_public_classes fromPath toPath (model as (clist,alist)) =
 		   val s1 = ("SYNTAX ERROR: Class consistency \n\n")
 		   val s2 = ("The following public classes are not included in the refined class:\n\n") 
 		   val s3 = (String.concat (List.map (fn a => (" * " ^ (string_of_path (name_of a)) ^ "\n")) clist))
-		   val _ = trace exce (s1^s2^s3)
 	       in 
-		   raise WFCPOG_RefineError ("Please adjust model...\n")
+		   raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2^s3)
 	       end
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.map_public_classes\n")
     in
@@ -183,9 +174,8 @@ fun map_public_ops [] = [[]]
 							   val s3 = ("ToClass = " ^ (string_of_path (name_of t)) ^ "\n")
 							   val s4 = ("The following public operations are not included in the refined classes:\n\n") 
 							   val s5 = (String.concat (List.map (fn a => (" * " ^ (operation2string a) ^ "\n")) oplist))
-							   val _ = trace exce (s1^s2^s3^s4^s5)
 						       in 
-							   raise WFCPOG_RefineError ("Please adjust model...\n")
+							   raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2^s3^s4^s5)
 						       end     
 	    ))]
 	    @(map_public_ops tail)
@@ -217,16 +207,15 @@ fun map_types [] fP tP model = []
 	val c1 = class_of (new_path) (model)
 		 handle _ => 
 			let
-			    val _ = trace exce  ("\n\n#####################################################################\n")
-			    val _ = trace exce ("#####################################################################\n\n")
-			    val _ = trace exce ("SYNTAX ERROR: Map types \n\n")
-
-			    val _ = trace exce ("The return type of the operation " ^ (operation2string h3) ^ " is inconsistent.\n")
-			    val _ = trace exce ("The refining package has no corresponding class.\n")
-			    val _ = trace exce ("Existing FromClass = " ^ (string_of_path (name_of h1)) ^ "\n")
-			    val _ = trace exce ("Inexisting ToClass = " ^ (string_of_path (name_of h2)) ^ "\n")
+			    val s1 = ("\n\n#####################################################################\n")
+			    val s2 = ("#####################################################################\n\n")
+			    val s3 = ("SYNTAX ERROR: Map types \n\n")
+			    val s4 = ("The return type of the operation " ^ (operation2string h3) ^ " is inconsistent.\n")
+			    val s4 = ("The refining package has no corresponding class.\n")
+			    val s5 = ("Existing FromClass = " ^ (string_of_path (name_of h1)) ^ "\n")
+			    val s6 = ("Inexisting ToClass = " ^ (string_of_path (name_of h2)) ^ "\n")
 			in 
-			    raise WFCPOG_RefineError ("Please adjust model...\n")
+			    raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2^s3^s4^s5^s6)
 			end
 	(* name of the arguments *)
 	val _ = trace wgen ("map_types_6: " ^ string_of_path (name_of c1) ^ "\n")
@@ -239,16 +228,15 @@ fun map_types [] fP tP model = []
 				  class_of (rel_path) (model)
 				  handle _ => 
 					 let
-					     val _ = trace exce  ("\n\n#####################################################################\n")
-					     val _ = trace exce ("#####################################################################\n\n")
-					     val _ = trace exce ("SYNTAX ERROR: Map types \n\n")
-						     
-					     val _ = trace exce ("One of the arguments type of the operation " ^ (operation2string h3) ^ " is inconsistent.\n")
-					     val _ = trace exce ("The refining package has no corresponding class.\n")
-					     val _ = trace exce ("Existing FromClass = " ^ (string_of_path (name_of h1)) ^ "\n")
-					     val _ = trace exce ("Inexisting ToClass = " ^ (string_of_path (name_of h2)) ^ "\n")
+					     val s1 = ("\n\n########################################################\n")
+					     val s2 = ("########################################################\n\n")
+					     val s3 = ("SYNTAX ERROR: Map types \n\n")
+					     val s4 = ("One of the arguments type of the operation " ^ (operation2string h3) ^ " is inconsistent.\n")
+					     val s5 = ("The refining package has no corresponding class.\n")
+					     val s6 = ("Existing FromClass = " ^ (string_of_path (name_of h1)) ^ "\n")
+					     val s7 = ("Inexisting ToClass = " ^ (string_of_path (name_of h2)) ^ "\n")
 					 in 
-					     raise WFCPOG_RefineError ("Please adjust model...\n")
+					     raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2^s3^s4^s5^s6^s7)
 					 end
 			      end
 			  ) arg_class_name1
@@ -277,6 +265,11 @@ fun check_syntax_help (model:Rep.Model as (clist,alist)) fromPath toPath =
 	res
     end
 
+(**
+ * This is a redundent operation. It is used because
+ * the proog obligations for refinement needs to 
+*)
+(* 
 fun check_syntax' abs_path conc_path model = 
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.check_syntax'\n")
@@ -284,11 +277,20 @@ fun check_syntax' abs_path conc_path model =
 	val res = 
 	    if (member abs_path model_packages)
 	    then check_syntax_help model abs_path conc_path
-	    else raise WFCPOG_RefineError ("This specific constraint is not applicable for this model.\n")
+	    else 
+		let
+		    val s1 = ("\n\n########################################################\n")
+		    val s2 = ("########################################################\n\n")
+		    val s3 = ("SYNTAX ERROR: check_syntax'\n\n")
+		    val s4 = ("No classifier where found with the package name of the abstract path.\n")
+		in
+		    raise WFCPOG.WFCPOG_WFC_FailedException_ (s1^s2^s3^s4)
+		end
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.check_syntax'\n")
     in
 	res
     end
+*)
 
 fun check_syntax wfpo (model:Rep.Model as (clist,alist)) = 
     let
@@ -297,12 +299,20 @@ fun check_syntax wfpo (model:Rep.Model as (clist,alist)) =
 	val packages = (#rfm_tuples data)
 	val abstract_packages = List.map (fn (a,b) => a) packages
 	val model_packages = all_packages_of_model model
-	val res = if (List.all (fn a => member a model_packages) abstract_packages)
-		  then List.all (fn a => a) (List.map (fn a => check_syntax_help model (#1 a) (#2 a)) packages)
-		  else raise WFCPOG_RefineError ("This specific constraint is not applicable for this model.\n")
+	val check = List.all (fn a => if (member a model_packages)
+				      then List.all (fn a => a) (List.map (fn a => check_syntax_help model (#1 a) (#2 a)) packages)
+				      else
+					  let
+					      val s1 = ("\n\n########################################################\n")
+					      val s2 = ("########################################################\n\n")
+					      val s3 = ("SYNTAX ERROR: check_syntax'\n\n")
+					      val s4 = ("No classifier where found with the package name of the abstract path.\n")
+					  in
+					      raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2^s3^s4)
+					  end ) abstract_packages
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.check_syntax\n")
     in
-	res
+	check
     end
 
 fun get_holocl_operation var_name oper class model = 
@@ -359,14 +369,10 @@ fun refine_package abs_path conc_path (model as (clist,alist)) =
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.refine_package\n")
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.refine_package\n")
-	val syntax_check = check_syntax' abs_path conc_path model
 	val abs_classes = List.filter (fn a => (package_of a = abs_path) andalso (is_visible_cl a)) (clist)
 	val conc_classes = List.filter (fn a => (package_of a = conc_path) andalso (is_visible_cl a)) (clist)
 	val cl_grouped = group_cl abs_classes conc_classes
-	val res = 
-	    if syntax_check = true 
-	    then (List.concat (List.map (fn (a,b) => refine_classifier a b model) cl_grouped))
-	    else raise WFCPOG_RefineError ("Something went wrong.\n")
+	val res = (List.concat (List.map (fn (a,b) => refine_classifier a b model) cl_grouped))
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.refine_package\n")
     in
 	res

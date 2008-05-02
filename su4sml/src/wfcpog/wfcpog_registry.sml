@@ -199,8 +199,21 @@ val supported_wfs = [
      recommends      = [],
      apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.are_conditions_visible),
      data = Datatab.empty
-    },
-    (WFCPOG_Taxonomy_Constraint.WFCPOG_TAX_Data.put ({key=9,max_depth=5}) tax_workaround)
+    },     
+     (* TODO: insert this constraint for having a default value.                                       *)
+     (*                                                                                                *)
+     (*    (WFCPOG_Taxonomy_Constraint.WFCPOG_TAX_Data.put ({key=9,max_depth=5}) tax_workaround)       *)
+     (*                                                                                                *)
+    WFCPOG.WFPO{
+     identifier      = "wfc_tax", 
+     name            = "WFC Taxonomy Consistency",
+     description     = "Checks if the inheritance hierarchy is not deeper than n (default value n=5)\n",
+     recommended     = true,
+     depends         = [],
+     recommends      = [],
+     apply           = WFCPOG.WFC(WFCPOG_Taxonomy_Constraint.has_maxDepth),
+     data            = Datatab.empty 
+    }
     , 
     WFCPOG.WFPO{ 
      identifier      = "wfc_rfm", 

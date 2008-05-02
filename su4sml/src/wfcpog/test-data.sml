@@ -11,6 +11,7 @@ structure TAX_Data = WFCPOG_Taxonomy_Constraint.WFCPOG_TAX_Data
 val _ = Control.Print.printDepth:=30
 val _ = Control.Print.printLength:=30
 
+val _ = trace wgen "\n\n\n"
 
 (** ################# **)
 (** WELLFORMED-CHECKS **)
@@ -27,6 +28,9 @@ val _ = trace high ("............. visibility constraint loaded ...\n")
 (* TAXONOMY CONSTRAINT *)
 val wfc_tax = get_wfpo supported_wfs "wfc_tax"
 val _ = trace high ("............. taxonomy constraint loaded ...\n")
+
+val wfc_tax_5 = rename_wfpo "wfc_tax_5" (TAX_Data.put ({key=2,max_depth=5}) wfc_tax)
+
 
 (** REFINEMENT CONSTRAINT **)
 val wfc_rfm = get_wfpo supported_wfs "wfc_rfm"
@@ -70,6 +74,7 @@ val _ = trace high ("............. refinement constraints loaded ...\n")
 val po_rfm_SC = rename_wfpo "po_rfm_SC" (RFM_Data.put ({key=10,rfm_tuples=[(["AbstractSimpleChair04"],["ConcreteSimpleChair02"])]}) po_rfm)
 val _ = trace high ("............. refine pog constraint loaded ...\n")
 
+
 (* 
 val md0 = rename_wfpo "md0" (TAX_Data.put ({key=8,max_depth=0}) tax)
 val md1 = rename_wfpo "md1" (TAX_Data.put ({key=9,max_depth=1}) tax)
@@ -91,10 +96,10 @@ val pos = [po_lsk,po_cm,po_sm,po_cmd,po_quy]
 val wfs = [wfc_rfm_SC]
 val pos = [po_rfm_SC]
 *)
-
+(*
 val wfs = []
 val pos = [po_cm,po_sm]
-
+*)
 (* 
 val wfs = []
 val pos = [po_cstr]
@@ -104,3 +109,5 @@ val pos = [po_cstr]
 val wfs = [wfc_vis]
 val pos = []
 *)
+val wfs = [wfc_rfm]
+val pos = []

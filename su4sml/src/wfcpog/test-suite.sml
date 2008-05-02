@@ -136,7 +136,12 @@ fun start_tests model [] = []
 		false => (((name_of h) ^ (insert_dots (name_of h)) ^ "[FAILED]\n"))::(start_tests model wfpos)
 	      | true =>  (((name_of h) ^ (insert_dots (name_of h)) ^ "[OK]\n"))::(start_tests model wfpos)
 	end
-	handle WFCPOG_RefineError s => ((name_of h) ^ (insert_dots (name_of h)) ^ "[RefineEXCP]\n" ^ "       Error Msg: " ^ s ^ "\n")::(start_tests model wfpos)
+	handle WFCPOG.WFCPOG_WFC_FailedException s => 
+	       let 
+		   val _  = trace exce s
+	       in
+		   ((name_of h) ^ (insert_dots (name_of h)) ^ "[RefineEXCP]\n")::(start_tests model wfpos)
+	       end
 	     | x =>((name_of h) ^ (insert_dots (name_of h)) ^ "[ERROR]\n")::(start_tests model wfpos)
 	)
       | POG (a) =>
