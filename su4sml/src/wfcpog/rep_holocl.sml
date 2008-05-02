@@ -252,18 +252,7 @@ open Rep_OclTerm
 exception HolOcl_Helper_InvalidArguments of string
 
 
-fun type_of_t (Literal                (_,t)) = t
-  | type_of_t (CollectionLiteral      (_,t)) = t
-  | type_of_t (If           (_,_,_,_,_,_,t)) = t
-  | type_of_t (AssociationEndCall (_,_,_,t)) = t
-  | type_of_t (AttributeCall      (_,_,_,t)) = t
-  | type_of_t (OperationCall    (_,_,_,_,t)) = t
-  | type_of_t (OperationWithType(_,_,_,_,t)) = t
-  | type_of_t (Variable               (_,t)) = t
-  | type_of_t (Let            (_,_,_,_,_,t)) = t
-  | type_of_t (Iterate  (_,_,_,_,_,_,_,_,t)) = t
-  | type_of_t (Iterator     (_,_,_,_,_,_,t)) = t
-  | type_of_t (Predicate(_,_,_,_)) = Boolean
+fun type_of_t term = Rep_OclHelper.type_of term
 
 fun ocl_opcall (source:OclTerm) f args t  = OperationCall (source, type_of_t source, f,
                                                   map (fn x => (x,type_of_t x)) args,
