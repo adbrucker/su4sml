@@ -36,6 +36,7 @@ val wfc_tax_5 = rename_wfpo "wfc_tax_5" (TAX_Data.put ({key=2,max_depth=5}) wfc_
 val wfc_rfm = get_wfpo supported_wfs "wfc_rfm"
 val _ = trace high ("............. refinement constraints loaded ...\n")
 val wfc_rfm_SC = rename_wfpo "wfc_rfm_SC" (RFM_Data.put ({key=10,rfm_tuples=[(["AbstractSimpleChair04"],["ConcreteSimpleChair02"])]}) wfc_rfm)
+val wfc_rfm_SR= rename_wfpo "wfc_rfm_SR" (RFM_Data.put ({key=10,rfm_tuples=[(["AbstractOverriding"],["ConcreteOverriding"])]}) wfc_rfm)
 val _ = trace high ("............. refine wfc constraint loaded ...\n")
 
 
@@ -71,8 +72,11 @@ val _ = trace high ("............. command/query constraints loaded ...\n")
 (** REFINEMENT CONSTRAINT **)
 val po_rfm = get_wfpo supported_pos "po_rfm"
 val _ = trace high ("............. refinement constraints loaded ...\n")
-val po_rfm_SC = rename_wfpo "po_rfm_SC" (RFM_Data.put ({key=10,rfm_tuples=[(["AbstractSimpleChair04"],["ConcreteSimpleChair02"])]}) po_rfm)
+val po_rfm_SC = rename_wfpo "po_rfm_SR" (RFM_Data.put ({key=10,rfm_tuples=[(["AbstractSimpleChair04"],["ConcreteSimpleChair02"])]}) po_rfm)
 val _ = trace high ("............. refine pog constraint loaded ...\n")
+val po_rfm_SR = rename_wfpo "po_rfm_SR" (RFM_Data.put ({key=10,rfm_tuples=[(["AbstractOverriding"],["ConcreteOverriding"])]}) po_rfm)
+val _ = trace high ("............. refine pog constraint loaded ...\n")
+
 
 
 (* 
@@ -109,5 +113,5 @@ val pos = [po_cstr]
 val wfs = [wfc_vis]
 val pos = []
 *)
-val wfs = [wfc_rfm]
-val pos = []
+val wfs = [wfc_rfm_SR]
+val pos = [po_rfm_SR]

@@ -54,6 +54,11 @@ val testcases = [
     uml  = prefix^"stack/stack.zargo",
     ocl  = prefix^"stack/stack.ocl"
    },
+   { 
+    name = "simple_rfm",
+    uml  = prefix^"simple_rfm/simple_rfm.zargo",
+    ocl  = prefix^"simple_rfm/simple_rfm.ocl"
+   },
    {
     name = "company",
     uml  = prefix^"company/company.zargo",
