@@ -190,13 +190,15 @@ fun strengthen_postcondition wfpo (model as (clist,alist)) =
 	strengthen_postcondition_help cl model
     end
 
+
+
+
 fun conjugate_invariants_help [] model = []
   | conjugate_invariants_help (class::clist) model = 
     let
 	(* get the invariants of all parents *)
-	val invariants = all_invariants_of class model
-	val c_name = string_of_path (name_of class)
- 	val invs = List.map (fn (a,b) => (Predicate(b,type_of_term b,name_of_inv class,[selfarg (type_of class)]))) invariants 
+        val parents = parents_of class model
+ 	val invs = List.map (fn a => Predicate(Variable(varcounter.nextStr(),Rep_Core.type_of a),Rep_Core.type_of a,name_of_inv a,[selfarg (Rep_Core.type_of a)])) parents 
     in
 	if (List.length(invs) = 0)
 	then (conjugate_invariants_help clist model)
@@ -208,10 +210,8 @@ fun conjugate_invariants_help [] model = []
 fun conjugate_invariants wfpo (model as (clist,alist)) = 
     let 
 	val cl = removeOclLibrary clist
-	
     in
 	conjugate_invariants_help cl model
     end
 
 end
-

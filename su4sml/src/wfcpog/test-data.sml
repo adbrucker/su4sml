@@ -112,4 +112,4 @@ val wfs = [wfc_vis]
 val pos = []
 *)
 val wfs = []
-val pos = [po_om]
+val pos = [po_lsk]
