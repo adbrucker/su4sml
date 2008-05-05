@@ -384,16 +384,27 @@ fun is_pog (WFCPOG.WFPO wfpo) = case #apply wfpo of
 
 
 (* RETURN: ( bool list , po list) *)
-fun process_depends [] model acc = acc 
-  | process_depends (h::tail) model  acc =
+fun process_depends [] data model acc = acc 
+  | process_depends (h::tail) data model acc =
     let
+	fun set_data (new_data:Object.T table) (WFCPOG.WFPO{identifier,name,description,recommended,depends,recommends,apply,data}) = 
+	    WFCPOG.WFPO{
+	      identifier = identifier,
+	      name = name,
+	      description=description,
+	      recommended=recommended,
+	      depends=depends,
+	      recommends=recommends,
+	      apply=apply,
+	      data=new_data
+	    }
 	val _ = trace function_calls ("WFCPOG_Registry.process_depends\n")
-	val wfpo  = get_wfpo supported h
+	val wfpo  = set_data data (get_wfpo supported h)
 	val _ = trace wgen ("Dependent wfpo " ^ (name_of wfpo) ^ " found.\n")
 	val res = 
 	    case (WFCPOG.apply_of wfpo) of
-		WFCPOG.WFC(a) => (process_depends tail model ((#1 acc)@[a wfpo model],(#2 acc)))
-	      | WFCPOG.POG(a) => (process_depends tail model ((#1 acc),(#2 acc)@(a wfpo model)))
+		WFCPOG.WFC(a) => (process_depends tail data model ((#1 acc)@[a wfpo model],(#2 acc)))
+	      | WFCPOG.POG(a) => (process_depends tail data model ((#1 acc),(#2 acc)@(a wfpo model)))
 	val _ = trace function_ends ("WFCPOG_Registry.process_depends\n")
     in
 	res
@@ -417,7 +428,7 @@ fun check_wfc model (wfc_sel as WFCPOG.WFPO{identifier,name,description,recommen
 				     let
 					 val _ = trace wgen ("Dependent wfpos detected.\n")
 					 val _ = trace wgen ("Process dependencies ...\n")
-					 val (wfs,pos) = process_depends depends model ([],[])
+					 val (wfs,pos) = process_depends depends data model ([],[])
 					 val _ = trace wgen ("Dependencies processed ...\n")
 				     in
 					 (List.all (fn a => a = true) wfs)
@@ -443,7 +454,7 @@ fun check_wfcs model wfcs = List.all (fn v => (v = true)) (map (check_wfc model)
 fun generate_po model (wfc_sel as WFCPOG.WFPO{identifier,name,description,recommended,depends,recommends,apply,data}:WFCPOG.wfpo)  = 
     let
 	val _ = trace function_calls ("WFCPOG_Registry.generate_po\n")
-	val _ = trace wgen (name_of wfc_sel ^ "...............")
+	val _ = trace wgen (name_of wfc_sel ^ " ...............\n")
 	val res = 
 	    case (WFCPOG.apply_of wfc_sel) of
 		WFCPOG.POG (a) => (* (wfc_sel,a wfc_sel model) *)
@@ -451,7 +462,7 @@ fun generate_po model (wfc_sel as WFCPOG.WFPO{identifier,name,description,recomm
 		then (wfc_sel,a wfc_sel model)
 		else 
 		    let
-			val (wfs,pos) = process_depends depends model ([],[])
+			val (wfs,pos) = process_depends depends data model ([],[])
 		    in
 			if (List.all (fn a => a = true) wfs)
 			then (wfc_sel,pos@(a wfc_sel model))
