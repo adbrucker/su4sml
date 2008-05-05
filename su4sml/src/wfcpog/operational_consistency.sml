@@ -42,16 +42,7 @@
 (** Implementation of the wellformed constraint for a constructor *)
 signature WFCPOG_OPERATIONAL_CONSTRAINT = 
 sig
-    (** sub constraint, included in operational consistency.*)
-    val generate_secureUML_creators_po      : Rep_Core.Classifier -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
-    (** sub constraint, included in operational consistency.*)
-    val generate_secureUML_destructors_po   : Rep_Core.Classifier -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
-    (** sub constraint, included in operational consistency.*)
-    val generate_secureUML_getters_po       : Rep_Core.Classifier -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
-    val generate_secureUML_setters_po       : Rep_Core.Classifier -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
-    val generate_secureUML_op_sec_po        : Rep_Core.Classifier -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
-    val generate_pos                        : WFCPOG.wfpo -> Rep.Model -> (string * Rep_OclTerm.OclTerm) list
-
+    val implementable_operation : WFCPOG.wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
 end
 structure WFCPOG_Operational_Constraint : WFCPOG_OPERATIONAL_CONSTRAINT = 
 struct
@@ -63,7 +54,7 @@ open Rep_Core
 open Rep
 open Rep_OclTerm
 open Rep_OclType
-
+open Rep_HolOcl_Namespace
 (* OclParser *)
 open ModelImport
 
@@ -72,171 +63,45 @@ open WFCPOG_Library
 
 exception WFCPO_OperationalError
 	
-fun case_insensitive "" = ""
-  | case_insensitive s:string = 
-    let
-	fun to_lower [x] = [Char.toLower x]
-	  | to_lower (h::tail) = (Char.toLower h)::(to_lower tail)
-    in 
-	String.implode (to_lower (String.explode s))
-    end
 
-
-(* get corresponding operation x from x_sec of. *) 
-fun secureUML_real_op oper class model = 
+fun impl_op_operation class oper = 
     let
-	val name = name_of_op oper
-	val len = String.size name
-	val substr = String.substring (name,0,len-4)
+	val _ = trace function_calls ("WFCPOG_Operational_Consistency.prestate_complete_operation\n")
+	(* Generate Variables : (sigma_pre,sigma_post) => sigma *)
+	val sigma = Literal("sigma",OclState)
+	val sigma_s = Literal("sigma_s",OclState)
+	val tuple_type = TupleType ([("sigma",OclState),("sigma_s",OclState)])
+	val tuple_term = Tuple [("sigma",sigma,OclState),("sigma_s",sigma_s,OclState)]
+	(* local valid post *)
+	val pre_of_op = Predicate(Variable("self",type_of class),type_of class,name_of_pre class oper,args2varargs (arguments_of_op oper))
+	val post_of_op = Predicate(Variable("self",type_of class),type_of class,name_of_post class oper,args2varargs ((arguments_of_op oper)@[("result",DummyT)]))
+	val lv_post = OperationCall(post_of_op,Boolean,["holOclLib","Boolean","OclLocalValid"],[(tuple_term,OclState)],Boolean)
+	val impl = OperationCall (pre_of_op,Boolean,["holOclLib","Boolean","implies"],[(lv_post,Boolean)],Boolean)
+	val lv_state = OperationCall(impl,Boolean,["holOclLib","Boolean","OclLocalValid"],[(tuple_term,OclState)],Boolean)
+	val holocl_exists = Iterator("holOclLib.exists",[("sigma_s",OclState)],Literal("",DummyT),DummyT,lv_state,Boolean,Boolean)
+	val holocl_forall = Iterator("holOclLib.forall",[("sigma",OclState)],Literal("",DummyT),DummyT,holocl_exists,Boolean,Boolean)
+	val _ = trace function_ends ("WFCPOG_Operational_Consistency.prestate_complete_operaiton\n")
     in
-	get_operation substr class model
+	holocl_forall
     end
 
-fun secureUML_sec_op oper class model = 
+fun impl_op_classifier class (model as (clist,alist)) = 
     let
-	val name = name_of_op oper ^ "_sec"
+	val _ = trace function_calls ("WFCPOG_Operational_Consistency.prestate_complete_classifier\n")
+	val ops = all_operations_of class model
+	val res = (List.map (fn a => ((["po_class_model_"]@(name_of class)@["_"]@[(name_of_op a)]),(impl_op_operation class a))) ops)
+	val _ = trace function_ends ("WFCPOG_Operational_Consistency.prestate_complete_classifier\n")
     in
-	get_operation name class model 
+	res
     end
 
-fun secureUML_get_att_name oper = 
+fun implementable_operation wfc_sel (model as (clist,alist)) = 
     let
-	val name = name_of_op oper
-	val len = String.size name
+	val _ = trace function_calls ("WFCPOG_Operational_Consistency.prestate_complete\n")
+	val cl = removeOclLibrary clist
+	val res = List.concat (List.map (fn a => impl_op_classifier a model) cl )
+	val _ = trace function_ends ("WFCPOG_Operational_Consistency.prestate_complete\n")
     in
-	String.substring (name,0,len-4)
-    end
-
-(* *)
-fun secureUML_getter_operations_of class model = List.filter (fn a => String.isPrefix "get" (name_of_op a)) (local_operations_of class)
-(* *)
-fun secureUML_setter_operations_of class model = List.filter (fn a => String.isPrefix "set" (name_of_op a)) (local_operations_of class)
-(* *)
-fun secureUML_op_sec_operations_of class model = List.filter (fn a => String.isSuffix "_sec" (name_of_op a)) (local_operations_of class)
-
-fun secureUML_substitute_terms (OperationCall(src,typ,path,args,rtyp)) class = 
-    let
-	val op_name = List.last path
-	val p_len = List.length path
-	val p = List.take (path,p_len-1)
-    in    
-	if (name_of class) = p
-	then (* substitute operation x with x_sec *)
-	    (OperationCall(src,typ,p@[op_name^"_sec"],args,rtyp))
-	else OperationCall(src,typ,path,args,rtyp)
-    end
-  | secureUML_substitute_terms (AttributeCall(src,typ,path,rtyp)) class =
-    let
-	val att_name = List.last path
-	val p_len = List.length path
-	val p = List.take (path,p_len-1)
-    in
-	if (name_of class) = p
-	then (* substitute attribute x with operation getX() *)
-	    OperationCall(src,typ,p@["get"^att_name],[],rtyp)
-	else AttributeCall(src,typ,path,rtyp)
-    end
-  | secureUML_substitute_terms x class = x
-
-fun generate_secureUML_creators_po class (model as (clist,alist)) = 
-    let
-		val creators = creation_operations_of class model
-    in
-	(List.map (fn a => 
-		      let
-			  val op_res = result_of_op a
-			  val result = Variable("result",op_res)
-			  val term1 = OperationCall(result,op_res,(name_of class)@["oclIsUndefined"],[],Boolean)
-			  val term2 = OperationCall(result,op_res,(name_of class)@["modifiedOnly"],[],Boolean)
-		      in 
-			  (("oper_model_constr"^(string_of_path (name_of class))),OperationCall(term1,Boolean,["oclLib","Boolean","and"],[(term2,Boolean)],Boolean))
-		      end
-		  ) creators)
-    end
-
-fun generate_secureUML_destructors_po class (model as (clist,alist)) =  
-    let
-	val destructors = destruction_operations_of class model
-    in
-	(List.map (fn a => 
-		      let
-			  val self = Variable("self",type_of class)
-			  val term1 = OperationCall(self,type_of class,(name_of class)@["oclIsUndefined"],[],Boolean)
-			  val atPre = OperationCall(self,type_of class,["oclLib","OclAny","atPre"],[],type_of class)
-			  val term2 = OperationCall(atPre,type_of class,(name_of class)@["modifiedOnly"],[],Boolean)
-		      in
-			  (("oper_model_destr_"^(string_of_path (name_of class))),OperationCall(term1,Boolean,["oclLib","Boolean","and"],[(term2,Boolean)],Boolean))
-		      end
-		  ) destructors)
-    end
-	
-fun generate_secureUML_getters_po class (model as (clist,alist)) = 
-    let
-	val getter = secureUML_getter_operations_of class model
-    in
-	(List.map (fn a =>
-		      let
-			  val op_res = result_of_op a
-			  val att_name = secureUML_get_att_name a
-			  val result = Variable("result",op_res)
-			  val self = Variable("self",type_of class)
-			  val atCall = AttributeCall(self,type_of class,(name_of class)@[(att_name)],op_res)
-		      in
-			  (("oper_model_getters_"^(string_of_path (name_of class))),OperationCall(result,op_res,["oclLib","Boolean","="],[(atCall,op_res)],Boolean))
-		      end
-		  ) getter)
-    end
-
-fun generate_secureUML_setters_po class (model as (clist,alist)) = 
-    let
-	val setter = secureUML_setter_operations_of class model
-    in
-    	(List.map (fn a =>
-		      let
-			  val (name,arg_type)= hd(arguments_of_op a)
-			  val self = Variable("self",type_of class)
-			  val att_name = secureUML_get_att_name a
-			  val arg = Variable(name,arg_type)
-			  val att = AttributeCall(self,type_of class,(name_of class)@[att_name],arg_type)
-			  val term1 = OperationCall(att,arg_type,["oclLib","Boolean","="],[(arg,arg_type)],Boolean)
-			  val term2 = OperationCall(att,arg_type,(name_of class)@["modifiedOnly"],[],Boolean)
-		      in
-			  (("oper_model_setters_"^(string_of_path (name_of class))),OperationCall(term1,Boolean,["oclLib","Boolean","and"],[(term2,Boolean)],Boolean))
-		      end
-		  ) setter)
-    end
-	
-fun generate_secureUML_op_sec_po class (model as (clist,alist)) =
-    let
-	val op_sec = secureUML_op_sec_operations_of class model
-    in
-	List.concat (List.map (fn a =>
-		      let
-			  val real_op = secureUML_real_op a class model
-			  val add_pres = List.map (fn (a,b) => (case a of
-								    NONE => (("pre_"^(string_of_path(name_of class))),b)
-								  | SOME(x) => (x,b))) (precondition_of_op real_op)
-			  val real_posts = postcondition_of_op real_op
-			  val add_posts = List.map (fn (a,b) => (case a of
-								     NONE => (("post_"^(string_of_path(name_of class))),(secureUML_substitute_terms b class))
-								   | SOME(x) => (x,(secureUML_substitute_terms b class)))) (real_posts)
-		      in
-			  add_pres@add_posts
-		      end
-		  ) op_sec)
-    end
-
-
-
-fun generate_pos wfpo (model as (clist,alist)) = (* [Variable("s",DummyT)] *)
-    let
-	val design_model_classes = removeOclLibrary clist
-	val po1 = List.map (fn a => generate_secureUML_creators_po a model) design_model_classes 
-	val po2 = List.map (fn a => generate_secureUML_destructors_po a model) design_model_classes 
-	val po3 = List.map (fn a => generate_secureUML_getters_po a model) design_model_classes 
-	val po4 = List.map (fn a => generate_secureUML_setters_po a model) design_model_classes 
-	val po5 = List.map (fn a => generate_secureUML_op_sec_po a model) design_model_classes 
-    in
-	List.concat(po1@po2@po3@po4@po5)
+	res
     end
 end;

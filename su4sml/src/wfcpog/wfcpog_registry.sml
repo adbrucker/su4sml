@@ -128,7 +128,12 @@ fun add_wfpo wfpo = ((wfpos := [wfpo]@(!wfpos));())
 fun del_wfpo wfpo_id = ((wfpos := List.filter (fn w => not ((WFCPOG.id_of w) = (wfpo_id)) ) 
 			   (!wfpos));())
 
-fun get_wfpo [] x = raise WFCPOG_RegistryError ("No ID = " ^ x ^ " found in given list!\n")
+fun get_wfpo [] x = 
+    let
+	val _ = trace exce ("No ID = " ^ x ^ " found in given list!\n")
+    in 
+	raise WFCPOG_RegistryError ("No ID = " ^ x ^ " found in given list!\n")
+    end
   | get_wfpo (h::tail) x = 
     if (id_of h = x) 
     then h
@@ -358,17 +363,17 @@ val supported_pos = [
      apply           = WFCPOG.POG(WFCPOG_Constructor_Constraint.attributes_are_inited),
      data            = Datatab.empty
     }
-    (*,
+    ,
     WFCPOG.WFPO{
-     identifier      = "oper_model", (* identifier                     *) 
+     identifier      = "po_oper_model", (* identifier                     *) 
      name            = "Operational model consistency",
-     description     = "Inserts the additional proof obligations resulting from the SecureUML transformation",
+     description     = "Inserts the additional proof obligations resulting from the operational model consistency.",
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.POG(WFCPOG_Operational_Constraint.generate_pos),
+     apply           = WFCPOG.POG(WFCPOG_Operational_Constraint.implementable_operation),
      data = Datatab.empty
-    }*)
+    }
 ]
 
 val supported = supported_wfs@supported_pos
