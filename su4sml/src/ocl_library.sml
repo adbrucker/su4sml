@@ -1141,6 +1141,12 @@ val oclLib =
            result=Boolean,scope=XMI.InstanceScope,
            visibility=XMI.public,stereotypes=[]
 	  },
+	  {
+	   arguments=[],isQuery=true,name="oclIsDefined",
+           body=[],postcondition=[],precondition=[],
+           result=Boolean,scope=XMI.InstanceScope,
+           visibility=XMI.public,stereotypes=[]
+	  },
           {
 	   arguments=[],isQuery=true,name="atPre",body=[],postcondition=[],
            precondition=[],result=OclAny,
