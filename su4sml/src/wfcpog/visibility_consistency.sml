@@ -42,8 +42,6 @@
 (** Implementation of the Liskov Substitiution Principle. *)
 signature WFCPOG_VISIBILITY_CONSTRAINT =
 sig
-    val are_conditions_visible : WFCPOG.wfpo -> Rep.Model -> bool
-
     (** 
      * Checks if the visibility of the class is at least as visible
      * as the most visible member.
@@ -67,9 +65,8 @@ sig
      * pre-conditions should only contain feature calls that are at least as visible as 
      * the operation itself.
      *)
-(*
-    val constraint_desing_by_contract_consistency : WFCPOG.wfpo -> Rep.Model -> bool
-*)
+    val constraint_design_by_contract_consistency : WFCPOG.wfpo -> Rep.Model -> bool
+
 end
 structure WFCPOG_Visibility_Constraint:WFCPOG_VISIBILITY_CONSTRAINT = 
 struct
@@ -171,87 +168,6 @@ and expr_is_visible modif (Literal(s,typ)) model = true
   | expr_is_visible modif (Iterator(name,vars,src,styp,body,btyp,rtyp)) model = 
     (expr_is_visible modif src model) andalso (expr_is_visible modif body model)
 
-
-fun are_conditions_visible_help [] model = true
-  | are_conditions_visible_help (h::classes) (model as (clist,alist)) = 
-    if (not (is_visible_cl h))
-    then 
-	let
-	    val _ = trace 50 ("Classifier " ^ (string_of_path (name_of h)) ^ " is not visible.\n")
-	in
-	    are_conditions_visible_help classes model
-	end
-    else
-	let
-	    val _ = trace 50 ("Classifier " ^ (string_of_path (name_of h)) ^ " is visible.\n")
-	    val pub_op = List.map (fn a => 
-				      let
-					  val _ = trace 50 ("public operation = " ^ (name_of_op a) ^ "\n")
-					  val posts = postcondition_of_op a
-				      in
-					  List.map (fn (x,y) => 
-						       let
-							   val _ = trace 50 ("next post: \n" )
-						       in
-							   if (expr_is_visible public y model)
-							   then true
-							   else raise WFCPOG.WFCPOG_WFC_FailedException ("WFC not hold in class " ^ (string_of_path (name_of h)) ^ " in the condition " ^ (valOf (x)) ^ " with term: " ^ (ocl2string false y) ^ "\n")
-						       end
-						   ) posts
-				      end
-				  ) (public_operations_of h model)
-	    val _ = trace 50 ("public operations done.\n\n")
-	    val pac_op = List.map (fn a => 
-				      let
-					  val _ = trace 50 ("package operations = " ^ (name_of_op a) ^ "\n")
-					  val posts = postcondition_of_op a
-				      in
-					  List.map (fn (x,y) => 
-						       let
-							   val _ = trace 50 ("next post: \n" )
-						       in
-							   if (expr_is_visible public y model)
-							   then true
-							   else raise WFCPOG.WFCPOG_WFC_FailedException ("WFC not hold in class " ^ (string_of_path (name_of h)) ^ " in the condition " ^ (valOf (x)) ^ " with term: " ^ (ocl2string false y) ^ "\n")
-						       end
-						   ) posts
-				      end
-				  ) (package_operations_of h model)
-	    val _ = trace 50 ("package operations done.\n\n")
-	    val pro_op = List.map (fn a => 
-				      let
-					  val _ = trace 50 ("protected operations " ^ (name_of_op a) ^ "\n")
-					  val posts = postcondition_of_op a
-				      in
-					  List.map (fn (x,y) => 
-						       let
-							   val _ = trace 50 ("next post: \n" )
-						       in
-							   if (expr_is_visible public y model)
-							   then true
-							   else raise WFCPOG.WFCPOG_WFC_FailedException ("WFC not hold in class " ^ (string_of_path (name_of h)) ^ " in the condition " ^ (valOf (x)) ^ " with term: " ^ (ocl2string false y) ^ "\n")
-						       end
-						   ) posts
-				      end
-				  ) (protected_operations_of h model)
-	    val _ = trace 50 ("protected operations done.\n\n")
-	    val _ = trace 50 ("visibility" ^ (string_of_path (name_of h)) ^ " done.\n")
-	in
-	    if (List.all (fn a => a) (List.concat (pub_op@pro_op@pac_op)))
-	    then are_conditions_visible_help classes model
-	    else false
-	end
-
-fun are_conditions_visible wfpo (model:Rep.Model as (clist,alist)) =
-    let
-	val _ = trace function_calls ("WF_visibility_CS.are_conditions_visible\n")
-	val classes = removeOclLibrary clist
-	val _ = trace 50 ("OclLibrary removed ...\n")
-	val res = are_conditions_visible_help classes model
-	val _ = trace function_ends ("WF_visibility_CS.are_conditions_visible\n")
-    in
-	res
-    end
 
 fun check_visibility_of_classifier class model = 
     let
@@ -386,9 +302,35 @@ fun check_runtime_classifier class model =
 				 raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
 			     end) invs_vis
     in
-	List.all (fn a => a = true) (check_inv@check_pre@check_post)
+	List.all (fn a => a = true) (check_pre@check_post@check_inv)
     end
 
+
+fun check_design_classifier class model = 
+    let
+	val ops_pre = List.map (fn a => (a,(precondition_of_op a))) (all_operations_of class model)
+	val ops_pre_vis = 
+	    List.concat (
+	    List.map (fn (a,b) => 
+				       let
+					   val op_vis = (#visibility a)
+				       in
+					   List.map (fn (opt_name,expr) => ((name_of_op a),opt_name,(expr_is_visible op_vis expr model))) b
+				       end) ops_pre)
+	val check_pre = 
+	    List.map (fn (a,b,c) =>
+			 if c = true
+			 then true
+			 else 
+			     let
+				 val s1 = "SYNTAX ERROR: Visibility design by contract consistency\n\n"
+				 val s2 = "Classifier " ^ (string_of_path (name_of class)) ^ " has in operation " ^ a ^ " in the precondition " ^ (opt2string b) ^ " inconsistent modificators.\n"
+			     in
+				 raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+			     end) ops_pre_vis
+    in
+	List.all (fn a => a = true) check_pre
+    end
 
 fun model_entity_consistency_help [] model = [true]
   | model_entity_consistency_help (h::classes) model = 
@@ -414,6 +356,14 @@ fun constraint_check_by_runtime_consistency_help [] model = [true]
 	(check)::(constraint_check_by_runtime_consistency_help classes model)
     end
 
+fun constraint_design_by_contract_consistency_help [] model = [true]
+  | constraint_design_by_contract_consistency_help (h::classes) model =
+    let
+	val check = check_design_classifier h model
+    in
+	(check)::(constraint_design_by_contract_consistency_help classes model)
+    end
+
 fun model_entity_consistency wfc_sel (model as (clist,alist)) =
     let
 	(* remove OclLibrary *)
@@ -427,7 +377,8 @@ fun model_entity_consistency wfc_sel (model as (clist,alist)) =
 fun model_inheritance_consistency wfc_sel (model as (clist,alist)) = 
     let
 	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.model_inheritance_consistency\n")
-	val classes = removeOclLibrary (clist)
+	val cl = removeOclLibrary (clist)
+	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
 	val res  = List.all (fn a => a = true) (model_inheritance_consistency_help classes model)
 	val _ = trace function_ends ("WFCPOG_Visibility_Constraint.model_inheritance_consistency\n")
     in
@@ -437,14 +388,22 @@ fun model_inheritance_consistency wfc_sel (model as (clist,alist)) =
 fun constraint_check_by_runtime_consistency wfc_sel (model as (clist,alist)) = 
     let
 	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency\n")
-	val classes = removeOclLibrary clist
+	val cl = removeOclLibrary clist
+	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
 	val res = List.all (fn a => a = true) (constraint_check_by_runtime_consistency_help classes model)
 	val _ = trace function_ends ("WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency\n")
     in
 	res
     end
 
-(*    
-fun constratin_design_by_constract_consistency 
-*)
+fun constraint_design_by_contract_consistency wfc_sel (model as (clist,alist)) = 
+    let
+	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.constraint_design_by_contract_consistency\n")
+	val cl = removeOclLibrary clist
+	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
+	val res = List.all (fn a => a = true) (constraint_design_by_contract_consistency_help classes model)
+ 	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.constraint_design_by_contract_consistency\n")
+    in
+	res
+    end
 end;

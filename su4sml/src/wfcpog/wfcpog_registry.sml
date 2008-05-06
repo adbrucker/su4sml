@@ -225,21 +225,22 @@ val supported_wfs = [
      apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency),
      data = Datatab.empty
     },
-WFCPOG.WFPO{
-     identifier      = "wfc_vis_runtime", 
-     name            = "WFC Visibility Consistency (complete)",
-     description     = "Runtime checking/enforcement in mind:\n pre-condition, post-conditions, invariants are shall only contain \n calls to visible features (i.e., public features of other classes, \n package features of other classes within the same package, \n protected features of superclasses, and own private features).\n",
+    WFCPOG.WFPO{
+     identifier      = "wfc_vis_design_by_contract", 
+     name            = "WFC Visibility Consistency (design_by_contract)",
+     description     = "Design by contract in mind: \n Here, clients (callers) should be able to check/establish the pre-condition of operations: \n pre-conditions should only contain feature calls that are at least as visible as \n the operation itself.",
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency),
+     apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.constraint_design_by_contract_consistency),
      data = Datatab.empty
-    },WFCPOG.WFPO{
+    },
+    WFCPOG.WFPO{
      identifier      = "wfc_vis", 
      name            = "WFC Visibility Consistency (complete)",
      description     = "Three checks forced: \n wfc_vis_runtime \n wfc_vis_class \n wfc_vis_inheritance",
      recommended     = false,
-     depends         = ["wfc_vis_class","wfc_vis_inheritance"],
+     depends         = ["wfc_vis_class","wfc_vis_inheritance","wfc_vis_design_by_contract"],
      recommends      = [],
      apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency),
      data = Datatab.empty
