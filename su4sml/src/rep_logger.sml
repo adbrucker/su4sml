@@ -93,7 +93,10 @@ fun get_offset () = get_spaces (!line_offset)
 
 fun inc_offset () = line_offset := (!line_offset)+2
 
-fun dec_offset () = line_offset := (!line_offset)-2
+fun dec_offset () = 
+    if (!line_offset = 0)
+    then line_offset := 0
+    else line_offset := (!line_offset)-2
 
 (* debugging-levels *)
 val zero = 0
