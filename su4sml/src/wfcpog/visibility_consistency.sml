@@ -43,16 +43,16 @@
 signature WFCPOG_VISIBILITY_CONSTRAINT =
 sig
     val are_conditions_visible : WFCPOG.wfpo -> Rep.Model -> bool
-(*
+
     (** 
      * Checks if the visibility of the class is at least as visible as 
      * as the most visible member.
      *)
-    val model_class_consistency                  : WFCPOG.wfpo -> Rep.Model -> bool
+    val model_entity_consistency                  : WFCPOG.wfpo -> Rep.Model -> bool
     (**
      * Checks if the modificators of overriden features are maintained in the subclasses.
      *)
-    val model_inheritence_consistency                   : WFCPOG.wfpo -> Rep.Model -> bool
+    val model_inheritance_consistency                   : WFCPOG.wfpo -> Rep.Model -> bool
     (**
      * Runtime checking/enforcement in mind:
      * pre-condition, post-conditions, invariants are shall only contain
@@ -61,6 +61,7 @@ sig
      * protected features of superclasses, and own private features).
      * Checks the pre-,postconditions and invariants with respect to 
      *)
+(*
     val constraint_check_by_runtime_consistency   : WFCPOG.wfpo -> Rep.Model -> bool
     (** 
      * Design by contract in mind: 
@@ -91,6 +92,7 @@ open WFCPOG_Library
 
 exception WFCPOG_VisibilityError of string
 
+type Visibility = XMI_DataTypes.VisibilityKind
 
 fun modificator_conforms_to private private = true
   | modificator_conforms_to protected private = true
@@ -248,11 +250,124 @@ fun are_conditions_visible wfpo (model:Rep.Model as (clist,alist)) =
     in
 	res
     end
+
+
+fun visibility2string public = "public"
+  | visibility2string package = "package"
+  | visibility2string protected = "protected"
+  | visibility2string private = "private"
+
+fun visibility_conform public _ = true
+  | visibility_conform package public = false
+  | visibility_conform package _ = true
+  | visibility_conform protected protected = true
+  | visibility_conform protected private = true
+  | visibility_conform protected _ = false
+  | visibility_conform private private = true
+  | visibility_conform private _ = false
+
+fun check_visibility_of_classifier class model = 
+    let
+	val vis_ops = List.map (fn (a:operation) => ((#visibility a),[a],[],[])) (all_operations_of class model)
+	val vis_atts = List.map (fn (a:attribute) => ((#visibility a),[],[a],[])) (all_attributes_of class model)
+	val vis_assocs = List.map (fn (a:associationend) => ((#visibility a),[],[],[a])) (all_associationends_of class model)
+	val vis_class = visibility_of class
+	val _ = 
+	    List.map (fn ((a:Visibility),x,y,z) => 
+			 if (visibility_conform vis_class a)
+			 then ()
+			 else 
+			     let
+				 val s1 = "SYNTAX ERROR: Visibility consistency\n\n"
+				 val s2 = "Classifier " ^ (string_of_path (name_of class)) ^ " is not visible enough.\n"
+				 val s3 = "Visibility of classifer: " ^ (visibility2string (visibility_of class)) ^ ".\n"
+				 val s4 = case List.length(x) of
+					      1 => ("Visibility of operation " ^ (name_of_op (List.hd(x))) ^ " : " ^ (visibility2string a))
+					    | _ => ""
+				 val s5 = case List.length(y) of
+					      1 => ("Visibility of attribute " ^ (name_of_att (List.hd(y))) ^ " : " ^ (visibility2string a))
+					    | _ => ""
+				 val s6 = case List.length(z) of
+					      1 => ("Visibility of operation " ^ (name_of_aend (List.hd(z))) ^ " : " ^ (visibility2string a))
+					    | _ => ""
+			     in
+				 raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2^s3^s4^s5^s6)
+			     end
+		     ) ((vis_ops)@(vis_atts)@(vis_assocs))
+    in
+	true
+    end
+    
+    
+fun check_inheritance_visibility_of_classifier class model =
+    let
+	(* modified operations *)
+        val mod_ops_this = modified_operations_of class model
+					  (* TODO: support for 
+					   * - modified_attributes_of
+					   * - modified_associationends_of
+					   *)
+	val mod_ops_super_this = List.map (fn oper =>
+					      let 
+						  val op_name = name_of_op oper
+						  val super_class = go_up_hierarchy class (class_has_local_op op_name model) model
+						  val super_op = get_operation op_name super_class model
+					      in
+						  (super_class,super_op,oper)
+					      end) mod_ops_this
+						  
+	val _ = 
+	    List.map (fn (super,sop,this_op) =>
+			 if (visibility_conform (#visibility this_op) (#visibility sop))
+			 then ()
+			 else 
+			     let
+				 val s1 = "SYNTAX ERROR: Visibility inheritance consistency\n\n"
+				 val s2 = "Classifier " ^ (string_of_path (name_of class)) ^ " has inconsistent visibility for the overriden operation: " ^ (name_of_op this_op) ^ ".\n"
+				 val s3 = "Visibility of the overriden operation : " ^ (visibility2string (#visibility this_op)) ^ ".\n"
+				 val s4 = "Visibility of the original operation (located in " ^ (string_of_path (name_of super)) ^ " ) : " ^ (visibility2string (#visibility sop)) ^ ".\n" 
+			     in
+				 raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2^s3^s4)
+			     end
+		     ) mod_ops_super_this
+	val _ = trace function_ends ("WFCPOG_Visibility_Consistency.check_inheritance_visibility_consistency\n")
+    in
+	true
+    end
+					      
+
+
+fun model_entity_consistency_help [] model = true
+  | model_entity_consistency_help (h::classes) model = 
+    let 
+	val _ = check_visibility_of_classifier h model
+    in
+	model_entity_consistency_help classes model
+    end
+
+fun model_inheritance_consistency_help [] model = true
+  | model_inheritance_consistency_help (h::classes) model = 
+    let
+	val _ = check_inheritance_visibility_of_classifier h model
+    in
+	model_inheritance_consistency_help classes model
+    end
+		
+
+fun model_entity_consistency wfc_sel (model as (clist,alist)) =
+    let
+	val classes = removeOclLibrary (clist)
+    in
+	model_entity_consistency_help classes model
+    end
+
+fun model_inheritance_consistency wfc_sel (model as (clist,alist)) = 
+    let
+	val classes = removeOclLibrary (clist)
+    in
+	model_inheritance_consistency_help classes model
+    end
 (* 
-fun model_class_consistency
-
-fun model_inheritance_consistency
-
 fun constraint_check_by_runtime_consistency
 
 fun constratin_design_by_constract_consistency 
