@@ -94,21 +94,20 @@ exception WFCPOG_VisibilityError of string
 
 type Visibility = XMI_DataTypes.VisibilityKind
 
-fun modificator_conforms_to private private = true
-  | modificator_conforms_to protected private = true
-  | modificator_conforms_to package private = true
-  | modificator_conforms_to public private = true
 
-  | modificator_conforms_to protected protected = true
-  | modificator_conforms_to package protected = true
-  | modificator_conforms_to public protected = true
+fun visibility2string public = "public"
+  | visibility2string package = "package"
+  | visibility2string protected = "protected"
+  | visibility2string private = "private"
 
-  | modificator_conforms_to package package = true
-  | modificator_conforms_to public package = true
-
-  | modificator_conforms_to public public = true
-
-  | modificator_conforms_to x y = false
+fun visibility_conforms_to public _ = true
+  | visibility_conforms_to package public = false
+  | visibility_conforms_to package _ = true
+  | visibility_conforms_to protected protected = true
+  | visibility_conforms_to protected private = true
+  | visibility_conforms_to protected _ = false
+  | visibility_conforms_to private private = true
+  | visibility_conforms_to private _ = false
 
 fun expr_is_visible_CollPart modif (CollectionItem(term,typ)) model = expr_is_visible modif term model
   | expr_is_visible_CollPart modif (CollectionRange(first,last,typ)) model = 
@@ -131,7 +130,7 @@ and expr_is_visible modif (Literal(s,typ)) model = true
 	val att = get_attribute att_name cl model
 	val _ = trace 50 ("end expr_is_visible")
     in
-	if (modificator_conforms_to (#visibility att) modif)
+	if (visibility_conforms_to (#visibility att) modif)
 	then (expr_is_visible modif src model)
 	else false
     end    
@@ -147,7 +146,7 @@ and expr_is_visible modif (Literal(s,typ)) model = true
 	val oper = get_operation op_name cl model
 	val _ = trace 50 ("end expr_is_visible")
     in
-	if (modificator_conforms_to (#visibility oper) modif) 
+	if (visibility_conforms_to (#visibility oper) modif) 
 	then ((List.all (fn (a,b) => (expr_is_visible modif a model)) args) andalso (expr_is_visible modif src model))
 	else false
     end
@@ -159,7 +158,7 @@ and expr_is_visible modif (Literal(s,typ)) model = true
 	val att = get_attribute att_name cl model
 	val _ = trace 100 ("end expr_is_visible")
     in
-	if (modificator_conforms_to (#visibility att) modif)
+	if (visibility_conforms_to (#visibility att) modif)
 	then (expr_is_visible modif src model)
 	else false
     end
@@ -170,6 +169,8 @@ and expr_is_visible modif (Literal(s,typ)) model = true
     (expr_is_visible modif src model) andalso (expr_is_visible modif body model)
   | expr_is_visible modif (Iterator(name,vars,src,styp,body,btyp,rtyp)) model = 
     (expr_is_visible modif src model) andalso (expr_is_visible modif body model)
+
+
 fun are_conditions_visible_help [] model = true
   | are_conditions_visible_help (h::classes) (model as (clist,alist)) = 
     if (not (is_visible_cl h))
@@ -251,21 +252,6 @@ fun are_conditions_visible wfpo (model:Rep.Model as (clist,alist)) =
 	res
     end
 
-
-fun visibility2string public = "public"
-  | visibility2string package = "package"
-  | visibility2string protected = "protected"
-  | visibility2string private = "private"
-
-fun visibility_conform public _ = true
-  | visibility_conform package public = false
-  | visibility_conform package _ = true
-  | visibility_conform protected protected = true
-  | visibility_conform protected private = true
-  | visibility_conform protected _ = false
-  | visibility_conform private private = true
-  | visibility_conform private _ = false
-
 fun check_visibility_of_classifier class model = 
     let
 	val vis_ops = List.map (fn (a:operation) => ((#visibility a),[a],[],[])) (all_operations_of class model)
@@ -274,7 +260,7 @@ fun check_visibility_of_classifier class model =
 	val vis_class = visibility_of class
 	val _ = 
 	    List.map (fn ((a:Visibility),x,y,z) => 
-			 if (visibility_conform vis_class a)
+			 if (visibility_conforms_to vis_class a)
 			 then ()
 			 else 
 			     let
@@ -318,7 +304,7 @@ fun check_inheritance_visibility_of_classifier class model =
 						  
 	val _ = 
 	    List.map (fn (super,sop,this_op) =>
-			 if (visibility_conform (#visibility this_op) (#visibility sop))
+			 if (visibility_conforms_to (#visibility this_op) (#visibility sop))
 			 then ()
 			 else 
 			     let
@@ -334,7 +320,69 @@ fun check_inheritance_visibility_of_classifier class model =
     in
 	true
     end
+
 					      
+fun check_runtime_classifier class model = 
+    let
+	val ops_pre = List.map (fn a => (a,(precondition_of_op a))) (all_operations_of class model)
+	val ops_pre_vis = 
+	    List.concat (
+	    List.map (fn (a,b) => 
+				       let
+					   val op_vis = (#visibility a)
+				       in
+					   List.map (fn (opt_name,expr) => ((name_of_op a),opt_name,(expr_is_visible op_vis expr model))) b
+				       end) ops_pre)
+	val ops_post = List.map (fn a => (a,(postcondition_of_op a))) (all_operations_of class model)
+	val ops_post_vis = 
+	    List.concat (
+	    List.map (fn (a,b) => 
+					let
+					    val op_vis = (#visibility a)
+					in
+					    List.map (fn (opt_name,expr) => ((name_of_op a),opt_name,(expr_is_visible op_vis expr model))) b
+					end)  ops_post)
+	val invs = all_invariants_of class model
+	val invs_vis = List.map (fn (a,b) =>
+				    let
+					val class_vis = (visibility_of class)
+				    in
+					(a,expr_is_visible class_vis b model)
+				    end) invs
+	val check_pres = 
+	    List.map (fn (a,b,c) =>
+			 if c = true
+			 then ()
+			 else 
+			     let
+				 val s1 = "error"
+			     in
+				 raise WFCPOG.WFCPOG_WFC_FailedException s1
+			     end) ops_pre_vis
+
+	val check_post =
+	    List.map (fn (a,b,c) =>
+			 if c = true
+			 then ()
+			 else
+			     let
+				 val s1 = "error"
+			     in
+				 raise WFCPOG.WFCPOG_WFC_FailedException s1
+			     end) ops_post_vis
+	val check_invs = 
+	    List.map (fn (a,b) =>
+			 if b = true
+			 then () 
+			 else
+			     let 
+				 val s1 = "error"
+			     in
+				 raise WFCPOG.WFCPOG_WFC_FailedException s1
+			     end) invs_vis
+    in
+	true
+    end
 
 
 fun model_entity_consistency_help [] model = true
@@ -352,7 +400,14 @@ fun model_inheritance_consistency_help [] model = true
     in
 	model_inheritance_consistency_help classes model
     end
-		
+	
+fun constraint_check_by_runtime_consistency_help [] model = true
+  | constraint_check_by_runtime_consistency_help (h::classes) model =
+    let
+	val _ = check_runtime_classifier h model
+    in
+	constraint_check_by_runtime_consistency_help classes model
+    end
 
 fun model_entity_consistency wfc_sel (model as (clist,alist)) =
     let
@@ -367,9 +422,15 @@ fun model_inheritance_consistency wfc_sel (model as (clist,alist)) =
     in
 	model_inheritance_consistency_help classes model
     end
-(* 
-fun constraint_check_by_runtime_consistency
 
+fun constraint_check_by_runtime_consistency wfc_sel (model as (clist,alist)) = 
+    let
+	val classes = removeOclLibrary clist
+    in
+	constraint_check_by_runtime_consistency_help classes model
+    end
+
+(*    
 fun constratin_design_by_constract_consistency 
 *)
 end;
