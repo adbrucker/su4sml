@@ -217,10 +217,10 @@ fun get_operation s classifier model =
 
 fun get_attribute s classifier model = 
     let
-	val x = List.find (fn a => if ((#name a) = s) then true else false) (attributes_of classifier)
+	val x = List.find (fn a => if ((#name a) = s) then true else false) (all_attributes_of classifier model)
     in
 	case x of
-	    NONE => raise WFCPOG_LibraryError ("No operation found using 'get_attribute'.\n")
+	    NONE => raise WFCPOG_LibraryError ("No attribute found using 'get_attribute'.\n")
 	  | SOME (x) => x
     end
 
