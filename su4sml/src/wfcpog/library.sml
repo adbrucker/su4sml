@@ -81,6 +81,8 @@ sig
     val args2varargs              : (string * Rep_OclType.OclType) list -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list
     (** Add self as argument *)
     val selfarg                   : Rep_OclType.OclType -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType)
+    (** Print option *)
+    val opt2string                : string option -> string
     (** Any kind of exceptions. *)
     exception WFCPOG_LibraryError of string
 end
@@ -102,6 +104,11 @@ open XMI_DataTypes
 
 
 exception WFCPOG_LibraryError of string 
+
+
+fun opt2string (NONE) = ""
+  | opt2string (SOME(s)) = s
+
 
 fun name_of_precondition ((a:string option),(t:OclTerm)) = a
 
