@@ -598,6 +598,12 @@ val inherited_attributes_of : Classifier -> transform_model -> attribute list
  *)
 val all_attributes_of : Classifier -> transform_model -> attribute list
 
+(**
+ * Get all the overriden attributes of a Classifier (Note: this attributes are inherently
+ * all local.
+ *)
+val modified_attributes_of : Classifier -> transform_model -> attribute list
+
 (** 
  * Find an attribute in a list of attributes. 
  *)
@@ -1356,7 +1362,13 @@ and class_of (name:Path) (model as (clist,alist)) =
      end
 
 and class_of_type (typ:OclType) (model:transform_model) = 
-    class_of_term (Variable ("x",typ)) model
+    let
+	val _ = trace function_calls ("Rep_Core.class_of_type\n")
+	val res = class_of_term (Variable ("x",typ)) model
+	val _ = trace function_ends ("Rep_Core.class_of_type\n")
+    in
+	res
+    end	      
 
 and type_of_parents (Primitive {parent,...}) (model:transform_model) =
     (    

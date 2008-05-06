@@ -195,6 +195,8 @@ fun map_types [] fP tP model = []
 	val _ = trace wgen ("map_types: f_op = " ^ name_of_op h3 ^ "\n")
 	val _ = trace wgen ("map_types: t_op = " ^ name_of_op h4 ^ "\n")
 	(* classifier of return type *)
+	(* TODO: remove next trace lines *)
+	val _ = trace wgen ("Length of model: " ^ Int.toString (List.length(#1 model))^ ".\n")
 	val ret_fC = class_of_type (#result (h3)) model
 	val _ = trace wgen ("map_types 2 \n")
 	(* name of classifier of return type *)
