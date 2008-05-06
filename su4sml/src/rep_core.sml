@@ -1300,7 +1300,8 @@ and class_of_term source (c:Classifier list, a:association list) =
 		 val _ = trace development ("shit")
 	     in
 		 templ_of temp_typ para_typ tail
-	     end  
+	     end
+	val _ = trace rep_core ("Now dispatch type ...\n")  
     in
 	case typ of
 	    (* Primitive types of lib *)
@@ -1363,9 +1364,9 @@ and class_of (name:Path) (model as (clist,alist)) =
 
 and class_of_type (typ:OclType) (model:transform_model) = 
     let
-	val _ = trace function_calls ("Rep_Core.class_of_type\n")
+	val _ = trace rep_core ("Rep_Core.class_of_type\n")
 	val res = class_of_term (Variable ("x",typ)) model
-	val _ = trace function_ends ("Rep_Core.class_of_type\n")
+	val _ = trace rep_core ("Rep_Core.class_of_type\n")
     in
 	res
     end	      
@@ -1848,9 +1849,9 @@ fun inherited_operations_of class (model as (clist,alist)) =
     let
 	val _ = trace rep_core ("inh ops 0\n")
 	val c_parents = parents_of class model
-	val _ = trace 50 ("inh ops: parents = " ^ (String.concat (List.map (fn a => (string_of_path (name_of a))) c_parents)) ^ " \n")
+	val _ = trace rep_core ("inh ops: parents = " ^ (String.concat (List.map (fn a => (string_of_path (name_of a))) c_parents)) ^ " \n")
 	val ops_of_par = (List.map (operations_of) c_parents)
-	val _ = trace 50 ("inh ops 2\n")
+	val _ = trace rep_core ("inh ops 2\n")
     in
 	List.foldr (fn (a,b) => embed_local_operations a b model) (List.last (ops_of_par)) ops_of_par
     end
@@ -1886,9 +1887,9 @@ fun inherited_associationends_of class (model as (clist,alist)) =
 fun all_operations_of class model =
     let 
 	val lo = local_operations_of class
-	val _ = trace 50 ("all ops of classifier : "^ (string_of_path (name_of class)) ^ "\n")
+	val _ = trace rep_core ("all ops of classifier : "^ (string_of_path (name_of class)) ^ "\n")
 	val io = inherited_operations_of class model
-	val _ = trace 50 ("all ops 2\n")
+	val _ = trace rep_core ("all ops 2\n")
     in
 	embed_local_operations lo io model
     end
@@ -1896,9 +1897,9 @@ fun all_operations_of class model =
 fun all_attributes_of class model = 
     let
 	val la = local_attributes_of class
-	val _ = trace 50 ("all atts of classifier : "^ (string_of_path (name_of class)) ^ "\n")
+	val _ = trace rep_core ("all atts of classifier : "^ (string_of_path (name_of class)) ^ "\n")
 	val ia = inherited_attributes_of class model
-	val _ = trace 50 ("all atts 2\n")
+	val _ = trace rep_core ("all atts 2\n")
     in
 	embed_local_attributes la ia model
     end
@@ -2622,6 +2623,7 @@ fun update_postcondition post' ({name,precondition,postcondition,body,
 
 fun visibility_of (Class{visibility,...})            = visibility
   | visibility_of (AssociationClass{visibility,...}) = visibility
+  | visibility_of (Primitive{...}) = public
   | visibility_of (Template{classifier,...})   = visibility_of classifier
 
 
