@@ -84,6 +84,12 @@ sig
     (** Print option *)
     val opt2string                : string option -> string
     (** Any kind of exceptions. *)
+    val is_Class                  : Rep_Core.Classifier -> bool
+    val is_AssoClass              : Rep_Core.Classifier -> bool
+    val is_Primi                  : Rep_Core.Classifier -> bool
+    val is_Enum                   : Rep_Core.Classifier -> bool
+    val is_Iface                  : Rep_Core.Classifier -> bool
+    val is_Templ                  : Rep_Core.Classifier -> bool
     exception WFCPOG_LibraryError of string
 end
 structure WFCPOG_Library:WFCPOG_LIBRARY =
@@ -109,6 +115,24 @@ exception WFCPOG_LibraryError of string
 fun opt2string (NONE) = ""
   | opt2string (SOME(s)) = s
 
+
+fun is_Class (Class{...}) = true
+  | is_Class x = false
+
+fun is_AssoClass (AssociationClass{...}) = true
+  | is_AssoClass x = false
+
+fun is_Enum (Enumeration{...}) = true
+  | is_Enum x = false
+
+fun is_Templ (Template{...}) = true
+  | is_Templ x = false
+
+fun is_Primi (Primitive{...}) = true
+  | is_Primi x = false
+
+fun is_Iface (Interface{...}) = true
+  | is_Iface x = false
 
 fun name_of_precondition ((a:string option),(t:OclTerm)) = a
 

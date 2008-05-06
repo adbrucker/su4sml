@@ -196,15 +196,55 @@ val supported_wfs = [
      data            = Datatab.empty
     },
     WFCPOG.WFPO{
-     identifier      = "wfc_vis", 
-     name            = "WFC Visibility Consistency",
-     description     = "Checks if the accessed operations in preconditions/postconditions/invariants are visible.\n",
+     identifier      = "wfc_vis_class", 
+     name            = "WFC Visibility Consistency (class)",
+     description     = "Checks if the visibility of the class is at least as visible as the most visible member.\n",
      recommended     = true,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.are_conditions_visible),
+     apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.model_entity_consistency),
      data = Datatab.empty
-    },     
+    },
+    WFCPOG.WFPO{
+     identifier      = "wfc_vis_inheritance", 
+     name            = "WFC Visibility Consistency (inheritance)",
+     description     = "Checks if the modificators of overriden features are maintained in the subclasses.\n",
+     recommended     = true,
+     depends         = [],
+     recommends      = [],
+     apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.model_inheritance_consistency),
+     data = Datatab.empty
+    },
+    WFCPOG.WFPO{
+     identifier      = "wfc_vis_runtime", 
+     name            = "WFC Visibility Consistency (runtime)",
+     description     = "Runtime checking/enforcement in mind:\n pre-condition, post-conditions, invariants are shall only contain \n calls to visible features (i.e., public features of other classes, \n package features of other classes within the same package, \n protected features of superclasses, and own private features).\n",
+     recommended     = false,
+     depends         = [],
+     recommends      = [],
+     apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency),
+     data = Datatab.empty
+    },
+WFCPOG.WFPO{
+     identifier      = "wfc_vis_runtime", 
+     name            = "WFC Visibility Consistency (complete)",
+     description     = "Runtime checking/enforcement in mind:\n pre-condition, post-conditions, invariants are shall only contain \n calls to visible features (i.e., public features of other classes, \n package features of other classes within the same package, \n protected features of superclasses, and own private features).\n",
+     recommended     = false,
+     depends         = [],
+     recommends      = [],
+     apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency),
+     data = Datatab.empty
+    },WFCPOG.WFPO{
+     identifier      = "wfc_vis", 
+     name            = "WFC Visibility Consistency (complete)",
+     description     = "Three checks forced: \n wfc_vis_runtime \n wfc_vis_class \n wfc_vis_inheritance",
+     recommended     = false,
+     depends         = ["wfc_vis_class","wfc_vis_inheritance"],
+     recommends      = [],
+     apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency),
+     data = Datatab.empty
+    },
+     
      (* TODO: insert this constraint for having a default value.                                       *)
      (*                                                                                                *)
      (*    (WFCPOG_Taxonomy_Constraint.WFCPOG_TAX_Data.put ({key=9,max_depth=5}) tax_workaround)       *)
@@ -392,6 +432,7 @@ fun is_pog (WFCPOG.WFPO wfpo) = case #apply wfpo of
 fun process_depends [] data model acc = acc 
   | process_depends (h::tail) data model acc =
     let
+	val _ = trace function_calls ("WFCPOG_Registry.process_depends\n")
 	fun set_data (new_data:Object.T table) (WFCPOG.WFPO{identifier,name,description,recommended,depends,recommends,apply,data}) = 
 	    WFCPOG.WFPO{
 	      identifier = identifier,
@@ -403,7 +444,6 @@ fun process_depends [] data model acc = acc
 	      apply=apply,
 	      data=new_data
 	    }
-	val _ = trace function_calls ("WFCPOG_Registry.process_depends\n")
 	val wfpo  = set_data data (get_wfpo supported h)
 	val _ = trace wgen ("Dependent wfpo " ^ (name_of wfpo) ^ " found.\n")
 	val res = 

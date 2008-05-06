@@ -22,6 +22,9 @@ val wfc_inf = get_wfpo supported_wfs "wfc_inf"
 val _ = trace high ("............. interface constraint loaded ...\n")
 
 (** VISIBILITY CONSTRAINT **)
+val wfc_vis_class = get_wfpo supported_wfs "wfc_vis_class"
+val wfc_vis_inheritance = get_wfpo supported_wfs "wfc_vis_inheritance"
+val wfc_vis_runtime = get_wfpo supported_wfs "wfc_vis_runtime"
 val wfc_vis = get_wfpo supported_wfs "wfc_vis"
 val _ = trace high ("............. visibility constraint loaded ...\n")
 
@@ -111,5 +114,5 @@ val pos = [po_cstr]
 val wfs = [wfc_vis]
 val pos = []
 *)
-val wfs = []
-val pos = [po_lsk]
+val wfs = [wfc_vis_class,wfc_vis_inheritance,wfc_vis_runtime]
+val pos = []
