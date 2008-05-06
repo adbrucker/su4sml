@@ -191,7 +191,7 @@ fun map_types [] fP tP model = []
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constrain.map_types\n")
 	val _ = trace wgen ("map_types: f_cl = " ^ string_of_path (name_of h1) ^ "\n")
-	val _ = trace wgen ("map_types: f_cl = " ^ string_of_path (name_of h2) ^ "\n")
+	val _ = trace wgen ("map_types: t_cl = " ^ string_of_path (name_of h2) ^ "\n")
 	val _ = trace wgen ("map_types: f_op = " ^ name_of_op h3 ^ "\n")
 	val _ = trace wgen ("map_types: t_op = " ^ name_of_op h4 ^ "\n")
 	(* classifier of return type *)
@@ -265,32 +265,7 @@ fun check_syntax_help (model:Rep.Model as (clist,alist)) fromPath toPath =
 	res
     end
 
-(**
- * This is a redundent operation. It is used because
- * the proog obligations for refinement needs to 
-*)
-(* 
-fun check_syntax' abs_path conc_path model = 
-    let
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.check_syntax'\n")
-	val model_packages = all_packages_of_model model
-	val res = 
-	    if (member abs_path model_packages)
-	    then check_syntax_help model abs_path conc_path
-	    else 
-		let
-		    val s1 = ("\n\n########################################################\n")
-		    val s2 = ("########################################################\n\n")
-		    val s3 = ("SYNTAX ERROR: check_syntax'\n\n")
-		    val s4 = ("No classifier where found with the package name of the abstract path.\n")
-		in
-		    raise WFCPOG.WFCPOG_WFC_FailedException_ (s1^s2^s3^s4)
-		end
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.check_syntax'\n")
-    in
-	res
-    end
-*)
+
 
 fun check_syntax wfpo (model:Rep.Model as (clist,alist)) = 
     let
@@ -299,17 +274,18 @@ fun check_syntax wfpo (model:Rep.Model as (clist,alist)) =
 	val packages = (#rfm_tuples data)
 	val abstract_packages = List.map (fn (a,b) => a) packages
 	val model_packages = all_packages_of_model model
-	val check = List.all (fn a => if (member a model_packages)
-				      then List.all (fn a => a) (List.map (fn a => check_syntax_help model (#1 a) (#2 a)) packages)
-				      else
-					  let
-					      val s1 = ("\n\n########################################################\n")
-					      val s2 = ("########################################################\n\n")
-					      val s3 = ("SYNTAX ERROR: check_syntax'\n\n")
-					      val s4 = ("No classifier where found with the package name of the abstract path.\n")
-					  in
-					      raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2^s3^s4)
-					  end ) abstract_packages
+	val check = List.all (fn (from,to) => 
+				 if (member from model_packages) andalso (member to model_packages)
+				 then check_syntax_help model from to
+				 else
+				     let
+					 val s1 = ("\n\n########################################################\n")
+					 val s2 = ("########################################################\n\n")
+					 val s3 = ("SYNTAX ERROR: check_syntax'\n\n")
+					 val s4 = ("No classifier where found with the package name of the abstract or concrete path.\n")
+				     in
+					 raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2^s3^s4)
+				     end ) packages
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.check_syntax\n")
     in
 	check
@@ -350,7 +326,7 @@ fun refine_operation abs_oper conc_oper abs_class conc_class model =
 	val refine = OperationCall(S,DummyT,["holOclLib","methodology","refinement","OclForwardRefinement"],[(T,DummyT),(R,DummyT)],Boolean)
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.refine_classifier\n")	
     in
-	(["po_refine_"]@(package_of abs_class)@["__"]@(package_of conc_class)@["_"]@[name_of_op abs_oper],refine)
+	(["po_refine_"]@(package_of abs_class)@["_"]@(package_of conc_class)@["_"]@[name_of_op abs_oper],refine)
     end
 
 fun refine_classifier abs_class conc_class model = 
