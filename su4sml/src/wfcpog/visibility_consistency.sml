@@ -42,9 +42,34 @@
 (** Implementation of the Liskov Substitiution Principle. *)
 signature WFCPOG_VISIBILITY_CONSTRAINT =
 sig
-    (** Checks if the pre- and postconditions of a given operation just
-      * access public classes/operations/attributes. *)
     val are_conditions_visible : WFCPOG.wfpo -> Rep.Model -> bool
+(*
+    (** 
+     * Checks if the visibility of the class is at least as visible as 
+     * as the most visible member.
+     *)
+    val model_class_consistency                  : WFCPOG.wfpo -> Rep.Model -> bool
+    (**
+     * Checks if the modificators of overriden features are maintained in the subclasses.
+     *)
+    val model_inheritence_consistency                   : WFCPOG.wfpo -> Rep.Model -> bool
+    (**
+     * Runtime checking/enforcement in mind:
+     * pre-condition, post-conditions, invariants are shall only contain
+     * calls to visible features (i.e., public features of other classes,
+     * package features of other classes within the same package, 
+     * protected features of superclasses, and own private features).
+     * Checks the pre-,postconditions and invariants with respect to 
+     *)
+    val constraint_check_by_runtime_consistency   : WFCPOG.wfpo -> Rep.Model -> bool
+    (** 
+     * Design by contract in mind: 
+     * Here, clients (callers) should be able to check/establish the pre-condition of operations:
+     * pre-conditions should only contain feature calls that are at least as visible as 
+     * the operation itself.
+     *)
+    val constraint_desing_by_contract_consistency : WFCPOG.wfpo -> Rep.Model -> bool
+*)
 end
 structure WFCPOG_Visibility_Constraint:WFCPOG_VISIBILITY_CONSTRAINT = 
 struct
@@ -223,4 +248,13 @@ fun are_conditions_visible wfpo (model:Rep.Model as (clist,alist)) =
     in
 	res
     end
+(* 
+fun model_class_consistency
+
+fun model_inheritance_consistency
+
+fun constraint_check_by_runtime_consistency
+
+fun constratin_design_by_constract_consistency 
+*)
 end;
