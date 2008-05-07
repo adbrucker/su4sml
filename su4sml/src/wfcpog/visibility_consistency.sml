@@ -173,8 +173,13 @@ fun check_entity_classifier class model =
     let
 	val vis_ops = List.map (fn (a:operation) => ((#visibility a),SOME(a),NONE,NONE)) (all_operations_of class model)
 	val vis_atts = List.map (fn (a:attribute) => ((#visibility a),NONE,SOME(a),NONE)) (all_attributes_of class model)
-        (* TODO: AssociationEnd support *)
-(*	val vis_assocs = List.map (fn (a:associationend) => ((#visibility a),NONE,NONE,SOME(a))) (associationends_of class) *)
+        (* TODO: AssociationEnd support :
+
+                 uncaught exception Bind [nonexhaustive binding failure]
+                 raised at: ../rep_core.sml:1775.11-1775.112
+                 test-suite.sml:163.13
+	
+	val vis_assocs = List.map (fn (a:associationend) => ((#visibility a),NONE,NONE,SOME(a))) (associationends_of (#2 model) class) *)
 	val vis_class = visibility_of class
 	val check = 
 	    List.map (fn ((a:Visibility),x,y,z) => 
@@ -207,10 +212,6 @@ fun check_inheritance_classifier class model =
     let
 	(* modified operations *)
         val mod_ops_this = modified_operations_of class model
-					  (* TODO: support for 
-					   * - modified_attributes_of
-					   * - modified_associationends_of
-					   *)
 	val mod_ops_super_this = List.map (fn oper =>
 					      let 
 						  val op_name = name_of_op oper
