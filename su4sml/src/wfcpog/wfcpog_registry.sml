@@ -114,6 +114,7 @@ struct
 
 exception WFCPOG_RegistryError of string
 exception WFCPOG_MethodologyError of string
+
 open Rep_Logger
 open WFCPOG
 open Datatab
@@ -386,13 +387,13 @@ val supported_pos = [
      data            = Datatab.empty
     },
     WFCPOG.WFPO{ 
-     identifier      = "po_cstr_attr", 
+     identifier      = "po_cstr_attribute", 
      name            = "WFC Constructor Consistency attributes are inited(subconstraint)",  
      description     = "Checks if after the execution of any constructor operation all the attributes are initialized.\n",
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.POG(WFCPOG_Constructor_Constraint.attributes_are_inited),
+     apply           = WFCPOG.POG(WFCPOG_Constructor_Constraint.force_initialize_attributes),
      data            = Datatab.empty
     },
     WFCPOG.WFPO{ 
@@ -402,7 +403,7 @@ val supported_pos = [
      recommended     = false,
      depends         = ["po_cstr_post"],
      recommends      = [],
-     apply           = WFCPOG.POG(WFCPOG_Constructor_Constraint.attributes_are_inited),
+     apply           = WFCPOG.POG(WFCPOG_Constructor_Constraint.force_initialize_attributes),
      data            = Datatab.empty
     }
     ,

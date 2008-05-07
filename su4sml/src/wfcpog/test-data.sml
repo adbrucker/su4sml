@@ -50,6 +50,9 @@ val _ = trace high ("............. refine wfc constraint loaded ...\n")
 (** ################# **)
 
 (** LISKOV CONSTRAINT **)
+val po_lsk_pre = get_wfpo supported_pos "po_lsk_pre"
+val po_lsk_post = get_wfpo supported_pos "po_lsk_post"
+val po_lsk_inv = get_wfpo supported_pos "po_lsk_inv"
 val po_lsk = get_wfpo supported_pos "po_lsk"
 val _ = trace high ("............. liskov constraint loaded ...\n")
 
@@ -63,6 +66,8 @@ val po_om = WFCPOG_Registry.get_wfpo WFCPOG_Registry.supported "po_oper_model"
 val _ = trace high ("............. operational constraint loaded ...\n")
 
 (** CONSTRUCTOR CONSTRAINT **)
+val po_cstr = get_wfpo supported_pos "po_cstr_post"
+val po_cstr = get_wfpo supported_pos "po_cstr_attribute"
 val po_cstr = get_wfpo supported_pos "po_cstr"
 val _ = trace high ("............. constructor constraints loaded ...\n")
 

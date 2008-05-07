@@ -45,9 +45,9 @@ sig
     (** sub constraint, included in constructor consistency.*)
     val post_implies_invariant     : WFCPOG.wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
     (** sub constraint, included in constructor consistency.*)
-    val overwrites_old_creators    : WFCPOG.wfpo -> Rep.Model -> bool
+    val override_old_creators    : WFCPOG.wfpo -> Rep.Model -> bool
     (** sub constraint, included in constructor consistency.*)
-    val attributes_are_inited      : WFCPOG.wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
+    val force_initialize_attributes      : WFCPOG.wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
     (** Any kind of Exception *) 
     exception WFCPO_ConstructorError of string
 end
@@ -60,7 +60,7 @@ open Rep_Core
 open Rep
 open Rep_OclTerm
 open Rep_OclType
-
+open Rep_HolOcl_Namespace
 (* OclParser *)
 open ModelImport
 
@@ -69,73 +69,113 @@ open WFCPOG_Library
 
 exception WFCPO_ConstructorError of string
 
-(* Make a string case insensitive *)
 
-
-fun generate_return_value crea_op classifier model = 
+fun term_post_implies_inv class oper model = 
     let
-	val invs1 = all_invariants_of classifier model
-	val invs2 = List.map (fn (a,b) => b) invs1
-	val invs = conjugate_terms invs2
-	val posts1 = postcondition_of_op crea_op
-	val posts2 = List.map (fn (a,b) => b) posts1
-	val posts = conjugate_terms posts2 
+	val _ = trace function_calls ("WFCPOG_Constructor_Consistency_Constraint.term_post_implies_inv\n")
+	val inv = Predicate (Variable("self",type_of class),type_of class,name_of_inv class,[])
+	val post = Predicate (Variable ("self",type_of class),type_of class,name_of_post class oper,args2varargs ((arguments_of_op oper)@[("result",(#result oper))]))
+	val implies = OperationCall (post,Boolean,["holOclLib","Boolean","implies"],[(inv,Boolean)],Boolean)
+    	val _ = trace function_ends ("WFCPOG_Constructor_Consistency_Constraint.term_post_implies_inv\n")
     in
-	  (["po_cstr"]@["_"]@["post_implies_inv"]@["_"]@(name_of classifier),OperationCall(posts,Boolean,["Boolean","implies"],[(invs,type_of_term invs)],Boolean))
+	implies
     end
 
-fun post_implies_invariant_help [] model = []
-  | post_implies_invariant_help (h::class) (model as (clist,alist)) = 
+fun term_init_attributes class oper model = 
     let
-	val creas = creation_operations_of h model
-	val pos = List.map (fn a => generate_return_value a h model) creas		    
-    in
-	pos@(post_implies_invariant_help (class) model)
-    end
-
-
-fun post_implies_invariant wfpo (model as (clist, alist)) =
-    let
-	val _ = trace function_calls ("WP_constructor_CS.post_implies_invariant\n")
-	val class = removeOclLibrary clist
-	val res = post_implies_invariant_help class model
-	val _ = trace function_ends ("WP_constructor_CS.post_implies_invariant\n")
+	(* 
+	 *)
     in 
+ 	Variable ("no",OclVoid)
+    end
+
+fun check_override_classifier class (model as (clist,alist)) = 
+    let
+	val _ = trace function_calls ("WFCPOG_Constructor_Consistency_Constraint.check_override_classifier\n")
+	val creas = creation_operations_of class model
+	val over_ops = modified_operations_of class model
+	val check = 
+	    List.map (fn a =>
+			 if (List.exists (fn b => a = b) over_ops)
+			 then true
+			 else 
+			     let 
+				 val s1 = "SYNTAX ERROR: Constructor Consistency override old creators\n\n"
+				 val s2 = "In the classifier " ^ (string_of_path (name_of class)) ^ " the Creator " ^ (name_of_op a) ^ "is not overriden.\n"
+			     in 
+				 raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+			     end) creas
+	val res = List.all (fn a => a = true) check
+	val _ = trace function_ends ("WFCPOG_Constructor_Consistency_Constraint.check_override_classifier\n")
+    in
 	res
     end
 
-fun overwrites_old_creators_help [] model = [true]
-  | overwrites_old_creators_help (h::classes) (model as (clist,alist)) = 
+fun generate_post_classifier class model = 
     let
-	val creas = creation_operations_of h model
-	val over_ops = modified_operations_of h model
+	val _ = trace function_calls ("WFCPOG_Constructor_Consistency_Constraint.check_post_classifier\n")
+	val pos = 
+	    List.map (fn a => 
+			 let
+			     val term = term_post_implies_inv class a model
+			     val path = ["po_cstr_","post_",(string_of_path (name_of class)),(name_of_op a)]
+			 in
+			     (path,term)
+			 end) (creation_operations_of class model)
+	val _ = trace function_ends ("WFCPOG_Constructor_Consistency_Constraint.check_override_classifier\n")
     in
-	(List.all (fn a => List.exists (fn b => b = a) (over_ops)) creas)::(overwrites_old_creators_help classes model)
-    end
-
-fun overwrites_old_creators wfpo (model as (clist, alist)) = 
-    let
-	val class = removeOclLibrary clist
-    in
-	List.all (fn a => a) (overwrites_old_creators_help class model)
-    end
-
-fun attributes_are_inited_help [] model = []
-  | attributes_are_inited_help (h::classes) (model as (clist,alist)) = 
-    let
-	val _ = trace function_calls ("WP_constructor_CS.attributes_are_inited_help\n")
-	val creas = creation_operations_of h model
-	(* TODO:  express term *)
-	val _ = trace function_ends ("WP_constructor_CS.attributes_are_inited_help\n")
-    in
-	[]:(Path * OclTerm) list
+	pos
     end
 
 
-fun attributes_are_inited wfpo (model as (clist,alist)) = 
+fun generate_attribute_classifier class model = 
     let
-	val classes = removeOclLibrary clist
+	val _ = trace function_calls ("WFCPOG_Constructor_Consistency_Constraint.generate_attribute_classifier\n")
+	val pos = 
+	    List.map (fn a => 
+			 let
+			     val term = term_init_attributes class a model
+			     val path = ["po_cstr_","attribute_",(string_of_path (name_of class)),(name_of_op a)]
+			 in
+			     (path,term)
+			 end) (creation_operations_of class model)
+	val _ = trace function_calls ("WFCPOG_Constructor_Consistency_Constraint.generate_attribute_classifier\n")
     in
-	(attributes_are_inited_help classes model)
+	pos
+    end
+
+
+fun override_old_creators wfpo (model as (clist, alist)) = 
+    let
+	val _ = trace function_calls ("WFCPOG_Constructor_Consistency.overrides_old_creators\n")
+	val cl = removeOclLibrary clist
+	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
+	val res = List.all (fn a => a = true) (List.map (fn a => check_override_classifier a model) classes)
+	val _ = trace function_calls ("WFCPOG_Constructor_Consistency.overrides_old_creators\n")
+    in
+	res
+    end
+
+fun post_implies_invariant wfpo (model as (clist, alist)) =
+    let
+	val _ = trace function_calls ("WFCPOG_Constructor_Consistency_Constraint.post_implies_invariant\n")
+	val cl = removeOclLibrary clist
+	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
+	val list = List.concat (List.map (fn a => generate_post_classifier a model) classes)
+	val _ = trace function_ends ("WFCPOG_Constructor_Consistency_Constraint.post_implies_invariant\n")
+    in 
+	list
+    end
+
+
+fun force_initialize_attributes wfpo (model as (clist,alist)) = 
+    let
+	val _ = trace function_calls ("WFCPOG_Constructor_Consistency_Constraint.force_initialize_attributes\n")
+	val cl = removeOclLibrary clist
+	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
+	val list = List.concat (List.map (fn a => generate_attribute_classifier a model) classes)
+	val _ = trace function_ends ("WFCPOG_Constructor_Consistency_Constraint.force_initialize_attributes\n")
+    in
+	list
     end
 end; 
