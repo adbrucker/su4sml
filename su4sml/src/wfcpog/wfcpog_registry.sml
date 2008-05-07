@@ -105,6 +105,7 @@ sig
     (** Create wfpo for wfc max_depth.*)
     val create_wfc_tax     : int -> WFCPOG.wfpo
     exception WFCPOG_RegistryError of string
+    exception WFCPOG_MethodologyError of string
 end
 
 
@@ -112,7 +113,7 @@ structure WFCPOG_Registry :WFCPOG_REGISTRY  =
 struct
 
 exception WFCPOG_RegistryError of string
-
+exception WFCPOG_MethodologyError of string
 open Rep_Logger
 open WFCPOG
 open Datatab
