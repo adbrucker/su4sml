@@ -103,6 +103,7 @@ val zero = 0
 val exce = 6
 val high = 10
 val medium = 20
+val isa_metho = 21 
 val function_calls = 25
 val function_ends = 26
 val function_arguments = 27
