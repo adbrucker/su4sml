@@ -978,7 +978,7 @@ exception Rep_CoreError of string
 val OclLibPackage = "oclLib"
 val OclAnyC = Class{name=Rep_OclType.OclAny,parent=NONE,attributes=[],
 		    operations=[], interfaces=[],
-		    invariant=[],stereotypes=[], associations=[],
+		    invariant=[(Literal("true",Boolean))],stereotypes=[], associations=[],
 		    thyname=NONE,
 		    visibility = public,
                     activity_graphs=nil}
