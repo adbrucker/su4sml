@@ -115,5 +115,5 @@ val pos = [po_cstr]
 val wfs = [wfc_vis]
 val pos = []
 *)
-val wfs = [wfc_vis_class,wfc_vis_inheritance,wfc_vis_runtime,wfc_vis_design_by_contract]
+val wfs = [wfc_vis_class,wfc_vis_inheritance,wfc_vis_runtime,wfc_vis_design_by_contract,wfc_vis]
 val pos = []
