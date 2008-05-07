@@ -42,9 +42,16 @@
 (** Implementation of the Liskov Substitiution Principle. *)
 signature WFCPOG_INTERFACE_CONSTRAINT =
 sig
-    val has_consistent_stereotypes      : WFCPOG.wfpo -> Rep.Model -> bool
-
-    val is_nameclash_free               : WFCPOG.wfpo -> Rep.Model -> bool								      
+    (**
+     * Checks if the operations of the interface do not have the
+     * stereotypyes 'create' or 'destroy'.
+     *)
+    val check_stereotypes      : WFCPOG.wfpo -> Rep.Model -> bool
+    (**
+     * Checks that a classifier implementing more then one interface
+     * has no nameclashes.
+     *)
+    val check_nameclashes      : WFCPOG.wfpo -> Rep.Model -> bool								      
 end
 structure WFCPOG_Interface_Constraint:WFCPOG_INTERFACE_CONSTRAINT =
 struct 
@@ -72,48 +79,112 @@ fun list_has_dup [] = false
     else list_has_dup (tail)
 
 
-fun has_consistent_stereotypes_help [] model = true
-  | has_consistent_stereotypes_help ((Interface{operations,...})::classes) (model as (clist,alist)) = 
-    List.all (fn a => not (List.exists (fn b => (b = "create") orelse (b = "destroy")) (#stereotypes a))) (operations) 
-  | has_consistent_stereotypes_help (h::classes) model = has_consistent_stereotypes_help classes model
+fun check_stereotypes_interface (i as Interface{operations,...}) (model as (clist,alist)) = 
+    if (List.all (fn a => not (List.exists (fn b => (b = "create") orelse (b = "destroy")) (#stereotypes a))) (operations))
+    then true
+    else
+	let
+	    val s1 = "SYNTAX ERROR: Interface stereotypes consistency\n\n"
+	    val s2 = "Interface " ^ (string_of_path (name_of i)) ^ " has a operations with stereotypes 'create' or 'destroy' \n"
+	in
+	    raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+	end
+  | check_stereotypes_interface  x model = true
 
-fun is_nameclash_free_help [] model = true
-  | is_nameclash_free_help ((Class{interfaces,...})::classes) (model as (clist,alist)) =
+
+fun check_nameclash_classifier (c as Class{interfaces,...}) (model as (clist,alist)) =
     if (List.length(interfaces)) <= 1
-    then is_nameclash_free_help classes model
+    then true
     else
 	let
 	    val if_list = List.map (fn a => class_of_type a model) interfaces
 	    val op_name_list = List.concat (List.map (fn a => (List.map (name_of_op) (all_operations_of a model))) if_list)
 	in 
-	    list_has_dup (op_name_list)
+	    if (not (list_has_dup (op_name_list)))
+	    then true
+	    else
+		let
+		    val s1 = "SYNTAX ERROR: Interface nameclash consistency\n\n"
+		    val s2 = "Classifier " ^ (string_of_path (name_of c)) ^ " has a nameclash resulting from the interfaces " ^ (String.concat (List.map (fn a => (string_of_OclType a)) interfaces)) ^ ".\n"
+		in
+		    raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+		end
 	end
-  | is_nameclash_free_help ((AssociationClass{interfaces,...})::classes) (model as (clist,alist)) = 
-        if (List.length(interfaces)) <= 1
-    then is_nameclash_free_help classes model
+  | check_nameclash_classifier (a as AssociationClass{interfaces,...}) (model as (clist,alist)) = 
+    if (List.length(interfaces)) <= 1
+    then true
     else
 	let
 	    val if_list = List.map (fn a => class_of_type a model) interfaces
 	    val op_name_list = List.concat (List.map (fn a => (List.map (name_of_op) (all_operations_of a model))) if_list)
 	in 
-	    list_has_dup (op_name_list)
+	    if (not (list_has_dup (op_name_list)))
+	    then true
+	    else
+		let
+		    val s1 = "SYNTAX ERROR: Interface nameclash consistency\n\n"
+		    val s2 = "Classifier " ^ (string_of_path (name_of a)) ^ " has a nameclash resulting from the interfaces " ^ (String.concat (List.map (fn a => (string_of_OclType a)) interfaces)) ^ ".\n"
+		in
+		    raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+		end
 	end
-  | is_nameclash_free_help (x::classes) model = is_nameclash_free_help classes model
+  | check_nameclash_classifier (e as Enumeration{interfaces,...}) model = 
+    if (List.length(interfaces)) <= 1
+    then true
+    else
+	let
+	    val if_list = List.map (fn a => class_of_type a model) interfaces
+	    val op_name_list = List.concat (List.map (fn a => (List.map (name_of_op) (all_operations_of a model))) if_list)
+	in 
+	    if (not (list_has_dup (op_name_list)))
+	    then true
+	    else
+		let
+		    val s1 = "SYNTAX ERROR: Interface nameclash consistency\n\n"
+		    val s2 = "Classifier " ^ (string_of_path (name_of e)) ^ " has a nameclash resulting from the interfaces " ^ (String.concat (List.map (fn a => (string_of_OclType a)) interfaces)) ^ ".\n"
+		in
+		    raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+		end
+	end
+  | check_nameclash_classifier (p as Primitive{interfaces,...}) model = 
+    if (List.length(interfaces)) <= 1
+    then true
+    else
+	let
+	    val if_list = List.map (fn a => class_of_type a model) interfaces
+	    val op_name_list = List.concat (List.map (fn a => (List.map (name_of_op) (all_operations_of a model))) if_list)
+	in 
+	    if (not (list_has_dup (op_name_list)))
+	    then true
+	    else
+		let
+		    val s1 = "SYNTAX ERROR: Interface nameclash consistency\n\n"
+		    val s2 = "Classifier " ^ (string_of_path (name_of p)) ^ " has a nameclash resulting from the interfaces " ^ (String.concat (List.map (fn a => string_of_OclType a) interfaces)) ^ ".\n"
+		in
+		    raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+		end
+	end
+  | check_nameclash_classifier x model = true
 
-
-fun has_consistent_stereotypes wfpo (model as (clist,alist)) = 
+fun check_stereotypes wfpo (model as (clist,alist)) = 
     let
-	val classes = removeOclLibrary clist
+	val _ = trace function_calls ("WFCPOG_Interface_Consistency.check_stereotypes\n")
+	val cl = removeOclLibrary clist
+	val classes = List.filter (fn a => (is_Iface a)) cl
+	val res = List.all (fn a => a = true) (List.map (fn a => check_stereotypes_interface a model) classes)
+	val _ = trace function_ends ("WFCPOG_Interface_Consistency.check_stereotypes\n")
     in
-	has_consistent_stereotypes_help classes model
+	res
     end
 
-fun is_nameclash_free wfpo (model as (clist,alist)) = 
+fun check_nameclashes wfpo (model as (clist,alist)) = 
     let
-	val classes = removeOclLibrary clist
+	val _ = trace function_calls ("WFCPOG_Interface_Consistency.check_nameclashes\n")
+	val cl = removeOclLibrary clist
+	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a) orelse (is_Primi a) orelse (is_Enum a)) cl
+	val res = List.all (fn a => a = true) (List.map (fn a => check_nameclash_classifier a model) classes)
+	val _ = trace function_ends ("WFCPOG_Interface_Consistency.check_nameclashes\n")
     in
-	is_nameclash_free_help classes model
+	res
     end
-
-
 end;

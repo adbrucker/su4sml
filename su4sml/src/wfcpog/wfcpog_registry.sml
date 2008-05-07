@@ -168,33 +168,33 @@ val tax_workaround =
 		       
 val supported_wfs = [ 
     WFCPOG.WFPO{
-     identifier      = "wfc_inf_ster",
+     identifier      = "wfc_inf_stereotypes",
      name            = "WFC Interface Consistency consistent stereotypes (subconstraint)",
      description     = "Checks if all operations of an interface don't have the stereotypes 'create' or 'destroy'.\n",
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.has_consistent_stereotypes),
+     apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.check_stereotypes),
      data            = Datatab.empty
     },
     WFCPOG.WFPO{
-     identifier      = "wfc_inf_name",
+     identifier      = "wfc_inf_nameclashes",
      name            = "WFC Interface Consistency no nameclashes (subconstraint)",
      description     = "Checks for classes inheriting from more than one interface that there are no nameclashes.\n",
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.is_nameclash_free),
+     apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.check_nameclashes),
      data            = Datatab.empty
     },
     WFCPOG.WFPO{
-     identifier      = "wfc_inf",
+     identifier      = "wfc_inf_all",
      name            = "WFC Interface Consistency (complete)",
      description     = "Checking of two subconstraints: \n wfc_inf_ster: Checks if all operations of an interface don't have the stereotypes 'create' or 'destroy'. \n wfc_inf_name : Checks for classes inheriting from more than one interface that there are no nameclashes.\n",
      recommended     = true,
-     depends         = ["wfc_inf_ster"],
+     depends         = ["wfc_inf_stereotypes"],
      recommends      = [],
-     apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.is_nameclash_free),
+     apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.check_nameclashes),
      data            = Datatab.empty
     },
     WFCPOG.WFPO{

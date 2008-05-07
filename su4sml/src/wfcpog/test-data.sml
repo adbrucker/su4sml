@@ -18,7 +18,9 @@ val _ = trace wgen "\n\n\n"
 (** ################# **)
 
 (** INTERFACE CONSTRAINT **)
-val wfc_inf = get_wfpo supported_wfs "wfc_inf"
+val wfc_inf_nameclashes = get_wfpo supported_wfs "wfc_inf_nameclashes"
+val wfc_inf_stereotypes = get_wfpo supported_wfs "wfc_inf_stereotypes"
+val wfc_inf_all = get_wfpo supported_wfs "wfc_inf_all"
 val _ = trace high ("............. interface constraint loaded ...\n")
 
 (** VISIBILITY CONSTRAINT **)

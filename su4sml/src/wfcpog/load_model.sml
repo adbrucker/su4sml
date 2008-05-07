@@ -16,7 +16,7 @@ val prefix = "../../../hol-ocl/examples/"
 val _ = Control.Print.printDepth:=20
 val _ = Control.Print.printLength:=30
 
-(*
+(* 
 val zargo = prefix^"simple_rfm/simple_rfm.zargo"
 val ocl = prefix^"simple_rfm/simple_rfm.ocl"
 val remP = []
@@ -40,11 +40,11 @@ val remP = []
 
 
 (** OVERRIDING **)
-
+(*
 val zargo = "../../../hol-ocl/examples/overriding/overriding.zargo"
 val ocl="../../../hol-ocl/examples/overriding/overriding.ocl"
 val remP = []
-
+*)
 
 (** ISP **)
 (* 
@@ -86,11 +86,11 @@ val zargo = "../../../hol-ocl/examples/overriding/overriding.zargo"
 val ocl="../../../hol-ocl/examples/overriding/overriding.ocl"
 val remP = []
 *)
-(* 
+
 val zargo = "../../../hol-ocl/examples/stack_manu/stack.zargo"
 val ocl="../../../hol-ocl/examples/stack_manu/stack.ocl"
 val remP = []
-*)
+
 (** import model *)
 val XMI = parseUML zargo
 val _ = init_offset()
