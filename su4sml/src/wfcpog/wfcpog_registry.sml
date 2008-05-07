@@ -162,7 +162,7 @@ val tax_workaround =
      recommended     = true,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.WFC(WFCPOG_Taxonomy_Constraint.has_maxDepth),
+     apply           = WFCPOG.WFC(WFCPOG_Taxonomy_Constraint.check_depth),
      data            = Datatab.empty 
     }
 		       
@@ -259,7 +259,7 @@ val supported_wfs = [
      recommended     = true,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.WFC(WFCPOG_Taxonomy_Constraint.has_maxDepth),
+     apply           = WFCPOG.WFC(WFCPOG_Taxonomy_Constraint.check_depth),
      data            = Datatab.empty 
     }
     , 

@@ -54,7 +54,7 @@ sig
     val print_taxonomy_args : TAX_args -> unit
 
     (** Subconstraint *)
-    val has_maxDepth   : WFCPOG.wfpo -> Rep.Model -> bool	   
+    val check_depth   : WFCPOG.wfpo -> Rep.Model -> bool	   
 
     exception WFCPOG_TaxonomyError of string
 end
@@ -118,28 +118,35 @@ fun deep_of_classifier x (Class{parent,...}) (model as (clist,alist)) =
   | deep_of_classifier x y model = raise WFCPOG_TaxonomyError ("Only Classes can check for maxDepth.\n")
 
 
-fun has_maxDepth_help depth [] model = true
-  | has_maxDepth_help depth (h::classes) (model as (clist,alist)) = 
+
+fun  check_depth_classifier depth class (model as (clist,alist)) = 
     let 
 	val _ = trace wgen ("look for deep ...\n")
-	val d = deep_of_classifier 0 h model
-	val _ = trace wgen ("deep of classifier " ^ (String.concat (Rep_Core.name_of h)) ^ " = " ^ (Int.toString d) ^ "\n")
+	val d = deep_of_classifier 0 class model
+	val check = 
+	    if (depth  > d) 
+	    then true
+	    else 
+		let
+		    val s1 = "SYNTAX ERROR: Taxonomy design consistency\n\n"
+		    val s2 = "Classifier " ^ (string_of_path (name_of class)) ^ " has depth " ^ (Int.toString (d)) ^ ".\n"
+		in
+		    raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+		end 
     in
-	if (d > depth) 
-	then false
-	else has_maxDepth_help depth classes model
+	check
     end
     
-fun has_maxDepth wfpo (model as (clist,alist)) =
+fun check_depth wfpo (model as (clist,alist)) =
     let
-	val _ = trace wgen ("remove oclLib ...\n")
-	val classes = removeOclLibrary clist
-	val _ = trace wgen ("oclLib removed ...\n")
+	val _ = trace function_calls ("WFCPG_Taxonomy_Consistency.check_maxDepth\n")
+	val cl = removeOclLibrary clist
+	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a) orelse (is_Iface a) orelse (is_Enum a) orelse (is_Primi a)) cl
 	val tax_args = WFCPOG_TAX_Data.get wfpo
-	val _ = trace wgen ("args extracted ...\n")
 	val depth = (#max_depth tax_args)
-	val _ = trace wgen ("depth = " ^ (Int.toString (depth)) ^ "\n")
+	val res = List.all (fn a => a = true) (List.map (fn a => check_depth_classifier depth a model) classes)
+	val _ = trace function_calls ("WFCPG_Taxonomy_Consistency.check_maxDepth\n")
     in
-	has_maxDepth_help depth classes model 
+	res
     end
 end;
