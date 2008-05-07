@@ -169,7 +169,7 @@ and expr_is_visible modif (Literal(s,typ)) model = true
     (expr_is_visible modif src model) andalso (expr_is_visible modif body model)
 
 
-fun check_visibility_of_classifier class model = 
+fun check_entity_classifier class model = 
     let
 	val vis_ops = List.map (fn (a:operation) => ((#visibility a),SOME(a),NONE,NONE)) (all_operations_of class model)
 	val vis_atts = List.map (fn (a:attribute) => ((#visibility a),NONE,SOME(a),NONE)) (all_attributes_of class model)
@@ -203,7 +203,7 @@ fun check_visibility_of_classifier class model =
     end
     
     
-fun check_inheritance_visibility_of_classifier class model =
+fun check_inheritance_classifier class model =
     let
 	(* modified operations *)
         val mod_ops_this = modified_operations_of class model
@@ -332,46 +332,17 @@ fun check_design_classifier class model =
 	List.all (fn a => a = true) check_pre
     end
 
-fun model_entity_consistency_help [] model = [true]
-  | model_entity_consistency_help (h::classes) model = 
-    let 
-	val check = check_visibility_of_classifier h model
-    in
-	(check)::(model_entity_consistency_help classes model)
-    end
-
-fun model_inheritance_consistency_help [] model = [true]
-  | model_inheritance_consistency_help (h::classes) model = 
-    let
-	val check = check_inheritance_visibility_of_classifier h model
-    in
-	(check)::(model_inheritance_consistency_help classes model)
-    end
-	
-fun constraint_check_by_runtime_consistency_help [] model = [true]
-  | constraint_check_by_runtime_consistency_help (h::classes) model =
-    let
-	val check = check_runtime_classifier h model
-    in
-	(check)::(constraint_check_by_runtime_consistency_help classes model)
-    end
-
-fun constraint_design_by_contract_consistency_help [] model = [true]
-  | constraint_design_by_contract_consistency_help (h::classes) model =
-    let
-	val check = check_design_classifier h model
-    in
-	(check)::(constraint_design_by_contract_consistency_help classes model)
-    end
-
 fun model_entity_consistency wfc_sel (model as (clist,alist)) =
     let
+	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.model_entity_consistency\n")
 	(* remove OclLibrary *)
 	val cl = removeOclLibrary (clist)
         (* visiblity only for Classes and AssocClasses *)
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
+	val res = List.all (fn a => a = true) (List.map (fn a => check_entity_classifier a model) classes)
+	val _ = trace function_ends ("WFCPOG_Visibility_Constraint.model_entity_consistency\n")
     in
-	List.all (fn a => a = true) (model_entity_consistency_help classes model)
+	res
     end
 
 fun model_inheritance_consistency wfc_sel (model as (clist,alist)) = 
@@ -379,7 +350,7 @@ fun model_inheritance_consistency wfc_sel (model as (clist,alist)) =
 	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.model_inheritance_consistency\n")
 	val cl = removeOclLibrary (clist)
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
-	val res  = List.all (fn a => a = true) (model_inheritance_consistency_help classes model)
+	val res  = List.all (fn a => a = true) (List.map (fn a => check_inheritance_classifier a model) classes)
 	val _ = trace function_ends ("WFCPOG_Visibility_Constraint.model_inheritance_consistency\n")
     in
 	res
@@ -390,7 +361,7 @@ fun constraint_check_by_runtime_consistency wfc_sel (model as (clist,alist)) =
 	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency\n")
 	val cl = removeOclLibrary clist
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
-	val res = List.all (fn a => a = true) (constraint_check_by_runtime_consistency_help classes model)
+	val res = List.all (fn a => a = true) (List.map (fn a => check_runtime_classifier a model) classes)
 	val _ = trace function_ends ("WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency\n")
     in
 	res
@@ -401,7 +372,7 @@ fun constraint_design_by_contract_consistency wfc_sel (model as (clist,alist)) =
 	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.constraint_design_by_contract_consistency\n")
 	val cl = removeOclLibrary clist
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
-	val res = List.all (fn a => a = true) (constraint_design_by_contract_consistency_help classes model)
+	val res = List.all (fn a => a = true) (List.map (fn a => check_design_classifier a model) classes)
  	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.constraint_design_by_contract_consistency\n")
     in
 	res
