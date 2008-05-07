@@ -272,13 +272,13 @@ val supported_wfs = [
      data            = Datatab.empty
     },
     WFCPOG.WFPO{ 
-     identifier      = "wfc_cstr", 
+     identifier      = "wfc_cstr_override", 
      name            = "WFC Constructor Consistency",  
-     description     = "Checks if a given class overwrites all old creators\n.",
+     description     = "Checks if a given class overrrides all old creators\n.",
      recommended     = true,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.WFC(WFCPOG_Constructor_Constraint.overwrites_old_creators),
+     apply           = WFCPOG.WFC(WFCPOG_Constructor_Constraint.override_old_creators),
      data            = Datatab.empty
     }
 ]
@@ -378,8 +378,8 @@ val supported_pos = [
      identifier      = "po_cstr_post", 
      name            = "Constructor Consistency post implies invariants(subconstraint)",  
      description     = "Checks if the postcondition of any constructor operation imples the class' invariant.\n",
-     recommended     = false,
-     depends         = [],
+     recommended     = true,
+     depends         = ["wfc_cstr_override"],
      recommends      = [],
      apply           = WFCPOG.POG(WFCPOG_Constructor_Constraint.post_implies_invariant),
      data            = Datatab.empty
