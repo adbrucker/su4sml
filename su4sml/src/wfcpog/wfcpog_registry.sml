@@ -477,7 +477,7 @@ fun check_wfc model (wfc_sel as WFCPOG.WFPO{identifier,name,description,recommen
 					 val (wfs,pos) = process_depends depends data model ([],[])
 					 val _ = trace wgen ("Dependencies processed ...\n")
 				     in
-					 (List.all (fn a => a = true) wfs)
+					 (List.all (fn a => a = true) (wfs@[a wfc_sel model]))
 				     end
 	      | x => raise WFCPOG_RegistryError ("A assumed wfc " ^ (name_of wfc_sel) ^ " is not a wfc!\n") 
 	val _ = trace function_ends ("WFCPOG_Registry.check_wfc\n")
