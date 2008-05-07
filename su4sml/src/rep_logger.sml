@@ -68,7 +68,7 @@ sig
     val rep_core                   : int
     val low                        : int
     val development                : int
-
+    val isa_metho                  : int
     val su4sml_home                : unit -> string
 
 end
