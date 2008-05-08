@@ -8,7 +8,7 @@
 "refineconstraint.sml"               ===> [ready for isabelle]
 "commandqueryconsistency.sml"        ===> [IMPLEMENTAITON NOT FINISHED] 
 "taxonomyconsistency.sml"            ===> [DONE]
-"interfaceconsistency.sml"	     ===> [ready for isabelle]
+"interfaceconsistency.sml"	     ===> [DONE]
 "SecureUMLconstraint.sml"            ===> [IMPLEMENTATION NOT FINISHED]
 
 

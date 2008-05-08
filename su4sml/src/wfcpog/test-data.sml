@@ -122,5 +122,5 @@ val pos = [po_cstr]
 val wfs = [wfc_vis]
 val pos = []
 *)
-val wfs = [wfc_vis_class]
-val pos = []
+val wfs = []
+val pos = [po_rfm_SR]
