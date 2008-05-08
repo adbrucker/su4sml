@@ -297,7 +297,7 @@ fun get_holocl_operation var_name oper class model =
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.get_holocl_operation\n") 
 	(** use Rep_Encoder to get operation as HOL-OCL-Term **)
 	(* val term = Rep_Encoder. .... *)
-	val hol_name = mk_def_of ((name_of class)@[(name_of_op oper)])
+	val hol_name = (name_of class)@[(name_of_op oper)]
 	val args = List.map (fn (a,b) => (Variable(a,b),b)) (arguments_of_op oper)
 	val typ = type_of class
 	val predicate = Predicate(Variable(var_name,typ),typ,hol_name,args)
