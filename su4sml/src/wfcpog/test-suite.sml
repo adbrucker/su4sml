@@ -155,14 +155,15 @@ fun start_tests model [] = []
 	WFC (a) =>
 	let 
 	    val _ = trace wgen ("Testing a wellformed constraint: \n")
-	    val check = check_wfc model h
+	    val res_wfcs = check_wfcs model [h]
 		handle WFCPOG.WFCPOG_WFC_FailedException s =>
 		       let
 			   val _  = trace wgen ("WFC_Failed_Exception handler ...\n")
 			   val _  = buffer:=((!buffer)^s)
 		       in
-			   false 
+			   [false] 
 		       end
+	    val check = List.all (fn (a,b) => b = true) res_wfcs
 	in
 	    case check of
 		false => 
@@ -190,7 +191,7 @@ fun start_tests model [] = []
       | POG (a) =>
 	let
 	    val _ = trace wgen ("Testing a proof obligation constraint: \n")
-	    val pos = generate_po model h 
+	    val pos = generate_pos model [h] 
 		handle WFCPOG.WFCPOG_WFC_FailedException s =>
 		       let 
 			   val _ = buffer:=((!buffer)^s)

@@ -95,7 +95,7 @@ end);
 
  
 fun print_taxonomy_args (args:TAX_args) = 
-    (concat["Taxonomy max_Depth with args: max_depth=\"",Int.toString (#max_depth args)," and key", Int.toString(#key args),"\n\n\n"])
+    (String.concat["Taxonomy max_Depth with args: max_depth=\"",Int.toString (#max_depth args)," and key", Int.toString(#key args),"\n\n\n"])
 
 fun deep_of_classifier x (Class{parent,...}) (model as (clist,alist)) = 
     (case parent of 
