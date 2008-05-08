@@ -297,7 +297,7 @@ fun get_holocl_operation var_name oper class model =
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.get_holocl_operation\n") 
 	(** use Rep_Encoder to get operation as HOL-OCL-Term **)
 	(* val term = Rep_Encoder. .... *)
-	val hol_name = mk_def_of (name_of class)@[(name_of_op oper)]
+	val hol_name = mk_def_of ((name_of class)@[(name_of_op oper)])
 	val args = List.map (fn (a,b) => (Variable(a,b),b)) (arguments_of_op oper)
 	val typ = type_of class
 	val predicate = Predicate(Variable(var_name,typ),typ,hol_name,args)
@@ -327,7 +327,7 @@ fun refine_operation abs_oper conc_oper abs_class conc_class model =
 	val refine = OperationCall(S,DummyT,["holOclLib","methodology","refinement","OclForwardRefinement"],[(T,DummyT),(R,DummyT)],Boolean)
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.refine_classifier\n")	
     in
-	(["po_refine_"]@(package_of abs_class)@["_"]@(package_of conc_class)@["_"]@[name_of_op abs_oper],refine)
+	(["po_refine_"^(string_of_path (name_of abs_class))^"_"^(string_of_path (name_of conc_class))^"_"^(name_of_op abs_oper)],refine)
     end
 
 fun refine_classifier abs_class conc_class model = 
