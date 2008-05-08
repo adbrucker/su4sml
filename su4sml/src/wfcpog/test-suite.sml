@@ -1,20 +1,21 @@
 signature WFCPOG_TESTSUITE =
 sig
+    (** buffer for storing output during testing *)
     val buffer            : string ref
-    val reset_buffer       : unit -> unit
-    (** Executes a test on all (default) model and returns a text output.*)
+    (** empty buffer *)
+    val reset_buffer      : unit -> unit
+    (** Executes a test on all (default) models and returns a text output.*)
     val runTests          : WFCPOG.wfpo list -> WFCPOG.wfpo list -> unit
     (** Executes a specified (string fst arg) test and returns a text output.*)
     val runTest           : string -> WFCPOG.wfpo list -> WFCPOG.wfpo list -> unit
-    (** Executes a test on all (default) models and returns the proof obligations.*)
-(*    val execTests      : WFCPOG.wfpo list -> WFCPOG.wfpo list -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
-    (** Executes a specified (string fst arg) test and returns the proof obligations.*)
-    val execTest       : string -> WFCPOG.wfpo list -> WFCPOG.wfpo list -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
-*)
+    (** Exectues a test on all (default) models and returns, if any, pos.*)
+    val runTests_ret_pos  : WFCPOG.wfpo list -> WFCPOG.wfpo list -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
+    (** Exectures a specified (string fst arg) test and returns the, if any, pos.*)
+    val runTest_ret_pos   : string -> WFCPOG.wfpo list -> WFCPOG.wfpo list -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
     (** Set Control.Print.printDepth. *)
-    val set_printDepth    : int -> unit
+    val spd               : int -> unit
     (** Set Control.Print.printLength. *)
-    val set_printLength   : int -> unit
+    val spl               : int -> unit
     exception WFCPOG_TestSuiteError of string
 end
 
@@ -126,19 +127,20 @@ val testcases = [
    }:testcase
 ]
 
-fun set_printDepth x = 
+fun spd x = 
     let 
 	val _ = Control.Print.printDepth:=x
     in
 	print ("printDepth set to " ^ (Int.toString (x)) ^ ".\n")
     end
 
-fun set_printLength x = 
+fun spl x = 
     let 
 	val _ = Control.Print.printLength:=x
     in
 	print ("printLength set to " ^ (Int.toString (x)) ^ ".\n")
     end
+
 fun add_dot 1 = ["."]
   | add_dot x = (".")::(add_dot (x-1))
 
@@ -146,8 +148,8 @@ fun insert_dots string = if (String.size(string) >= 100)
 			 then raise WFCPOG_TestSuiteError ("Name of wfpo to long...\n")
 			 else String.concat (add_dot (100 - String.size(string)))
     
-
-fun start_tests model [] = ()
+(* RETURN: (path,term) list *)
+fun start_tests model [] = []
   | start_tests model (h::wfpos) = 
     case (apply_of h) of
 	WFC (a) =>
@@ -171,7 +173,7 @@ fun start_tests model [] = ()
 		    val _ = buffer:=(!buffer)^mes
 		    val _ = trace wgen ("results logged in buffer ...\n")
 		in
-		    (start_tests model wfpos)
+		    ([])@(start_tests model wfpos)
 		end
 	      | true =>  
 		let
@@ -182,7 +184,7 @@ fun start_tests model [] = ()
 		    val _ = buffer:=(!buffer)^mes
 		    val _ = trace wgen ("results logged in buffer ...\n")
 		in
-		    (start_tests model wfpos)
+		    ([])@(start_tests model wfpos)
 		end
 	end
       | POG (a) =>
@@ -201,57 +203,27 @@ fun start_tests model [] = ()
 		let
 		    val _ = buffer:=(!buffer)^((name_of h ^ (insert_dots (name_of h)) ^ "[DEPENDING WFC NOT HOLD]\n"))
 		in
-		    (start_tests model wfpos)
+		    ([])@(start_tests model wfpos)
 		end	 
 	      | (wfc,list) => 
 		let
 		    val _ = buffer:=(!buffer)^((name_of h ^ (insert_dots (name_of h)) ^ "[ " ^ (Int.toString(List.length(list))) ^ " Terms ]\n"))
 		in 
-		    (start_tests model wfpos)
+		    (list)@(start_tests model wfpos)
 		end
 	end
-	
-fun exec_test model (h:wfpo as WFPO{name,identifier,description,recommended,depends,recommends,apply,data}) = 
-    (case (apply_of h) of
-	 WFC (a) =>
-	 (let 
-	      val _ = trace wgen ("Testing a wellformed constraint: \n")
-	  in
-	      []
-	  end
-	 )
-       | POG (a) =>
-	 (let
-	      val _ = trace wgen ("Testing a proof obligation constraint: \n")
-	      val x = generate_po model h
-	  in
-	      (#2 x)
-	  end
-	 )
-    )
-
-	 
-fun exec_tests (tc:testcase) wfs pos = 
-    let
-	val i_model = ModelImport.import (#uml tc) (#ocl tc) []
-	val (clist,alist) = Rep_Core.normalize_ext i_model
-	val model = ((clist@oclLib),(alist))
-	val result = List.map (exec_test model) (wfs@pos)
-    in
-	List.concat (result)
-    end
-
+		 
 fun test (tc:testcase) wfs pos = 
     let 
 	val i_model = ModelImport.import (#uml tc) (#ocl tc) []
 	val (clist,alist) = Rep_Core.normalize_ext i_model
 	val model = ((clist@oclLib),(alist))
 	val _ = trace wgen ("Model of testcase loaded ...\n")
-	val _ = start_tests model (wfs@pos)
+	val x = start_tests model (wfs@pos)
 	val _ = trace wgen ("Test finished ...\n")
 
     in
-	()
+	x
     end
 
 fun printResult s = print s
@@ -265,22 +237,7 @@ fun print_tc (tc:testcase)=
 	    in
 		s1^s2^name^s3
 	    end
-(* 
-fun execTest name wfs pos = 
-    let
-	val _  = trace high ("runTest ...\n")
-	val tc = valOf (List.find (fn a => name = (#name a)) testcases)
-	val string = (print_tc tc)^(test tc wfs pos)
-	val output = if (String.isSubstring "[Error]" string)
-		     then print(string^"\n\n !!!!!!!!!! WFCPOG still contains bugs !!!!!!!!!!!!!\n\n\n")
-		     else print (string^"\n\n !!!!!!!!!!  Congratulations, no bugs  !!!!!!!!!!!!!!\n\n\n")
-    in 
-	exec_tests tc wfs pos
-    end    
 
-fun execTests wfs pos = 
-    List.concat (List.map (fn a => exec_tests a wfs pos) testcases)
-*)
 fun runTest name wfs pos = 
     let
 	val _  = trace wgen ("Starts runing one test ...\n")
@@ -313,5 +270,44 @@ fun runTests wfs pos =
 	if (String.isSubstring "[ERROR]" (!buffer)) 
 	then print ((!buffer)^"\n\n !!!!!!!!!! WFCPOG still contains bugs !!!!!!!!!!!!!\n\n\n")
 	else print ((!buffer)^"\n\n !!!!!!!!!!  Congratulations, no bugs  !!!!!!!!!!!!!!\n\n\n")
+    end
+
+
+fun runTest_ret_pos name wfs pos = 
+    let
+	val _  = trace wgen ("Starts runing one test ...\n")
+	val _  = reset_buffer()
+	val tc = valOf (List.find (fn a => name = (#name a)) testcases)
+	val _ = trace wgen ("Accessing model ...\n")
+	val s1 = (print_tc tc)
+	val pos = test tc wfs pos
+	val _ = buffer:=s1^(!buffer)
+	val _ = 
+	     if (String.isSubstring "[Error]" (!buffer))
+	     then print ((!buffer)^"\n\n !!!!!!!!!! WFCPOG still contains bugs !!!!!!!!!!!!!\n\n\n")
+	     else print ((!buffer)^"\n\n !!!!!!!!!!  Congratulations, no bugs  !!!!!!!!!!!!!!\n\n\n")
+    in
+	pos
+    end
+
+
+fun runTests_ret_pos wfs pos =
+    let 
+	val _ = trace wgen ("Starts running tests ...\n")
+	val _ = reset_buffer()
+	val pos = List.concat (List.map (fn a => 
+					    let 
+						val s1 = (print_tc a)
+						val _ = buffer:=(!buffer)^s1
+						val x = (test a wfs pos)
+					    in
+						x
+					    end) testcases)
+	val _ = 
+	    if (String.isSubstring "[ERROR]" (!buffer)) 
+	    then print ((!buffer)^"\n\n !!!!!!!!!! WFCPOG still contains bugs !!!!!!!!!!!!!\n\n\n")
+	    else print ((!buffer)^"\n\n !!!!!!!!!!  Congratulations, no bugs  !!!!!!!!!!!!!!\n\n\n")
+    in
+	 pos
     end
 end
