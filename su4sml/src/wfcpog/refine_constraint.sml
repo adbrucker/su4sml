@@ -50,8 +50,9 @@ sig
 		  val put : T -> WFCPOG.wfpo -> WFCPOG.wfpo
 		  val map : (T -> T) -> WFCPOG.wfpo -> WFCPOG.wfpo
 	      end	 
+    val print_refine_args       : RFM_args -> string	      
 
-    val check_syntax         : WFCPOG.wfpo -> Rep.Model -> bool
+    val check_syntax            : WFCPOG.wfpo -> Rep.Model -> bool
 
     val generate_pos            : WFCPOG.wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list 
 
@@ -81,7 +82,7 @@ exception OpGroupError of Rep_Core.operation list * string
 
 type RFM_args = {
      key : int,
-     rfm_tuples : (Rep_OclType.Path * Rep_OclType.Path) list
+     rfm_tuple : (Rep_OclType.Path * Rep_OclType.Path)
 }
 
 
@@ -89,11 +90,17 @@ type RFM_args = {
 structure WFCPOG_RFM_Data = WFCPOG_DataFun
 		     (struct
 		      type T = RFM_args;
-		      val empty = ({key=10,rfm_tuples=[([]:Path,[]:Path)]});
+		      val empty = ({key=10,rfm_tuple=([]:Path,[]:Path)});
 		      fun copy T = T;
 		      fun extend T = T;
 		      end);
 
+fun print_refine_args (args:RFM_args) = 
+    let 
+	val tuple = (#rfm_tuple args)
+    in
+	(String.concat ["Refine rmf_tuples with args: abstract package = ",(string_of_path (#1 tuple)),", concrete package = ",(string_of_path (#2 tuple)),".\n"])
+    end
 fun rm x [] = [] 
   | rm x [b] = if (x = b) then [] else [b] 
   | rm x (h::tail) = if (x = h) then (rm x tail) else (h::(rm x tail))
@@ -273,20 +280,21 @@ fun check_syntax wfpo (model:Rep.Model as (clist,alist)) =
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.check_syntax\n")
 	val data = WFCPOG_RFM_Data.get wfpo
-	val packages = (#rfm_tuples data)
+	val packages = (#rfm_tuple data)
+	val from = (#1 packages)
+	val to = (#2 packages)
 	val model_packages = all_packages_of_model model
-	val check = List.all (fn (from,to) => 
-				 if (member from model_packages) andalso (member to model_packages)
-				 then check_syntax_help model from to
-				 else
-				     let
-					 val s1 = ("\n\n########################################################\n")
-					 val s2 = ("########################################################\n\n")
-					 val s3 = ("SYNTAX ERROR: check_syntax'\n\n")
-					 val s4 = ("No classifier where found with the package name of the abstract or concrete path.\n")
-				     in
-					 raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2^s3^s4)
-				     end ) packages
+	val check = if ((member from model_packages) andalso (member to model_packages))
+		    then check_syntax_help model from to
+		    else
+			let
+			    val s1 = ("\n\n########################################################\n")
+			    val s2 = ("########################################################\n\n")
+			    val s3 = ("SYNTAX ERROR: check_syntax\n\n")
+			    val s4 = ("No classifier where found with the package name of the abstract or concrete path.\n")
+			in
+			    raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2^s3^s4)
+			end 
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.check_syntax\n")
     in
 	check
@@ -362,9 +370,9 @@ fun generate_pos wfpo (model as (clist,alist)) =
 	val _ = trace wgen ("oclLib removed ...\n")
 	val _ = trace wgen ("Extract args ...\n")
 	val rfm_args = WFCPOG_RFM_Data.get wfpo
-	val to_refine_packages = (#rfm_tuples rfm_args)
+	val packages = (#rfm_tuple rfm_args)
 	val _ = trace wgen("Args extracted ...\n")
-	val res = List.concat (List.map (fn (a,b) => refine_package a b model) to_refine_packages)
+	val res = refine_package (#1 packages) (#2 packages) model
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.generate_pos\n")
     in	
 	res

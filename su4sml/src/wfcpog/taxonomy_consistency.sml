@@ -51,7 +51,7 @@ sig
 		  val map : (T -> T) -> WFCPOG.wfpo -> WFCPOG.wfpo
 	      end
     
-    val print_taxonomy_args : TAX_args -> unit
+    val print_taxonomy_args : TAX_args -> string
 
     (** Subconstraint *)
     val check_depth   : WFCPOG.wfpo -> Rep.Model -> bool	   
@@ -95,7 +95,7 @@ end);
 
  
 fun print_taxonomy_args (args:TAX_args) = 
-    print (concat["Taxonomy max_Depth with args: max_depth=\"",Int.toString (#max_depth args)," and key", Int.toString(#key args),"\n\n\n"])
+    (concat["Taxonomy max_Depth with args: max_depth=\"",Int.toString (#max_depth args)," and key", Int.toString(#key args),"\n\n\n"])
 
 fun deep_of_classifier x (Class{parent,...}) (model as (clist,alist)) = 
     (case parent of 
