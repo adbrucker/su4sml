@@ -274,7 +274,6 @@ fun check_syntax wfpo (model:Rep.Model as (clist,alist)) =
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.check_syntax\n")
 	val data = WFCPOG_RFM_Data.get wfpo
 	val packages = (#rfm_tuples data)
-	val abstract_packages = List.map (fn (a,b) => a) packages
 	val model_packages = all_packages_of_model model
 	val check = List.all (fn (from,to) => 
 				 if (member from model_packages) andalso (member to model_packages)
@@ -346,7 +345,6 @@ fun refine_classifier abs_class conc_class model =
 fun refine_package abs_path conc_path (model as (clist,alist)) =
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.refine_package\n")
-	val _ = trace function_ends ("WFCPOG_Refine_Constraint.refine_package\n")
 	val abs_classes = List.filter (fn a => (package_of a = abs_path) andalso (is_visible_cl a)) (clist)
 	val conc_classes = List.filter (fn a => (package_of a = conc_path) andalso (is_visible_cl a)) (clist)
 	val cl_grouped = group_cl abs_classes conc_classes
