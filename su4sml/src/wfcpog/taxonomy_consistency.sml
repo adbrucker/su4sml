@@ -144,10 +144,10 @@ fun check_depth wfpo (model as (clist,alist)) =
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a) orelse (is_Iface a) orelse (is_Enum a) orelse (is_Primi a)) cl
 	val tax_args = WFCPOG_TAX_Data.get wfpo
 	val depth = (#max_depth tax_args)
-	val res = List.all (fn a => a = true) (List.map (fn a => check_depth_classifier depth a model) classes)
+	val res = List.all (fn a => a = true) (List.map (fn a => check_depth_classifier depth a model
+							    handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)) classes)
 	val _ = trace function_calls ("WFCPG_Taxonomy_Consistency.check_maxDepth\n")
     in
 	res
-	handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)
     end
 end;
