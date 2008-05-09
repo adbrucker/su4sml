@@ -103,7 +103,7 @@ fun check_override_classifier class (model as (clist,alist)) =
 				 val s1 = "SYNTAX ERROR: Constructor Consistency override old creators\n\n"
 				 val s2 = "In the classifier " ^ (string_of_path (name_of class)) ^ " the Creator " ^ (name_of_op a) ^ "is not overriden.\n"
 			     in 
-				 raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+				 raise WFCPOG.WFC_FailedMessage (s1^s2)
 			     end) creas
 	val res = List.all (fn a => a = true) check
 	val _ = trace function_ends ("WFCPOG_Constructor_Consistency_Constraint.check_override_classifier\n")
@@ -154,6 +154,7 @@ fun override_old_creators wfpo (model as (clist, alist)) =
 	val _ = trace function_calls ("WFCPOG_Constructor_Consistency.overrides_old_creators\n")
     in
 	res
+	handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)
     end
 
 fun post_implies_invariant wfpo (model as (clist, alist)) =

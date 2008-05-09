@@ -68,8 +68,8 @@ val po_om = WFCPOG_Registry.get_wfpo WFCPOG_Registry.supported "po_oper_model"
 val _ = trace high ("............. operational constraint loaded ...\n")
 
 (** CONSTRUCTOR CONSTRAINT **)
-val po_cstr = get_wfpo supported_pos "po_cstr_post"
-val po_cstr = get_wfpo supported_pos "po_cstr_attribute"
+val po_cstr_post = get_wfpo supported_pos "po_cstr_post"
+val po_cstr_attribute = get_wfpo supported_pos "po_cstr_attribute"
 val po_cstr = get_wfpo supported_pos "po_cstr"
 val _ = trace high ("............. constructor constraints loaded ...\n")
 
@@ -122,5 +122,11 @@ val pos = [po_cstr]
 val wfs = [wfc_vis]
 val pos = []
 *)
+(*
 val wfs = []
 val pos = [po_rfm_SR]
+*)
+val wfc = 
+[wfc_inf_nameclashes,wfc_inf_stereotypes,wfc_inf_all,wfc_vis_class,wfc_vis_inheritance,wfc_vis_runtime,wfc_vis_design_by_contract,wfc_vis,wfc_tax]
+val pos =
+[po_lsk_pre,po_lsk_post,po_lsk_inv,po_cm,po_sm,po_om,po_cstr_post,po_cstr_attribute,po_cstr]

@@ -131,7 +131,7 @@ fun  check_depth_classifier depth class (model as (clist,alist)) =
 		    val s1 = "SYNTAX ERROR: Taxonomy design consistency\n\n"
 		    val s2 = "Classifier " ^ (string_of_path (name_of class)) ^ " has depth " ^ (Int.toString (d)) ^ ".\n"
 		in
-		    raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+		    raise WFCPOG.WFC_FailedMessage (s1^s2)
 		end 
     in
 	check
@@ -148,5 +148,6 @@ fun check_depth wfpo (model as (clist,alist)) =
 	val _ = trace function_calls ("WFCPG_Taxonomy_Consistency.check_maxDepth\n")
     in
 	res
+	handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)
     end
 end;

@@ -69,7 +69,9 @@ sig
   val id_of  : wfpo -> wfpo_id
   val name_of : wfpo -> string
 
-  exception WFCPOG_WFC_FailedException of (wfpo * string)
+  exception WFC_FailedMessage of string
+  exception WFC_FailedException of (wfpo * string)
+
 end
 
 
@@ -92,7 +94,8 @@ and wfpo = WFPO of {
      data            : Object.T Datatab.table 
  }
 
-exception WFCPOG_WFC_FailedException of (wfpo * string)
+exception WFC_FailedMessage of string
+exception WFC_FailedException of (wfpo * string)
 
 fun get_data (WFPO w) = #data w
 fun up_data  data' (WFPO{identifier=identifier,name=name,description=description,

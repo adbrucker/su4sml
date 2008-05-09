@@ -200,7 +200,7 @@ fun check_entity_classifier class model =
 					      SOME(aend) => ("Visibility of operation " ^ (name_of_aend aend) ^ " : " ^ (visibility2string a))
 					    | _ => ""
 			     in
-				 raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2^s3^s4^s5^s6)
+				 raise WFCPOG.WFC_FailedMessage (s1^s2^s3^s4^s5^s6)
 			     end
 		     ) ((vis_ops)@(vis_atts))
     in
@@ -232,7 +232,7 @@ fun check_inheritance_classifier class model =
 				 val s3 = "Visibility of the overriden operation : " ^ (visibility2string (#visibility this_op)) ^ ".\n"
 				 val s4 = "Visibility of the original operation (located in " ^ (string_of_path (name_of super)) ^ " ) : " ^ (visibility2string (#visibility sop)) ^ ".\n" 
 			     in
-				 raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2^s3^s4)
+				 raise WFCPOG.WFC_FailedMessage (s1^s2^s3^s4)
 			     end
 		     ) mod_ops_super_this
 	val _ = trace function_ends ("WFCPOG_Visibility_Consistency.check_inheritance_visibility_consistency\n")
@@ -277,7 +277,7 @@ fun check_runtime_classifier class model =
 				 val s1 = "SYNTAX ERROR: Visibility runtime consistency\n\n"
 				 val s2 = "Classifier " ^ (string_of_path (name_of class)) ^ " has in operation " ^ a ^ " in the precondition " ^ (opt2string b) ^ " inconsistent modificators.\n"
 			     in
-				 raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+				 raise WFCPOG.WFC_FailedMessage (s1^s2)
 			     end) ops_pre_vis
 
 	val check_post =
@@ -289,7 +289,7 @@ fun check_runtime_classifier class model =
 				 val s1 = "SYNTAX ERROR: Visibility runtime consistency\n\n"
 				 val s2 = "Classifier " ^ (string_of_path (name_of class)) ^ " has in operation " ^ a ^ " in the postcondition " ^ (opt2string b) ^ " inconsistent modificators.\n"
 			     in
-				 raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+				 raise WFCPOG.WFC_FailedMessage (s1^s2)
 			     end) ops_post_vis
 	val check_inv = 
 	    List.map (fn (a,b) =>
@@ -300,7 +300,7 @@ fun check_runtime_classifier class model =
 				 val s1 = "SYNTAX ERROR: Visibility runtime consistency\n\n"
 				 val s2 = "Classifier " ^ (string_of_path (name_of class)) ^ " has in the invariant " ^ (opt2string(a)) ^ "inconsistent modificators.\n"
 			     in
-				 raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+				 raise WFCPOG.WFC_FailedMessage (s1^s2)
 			     end) invs_vis
     in
 	List.all (fn a => a = true) (check_pre@check_post@check_inv)
@@ -327,7 +327,7 @@ fun check_design_classifier class model =
 				 val s1 = "SYNTAX ERROR: Visibility design by contract consistency\n\n"
 				 val s2 = "Classifier " ^ (string_of_path (name_of class)) ^ " has in operation " ^ a ^ " in the precondition " ^ (opt2string b) ^ " inconsistent modificators.\n"
 			     in
-				 raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+				 raise WFCPOG.WFC_FailedMessage (s1^s2)
 			     end) ops_pre_vis
     in
 	List.all (fn a => a = true) check_pre
@@ -344,6 +344,7 @@ fun model_entity_consistency wfc_sel (model as (clist,alist)) =
 	val _ = trace function_ends ("WFCPOG_Visibility_Constraint.model_entity_consistency\n")
     in
 	res
+	handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfc_sel,s)
     end
 
 fun model_inheritance_consistency wfc_sel (model as (clist,alist)) = 
@@ -355,6 +356,7 @@ fun model_inheritance_consistency wfc_sel (model as (clist,alist)) =
 	val _ = trace function_ends ("WFCPOG_Visibility_Constraint.model_inheritance_consistency\n")
     in
 	res
+	handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfc_sel,s)
     end
 
 fun constraint_check_by_runtime_consistency wfc_sel (model as (clist,alist)) = 
@@ -366,6 +368,7 @@ fun constraint_check_by_runtime_consistency wfc_sel (model as (clist,alist)) =
 	val _ = trace function_ends ("WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency\n")
     in
 	res
+	handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfc_sel,s)
     end
 
 fun constraint_design_by_contract_consistency wfc_sel (model as (clist,alist)) = 
@@ -377,5 +380,6 @@ fun constraint_design_by_contract_consistency wfc_sel (model as (clist,alist)) =
  	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.constraint_design_by_contract_consistency\n")
     in
 	res
+	handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfc_sel,s)
     end
 end;

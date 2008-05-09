@@ -87,7 +87,7 @@ fun check_stereotypes_interface (i as Interface{operations,...}) (model as (clis
 	    val s1 = "SYNTAX ERROR: Interface stereotypes consistency\n\n"
 	    val s2 = "Interface " ^ (string_of_path (name_of i)) ^ " has a operations with stereotypes 'create' or 'destroy' \n"
 	in
-	    raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+	    raise WFCPOG.WFC_FailedMessage (s1^s2)
 	end
   | check_stereotypes_interface  x model = true
 
@@ -107,7 +107,7 @@ fun check_nameclash_classifier (c as Class{interfaces,...}) (model as (clist,ali
 		    val s1 = "SYNTAX ERROR: Interface nameclash consistency\n\n"
 		    val s2 = "Classifier " ^ (string_of_path (name_of c)) ^ " has a nameclash resulting from the interfaces " ^ (String.concat (List.map (fn a => (string_of_OclType a)) interfaces)) ^ ".\n"
 		in
-		    raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+		    raise WFCPOG.WFC_FailedMessage (s1^s2)
 		end
 	end
   | check_nameclash_classifier (a as AssociationClass{interfaces,...}) (model as (clist,alist)) = 
@@ -125,7 +125,7 @@ fun check_nameclash_classifier (c as Class{interfaces,...}) (model as (clist,ali
 		    val s1 = "SYNTAX ERROR: Interface nameclash consistency\n\n"
 		    val s2 = "Classifier " ^ (string_of_path (name_of a)) ^ " has a nameclash resulting from the interfaces " ^ (String.concat (List.map (fn a => (string_of_OclType a)) interfaces)) ^ ".\n"
 		in
-		    raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+		    raise WFCPOG.WFC_FailedMessage (s1^s2)
 		end
 	end
   | check_nameclash_classifier (e as Enumeration{interfaces,...}) model = 
@@ -143,7 +143,7 @@ fun check_nameclash_classifier (c as Class{interfaces,...}) (model as (clist,ali
 		    val s1 = "SYNTAX ERROR: Interface nameclash consistency\n\n"
 		    val s2 = "Classifier " ^ (string_of_path (name_of e)) ^ " has a nameclash resulting from the interfaces " ^ (String.concat (List.map (fn a => (string_of_OclType a)) interfaces)) ^ ".\n"
 		in
-		    raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+		    raise WFCPOG.WFC_FailedMessage (s1^s2)
 		end
 	end
   | check_nameclash_classifier (p as Primitive{interfaces,...}) model = 
@@ -161,7 +161,7 @@ fun check_nameclash_classifier (c as Class{interfaces,...}) (model as (clist,ali
 		    val s1 = "SYNTAX ERROR: Interface nameclash consistency\n\n"
 		    val s2 = "Classifier " ^ (string_of_path (name_of p)) ^ " has a nameclash resulting from the interfaces " ^ (String.concat (List.map (fn a => string_of_OclType a) interfaces)) ^ ".\n"
 		in
-		    raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2)
+		    raise WFCPOG.WFC_FailedMessage (s1^s2)
 		end
 	end
   | check_nameclash_classifier x model = true
@@ -175,6 +175,7 @@ fun check_stereotypes wfpo (model as (clist,alist)) =
 	val _ = trace function_ends ("WFCPOG_Interface_Consistency.check_stereotypes\n")
     in
 	res
+	handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)
     end
 
 fun check_nameclashes wfpo (model as (clist,alist)) = 
@@ -186,5 +187,6 @@ fun check_nameclashes wfpo (model as (clist,alist)) =
 	val _ = trace function_ends ("WFCPOG_Interface_Consistency.check_nameclashes\n")
     in
 	res
+	handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)
     end
 end;

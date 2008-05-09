@@ -157,7 +157,7 @@ fun map_public_classes fromPath toPath (model as (clist,alist)) =
 		   val s2 = ("The following public classes are not included in the refined class:\n\n") 
 		   val s3 = (String.concat (List.map (fn a => (" * " ^ (string_of_path (name_of a)) ^ "\n")) clist))
 	       in 
-		   raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2^s3)
+		   raise WFCPOG.WFC_FailedMessage (s1^s2^s3)
 	       end
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.map_public_classes\n")
     in
@@ -182,7 +182,7 @@ fun map_public_ops [] = [[]]
 							   val s4 = ("The following public operations are not included in the refined classes:\n\n") 
 							   val s5 = (String.concat (List.map (fn a => (" * " ^ (operation2string a) ^ "\n")) oplist))
 						       in 
-							   raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2^s3^s4^s5)
+							   raise WFCPOG.WFC_FailedMessage (s1^s2^s3^s4^s5)
 						       end     
 	    ))]
 	    @(map_public_ops tail)
@@ -224,7 +224,7 @@ fun map_types [] fP tP model = []
 			    val s5 = ("Existing FromClass = " ^ (string_of_path (name_of h1)) ^ "\n")
 			    val s6 = ("Inexisting ToClass = " ^ (string_of_path (name_of h2)) ^ "\n")
 			in 
-			    raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2^s3^s4^s5^s6)
+			    raise WFCPOG.WFC_FailedMessage (s1^s2^s3^s4^s5^s6)
 			end
 	(* name of the arguments *)
 	val _ = trace wgen ("map_types_6: " ^ string_of_path (name_of c1) ^ "\n")
@@ -245,7 +245,7 @@ fun map_types [] fP tP model = []
 					     val s6 = ("Existing FromClass = " ^ (string_of_path (name_of h1)) ^ "\n")
 					     val s7 = ("Inexisting ToClass = " ^ (string_of_path (name_of h2)) ^ "\n")
 					 in 
-					     raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2^s3^s4^s5^s6^s7)
+					     raise WFCPOG.WFC_FailedMessage (s1^s2^s3^s4^s5^s6^s7)
 					 end
 			      end
 			  ) arg_class_name1
@@ -293,11 +293,12 @@ fun check_syntax wfpo (model:Rep.Model as (clist,alist)) =
 			    val s3 = ("SYNTAX ERROR: check_syntax\n\n")
 			    val s4 = ("No classifier where found with the package name of the abstract or concrete path.\n")
 			in
-			    raise WFCPOG.WFCPOG_WFC_FailedException (s1^s2^s3^s4)
+			    raise WFCPOG.WFC_FailedMessage (s1^s2^s3^s4)
 			end 
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.check_syntax\n")
     in
 	check
+	handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)
     end
 
 fun get_holocl_operation var_name oper class model = 
