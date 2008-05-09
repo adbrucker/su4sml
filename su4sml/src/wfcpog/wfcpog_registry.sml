@@ -453,26 +453,32 @@ fun check_wfc model wfc =
     end
     
 fun check_wfcs model wfcs =  
-    List.concat (map (fn (a as WFCPOG.WFPO{identifier,name,description,recommended,depends,recommends,apply,data}:WFCPOG.wfpo) =>
-			 if (depends = [])
-			 then [(check_wfc model a)]
-			 else
-			     let
-				 val depending_wfpos = List.map (set_data (get_wfpo supported)) depends 
-				 val depending_wfcs = List.filter (fn b => 
-								      case (WFCPOG.apply_of b) of
-									  WFCPOG.WFC(x) => true
-									| WFCPOG.POG(x) => false) depending_wfpos
-				 val depending_pos = List.filter (fn b =>
-								     case (WFCPOG.apply_of b) of
-									 WFCPOG.WFC(x) => false
-								       | WFCPOG.POG(x) => true) depending_wfpos
-			     in
-				 if (List.length depending_pos <> 0)
-				 then raise WFCPOG_RegistryError ("A wellformedness check has a proof obligation marked as depending. But this is not allowed! \n\nCHANGE WFCPOG_Registry.supported_wfs ENTRY(IES)!!!")
-				 else (List.map (check_wfc model) depending_wfcs)@[(check_wfc model a)]
-			     end) wfcs)
-			 
+    let
+	val _ = trace function_calls ("WFCPOG_Registry.check_wfcs\n")
+	val res =     List.concat (map (fn (a as WFCPOG.WFPO{identifier,name,description,recommended,depends,recommends,apply,data}:WFCPOG.wfpo) =>
+					   if (depends = [])
+					   then [(check_wfc model a)]
+					   else
+					       let
+						   val depending_wfpos = List.map (set_data (get_wfpo supported)) depends 
+						   val depending_wfcs = List.filter (fn b => 
+											case (WFCPOG.apply_of b) of
+											    WFCPOG.WFC(x) => true
+											  | WFCPOG.POG(x) => false) depending_wfpos
+						   val depending_pos = List.filter (fn b =>
+										       case (WFCPOG.apply_of b) of
+											   WFCPOG.WFC(x) => false
+											 | WFCPOG.POG(x) => true) depending_wfpos
+					       in
+						   if (List.length depending_pos <> 0)
+						   then raise WFCPOG_RegistryError ("A wellformedness check has a proof obligation marked as depending. But this is not allowed! \n\nCHANGE WFCPOG_Registry.supported_wfs ENTRY(IES)!!!")
+						   else (List.map (check_wfc model) depending_wfcs)@[(check_wfc model a)]
+					       end) wfcs)
+	val _ = trace function_ends ("WFCPOG_Registry.check_wfcs\n")
+    in
+	res
+    end
+
 fun generate_po model po =  
     let
 	val _ = trace function_calls ("WFCPOG_Registry.generate_po\n")
