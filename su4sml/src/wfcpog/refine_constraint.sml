@@ -107,29 +107,71 @@ fun rm x [] = []
 						      
 fun group_cl [] [] = []
   | group_cl [] toC = []
-  | group_cl FromC [] = raise ClassGroupError (FromC,("Some classes of the abstract package are public where in the concrete not.\n")) 
+  | group_cl FromC [] = 
+    let
+	val s1 = "SYNTAX ERROR: OO Refinement syntax check\n\n"
+	val s2 = "Classifiers " ^(String.concat (List.map (fn a => ((string_of_path (name_of a))^", ")) FromC))^" of abstract package have no corresponding classifiers in concrete package.\n"
+    in
+	raise WFCPOG.WFC_FailedMessage (s1^s2)
+    end
   | group_cl (h1::t1) list =
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.group_cl \n")
 	val _ = trace wgen ("Class: " ^ string_of_path (name_of h1) ^ "\n")
 	val x = List.filter (fn a => ((List.last (name_of a)) = (List.last (name_of h1)))) list
 	val res = 
-	    if (List.length(x) = 0)
-	    then raise ClassGroupError ([h1],("Some classes of the abstract package are public where in the concrete not.\n"))
-	    else (h1,hd(x))::(group_cl t1 (rm (hd(x)) list))
+	    case  (List.length(x)) of 
+		0 => 
+		let
+		    val s1 = "SYNTAX ERROR: OO Refinement syntax check\n\n"
+		    val s2 = "Classifier " ^ (string_of_path (name_of h1)) ^ " of abstract package has no corresponding classifier in concrete package.\n"
+		in
+		    raise WFCPOG.WFC_FailedMessage (s1^s2)
+		end
+	      | 1 => (h1,hd(x))::(group_cl t1 (rm (hd(x)) list))
+	      | x => 
+		let
+		    val s1 = "SYNTAX ERROR: OO Refinement syntax check\n\n"
+		    val s2 = "Something extremely strange happened. It seemed that the concrete package has two classifiers with the same name!. \nPLEASE CHECK THE CLASSIFIERS OF THE CONCRETE PACKAGE FOR THE OCCURENCE OF DUPLICATES.\n"
+		in
+		    raise WFCPOG.WFC_FailedMessage (s1^s2)
+		end
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.group_cl \n")
     in
 	res
     end
 
-fun group_op [] [] = []
-  | group_op fromOps [] = raise OpGroupError (fromOps,("Some operations of the abstract class are public where int the concrete not.\n"))
-  | group_op [] toOps = []
-  | group_op ((h1:operation)::t1) list =
+fun group_op class_name [] [] = []
+  | group_op class_name fromOps [] = 
     let
+	val s1 = "SYNTAX ERROR: OO Refinement syntax check\n\n"
+	val s2 = "The abstract classifier "^class_name^" its operations " ^(String.concat (List.map (fn a => ((name_of_op a)^", ")) fromOps))^" have no corresponding operations in the concrete classifier.\n"
+    in
+	raise WFCPOG.WFC_FailedMessage (s1^s2)
+    end
+  | group_op class_name [] toOps = []
+  | group_op class_name ((h1:operation)::t1) list =
+    let
+	(* TODO: Check also signature because of the overloaded operations! *)
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.group_op \n")
 	val x = hd(List.filter (fn a => ((name_of_op a) = (name_of_op h1))) list)
-	val res = (h1,x)::(group_op t1 (rm x list))
+	val res = 
+	    case  (List.length(x)) of 
+		0 => 
+		let
+		    val s1 = "SYNTAX ERROR: OO Refinement syntax check\n\n"
+		    val s2 = "The abstract classifier "^class_name^" its operation " ^(name_of_op h1)^ " has no corresponding operation in the concrete classifier.\n"
+		in
+		    raise WFCPOG.WFC_FailedMessage (s1^s2)
+		end
+	      | 1 => (h1,x)::(group_op class_name t1 (rm x list))
+	      | x => 
+		let
+		    val s1 = "SYNTAX ERROR: OO Refinement syntax check\n\n"
+		    val s2 = "Something extremely strange happened. It seemed that the classifier "^class_name^"has two operations with the same name!. \nPLEASE CHECK THE CLASSIFIERS OF THE CONCRETE PACKAGE FOR THE OCCURENCE OF DUPLICATES.\n"
+		in
+		    raise WFCPOG.WFC_FailedMessage (s1^s2)
+		end
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.group_op \n")
     in
 	res
@@ -149,9 +191,9 @@ fun map_public_classes fromPath toPath (model as (clist,alist)) =
 	val _ = List.map (fn a => trace wgen (" - " ^ (string_of_path (name_of a))^"\n")) conc_c
 	val _ = trace wgen ("Package " ^ string_of_path (toPath) ^ " contains " ^ Int.toString (List.length(conc_c)) ^ " public classes.\n")
 	val _ = trace wgen ("map_public_classes 3 \n")
-	val res = 
-	group_cl abs_c conc_c 
-	handle ClassGroupError (clist,s) => 
+	val res = group_cl abs_c conc_c 
+(* 
+	handle WFCPOG.WFC_FailedMessage s => 
 	       let
 		   val s1 = ("SYNTAX ERROR: Class consistency \n\n")
 		   val s2 = ("The following public classes are not included in the refined class:\n\n") 
@@ -160,6 +202,7 @@ fun map_public_classes fromPath toPath (model as (clist,alist)) =
 		   raise WFCPOG.WFC_FailedMessage (s1^s2^s3)
 	       end
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.map_public_classes\n")
+*)
     in
 	res
     end
@@ -173,7 +216,7 @@ fun map_public_ops [] = [[]]
 	val _ = trace wgen ("Number of operations of f_class(" ^ (string_of_path (name_of f)) ^ ") = " ^ Int.toString (List.length(f_ops)) ^ "\n")
 	val _ = trace wgen ("Number of operations of t_class(" ^ (string_of_path (name_of t)) ^ ") = " ^ Int.toString (List.length(t_ops)) ^ "\n")
 	val res = 
-	    [(List.map (fn (a,b) => (f,t,a,b)) (group_op f_ops t_ops
+	    [(List.map (fn (a,b) => (f,t,a,b)) (group_op (List.last (Rep_Core.name_of f))  f_ops t_ops
 						handle OpGroupError (oplist,s) => 
 						       let
 							   val s1 = ("SYNTAX ERROR: Operation consistency \n\n")
@@ -261,12 +304,15 @@ fun check_syntax_help (model:Rep.Model as (clist,alist)) fromPath toPath =
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.check_syntax_help\n")
 	(* check public classes of the two packages *)
 	val x = map_public_classes fromPath toPath model
+		handle WFCPOG_FailedMessage s => raise WFCPOG_RefineError s
         val _ = trace wgen ("check syntax 2 \n")
 	(* check public methods of the public classes *)
 	val y = List.concat (map_public_ops x)
+		handle WFCPOG_FailedMessage s => raise WFCPOG_RefineError s
 	val _ = trace wgen ("check syntax 3 \n")
 	(* check types of the public operations of public classes *)
 	val z = map_types y fromPath toPath model
+		handle WFCPOG_FailedMessage s => raise WFCPOG_RefineError s
 	val _ = trace wgen ("check syntax 4 \n")
 	val res = List.all (fn a => a) z
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.check_syntax_help\n")
@@ -286,7 +332,7 @@ fun check_syntax wfpo (model:Rep.Model as (clist,alist)) =
 	val model_packages = all_packages_of_model model
 	val check = if ((member from model_packages) andalso (member to model_packages))
 		    then check_syntax_help model from to
-			 handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)
+			 handle WFCPOG_RefineError s => raise WFCPOG.WFC_FailedException (wfpo,s)
 		    else
 			let
 			    val s1 = ("\n\n########################################################\n")
@@ -294,7 +340,7 @@ fun check_syntax wfpo (model:Rep.Model as (clist,alist)) =
 			    val s3 = ("SYNTAX ERROR: check_syntax\n\n")
 			    val s4 = ("No classifier where found with the package name of the abstract or concrete path.\n")
 			in
-			    raise WFCPOG.WFC_FailedMessage (s1^s2^s3^s4)
+			    raise WFCPOG.WFC_FailedException (wfpo,s1^s2^s3^s4)
 			end 
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.check_syntax\n")
     in
@@ -356,8 +402,8 @@ fun refine_package abs_path conc_path (model as (clist,alist)) =
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.refine_package\n")
 	val abs_classes = List.filter (fn a => (package_of a = abs_path) andalso (is_visible_cl a)) (clist)
 	val conc_classes = List.filter (fn a => (package_of a = conc_path) andalso (is_visible_cl a)) (clist)
-	val cl_grouped = group_cl abs_classes conc_classes
-	val res = (List.concat (List.map (fn (a,b) => refine_classifier a b model) cl_grouped))
+	val cl_grouped = 
+	val res = (List.concat (List.map (fn (a,b) => refine_classifier a b model) (group_cl abs_classes conc_classes))
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.refine_package\n")
     in
 	res
