@@ -161,7 +161,7 @@ fun start_tests model [] = []
 			   val _  = trace wgen ("WFC_Failed_Exception handler ...\n")
 			   val _  = buffer:=((!buffer)^s)
 		       in
-			   [(h,false)] 
+			   raise WFCPOG.WFC_FailedException(h,s) 
 		       end
 	    val check = List.all (fn (a,b) => b = true) res_wfcs
 	in
@@ -196,7 +196,7 @@ fun start_tests model [] = []
 		       let 
 			   val _ = buffer:=((!buffer)^s)
 		       in
-			   [(h,[(["Exception"],(Variable("x",OclVoid)))])]
+			   raise WFCPOG.WFC_FailedException (h,s)
 		       end
 	in
 	    case pos of 
@@ -252,11 +252,18 @@ fun runTest name wfs pos =
 	val _ = trace wgen ("Accessing model ...\n")
 	val s1 = (print_tc tc)
 	val _ = (test tc wfs pos)
+	    handle WFCPOG.WFC_FailedException (wfpo,s) =>  
+		   let
+		       val _ = buffer:=((!buffer)^s)
+		   in
+		       []
+		   end
 	val _ = buffer:=s1^(!buffer)
     in
-	if (String.isSubstring "[Error]" (!buffer))
+	(if (String.isSubstring "[Error]" (!buffer))
 	then print ((!buffer)^"\n\n !!!!!!!!!! WFCPOG still contains bugs !!!!!!!!!!!!!\n\n\n")
 	else print ((!buffer)^"\n\n !!!!!!!!!!  Congratulations, no bugs  !!!!!!!!!!!!!!\n\n\n")
+	) 
     end
 
 
@@ -268,9 +275,16 @@ fun runTests wfs pos =
 			     let 
 				 val s1 = (print_tc a)
 				 val _ = buffer:=(!buffer)^s1
-				 val _ = (test a wfs pos)
+				 val data = (test a wfs pos)
+				     handle WFCPOG.WFC_FailedException (wfpo,s) =>  
+					    let
+						val _ = buffer:=((!buffer)^s)
+						val _ = trace wgen (!buffer)
+					    in
+						raise WFCPOG_TestSuiteError ("one wfc failed\n")
+					    end
 			     in
-				 ()
+				 data
 			     end) testcases
     in
 	if (String.isSubstring "[ERROR]" (!buffer)) 

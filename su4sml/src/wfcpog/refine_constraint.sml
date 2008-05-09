@@ -319,6 +319,7 @@ fun check_syntax wfpo (model:Rep.Model as (clist,alist)) =
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.check_syntax\n")
 	val data = WFCPOG_RFM_Data.get wfpo
+	val _ = trace wgen (print_refine_args data)
 	val packages = (#rfm_tuple data)
 	val from = (#1 packages)
 	val to = (#2 packages)
