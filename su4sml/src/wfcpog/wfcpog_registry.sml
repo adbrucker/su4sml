@@ -460,7 +460,7 @@ fun check_wfcs model wfcs =
 					   then [(check_wfc model a)]
 					   else
 					       let
-						   val depending_wfpos = List.map (set_data (get_wfpo supported)) depends 
+						   val depending_wfpos = List.map (fn m => (set_data data (get_wfpo supported m))) depends 
 						   val depending_wfcs = List.filter (fn b => 
 											case (WFCPOG.apply_of b) of
 											    WFCPOG.WFC(x) => true
@@ -501,7 +501,7 @@ fun generate_pos model pos =
 				 then [(generate_po model a)]
 				 else
 				     let
-					 val depending_wfpos = List.map (set_data (get_wfpo supported)) depends
+					 val depending_wfpos = List.map (fn m => (set_data data (get_wfpo supported m))) depends
 					 val depending_wfcs = List.filter (fn b =>
 									      case (WFCPOG.apply_of b)of
 										  WFCPOG.WFC(x) => true
