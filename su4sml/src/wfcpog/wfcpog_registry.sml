@@ -425,6 +425,19 @@ fun is_pog (WFCPOG.WFPO wfpo) = case #apply wfpo of
 				  WFCPOG.POG _ => true
 				| _            => false
 
+fun set_data (new_data:Object.T table) (WFCPOG.WFPO{identifier,name,description,recommended,depends,recommends,apply,data}) =  
+    WFCPOG.WFPO{ 
+      identifier = identifier, 
+      name = name, 
+      description=description, 
+      recommended=recommended, 
+      depends=depends, 
+      recommends=recommends, 
+      apply=apply, 
+      data=new_data 
+    } 				
+
+
 
 fun check_wfc model wfc = 
     let
@@ -445,7 +458,7 @@ fun check_wfcs model wfcs =
 			 then [(check_wfc model a)]
 			 else
 			     let
-				 val depending_wfpos = List.map (get_wfpo supported) depends 
+				 val depending_wfpos = List.map (set_data (get_wfpo supported)) depends 
 				 val depending_wfcs = List.filter (fn b => 
 								      case (WFCPOG.apply_of b) of
 									  WFCPOG.WFC(x) => true
@@ -473,30 +486,36 @@ fun generate_po model po =
 	res
     end
 
-fun generate_pos model pos = 
-    List.concat (map (fn (a as (WFCPOG.WFPO{identifier,name,description,recommended,depends,recommends,apply,data}:WFCPOG.wfpo)) => 
-			 if (depends = [])
-			 then [(generate_po model a)]
-			 else
-			     let
-				 val depending_wfpos = List.map (get_wfpo supported) depends
-				 val depending_wfcs = List.filter (fn b =>
-								      case (WFCPOG.apply_of b)of
-									  WFCPOG.WFC(x) => true
-									| WFCPOG.POG(x) => false) depending_wfpos
-				 val depending_pos = List.filter (fn b =>
-								     case (WFCPOG.apply_of b) of
-									 WFCPOG.WFC(x) => false
-								       | WFCPOG.POG(x) => true) depending_wfpos
-				 val check = List.map (check_wfc model) depending_wfcs
-			     in
-				 if (List.all (fn (wfc,x) => x = true) check)
-				 then (List.map (generate_po model) depending_pos)@[(generate_po model a)]
-				 else (* doesn't matter, because WFCPOG_WFC_FailedException is returned *) 
-					  []
-			     end) pos)
+fun generate_pos model pos =
+    let
+	val _ = trace function_calls ("WFCPOG_Registry.generate_pos\n")
+	val res = 
+	    List.concat (map (fn (a as (WFCPOG.WFPO{identifier,name,description,recommended,depends,recommends,apply,data}:WFCPOG.wfpo)) => 
+				 if (depends = [])
+				 then [(generate_po model a)]
+				 else
+				     let
+					 val depending_wfpos = List.map (set_data (get_wfpo supported)) depends
+					 val depending_wfcs = List.filter (fn b =>
+									      case (WFCPOG.apply_of b)of
+										  WFCPOG.WFC(x) => true
+										| WFCPOG.POG(x) => false) depending_wfpos
+					 val depending_pos = List.filter (fn b =>
+									     case (WFCPOG.apply_of b) of
+										 WFCPOG.WFC(x) => false
+									       | WFCPOG.POG(x) => true) depending_wfpos
+					 val check = List.map (check_wfc model) depending_wfcs
+				     in
+					 if (List.all (fn (wfc,x) => x = true) check)
+					 then (List.map (generate_po model) depending_pos)@[(generate_po model a)]
+					 else (* doesn't matter, because WFCPOG_WFC_FailedException is returned *) 
+						  []
+				     end) pos)
+	val _ = trace function_ends ("WFCPOG_Registry.generate_pos\n")
+    in
+	res
+    end
     
-
 fun create_wfc_tax i =     (WFCPOG_Taxonomy_Constraint.WFCPOG_TAX_Data.put ({key=9,max_depth=i}) tax_workaround)
 
 fun wf_is_supported_id wfpo_id = List.exists (fn w => wfpo_id = id_of w) supported_wfs
