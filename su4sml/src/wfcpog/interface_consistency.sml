@@ -171,11 +171,11 @@ fun check_stereotypes wfpo (model as (clist,alist)) =
 	val _ = trace function_calls ("WFCPOG_Interface_Consistency.check_stereotypes\n")
 	val cl = removeOclLibrary clist
 	val classes = List.filter (fn a => (is_Iface a)) cl
-	val res = List.all (fn a => a = true) (List.map (fn a => check_stereotypes_interface a model) classes)
+	val res = List.all (fn a => a = true) (List.map (fn a => check_stereotypes_interface a model
+							    handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)) classes)
 	val _ = trace function_ends ("WFCPOG_Interface_Consistency.check_stereotypes\n")
     in
 	res
-	handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)
     end
 
 fun check_nameclashes wfpo (model as (clist,alist)) = 
@@ -183,10 +183,11 @@ fun check_nameclashes wfpo (model as (clist,alist)) =
 	val _ = trace function_calls ("WFCPOG_Interface_Consistency.check_nameclashes\n")
 	val cl = removeOclLibrary clist
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a) orelse (is_Primi a) orelse (is_Enum a)) cl
-	val res = List.all (fn a => a = true) (List.map (fn a => check_nameclash_classifier a model) classes)
+	val res = List.all (fn a => a = true) (List.map (fn a => check_nameclash_classifier a model
+							    handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)) classes)
 	val _ = trace function_ends ("WFCPOG_Interface_Consistency.check_nameclashes\n")
     in
 	res
-	handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)
+
     end
 end;

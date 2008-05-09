@@ -340,11 +340,11 @@ fun model_entity_consistency wfc_sel (model as (clist,alist)) =
 	val cl = removeOclLibrary (clist)
         (* visiblity only for Classes and AssocClasses *)
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
-	val res = List.all (fn a => a = true) (List.map (fn a => check_entity_classifier a model) classes)
+	val res = List.all (fn a => a = true) (List.map (fn a => check_entity_classifier a model
+							    handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfc_sel,s)) classes)
 	val _ = trace function_ends ("WFCPOG_Visibility_Constraint.model_entity_consistency\n")
     in
 	res
-	handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfc_sel,s)
     end
 
 fun model_inheritance_consistency wfc_sel (model as (clist,alist)) = 
@@ -352,11 +352,12 @@ fun model_inheritance_consistency wfc_sel (model as (clist,alist)) =
 	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.model_inheritance_consistency\n")
 	val cl = removeOclLibrary (clist)
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
-	val res  = List.all (fn a => a = true) (List.map (fn a => check_inheritance_classifier a model) classes)
+	val res  = List.all (fn a => a = true) (List.map (fn a => check_inheritance_classifier a model
+							     handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfc_sel,s)) classes)
 	val _ = trace function_ends ("WFCPOG_Visibility_Constraint.model_inheritance_consistency\n")
     in
 	res
-	handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfc_sel,s)
+
     end
 
 fun constraint_check_by_runtime_consistency wfc_sel (model as (clist,alist)) = 
@@ -364,11 +365,11 @@ fun constraint_check_by_runtime_consistency wfc_sel (model as (clist,alist)) =
 	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency\n")
 	val cl = removeOclLibrary clist
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
-	val res = List.all (fn a => a = true) (List.map (fn a => check_runtime_classifier a model) classes)
+	val res = List.all (fn a => a = true) (List.map (fn a => check_runtime_classifier a model
+							    handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfc_sel,s)) classes)
 	val _ = trace function_ends ("WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency\n")
     in
 	res
-	handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfc_sel,s)
     end
 
 fun constraint_design_by_contract_consistency wfc_sel (model as (clist,alist)) = 
@@ -376,10 +377,11 @@ fun constraint_design_by_contract_consistency wfc_sel (model as (clist,alist)) =
 	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.constraint_design_by_contract_consistency\n")
 	val cl = removeOclLibrary clist
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
-	val res = List.all (fn a => a = true) (List.map (fn a => check_design_classifier a model) classes)
+	val res = List.all (fn a => a = true) (List.map (fn a => check_design_classifier a model
+							    handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfc_sel,s)) classes)
  	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.constraint_design_by_contract_consistency\n")
     in
 	res
-	handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfc_sel,s)
+	
     end
 end;

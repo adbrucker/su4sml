@@ -286,6 +286,7 @@ fun check_syntax wfpo (model:Rep.Model as (clist,alist)) =
 	val model_packages = all_packages_of_model model
 	val check = if ((member from model_packages) andalso (member to model_packages))
 		    then check_syntax_help model from to
+			 handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)
 		    else
 			let
 			    val s1 = ("\n\n########################################################\n")
@@ -298,7 +299,6 @@ fun check_syntax wfpo (model:Rep.Model as (clist,alist)) =
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.check_syntax\n")
     in
 	check
-	handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)
     end
 
 fun get_holocl_operation var_name oper class model = 

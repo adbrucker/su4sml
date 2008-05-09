@@ -150,11 +150,11 @@ fun override_old_creators wfpo (model as (clist, alist)) =
 	val _ = trace function_calls ("WFCPOG_Constructor_Consistency.overrides_old_creators\n")
 	val cl = removeOclLibrary clist
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
-	val res = List.all (fn a => a = true) (List.map (fn a => check_override_classifier a model) classes)
+	val res = List.all (fn a => a = true) (List.map (fn a => check_override_classifier a model
+							    handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)) classes)
 	val _ = trace function_calls ("WFCPOG_Constructor_Consistency.overrides_old_creators\n")
     in
 	res
-	handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)
     end
 
 fun post_implies_invariant wfpo (model as (clist, alist)) =
