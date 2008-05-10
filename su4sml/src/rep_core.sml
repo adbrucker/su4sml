@@ -1166,13 +1166,13 @@ fun type_of_path ["Integer"] (model:transform_model) = Integer
 	end
     else 
 	let
-	    val cl = class_of_design_model [set] model
+	    val cl = class_of [set] model
 	in
 	    type_of cl
 	end
   | type_of_path (list:Path) (model:transform_model) = 
     let
-	val cl = class_of_design_model list model 
+	val cl = class_of list model 
     in
 	type_of cl
     end
