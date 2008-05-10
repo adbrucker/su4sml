@@ -96,6 +96,8 @@ sig
     (** Generate all recommended pos.*)							      
     val generate_recommended_pos : Rep.Model -> (WFCPOG.wfpo * (Rep_OclType.Path * Rep_OclTerm.OclTerm) list) list
 
+    val generate_void_po         : WFCPOG.wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
+    val generate_void_wfc        : WFCPOG.wfpo -> Rep.Model -> bool
     (** Argument Wrappers *)
     (** Create wfpo for wfc max_depth.*)
     val create_wfc_tax     : int -> WFCPOG.wfpo
@@ -135,6 +137,11 @@ fun get_wfpo [] x =
     if (id_of h = x) 
     then h
     else get_wfpo tail x 
+
+
+fun generate_void_po wfpo model = []
+
+fun generate_void_wfc wfpo model = true
 
 fun rename_wfpo new_name (WFCPOG.WFPO{identifier=identifier,name=name,description=description,recommended=recommended,depends=depends,recommends=recommends,apply=apply,data=data}:WFCPOG.wfpo) =
     WFCPOG.WFPO{
@@ -187,9 +194,9 @@ val supported_wfs = [
      name            = "WFC Interface Consistency (complete)",
      description     = "Checking of two subconstraints: \n wfc_inf_ster: Checks if all operations of an interface don't have the stereotypes 'create' or 'destroy'. \n wfc_inf_name : Checks for classes inheriting from more than one interface that there are no nameclashes.\n",
      recommended     = true,
-     depends         = ["wfc_inf_stereotypes"],
+     depends         = ["wfc_inf_stereotypes","wfc_inf_nameclashes"],
      recommends      = [],
-     apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.check_nameclashes),
+     apply           = WFCPOG.WFC(generate_void_wfc),
      data            = Datatab.empty
     },
     WFCPOG.WFPO{
@@ -233,13 +240,13 @@ val supported_wfs = [
      data = Datatab.empty
     },
     WFCPOG.WFPO{
-     identifier      = "wfc_vis", 
+     identifier      = "wfc_vis_all", 
      name            = "WFC Visibility Consistency (complete)",
      description     = "Three checks forced: \n wfc_vis_runtime \n wfc_vis_class \n wfc_vis_inheritance",
      recommended     = false,
-     depends         = ["wfc_vis_class","wfc_vis_inheritance","wfc_vis_design_by_contract"],
+     depends         = ["wfc_vis_class","wfc_vis_inheritance","wfc_vis_runtime","wfc_vis_design_by_contract"],
      recommends      = [],
-     apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency),
+     apply           = WFCPOG.WFC(generate_void_wfc),
      data = Datatab.empty
     },
      
@@ -312,13 +319,13 @@ val supported_pos = [
      data            = Datatab.empty
     },
     WFCPOG.WFPO{
-     identifier      = "po_lsk", 
+     identifier      = "po_lsk_all", 
      name            = "Liskov's subtitution principle", 
      description     = "Generate Proof Obligations following the idea from Barbara Liskov",
      recommended     = true,
-     depends         = ["po_lsk_pre","po_lsk_post"],
+     depends         = ["po_lsk_pre","po_lsk_post","po_lsk_inv"],
      recommends      = [],
-     apply           = WFCPOG.POG(WFCPOG_Liskov_Constraint.conjugate_invariants),
+     apply           = WFCPOG.POG(generate_void_po),
      data            = Datatab.empty
     }, 
     WFCPOG.WFPO{
@@ -392,13 +399,13 @@ val supported_pos = [
      data            = Datatab.empty
     },
     WFCPOG.WFPO{ 
-     identifier      = "po_cstr", 
+     identifier      = "po_cstr_all", 
      name            = "WFC Constructor Consistency (complete)",
      description     = "Checks two subconstraints: \n cstr_post : Checks if after the execution of any constructor operation all the attributes are initialized.\n cstr_attr: Checks if after the execution of any constructor operation all the attributes are initialized.\n",
      recommended     = false,
-     depends         = ["po_cstr_post"],
+     depends         = ["po_cstr_post","po_cstr_attribute"],
      recommends      = [],
-     apply           = WFCPOG.POG(WFCPOG_Constructor_Constraint.force_initialize_attributes),
+     apply           = WFCPOG.POG(generate_void_po),
      data            = Datatab.empty
     }
     ,
