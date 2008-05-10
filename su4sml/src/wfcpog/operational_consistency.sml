@@ -79,7 +79,7 @@ fun impl_op_operation class oper =
 	val impl = OperationCall (pre_of_op,Boolean,["holOclLib","Boolean","implies"],[(lv_post,Boolean)],Boolean)
 	val lv_state = OperationCall(impl,Boolean,["holOclLib","Boolean","OclLocalValid"],[(tuple_term,OclState)],Boolean)
 	val holocl_exists = Iterator("holOclLib.exists",[("sigma_s",OclState)],Literal("",DummyT),DummyT,lv_state,Boolean,Boolean)
-	val holocl_forall = Iterator("holOclLib.forall",[("sigma",OclState)],Literal("",DummyT),DummyT,holocl_exists,Boolean,Boolean)
+	val holocl_forall = Iterator("holOclLib.forAll",[("sigma",OclState)],Literal("",DummyT),DummyT,holocl_exists,Boolean,Boolean)
 	val _ = trace function_ends ("WFCPOG_Operational_Consistency.prestate_complete_operaiton\n")
     in
 	holocl_forall
