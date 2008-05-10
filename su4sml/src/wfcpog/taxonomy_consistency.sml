@@ -124,7 +124,7 @@ fun  check_depth_classifier depth class (model as (clist,alist)) =
 	val _ = trace wgen ("look for deep ...\n")
 	val d = deep_of_classifier 0 class model
 	val check = 
-	    if (depth  > d) 
+	    if (depth  >= d) 
 	    then true
 	    else 
 		let
