@@ -324,9 +324,9 @@ fun check_syntax wfpo (model:Rep.Model as (clist,alist)) =
 	val from = (#1 packages)
 	val to = (#2 packages)
 	val model_packages = all_packages_of_model model
-	val _ = trace wgen ("Packages of model: "^(List.map (fn a => ((string_of_path (name_of a))^", ")) model_package)^".\n")
-	val _ = trace wgen ("Abstract Package = "^from^", contains "^(List.length(from))^" strings.\n")
-	val _ = trace wgen ("Concrete Package = "^to^", contains "^(List.length(from))^" strings.\n")
+	val _ = trace wgen ("Packages of model: "^(String.concat (List.map (fn a => ((string_of_path a)^", ")) model_packages))^".\n")
+	val _ = trace wgen ("Abstract Package = "^(string_of_path from)^", contains "^(Int.toString (List.length(from)))^" strings.\n")
+	val _ = trace wgen ("Concrete Package = "^(string_of_path to)^", contains "^(Int.toString(List.length(from)))^" strings.\n")
 	val check = if ((member from model_packages) andalso (member to model_packages))
 		    then check_syntax_help model from to
 			 handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)
