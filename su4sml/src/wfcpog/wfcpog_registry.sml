@@ -284,6 +284,26 @@ val supported_wfs = [
      recommends      = [],
      apply           = WFCPOG.WFC(WFCPOG_Constructor_Constraint.override_old_creators),
      data            = Datatab.empty
+    },
+    WFCPOG.WFPO{ 
+     identifier      = "wfc_quy_strong", 
+     name            = "WFC Command Query Constraint",  
+     description     = "Checks if all ocl formualas just contains operationcalls which are isQuery.\n",
+     recommended     = false,
+     depends         = [],
+     recommends      = [],
+     apply           = WFCPOG.WFC(WFCPOG_Command_Query_Constraint.strong_is_query),
+     data            = Datatab.empty
+    },
+    WFCPOG.WFPO{ 
+     identifier      = "wfc_quy_weak", 
+     name            = "WFC Command Query Constraint",  
+     description     = "Checks if operations declared to be isQuery just contains ocl formulas which contain just operationcalls which are isQuery.\n",
+     recommended     = false,
+     depends         = [],
+     recommends      = [],
+     apply           = WFCPOG.WFC(WFCPOG_Command_Query_Constraint.weak_is_query),
+     data            = Datatab.empty
     }
 ]
 
@@ -337,27 +357,17 @@ val supported_pos = [
      recommends      = [],
      apply           = WFCPOG.POG(WFCPOG_Refine_Constraint.generate_pos),
      data            = Datatab.empty
-    },
+    },(*
     WFCPOG.WFPO{
-     identifier      = "po_cmd", (* identifier                     *) 
+     identifier      = "po_cmd", 
      name            = "Query Command Constraint",
      description     = "Check if operations which are declared as command are really commands",
      recommended     = false,
      depends         = [],
      recommends      = [],
-     apply           = WFCPOG.POG(WFCPOG_Command_Query_Constraint.ops_are_command),
+     apply           = WFCPOG.POG(WFCPOG_Command_Query_Constraint.semantics),
      data = Datatab.empty
-    },
-    WFCPOG.WFPO{
-     identifier      = "po_quy", (* identifier                     *) 
-     name            = "Query Command Constraint",
-     description     = "Check if operations which are declared as queries are really queries",
-     recommended     = false,
-     depends         = [],
-     recommends      = [],
-     apply           = WFCPOG.POG(WFCPOG_Command_Query_Constraint.ops_are_query),
-     data = Datatab.empty
-    },
+    },*)
     WFCPOG.WFPO{
      identifier      = "po_class_model", (* identifier                     *) 
      name            = "Data model consistency: class model",

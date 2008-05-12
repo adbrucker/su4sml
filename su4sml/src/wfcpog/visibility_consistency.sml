@@ -372,7 +372,7 @@ fun constraint_check_by_runtime_consistency wfc_sel (model as (clist,alist)) =
 	res
     end
 
-fun constraint_design_by_contract_consistency wfc_sel (model as (clist,alist)) = 
+fun constraint_design_by_contract_consistency wfc_sel (model as (clist,alist)) =
     let
 	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.constraint_design_by_contract_consistency\n")
 	val cl = removeOclLibrary clist
