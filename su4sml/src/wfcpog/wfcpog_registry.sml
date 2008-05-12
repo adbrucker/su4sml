@@ -169,6 +169,7 @@ val tax_workaround =
     }
 		       
 val supported_wfs = [ 
+    (* SUPPORTED IN ISABLLE *)
     WFCPOG.WFPO{
      identifier      = "wfc_inf_stereotypes",
      name            = "WFC Interface Consistency consistent stereotypes (subconstraint)",
@@ -179,6 +180,7 @@ val supported_wfs = [
      apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.check_stereotypes),
      data            = Datatab.empty
     },
+    (* SUPPORTED IN ISABELLE *)
     WFCPOG.WFPO{
      identifier      = "wfc_inf_nameclashes",
      name            = "WFC Interface Consistency no nameclashes (subconstraint)",
@@ -189,6 +191,7 @@ val supported_wfs = [
      apply           = WFCPOG.WFC(WFCPOG_Interface_Constraint.check_nameclashes),
      data            = Datatab.empty
     },
+    (* SUPPORTED IN ISABLLE *)
     WFCPOG.WFPO{
      identifier      = "wfc_inf_all",
      name            = "WFC Interface Consistency (complete)",
@@ -199,6 +202,7 @@ val supported_wfs = [
      apply           = WFCPOG.WFC(generate_void_wfc),
      data            = Datatab.empty
     },
+    (* SUPPORTED IN ISABLLE *)
     WFCPOG.WFPO{
      identifier      = "wfc_vis_class", 
      name            = "WFC Visibility Consistency (class)",
@@ -209,6 +213,7 @@ val supported_wfs = [
      apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.model_entity_consistency),
      data = Datatab.empty
     },
+    (* SUPPORTED IN ISABLLE *)
     WFCPOG.WFPO{
      identifier      = "wfc_vis_inheritance", 
      name            = "WFC Visibility Consistency (inheritance)",
@@ -219,6 +224,7 @@ val supported_wfs = [
      apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.model_inheritance_consistency),
      data = Datatab.empty
     },
+    (* SUPPORTED IN ISABLLE *)
     WFCPOG.WFPO{
      identifier      = "wfc_vis_runtime", 
      name            = "WFC Visibility Consistency (runtime)",
@@ -229,6 +235,7 @@ val supported_wfs = [
      apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency),
      data = Datatab.empty
     },
+    (* SUPPORTED IN ISABLLE *)
     WFCPOG.WFPO{
      identifier      = "wfc_vis_design_by_contract", 
      name            = "WFC Visibility Consistency (design_by_contract)",
@@ -239,6 +246,7 @@ val supported_wfs = [
      apply           = WFCPOG.WFC(WFCPOG_Visibility_Constraint.constraint_design_by_contract_consistency),
      data = Datatab.empty
     },
+    (* SUPPORTED IN ISABLLE *)
     WFCPOG.WFPO{
      identifier      = "wfc_vis_all", 
      name            = "WFC Visibility Consistency (complete)",
@@ -254,6 +262,7 @@ val supported_wfs = [
      (*                                                                                                *)
      (*    (WFCPOG_Taxonomy_Constraint.WFCPOG_TAX_Data.put ({key=9,max_depth=5}) tax_workaround)       *)
      (*                                                                                                *)
+    (* SUPPORTED IN ISABLLE *)
     WFCPOG.WFPO{
      identifier      = "wfc_tax", 
      name            = "WFC Taxonomy Consistency",
@@ -265,6 +274,7 @@ val supported_wfs = [
      data            = Datatab.empty 
     }
     , 
+    (* NOT SUPPORTED IN ISABLLE (is not needed)*)
     WFCPOG.WFPO{ 
      identifier      = "wfc_rfm", 
      name            = "WFC OO Refinement",  
@@ -275,6 +285,7 @@ val supported_wfs = [
      apply           = WFCPOG.WFC(WFCPOG_Refine_Constraint.check_syntax),
      data            = Datatab.empty
     },
+    (* SUPPORTED IN ISABLLE *)
     WFCPOG.WFPO{ 
      identifier      = "wfc_cstr_override", 
      name            = "WFC Constructor Consistency",  
@@ -285,6 +296,7 @@ val supported_wfs = [
      apply           = WFCPOG.WFC(WFCPOG_Constructor_Constraint.override_old_creators),
      data            = Datatab.empty
     },
+    (* SUPPORTED IN ISABLLE *)
     WFCPOG.WFPO{ 
      identifier      = "wfc_quy_strong", 
      name            = "WFC Command Query Constraint",  
@@ -295,6 +307,7 @@ val supported_wfs = [
      apply           = WFCPOG.WFC(WFCPOG_Command_Query_Constraint.strong_is_query),
      data            = Datatab.empty
     },
+    (* SUPPORTED IN ISABLLE *)
     WFCPOG.WFPO{ 
      identifier      = "wfc_quy_weak", 
      name            = "WFC Command Query Constraint",  

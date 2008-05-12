@@ -21,20 +21,21 @@ val zargo = prefix^"simple_rfm/simple_rfm.zargo"
 val ocl = prefix^"simple_rfm/simple_rfm.ocl"
 val remP = []
 *)
-(* 
-val zargo = "../../../../examples/meeting/Meeting.zargo"
+(*
+val zargo = prefix^"meeting/Meeting.zargo"
 val ocl = ""
+val remP = []
 *)
-
+(*
 val zargo = "../../../hol-ocl/examples/SimpleChair/SimpleChair.zargo"
 val ocl = "../../../hol-ocl/examples/SimpleChair/AbstractSimpleChair04.ocl"
 val remP = ["AbstractSimpleChair02", "AbstractSimpleChair03","AbstractSimpleChair01","ConcreteSimpleChair01"] ;
-
+*)
 
 (** EBANK **)
 (* 
-val zargo = "../../../examples/ebank/ebank.zargo"
-val ocl="../../../examples/ebank/ebank.ocl"
+val zargo = prefix^"ebank/ebank.zargo"
+val ocl=prefix^"ebank/ebank.ocl"
 val remP = []
 *)
 
@@ -86,11 +87,11 @@ val zargo = "../../../hol-ocl/examples/overriding/overriding.zargo"
 val ocl="../../../hol-ocl/examples/overriding/overriding.ocl"
 val remP = []
 *)
-(* 
-val zargo = "../../../hol-ocl/examples/stack_manu/stack.zargo"
-val ocl="../../../hol-ocl/examples/stack_manu/stack.ocl"
+
+val zargo = prefix^"stack_manu/stack.zargo"
+val ocl=prefix^"stack_manu/stack.ocl"
 val remP = []
-*)
+
 (** import model *)
 val XMI = parseUML zargo
 val _ = init_offset()

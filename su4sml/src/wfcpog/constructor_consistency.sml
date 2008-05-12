@@ -83,7 +83,10 @@ fun term_post_implies_inv class oper model =
 
 fun term_init_attributes class oper model = 
     let
-	(* 
+	val atts = all_attributes_of class model
+	val post = Predicate (Variable ("self",type_of class),type_of class,name_of_post class oper,args2varargs ((arguments_of_op oper)@[("result",(#result oper))]))
+        (* TODO:
+	 * for all attributes: self.att_name = soll definiert sein
 	 *)
     in 
  	Variable ("no",OclVoid)

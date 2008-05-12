@@ -87,7 +87,7 @@ fun check_weak_classifier class (model as (clist,alist)) =
 						   then true
 						   else
 						       let
-							   val s1 = "WFC ERROR: Command/Query constraint\n\n"
+							   val s1 = "WFC ERROR: Weak Command/Query constraint\n\n"
 							   val s2 = "Classifier " ^ (string_of_path (name_of class)) ^ " has in the operatin "^(name_of_op oper)^" the precondition " ^ (opt2string a) ^ " with the term "^(ocl2string false b)^" a call to an operation which is not isQuery.\n"
 						       in
 							   raise WFCPOG.WFC_FailedMessage (s1^s2)
@@ -100,7 +100,7 @@ fun check_weak_classifier class (model as (clist,alist)) =
 						    then true
 						    else
 							let
-							    val s1 = "WFC ERROR: Command/Query constraint\n\n"
+							    val s1 = "WFC ERROR: Weak Command/Query constraint\n\n"
 							    val s2 = "Classifier " ^ (string_of_path (name_of class)) ^ " has in the operation "^(name_of_op oper)^" postcondition " ^ (opt2string a) ^ " with the term "^(ocl2string false b)^" a call to an operation which is not isQuery.\n"
 							in
 							    raise WFCPOG.WFC_FailedMessage (s1^s2)
@@ -124,7 +124,7 @@ fun check_strong_classifier class (model as (clist,alist)) =
 						   then true
 						   else
 						       let
-							   val s1 = "WFC ERROR: Command/Query constraint\n\n"
+							   val s1 = "WFC ERROR: Strong Command/Query constraint\n\n"
 							   val s2 = "Classifier " ^ (string_of_path (name_of class)) ^ " has in the operation "^(name_of_op oper)^" precondition " ^ (opt2string a) ^ " with the term "^(ocl2string false b)^" a call to an operation which is not isQuery.\n"
 						       in
 							   raise WFCPOG.WFC_FailedMessage (s1^s2)
@@ -137,7 +137,7 @@ fun check_strong_classifier class (model as (clist,alist)) =
 						    then true
 						    else
 							let
-							    val s1 = "WFC ERROR: Command/Query constraint\n\n"
+							    val s1 = "WFC ERROR: Strong Command/Query constraint\n\n"
 							    val s2 = "Classifier " ^ (string_of_path (name_of class)) ^ " has in the operation "^(name_of_op oper)^" postcondition " ^ (opt2string a) ^ " with the term "^(ocl2string false b)^" a call to an operation which is not isQuery.\n"
 							in
 							    raise WFCPOG.WFC_FailedMessage (s1^s2)
@@ -149,7 +149,7 @@ fun check_strong_classifier class (model as (clist,alist)) =
 				      then true
 				      else
 					  let
-					      val s1 = "WFC ERROR: Command/Query constraint\n\n"
+					      val s1 = "WFC ERROR: Strong Command/Query constraint\n\n"
 					      val s2 = "Classifier " ^ (string_of_path (name_of class)) ^ " has in the invariant " ^ (opt2string a) ^ " with the term "^(ocl2string false b)^" a call to an operation which is not isQuery.\n"
 					  in
 					      raise WFCPOG.WFC_FailedMessage (s1^s2)

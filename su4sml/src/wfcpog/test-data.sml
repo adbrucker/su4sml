@@ -126,7 +126,7 @@ val wfs = [wfc_vis]
 val pos = []
 *)
 
-val wfs = []
+val wfs = [wfc_quy_strong,wfc_quy_weak]
 val pos = [po_rfm_SC]
 
 (* 
