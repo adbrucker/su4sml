@@ -472,12 +472,12 @@ val prefix_collectionpart   : string list -> Rep_OclTerm.CollectionPart -> Rep_O
  * Checks if a term is side-effect free. This means that just operationcalls to 
  * operations with the attribute isQuery=true are allowed.
  *)
-val side_effect_free : Rep_OclTerm.OclTerm -> bool
+val side_effect_free : Rep_OclTerm.OclTerm -> transform_model -> bool
 (**
  * Checks if a collection part is side-effect free. This means that jus operationcalls to
  * operations with the attribute isQuery=true are allowed.
  *)
-val collparts_are_side_effect_free : Rep_OclTerm.CollectionPart-> bool      
+val collparts_are_side_effect_free : Rep_OclTerm.CollectionPart-> transform_model -> bool      
 
 (*****************************************
  *            OPERATIONS                 *
@@ -3110,63 +3110,68 @@ and prefix_expression ext_path (Variable (s,t)) = (Variable (s,t))
 	(Iterate (prefixed_vars,acc_var_name,prefix_acc_type,acc_var_term,sterm,stype,bterm,btype,restype))
     end
 
-fun collparts_are_side_effect_free (CollectionItem (exp,typ)) =  
-    if side_effect_free exp
+fun collparts_are_side_effect_free (CollectionItem (exp,typ)) model  =  
+    if side_effect_free exp model
     then true
     else false
-  | collparts_are_side_effect_free (CollectionRange (exp1,exp2,typ)) = 
-    if side_effect_free exp1 andalso side_effect_free exp2
+  | collparts_are_side_effect_free (CollectionRange (exp1,exp2,typ)) model = 
+    if side_effect_free exp1 model  andalso side_effect_free exp2 model
     then true
     else false
 
-and side_effect_free (Literal(x,y)) = true
-  | side_effect_free (Tuple (x)) = 
-    if (List.all (fn (a,b,c) => side_effect_free b) x) 
+and side_effect_free (Literal(x,y)) model = true
+  | side_effect_free (Tuple (x)) model = 
+    if (List.all (fn (a,b,c) => side_effect_free b model ) x) 
     then true
     else false
-  | side_effect_free (CollectionLiteral (parts,typ)) = 
-    if (List.all (collparts_are_side_effect_free) parts)
+  | side_effect_free (CollectionLiteral (parts,typ)) model  = 
+    if (List.all (fn a => collparts_are_side_effect_free a model) parts)
     then true
     else false
-  | side_effect_free (If (ifexp,ift,thenexp,thent,elseexp,elset,ret)) =
-    if (side_effect_free ifexp) andalso (side_effect_free thenexp) andalso (side_effect_free elseexp)
+  | side_effect_free (If (ifexp,ift,thenexp,thent,elseexp,elset,ret)) model =
+    if (side_effect_free ifexp model) andalso (side_effect_free thenexp model) andalso (side_effect_free elseexp model)
     then true
     else false
-  | side_effect_free (QualifiedAssociationEndCall (source,typ,qualifies,path,ret)) = 
-    if (side_effect_free source) andalso (List.all (fn (a,b) => side_effect_free a) qualifies)
+  | side_effect_free (QualifiedAssociationEndCall (source,typ,qualifies,path,ret)) model = 
+    if (side_effect_free source model) andalso (List.all (fn (a,b) => side_effect_free a model) qualifies)
     then true
     else false
-  | side_effect_free (AssociationEndCall (source,typ,path,ret)) = 
-    if (side_effect_free source)
+  | side_effect_free (AssociationEndCall (source,typ,path,ret)) model = 
+    if (side_effect_free source model)
     then true
     else false
-  | side_effect_free (AttributeCall (source,typ,path,ret)) =
-    if (side_effect_free source)
+  | side_effect_free (AttributeCall (source,typ,path,ret)) model =
+    if (side_effect_free source model)
     then true
     else false
-  | side_effect_free (OperationCall (source,typ,path,args,ret)) = 
-    if (side_effect_free source) andalso (List.all (fn (a,b) => side_effect_free a) args)
-    then true
-    else false
-  | side_effect_free (OperationWithType (source,typ,string,typ2,ret)) = 
-    if (side_effect_free source)
+  | side_effect_free (OperationCall (source,typ,path,args,ret)) model = 
+    let
+	val class = class_of_type typ model
+	val oper = get_operation (List.last (path)) class model
+    in
+	if (side_effect_free source model) andalso (List.all (fn (a,b) => side_effect_free a model) args) andalso (#isQuery oper)
+	then true
+	else false
+    end
+  | side_effect_free (OperationWithType (source,typ,string,typ2,ret)) model = 
+    if (side_effect_free source model)
     then true
     else false 
-  | side_effect_free (Predicate (source,typ,path,args)) = 
-    if (side_effect_free source) andalso (List.all (fn (a,b) => side_effect_free a) args)
+  | side_effect_free (Predicate (source,typ,path,args)) model = 
+    if (side_effect_free source model) andalso (List.all (fn (a,b) => side_effect_free a model) args)
     then true
     else false
-  | side_effect_free (Variable (string,typ)) = true
-  | side_effect_free (Let (string,typ,rhsexp,rhstyp,expin,intyp)) = 
-    if (side_effect_free rhsexp) andalso (side_effect_free expin)
+  | side_effect_free (Variable (string,typ)) model = true
+  | side_effect_free (Let (string,typ,rhsexp,rhstyp,expin,intyp)) model = 
+    if (side_effect_free rhsexp model) andalso (side_effect_free expin model)
     then true
     else false
-  | side_effect_free (Iterate(vars,res_name,res_typ,res_exp,source,typ,body,bodyty,ret)) = 
-    if (side_effect_free source) andalso (side_effect_free res_exp) andalso (side_effect_free body)
+  | side_effect_free (Iterate(vars,res_name,res_typ,res_exp,source,typ,body,bodyty,ret)) model = 
+    if (side_effect_free source model) andalso (side_effect_free res_exp model) andalso (side_effect_free body model)
     then true
     else false
-  | side_effect_free (Iterator(name,vars,source,typ,bodyexp,bodytyp,ret)) = 
-    if (side_effect_free source) andalso (side_effect_free bodyexp)
+  | side_effect_free (Iterator(name,vars,source,typ,bodyexp,bodytyp,ret)) model = 
+    if (side_effect_free source model) andalso (side_effect_free bodyexp model)
     then true
     else false
 
