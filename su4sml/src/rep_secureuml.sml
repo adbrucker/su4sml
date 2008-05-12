@@ -38,7 +38,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************)
 (* $Id$ *)
+signature REP_SECUREUML =
+sig
 
+type Subject
+
+
+type Role
+type RoleAssignment = (Subject * Role) list
+type RoleHierarchy = (Role * Role) list
+
+type Resource 
+type ActionName 
+type ProtectedAction 
+type Permission
+
+val is_Role           : Rep_Core.Classifier -> bool
+val is_Permission     : Rep_Core.Classifier -> bool
+val is_User           : Rep_Core.Classifier -> bool
+val is_CompEnt        : Rep_Core.Classifier -> bool
+
+end
 structure Rep_SecureUML : REP_SECUREUML =
 struct
  
@@ -87,5 +107,55 @@ type Permission = { name:        string,
 		    constraints: Rep_OclTerm.OclTerm list,
 		    actions:     ProtectedAction list
 		    }
+
+fun is_Role (Class{stereotypes,...}) = 
+    List.exists (fn a => a = "secuml.role") stereotypes
+  | is_Role (AssociationClass{stereotypes,...}) = 
+    List.exists (fn a => a = "secuml.role") stereotypes
+  | is_Role (Interface{stereotypes,...}) = 
+    List.exists (fn a => a = "secuml.role") stereotypes
+  | is_Role (Enumeration{stereotypes,...}) = 
+    List.exists (fn a => a = "secuml.role") stereotypes
+  | is_Role (Primitive{stereotypes,...}) = 
+    List.exists (fn a => a = "secuml.role") stereotypes
+  | is_Role x = false
+
+fun is_User (Class{stereotypes,...}) = 
+    List.exists (fn a => a = "secuml.user") stereotypes
+  | is_User (AssociationClass{stereotypes,...}) = 
+    List.exists (fn a => a = "secuml.user") stereotypes
+  | is_User (Interface{stereotypes,...}) = 
+    List.exists (fn a => a = "secuml.user") stereotypes
+  | is_User (Enumeration{stereotypes,...}) = 
+    List.exists (fn a => a = "secuml.user") stereotypes
+  | is_User (Primitive{stereotypes,...}) = 
+    List.exists (fn a => a = "secuml.user") stereotypes
+  | is_User x = false
+
+fun is_Permission (Class{stereotypes,...}) = 
+    List.exists (fn a => a = "secuml.permission") stereotypes
+  | is_Permission (AssociationClass{stereotypes,...}) = 
+    List.exists (fn a => a = "secuml.permission") stereotypes
+  | is_Permission (Interface{stereotypes,...}) = 
+    List.exists (fn a => a = "secuml.permission") stereotypes
+  | is_Permission (Enumeration{stereotypes,...}) = 
+    List.exists (fn a => a = "secuml.permission") stereotypes
+  | is_Permission (Primitive{stereotypes,...}) = 
+    List.exists (fn a => a = "secuml.permission") stereotypes
+  | is_Permission x = false
+
+fun is_CompEnt (Class{stereotypes,...}) = 
+    List.exists (fn a => a = "compuml.entity") stereotypes
+  | is_CompEnt (AssociationClass{stereotypes,...}) = 
+    List.exists (fn a => a = "compuml.entity") stereotypes
+  | is_CompEnt (Interface{stereotypes,...}) = 
+    List.exists (fn a => a = "compuml.entity") stereotypes
+  | is_CompEnt (Enumeration{stereotypes,...}) = 
+    List.exists (fn a => a = "compuml.entity") stereotypes
+  | is_CompEnt (Primitive{stereotypes,...}) = 
+    List.exists (fn a => a = "compuml.entity") stereotypes
+  | is_CompEnt x = false
+
+
 
 end
