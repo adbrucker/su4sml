@@ -40,7 +40,6 @@
 (* $Id$ *)
 signature REP_SECUREUML =
 sig
-
 type Subject
 
 
@@ -62,6 +61,10 @@ end
 structure Rep_SecureUML : REP_SECUREUML =
 struct
  
+open Rep_Core
+
+
+
 datatype Subject = User of string
 	         | Group of Group
 withtype Group = string * Subject list
