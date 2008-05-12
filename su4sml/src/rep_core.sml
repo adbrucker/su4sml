@@ -468,6 +468,16 @@ val prefix_expression       : string list -> Rep_OclTerm.OclTerm -> Rep_OclTerm.
  *)
 val prefix_collectionpart   : string list -> Rep_OclTerm.CollectionPart -> Rep_OclTerm.CollectionPart
 
+(**
+ * Checks if a term is side-effect free. This means that just operationcalls to 
+ * operations with the attribute isQuery=true are allowed.
+ *)
+val side_effect_free : Rep_OclTerm.OclTerm -> bool
+(**
+ * Checks if a collection part is side-effect free. This means that jus operationcalls to
+ * operations with the attribute isQuery=true are allowed.
+ *)
+val collparts_are_side_effect_free : Rep_OclTerm.CollectionPart-> bool      
 
 (*****************************************
  *            OPERATIONS                 *
@@ -3100,10 +3110,65 @@ and prefix_expression ext_path (Variable (s,t)) = (Variable (s,t))
 	(Iterate (prefixed_vars,acc_var_name,prefix_acc_type,acc_var_term,sterm,stype,bterm,btype,restype))
     end
 
+fun collparts_are_side_effect_free (CollectionItem (exp,typ)) =  
+    if side_effect_free exp
+    then true
+    else false
+  | collparts_are_side_effect_free (CollectionRange (exp1,exp2,typ)) = 
+    if side_effect_free exp1 andalso side_effect_free exp2
+    then true
+    else false
 
-
-
-
+and side_effect_free (Literal(x,y)) = true
+  | side_effect_free (Tuple (x)) = 
+    if (List.all (fn (a,b,c) => side_effect_free b) x) 
+    then true
+    else false
+  | side_effect_free (CollectionLiteral (parts,typ)) = 
+    if (List.all (collparts_are_side_effect_free) parts)
+    then true
+    else false
+  | side_effect_free (If (ifexp,ift,thenexp,thent,elseexp,elset,ret)) =
+    if (side_effect_free ifexp) andalso (side_effect_free thenexp) andalso (side_effect_free elseexp)
+    then true
+    else false
+  | side_effect_free (QualifiedAssociationEndCall (source,typ,qualifies,path,ret)) = 
+    if (side_effect_free source) andalso (List.all (fn (a,b) => side_effect_free a) qualifies)
+    then true
+    else false
+  | side_effect_free (AssociationEndCall (source,typ,path,ret)) = 
+    if (side_effect_free source)
+    then true
+    else false
+  | side_effect_free (AttributeCall (source,typ,path,ret)) =
+    if (side_effect_free source)
+    then true
+    else false
+  | side_effect_free (OperationCall (source,typ,path,args,ret)) = 
+    if (side_effect_free source) andalso (List.all (fn (a,b) => side_effect_free a) args)
+    then true
+    else false
+  | side_effect_free (OperationWithType (source,typ,string,typ2,ret)) = 
+    if (side_effect_free source)
+    then true
+    else false 
+  | side_effect_free (Predicate (source,typ,path,args)) = 
+    if (side_effect_free source) andalso (List.all (fn (a,b) => side_effect_free a) args)
+    then true
+    else false
+  | side_effect_free (Variable (string,typ)) = true
+  | side_effect_free (Let (string,typ,rhsexp,rhstyp,expin,intyp)) = 
+    if (side_effect_free rhsexp) andalso (side_effect_free expin)
+    then true
+    else false
+  | side_effect_free (Iterate(vars,res_name,res_typ,res_exp,source,typ,body,bodyty,ret)) = 
+    if (side_effect_free source) andalso (side_effect_free res_exp) andalso (side_effect_free body)
+    then true
+    else false
+  | side_effect_free (Iterator(name,vars,source,typ,bodyexp,bodytyp,ret)) = 
+    if (side_effect_free source) andalso (side_effect_free bodyexp)
+    then true
+    else false
 
 fun type_of_template (T as Template{classifier,parameter}) =
     (case (name_of classifier) of
