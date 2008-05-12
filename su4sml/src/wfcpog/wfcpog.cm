@@ -69,7 +69,7 @@ Group is
 "command_query_consistency.sml"
 "taxonomy_consistency.sml"
 "interface_consistency.sml"
-"SecureUML_constraint.sml"
+(* "SecureUML_constraint.sml" *)
 
 (* wccpog toplevel *)
 "wfcpog_registry.sml"
