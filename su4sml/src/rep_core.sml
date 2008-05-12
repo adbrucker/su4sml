@@ -853,6 +853,7 @@ exception NoCollectionTypeError of Rep_OclType.OclType
 exception AttributeAssocEndNameClash of string
 exception ParentsOfError of string
 exception Rep_CoreError of string
+exception HOLOCL_ClassifierError of string
 end
 
 structure Rep_Core  :  REP_CORE = 
@@ -983,7 +984,7 @@ exception AttributeNotFoundError of string
 exception AttributeAssocEndNameClash of string
 exception ParentsOfError of string
 exception Rep_CoreError of string
-
+exception HOLOCL_ClassifierError of string
 
 val OclLibPackage = "oclLib"
 val OclAnyC = Class{name=Rep_OclType.OclAny,parent=NONE,attributes=[],
@@ -1082,9 +1083,12 @@ fun class_of_design_model path (model as (clist,alist)) =
     let
 	val _ = trace rep_core ("path of class = " ^ (String.concat (path)) ^ "\n")
     in
-	case (List.find (fn a => (type_of a) = Classifier (path)) clist) of
-	    NONE => raise GetClassifierError (String.concat path)
-	  | SOME(x) => x
+	if (List.hd (path) = "holOclLib")
+	then raise HOLOCL_ClassifierError ("You try to access an HOLOCL Classifier which is not part of the model.\n")
+	else
+	    case (List.find (fn a => (type_of a) = Classifier (path)) clist) of
+		NONE => raise GetClassifierError (String.concat path)
+	      | SOME(x) => x
     end
 
 fun type_of_parent (Class {parent,...}) = 
@@ -1176,13 +1180,13 @@ fun type_of_path ["Integer"] (model:transform_model) = Integer
 	end
     else 
 	let
-	    val cl = class_of [set] model
+	    val cl = class_of_design_model [set] model
 	in
 	    type_of cl
 	end
   | type_of_path (list:Path) (model:transform_model) = 
     let
-	val cl = class_of list model 
+	val cl = class_of_design_model list model 
     in
 	type_of cl
     end
