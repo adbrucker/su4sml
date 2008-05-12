@@ -52,7 +52,7 @@ Group is
   $smlnj/ml-yacc/ml-yacc-lib.cm
 #endif
 
-"../rep_secureuml.sig"
+
 "../rep_secureuml.sml"	
 "rep_holocl.sml"
 "datatab.sml"
