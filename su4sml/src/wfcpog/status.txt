@@ -1,12 +1,16 @@
 
 
-"visibilityconsistency.sml"          ===> [DONE (class: support for associationends)]
-"liskovconstraint.sml"               ===> [DONE (invariants raises error)]
+"visibilityconsistency.sml"          ===> [DONE (class: support for
+assocends)]  ==> MANUEL
+"liskovconstraint.sml"               ===> [DONE (invariants)]
 "datamodelconsistency.sml"           ===> [DONE]
-"constructorconsistency.sml"         ===> [DONE (force_initialize_attributes still left]
+"constructorconsistency.sml"         ===> [DONE
+(force_initialize_attributes still left]
+==> Manuel
 "operationalconsistency.sml"         ===> [ready for isabelle]
 "refineconstraint.sml"               ===> [ready for isabelle]
-"commandqueryconsistency.sml"        ===> [ready for isablle (is_modified_only still left)] 
+"commandqueryconsistency.sml"        ===> [ready for isablle
+(is_modified_only still left)] 
 "taxonomyconsistency.sml"            ===> [DONE]
 "interfaceconsistency.sml"	     ===> [DONE]
 "SecureUMLconstraint.sml"            ===> [IMPLEMENTATION NOT FINISHED]
