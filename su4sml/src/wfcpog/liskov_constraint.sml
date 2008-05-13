@@ -203,7 +203,7 @@ fun conjugate_invariants_help [] model = []
 	if (List.length(invs) = 0)
 	then (conjugate_invariants_help clist model)
 	else (["po_lsk_inv"]@["_"]@(name_of class)@["_"],
-	                               conjugate_terms invs)::(conjugate_invariants_help clist model)
+	                               Rep_HolOcl_Helper.holocl_and_all invs)::(conjugate_invariants_help clist model)
 	    
     end
 
