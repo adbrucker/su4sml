@@ -1084,7 +1084,7 @@ fun class_of_design_model path (model as (clist,alist)) =
 	val _ = trace rep_core ("path of class = " ^ (String.concat (path)) ^ "\n")
     in
 	if (List.hd (path) = "holOclLib")
-	then raise HOLOCL_ClassifierError ("You try to access an HOLOCL Classifier which is not part of the model.\n")
+	then raise HOLOCL_ClassifierError ("You try to access an HOLOCL Classifier "^(string_of_path path) ^" which is not part of the model.\n")
 	else
 	    case (List.find (fn a => (type_of a) = Classifier (path)) clist) of
 		NONE => raise GetClassifierError (String.concat path)
