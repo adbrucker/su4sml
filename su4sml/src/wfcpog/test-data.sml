@@ -87,12 +87,14 @@ val _ = trace high ("............. refine pog constraint loaded ...\n")
 val po_rfm_SR = rename_wfpo "po_rfm_SR" (RFM_Data.put ({key=10,rfm_tuple=(["AbstractOverriding"],["ConcreteOverriding"])}) po_rfm)
 val _ = trace high ("............. refine pog constraint loaded ...\n")
 
-(* ALL CONSTRAINTS: 
+ 
+(* ALL CONSTRAINTS:  *)
 val wfc = 
-[wfc_inf_nameclashes,wfc_inf_stereotypes,wfc_inf_all,wfc_vis_class,wfc_vis_inheritance,wfc_vis_runtime,wfc_vis_design_by_contract,wfc_vis,wfc_tax]
+[wfc_inf_nameclashes,wfc_inf_stereotypes,wfc_inf_all,wfc_vis_class,wfc_vis_inheritance,wfc_vis_runtime,wfc_vis_design_by_contract,wfc_vis_all,wfc_tax]
 val pos =
-[po_lsk_pre,po_lsk_post,po_lsk_inv,po_cm,po_sm,po_om,po_cstr_post,po_cstr_attribute,po_cstr]
-*)
+[po_lsk_pre,po_lsk_post,po_lsk_inv,po_cm,po_sm,po_om,po_cstr_post,po_cstr_attribute,po_cstr_all]
 
+(*
 val wfcs = []
 val pos = [po_lsk_inv]
+*)

@@ -71,11 +71,11 @@ val testcases = [
     uml  = prefix^"simple_rfm/simple_rfm.zargo",
     ocl  = prefix^"simple_rfm/simple_rfm.ocl"
    },
-   {
+   (*{
     name = "company",
     uml  = prefix^"company/company.zargo",
     ocl  = prefix^"company/company.ocl"
-   }:testcase,
+   }:testcase,*)
    {
     name = "ebank",
     uml  = prefix^"ebank/ebank.zargo",
@@ -91,11 +91,11 @@ val testcases = [
     uml  = prefix^"isp/isp.zargo",
     ocl  = prefix^"isp/isp.ocl"
    }:testcase,*)
-   {
+    (* {
     name = "royals_and_loyals",
     uml  = prefix^"royals_and_loyals/royals_and_loyals.zargo",
     ocl  = prefix^"royals_and_loyals/royals_and_loyals.ocl"
-   }:testcase,  
+   }:testcase, *) 
    {
     name = "simple",
     uml  = prefix^"simple/simple.zargo",
@@ -111,11 +111,11 @@ val testcases = [
     uml  = prefix^"vehicles/vehicles.zargo",
     ocl  = prefix^"vehicles/vehicles.ocl"
    }:testcase,
-   {
+   (* {
     name = "SimpleChair",
     uml  = prefix^"SimpleChair/SimpleChair.zargo",
     ocl  = prefix^"SimpleChair/ConcreteSimpleChair01.ocl"
-   }:testcase,
+   }:testcase, *)
    {
     name = "overriding",
     uml  = prefix^"overriding/overriding.zargo",
@@ -138,12 +138,11 @@ fun start_tests model [] = []
 	let 
 	    val _ = trace wgen ("Testing a wellformed constraint: \n")
 	    val res_wfcs = check_wfcs model [h]
-		handle WFCPOG.WFC_FailedMessage s =>
+		handle WFCPOG.WFC_FailedException (wfc,s) =>
 		       let
-			   val _  = trace wgen ("WFC_Failed_Exception handler ...\n")
-			   val _  = buffer:=((!buffer)^s)
+			   val _  = buffer:=((!buffer)^"\n\n"^s)
 		       in
-			   raise WFCPOG.WFC_FailedException(h,s) 
+			   [(h,false)]
 		       end
 	    val check = List.all (fn (a,b) => b = true) res_wfcs
 	in
@@ -174,11 +173,11 @@ fun start_tests model [] = []
 	let
 	    val _ = trace wgen ("Testing a proof obligation constraint: \n")
 	    val pos = generate_pos model [h] 
-		handle WFCPOG.WFC_FailedMessage s =>
+		handle WFCPOG.WFC_FailedException (po,s) =>
 		       let 
 			   val _ = buffer:=((!buffer)^s)
 		       in
-			   raise WFCPOG.WFC_FailedException (h,s)
+			   [(h,[(["Exception"],(Variable("x",OclVoid)))])]
 		       end
 	in
 	    case pos of 
@@ -234,12 +233,6 @@ fun runTest name wfs pos =
 	val _ = trace wgen ("Accessing model ...\n")
 	val s1 = (print_tc tc)
 	val _ = (test tc wfs pos)
-	    handle WFCPOG.WFC_FailedException (wfpo,s) =>  
-		   let
-		       val _ = buffer:=((!buffer)^s)
-		   in
-		       []
-		   end
 	val _ = buffer:=s1^(!buffer)
     in
 	(if (String.isSubstring "[Error]" (!buffer))
@@ -258,13 +251,6 @@ fun runTests wfs pos =
 				 val s1 = (print_tc a)
 				 val _ = buffer:=(!buffer)^s1
 				 val data = (test a wfs pos)
-				     handle WFCPOG.WFC_FailedException (wfpo,s) =>  
-					    let
-						val _ = buffer:=((!buffer)^s)
-						val _ = trace wgen (!buffer)
-					    in
-						raise WFCPOG_TestSuiteError ("one wfc failed\n")
-					    end
 			     in
 				 data
 			     end) testcases
