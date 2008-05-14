@@ -71,6 +71,7 @@ sig
 
   exception WFC_FailedMessage of string
   exception WFC_FailedException of (wfpo * string)
+  exception WFCPOG_Exception of string
 
 end
 
@@ -96,6 +97,7 @@ and wfpo = WFPO of {
 
 exception WFC_FailedMessage of string
 exception WFC_FailedException of (wfpo * string)
+exception WFCPOG_Exception of string
 
 fun get_data (WFPO w) = #data w
 fun up_data  data' (WFPO{identifier=identifier,name=name,description=description,

@@ -71,11 +71,11 @@ val testcases = [
     uml  = prefix^"simple_rfm/simple_rfm.zargo",
     ocl  = prefix^"simple_rfm/simple_rfm.ocl"
    },
-   (*{
+   {
     name = "company",
     uml  = prefix^"company/company.zargo",
     ocl  = prefix^"company/company.ocl"
-   }:testcase,*)
+   }:testcase,
    {
     name = "ebank",
     uml  = prefix^"ebank/ebank.zargo",
@@ -91,11 +91,11 @@ val testcases = [
     uml  = prefix^"isp/isp.zargo",
     ocl  = prefix^"isp/isp.ocl"
    }:testcase,*)
-    (* {
+   {
     name = "royals_and_loyals",
     uml  = prefix^"royals_and_loyals/royals_and_loyals.zargo",
     ocl  = prefix^"royals_and_loyals/royals_and_loyals.ocl"
-   }:testcase, *) 
+   }:testcase, 
    {
     name = "simple",
     uml  = prefix^"simple/simple.zargo",
@@ -111,11 +111,11 @@ val testcases = [
     uml  = prefix^"vehicles/vehicles.zargo",
     ocl  = prefix^"vehicles/vehicles.ocl"
    }:testcase,
-   (* {
+   {
     name = "SimpleChair",
     uml  = prefix^"SimpleChair/SimpleChair.zargo",
     ocl  = prefix^"SimpleChair/ConcreteSimpleChair01.ocl"
-   }:testcase, *)
+   }:testcase,
    {
     name = "overriding",
     uml  = prefix^"overriding/overriding.zargo",
@@ -204,7 +204,7 @@ fun test (tc:testcase) wfs pos =
     let 
 	val i_model = ModelImport.import (#uml tc) (#ocl tc) []
 	val (clist,alist) = Rep_Core.normalize_ext i_model
-	val model = ((clist@oclLib),(alist))
+	val model = (((#1 i_model)@oclLib),(#2 i_model))
 	val _ = trace wgen ("Model of testcase loaded ...\n")
 	val x = start_tests model (wfs@pos)
 	val _ = trace wgen ("Test finished ...\n")

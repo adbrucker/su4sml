@@ -89,12 +89,13 @@ val _ = trace high ("............. refine pog constraint loaded ...\n")
 
  
 (* ALL CONSTRAINTS:  *)
+
 val wfc = 
 [wfc_inf_nameclashes,wfc_inf_stereotypes,wfc_inf_all,wfc_vis_class,wfc_vis_inheritance,wfc_vis_runtime,wfc_vis_design_by_contract,wfc_vis_all,wfc_tax]
 val pos =
 [po_lsk_pre,po_lsk_post,po_lsk_inv,po_cm,po_sm,po_om,po_cstr_post,po_cstr_attribute,po_cstr_all]
 
 (*
-val wfcs = []
+val wfcs = [wfc_vis_class]
 val pos = [po_lsk_inv]
 *)
