@@ -197,13 +197,13 @@ fun conjugate_invariants_help [] model = []
   | conjugate_invariants_help (class::clist) model = 
     let
 	(* get the invariants of all parents *)
-        val parents = parents_of class model
- 	val invs = List.map (fn a => Predicate(Variable(varcounter.nextStr(),Rep_Core.type_of a),Rep_Core.type_of a,name_of_inv a,[])) parents 
+        val parents_and_self = (parents_of class model)@[class]
+ 	val invs = List.map (fn a => Predicate(Variable(varcounter.nextStr(),Rep_Core.type_of a),Rep_Core.type_of a,name_of_inv a,[])) parents_and_self
     in
 	if (List.length(invs) = 0)
 	then (conjugate_invariants_help clist model)
 	else (["po_lsk_inv"]@["_"]@(name_of class)@["_"],
-	                               Rep_HolOcl_Helper.holocl_and_all invs)::(conjugate_invariants_help clist model)
+	                               conjugate_terms invs)::(conjugate_invariants_help clist model)
 	    
     end
 

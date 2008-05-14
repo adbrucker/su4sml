@@ -12,16 +12,11 @@ sig
     val runTests_ret_pos  : WFCPOG.wfpo list -> WFCPOG.wfpo list -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
     (** Exectures a specified (string fst arg) test and returns the, if any, pos.*)
     val runTest_ret_pos   : string -> WFCPOG.wfpo list -> WFCPOG.wfpo list -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
-    (** Set Control.Print.printDepth. *)
-    val spd               : int -> unit
-    (** Set Control.Print.printLength. *)
-    val spl               : int -> unit
     exception WFCPOG_TestSuiteError of string
 end
 
 structure WFCPOG_TestSuite : WFCPOG_TESTSUITE =
 struct
-
 open Rep_Logger
 open Rep_OclTerm
 open Rep_OclType
@@ -29,6 +24,7 @@ open WFCPOG
 open WFCPOG_Refine_Constraint
 open WFCPOG_Registry
 open OclLibrary
+
 
 exception WFCPOG_TestSuiteError of string
 
@@ -126,20 +122,6 @@ val testcases = [
     ocl  = prefix^"overriding/overriding.ocl"
    }:testcase
 ]
-
-fun spd x = 
-    let 
-	val _ = Control.Print.printDepth:=x
-    in
-	print ("printDepth set to " ^ (Int.toString (x)) ^ ".\n")
-    end
-
-fun spl x = 
-    let 
-	val _ = Control.Print.printLength:=x
-    in
-	print ("printLength set to " ^ (Int.toString (x)) ^ ".\n")
-    end
 
 fun add_dot 1 = ["."]
   | add_dot x = (".")::(add_dot (x-1))

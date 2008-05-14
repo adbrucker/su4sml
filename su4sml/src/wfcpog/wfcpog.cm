@@ -72,4 +72,5 @@ Group is
 "SecureUML_constraint.sml"
 
 (* wccpog toplevel *)
+"test-suite.sml"
 "wfcpog_registry.sml"
