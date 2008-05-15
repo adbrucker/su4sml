@@ -403,7 +403,7 @@ val supported_pos = [
     },
     WFCPOG.WFPO{ 
      identifier      = "po_cstr_post", 
-     name            = "Constructor Consistency post implies invariants(subconstraint)",  
+     name            = "PO Constructor Consistency post implies invariants(subconstraint)",  
      description     = "Checks if the postcondition of any constructor operation imples the class' invariant.\n",
      recommended     = true,
      depends         = ["wfc_cstr_override"],
@@ -413,7 +413,7 @@ val supported_pos = [
     },
     WFCPOG.WFPO{ 
      identifier      = "po_cstr_attribute", 
-     name            = "WFC Constructor Consistency attributes are inited(subconstraint)",  
+     name            = "PO Constructor Consistency attributes are inited(subconstraint)",  
      description     = "Checks if after the execution of any constructor operation all the attributes are initialized.\n",
      recommended     = false,
      depends         = [],
@@ -423,7 +423,7 @@ val supported_pos = [
     },
     WFCPOG.WFPO{ 
      identifier      = "po_cstr_all", 
-     name            = "WFC Constructor Consistency (complete)",
+     name            = "PO Constructor Consistency (complete)",
      description     = "Checks two subconstraints: \n cstr_post : Checks if after the execution of any constructor operation all the attributes are initialized.\n cstr_attr: Checks if after the execution of any constructor operation all the attributes are initialized.\n",
      recommended     = false,
      depends         = ["po_cstr_post","po_cstr_attribute"],
