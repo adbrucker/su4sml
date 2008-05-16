@@ -204,8 +204,8 @@ fun test (tc:testcase) wfs pos =
     let 
 	val i_model = ModelImport.import (#uml tc) (#ocl tc) []
 	val (clist,alist) = Rep_Core.normalize_ext i_model
-(* 	val model = (((#1 i_model)@oclLib),(#2 i_model)) *)
-	val model = ((clist@oclLib),alist)
+ 	val model = (((#1 i_model)@oclLib),(#2 i_model))
+(* 	val model = ((clist@oclLib),alist) *)
 	val _ = trace wgen ("Model of testcase loaded ...\n")
 	val x = start_tests model (wfs@pos)
 	val _ = trace wgen ("Test finished ...\n")

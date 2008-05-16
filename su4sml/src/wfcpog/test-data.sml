@@ -96,6 +96,6 @@ val pos =
 [po_lsk_pre,po_lsk_post,po_lsk_inv,po_cm,po_sm,po_om,po_cstr_post,po_cstr_attribute,po_cstr_all]
 
 (*
-val wfcs = [wfc_vis_class]
+val wfcs = [wfc_vis_runtime]
 val pos = [po_lsk_inv]
 *)

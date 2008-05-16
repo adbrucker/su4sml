@@ -1,8 +1,7 @@
 
 
-"visibilityconsistency.sml"          ===> [DONE (class: support for
-assocends)]  ==> MANUEL
-"liskovconstraint.sml"               ===> [DONE (invariants)]
+"visibilityconsistency.sml"          ===> [DONE]
+"liskovconstraint.sml"               ===> [DONE]
 "datamodelconsistency.sml"           ===> [DONE]
 "constructorconsistency.sml"         ===> [DONE
 (force_initialize_attributes still left]

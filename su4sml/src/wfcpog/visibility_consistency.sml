@@ -122,8 +122,8 @@ and expr_is_visible modif (Literal(s,typ)) model = true
 	val _ = trace wgen ("start expr_is_visible")
 	val cl = class_of_term src model
 	val att_name = List.last(path)
-	val _ = trace wgen ("start get_attribute ")
-	val att = get_attribute att_name cl model
+	val _ = trace wgen ("start get_associationends ")
+	val att = get_associationend att_name cl model
 	val _ = trace wgen ("end expr_is_visible")
     in
 	if (visibility_conforms_to (#visibility att) modif)
@@ -173,9 +173,7 @@ fun check_entity_classifier class model =
     let
 	val vis_ops = List.map (fn (a:operation) => ((#visibility a),SOME(a),NONE,NONE)) (all_operations_of class model)
 	val vis_atts = List.map (fn (a:attribute) => ((#visibility a),NONE,SOME(a),NONE)) (all_attributes_of class model)
-(*        val vis_assocs = List.map (fn (a:associationend) => ((#visibility a),NONE,NONE,SOME(a))) (all_associationends_of class model)
-			 handle Bind => raise WFCPOG.WFCPOG_Exception ("Bind exception\n")
-*)
+ 	val vis_assocs = List.map (fn (a:associationend) => ((#visibility a),NONE,NONE,SOME(a))) (all_associationends_of class model)
 	val vis_class = visibility_of class
 	val check = 
 	    List.map (fn ((a:Visibility),x,y,z) => 
@@ -198,7 +196,7 @@ fun check_entity_classifier class model =
 			     in
 				 raise WFCPOG.WFC_FailedMessage (s1^s2^s3^s4^s5^s6)
 			     end
-		     ) ((vis_ops)@(vis_atts))
+		     ) ((vis_ops)@(vis_atts)@(vis_assocs))
     in
 	List.all (fn a => a = true) check
     end

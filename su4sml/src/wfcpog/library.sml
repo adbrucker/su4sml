@@ -65,8 +65,10 @@ sig
     val disjugate_terms           : Rep_OclTerm.OclTerm list -> Rep_OclTerm.OclTerm
     (** Get an attribute by name. *)
     val get_attribute             : string -> Rep_Core.Classifier -> Rep.Model -> Rep_Core.attribute
+    (** Get an associationend by name.*)
+    val get_associationend        : string -> Rep_Core.Classifier -> Rep.Model -> Rep_Core.associationend
     (** Get an operation by name. *)
- (*    val get_operation             : string -> Rep_Core.Classifier -> Rep.Model -> Rep_Core.operation *)
+    (*    val get_operation             : string -> Rep_Core.Classifier -> Rep.Model -> Rep_Core.operation *)
     (** *) 
     val class_contains_op         : Rep_Core.operation -> Rep.Model -> Rep_Core.Classifier -> bool
     (** *)
@@ -220,8 +222,27 @@ fun get_attribute s classifier model =
 	val x = List.find (fn a => if ((#name a) = s) then true else false) (all_attributes_of classifier model)
     in
 	case x of
-	    NONE => raise WFCPOG_LibraryError ("No attribute found using 'get_attribute'.\n")
+	    NONE => 
+	    let
+		val _ = trace exce ("No such Attribute: \n In Classifier "^(string_of_path (name_of classifier))^" in attribute "^s)
+	    in
+		raise WFCPOG_LibraryError ("No attribute found using 'get_attribute'.\n")
+	    end
 	  | SOME (x) => x
+    end
+
+fun get_associationend s classifier model = 
+    let
+	val x = List.find (fn a => if ((List.last(#name a)) = s) then true else false) (all_associationends_of classifier model)
+    in
+	case x of 
+	    NONE =>
+	    let
+		val _ = trace exce ("No such associationend: \n In Classifier "^(string_of_path (Rep_Core.name_of classifier))^" no associationend called "^(s)^".\n")
+	    in
+		raise WFCPOG_LibraryError ("No attribute found using 'get_attribute'.\n")
+	    end 
+	  | SOME(x) => x
     end
 
 
