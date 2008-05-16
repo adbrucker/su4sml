@@ -241,7 +241,8 @@ sig
     val holocl_implies    : Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm
     val holocl_not        : Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm 
     val holocl_xor        : Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm
-
+    val holocl_localValid_state      : Rep_OclTerm.OclTerm -> string -> Rep_OclTerm.OclTerm
+    val holocl_localValid_transition : Rep_OclTerm.OclTerm -> string -> string -> Rep_OclTerm.OclTerm
 end
 structure Rep_HolOcl_Helper:REP_HOLOCL_HELPER = 
 struct 
@@ -270,5 +271,15 @@ fun holocl_implies a b    = ocl_opcall a ["holOclLib","Boolean","implies"] [b] B
 fun holocl_xor a b        = ocl_opcall a ["holOclLib","Boolean","xor"]     [b] Boolean
 fun holocl_not a          = ocl_opcall a ["holOclLib","Boolean","not"]     []  Boolean
 
+fun holocl_localValid_state term var_name = 
+    OperationCall(term,Boolean,["holOclLib","Boolean","OclLocalValid"],[(Literal(var_name,OclState),DummyT)],Boolean)
 
+fun holocl_localValid_transition term var_name1 var_name2 = 
+    let
+	val sigma = Literal(var_name1,OclState)
+	val sigma_s = Literal(var_name2,OclState)
+	val tuple_term = Tuple [(var_name1,sigma,OclState),(var_name2,sigma_s,OclState)]
+    in
+	OperationCall(term,Boolean,["holOclLib","Boolean","OclLocalValid"],[(tuple_term,OclState)],Boolean)
+    end
 end

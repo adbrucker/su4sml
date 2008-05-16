@@ -173,8 +173,9 @@ fun check_entity_classifier class model =
     let
 	val vis_ops = List.map (fn (a:operation) => ((#visibility a),SOME(a),NONE,NONE)) (all_operations_of class model)
 	val vis_atts = List.map (fn (a:attribute) => ((#visibility a),NONE,SOME(a),NONE)) (all_attributes_of class model)
-        val vis_assocs = List.map (fn (a:associationend) => ((#visibility a),NONE,NONE,SOME(a))) (all_associationends_of class model)
+(*        val vis_assocs = List.map (fn (a:associationend) => ((#visibility a),NONE,NONE,SOME(a))) (all_associationends_of class model)
 			 handle Bind => raise WFCPOG.WFCPOG_Exception ("Bind exception\n")
+*)
 	val vis_class = visibility_of class
 	val check = 
 	    List.map (fn ((a:Visibility),x,y,z) => 

@@ -61,6 +61,10 @@ val ocl="../../../examples/royals_and_loyals/royals_and_loyals.ocl"
 val remP = []
 *)
 
+(** COMPANY **)
+val zargo = prefix^"company/company.zargo"
+val ocl =""
+val remP =[]
 
 (** SIMPLE **)
 (*
@@ -82,15 +86,18 @@ val ocl = "../../../examples/vehicles/vehicles.ocl"
 *)
 
 (** OVERRRIDING **)
-(*
+(* 
 val zargo = "../../../hol-ocl/examples/overriding/overriding.zargo"
 val ocl="../../../hol-ocl/examples/overriding/overriding.ocl"
 val remP = []
 *)
 
+(** STACK MANU **)
+(* 
 val zargo = prefix^"stack_manu/stack.zargo"
 val ocl=prefix^"stack_manu/stack.ocl"
 val remP = []
+*)
 
 (** import model *)
 val XMI = parseUML zargo

@@ -70,7 +70,6 @@ fun impl_op_operation class oper =
 	(* Generate Variables : (sigma_pre,sigma_post) => sigma *)
 	val sigma = Literal("sigma",OclState)
 	val sigma_s = Literal("sigma_s",OclState)
-	val tuple_type = TupleType ([("sigma",OclState),("sigma_s",OclState)])
 	val tuple_term = Tuple [("sigma",sigma,OclState),("sigma_s",sigma_s,OclState)]
 	(* local valid post *)
 	val pre_of_op = Predicate(Variable("self",type_of class),type_of class,name_of_pre class oper,args2varargs (arguments_of_op oper))
