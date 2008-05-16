@@ -1,0 +1,176 @@
+
+sc = subconstraint;
+
+"visibilityconsistency.sml":
+
+	new file name:  visibility.sml
+
+	sc A class is at least as visible as least visible op/att/assocend
+	   
+	   doc name:	? 
+	   name:        class_visibility       
+	   wfpo_id:     wfc_vis_class
+
+
+	sc All ops at least inherite visibilities:	
+	   
+	   doc name:    ? 
+	   name:        inheritance_visiblity
+	   wfpo_id:     wfc_vis_inheritance
+
+
+	sc runtime:     
+	   doc name:    ? 
+	   name:        runtime_visibility
+	   wfpo_id:     wfc_vis_runtime
+
+
+	sc design_by_contract:
+
+	   doc name:    ?  
+	   name:        dbc_visibility
+	   wfpo_id:     wfc_vis_design_by_contract	
+
+
+"liskovconstraint.sml":
+
+	new file name:	liskov.sml
+
+	sc pre:
+	   doc name:	? 
+	   name:        weaken_preconditions		
+	   wfpo_id:     po_lsk_pre
+
+
+	sc post:        
+
+	   doc name:    ? 
+	   name:        strengthen_postconditions
+	   wfpo_id:     po_lsk_pre
+
+
+	sc inv:		
+	   doc name:    ? 
+	   name:        conjugate_invariants
+	   wfpo_id:     po_lsk_inv              
+
+
+"datamodelconsistency.sml" +
+"operational_model_consistency.sml"
+
+	new file name:  model_consistency.sml
+
+	sc class:
+
+	   doc name:    ? 
+	   name:        class_data_model	
+	   wfpo_id:     po_class_model
+
+
+	sc strong:	
+
+	   doc name:    ? 
+	   name:        strong_data_model
+	   wfpo_id:     po_strong_model
+
+
+	sc operational: 
+
+	   doc name:    ? 
+	   name:        operational_model
+	   wfpo_id:     po_operational_model
+
+
+"constructorconsistency.sml" +
+"interface_consistency.sml" +
+"taxonomy_consistency.sml" +
+"commandqueryconsistency.sml"
+        
+	new file name:	misc_consistency.sml
+	     
+	sc A class  must override old constructors:
+	   
+	   doc name:    ? 	
+	   name:        cstr_override_old_constructors    
+	   wfpo_id:     wfc_cstr_override
+	
+
+	sc Every postcondition of a constructor must  imply the class
+           its  invariant:
+	   
+	   doc name:    ? 
+	   name:        cstr_post_implies_invariant
+	   wfpo_id:     po_cstr_post
+
+
+	sc All attributes must be initialized after a constructor
+
+	   doc name:    ?
+	   name:        force_cstr_inits_attributes
+	   wfpo_id:     po_cstr_attribute
+
+
+	sc The maximal depth of the class hierarchy:
+
+	   doc name:    ?     
+	   name:        check_depth
+	   wfpo_id:     wfc_depth 
+
+	
+	sc A class importing more then two interface should not have nameclashes:
+
+	   doc name:    ?
+	   op name:     check_inf_no_nameclashes
+	   wfpo_id      wfc_inf_nameclashes
+
+
+	sc A operations of an interface should not have stereotypes
+	   create or destroy:
+
+	   doc name:    ? 
+	   op name:     check_inf_op_stereotypes
+	   wfpo_id:     wfc_inf_stereotypes
+
+        sc Checks if all ocl formualas just contains operationcalls
+	   which are isQuery
+	   
+	   doc name:    ?
+	   op_name:     strong_is_query
+	   wfpo_id:     wfc_quy_strong
+
+	sc Checks if operations declared to be isQuery just contains 
+	   ocl formulas which contain just operationcalls which are isQuery.
+	   
+	   doc name:    ?
+	   op_name:     weak_is_query
+	   wfpo_id:     wfc_quy_weak
+
+
+	sc Checks that nothing is modified after execution of
+	   operation which is isQuery.
+
+	   doc name:    ?
+	   op_name:     modified_only
+	   wfpo_id      po_quy_modified
+
+"refineconstraint.sml"
+
+	new file name:	refinement.sml
+
+	sc syntax:      
+
+	   doc name:    ? 
+	   name:        rfm_check_syntax
+	   wfpo_id:     wfc_rfm               
+
+
+	sc po_gen:      
+
+	   doc name:    ? 
+	   name:        rfm_generate_po
+	   wfpo_id      po_rfm		
+
+
+"SecureUMLconstraint.sml"          
+
+
