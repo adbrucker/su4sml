@@ -1855,7 +1855,8 @@ fun local_associationends_of (all_associations:association list) (Class{name,ass
     in
         oppAends@filteredSelfAends
     end *)
-  | local_associationends_of _ _ = error ("in local_associationends_of: This classifier has no associationends") (*FIXME: or rather []? *)
+  | local_associationends_of [] model = []
+
 fun associationends_of assocs classes = local_associationends_of assocs classes                             
     
 (* get all inherited operations of a classifier, without the local operations *)
