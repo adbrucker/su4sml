@@ -118,7 +118,7 @@ fun generate_return_value typ oper sub_class super_class  model =
     in
       case typ of
 	weaken_pre => 
-	(* DEFINITION (OOSC p.578): sub_pre -> super_pre*)
+	(* DEFINITION (OOSC p.578): super_pre -> sub_pre*)
 	let
 	  val pre_super = Predicate(Variable("self_super",super_type),super_type, 
 				    name_of_pre super_class oper,
