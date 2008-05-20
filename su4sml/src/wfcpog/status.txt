@@ -3,17 +3,89 @@
 "visibilityconsistency.sml"          ===> [DONE]
 "liskovconstraint.sml"               ===> [DONE]
 "datamodelconsistency.sml"           ===> [DONE]
-"constructorconsistency.sml"         ===> [DONE (Xmi_Parser)]
+"constructorconsistency.sml"         ===> [NOT YET SUPPORTED]
+*************************************
 BUG REPORT: 
-For checking the last subconstraint:
+*************************************
+1.) For checking the last subconstraint:
 
     force_initialize_attributes
 
-the Xmi_Parser needs to be updated that it parses 
-stereotypes 'create' and 'destroy'
-"operationalconsistency.sml"         ===> [ready for isabelle]
-"refineconstraint.sml"               ===> [ready for isabelle]
-"commandqueryconsistency.sml"        ===> [ready for isablle (is_modified_only still left)] 
+    the Xmi_Parser needs to be updated that it parses 
+    stereotypes 'create' and 'destroy'
+
+"operationalconsistency.sml"         ===> [BUG (isabelle)]
+*************************************
+BUG REPORT:
+*************************************
+Es wird staendig eine Error geworfen.
+
+Der konkrete Grund ist, dass er auf einen Klassifier 
+zugreiffen moechte der nicht existiert.
+
+Er versucht auf ["holOclLib","Boolean"] zuzugreiffen,
+wenn man folgenden oclterm zu einem holoclterm
+transformieren moechte.
+
+Der Feher tritt so auf;
+
+Rep_Core -> Exception 
+Rep_Encoder.holocl_term.Ocl2holocl
+WFCPOG_Conncetor.ocl2holocl
+
+Vielleicht liegt es daran, dass 
+"holOclLib.forAll" noch nie vorher gebraucht wurde.
+
+Hier der term, der die Excption wirft.
+
+Iterator
+     ("holOclLib.forAll",[("sigma",OclState)],Literal ("",DummyT),DummyT,
+      Iterator
+        ("holOclLib.exists",[("sigma_s",OclState)],Literal ("",DummyT),DummyT,
+         OperationCall
+           (OperationCall
+              (Predicate
+                 (Variable ("self",Classifier ["overriding","C"]),
+                  Classifier ["overriding","C"],
+                  ["overriding","C","=_OclAny_Boolean","pre1"],
+                  [(Variable ("object",OclAny),OclAny)]),Boolean,
+               ["holOclLib","Boolean","implies"],
+               [(OperationCall
+                   (Predicate
+                      (Variable ("self",Classifier ["overriding","C"]),
+                       Classifier ["overriding","C"],
+                       ["overriding","C","=_OclAny_Boolean","post1"],
+                       [(Variable ("object",OclAny),OclAny),
+                        (Variable ("result",DummyT),DummyT)]),Boolean,
+                    ["holOclLib","Boolean","OclLocalValid"],
+                    [(Tuple
+                        [("sigma",Literal ("sigma",OclState),OclState),
+                         ("sigma_s",Literal ("sigma_s",OclState),OclState)],
+                      OclState)],Boolean),Boolean)],Boolean),Boolean,
+            ["holOclLib","Boolean","OclLocalValid"],
+            [(Tuple
+                [("sigma",Literal ("sigma",OclState),OclState),
+                 ("sigma_s",Literal ("sigma_s",OclState),OclState)],OclState)]
+
+
+
+
+
+
+
+
+"refineconstraint.sml"               ===> [BUG (isabelle)]
+"queryconsistency.sml"               ===> [BUG (isabelle)]
+*************************************
+BUG REPORT:
+*************************************
+1.) keyword check_wfc_queryConsistency
+
+    Isabelle does not accept the keyword althought the 
+    keyword is defined the same way as all other check_wfc_....
+
+2.) is_modified_only still left
+
 "taxonomyconsistency.sml"            ===> [DONE]
 "interfaceconsistency.sml"	     ===> [DONE]
 "SecureUMLconstraint.sml"            ===> [IMPLEMENTATION NOT FINISHED]
