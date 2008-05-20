@@ -52,11 +52,10 @@ Group is
   $smlnj/ml-yacc/ml-yacc-lib.cm
 #endif
 
-
+"library.sml"
 "../rep_secureuml.sml"	
 "rep_holocl.sml"
 "datatab.sml"
-"library.sml"
 "wfcpog.sml"
 
 (* wfcs and pogs *)
