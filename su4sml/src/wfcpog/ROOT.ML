@@ -38,10 +38,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************)
 (* $Id$ *)
-	 
+
+use "library.sml";	 
 use "rep_holocl.sml";
 use "datatab.sml";
-use "library.sml";
 use "wfcpog.sml";
 
 (* wfcs and pogs *)
