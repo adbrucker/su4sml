@@ -43,9 +43,9 @@
 signature WFCPOG_CONSTRUCTOR_CONSTRAINT = 
 sig
     (** sub constraint, included in constructor consistency.*)
-    val post_implies_invariant     : WFCPOG.wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
+    val post_implies_invariant           : WFCPOG.wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
     (** sub constraint, included in constructor consistency.*)
-    val override_old_creators    : WFCPOG.wfpo -> Rep.Model -> bool
+    val override_old_creators            : WFCPOG.wfpo -> Rep.Model -> bool
     (** sub constraint, included in constructor consistency.*)
     val force_initialize_attributes      : WFCPOG.wfpo -> Rep.Model -> (Rep_OclType.Path * Rep_OclTerm.OclTerm) list
     (** Any kind of Exception *) 
@@ -61,6 +61,7 @@ open Rep
 open Rep_OclTerm
 open Rep_OclType
 open Rep_HolOcl_Namespace
+open Rep_HolOcl_Helper
 (* OclParser *)
 open ModelImport
 
@@ -84,12 +85,21 @@ fun term_post_implies_inv class oper model =
 fun term_init_attributes class oper model = 
     let
 	val atts = all_attributes_of class model
+	val _ = trace wgen ("Number of attributes found = "^(Int.toString(List.length(atts))))
 	val post = Predicate (Variable ("self",type_of class),type_of class,name_of_post class oper,args2varargs ((arguments_of_op oper)@[("result",(#result oper))]))
-        (* TODO:
-	 * for all attributes: self.att_name = soll definiert sein
-	 *)
-    in 
- 	Variable ("no",OclVoid)
+        val att_is_defined = 
+	    List.map (fn a => 
+			 let
+			     val attr_name = (string_of_path (name_of class))^"."^(#name a)
+			     val attr_typ = (#attr_type a)
+			     val src = Predicate(Variable(attr_name,attr_typ),attr_typ,(name_of class)@[(#name a)],[])
+			 in
+			     OperationCall(src,Boolean,["oclIsDefined"],[],Boolean)
+			 end) atts
+	val and_atts = holocl_and_all att_is_defined
+	val post_impl_atts = holocl_implies post and_atts
+    in
+	post_impl_atts
     end
 
 fun check_override_classifier class (model as (clist,alist)) = 
@@ -117,14 +127,17 @@ fun check_override_classifier class (model as (clist,alist)) =
 fun generate_post_classifier class model = 
     let
 	val _ = trace function_calls ("WFCPOG_Constructor_Consistency_Constraint.check_post_classifier\n")
-	val pos = 
-	    List.map (fn a => 
-			 let
-			     val term = term_post_implies_inv class a model
-			     val path = ["po_cstr_","post_",(string_of_path (name_of class)),(name_of_op a)]
-			 in
-			     (path,term)
-			 end) (creation_operations_of class model)
+	val atts = all_attributes_of class model
+	val pos = if (List.length(atts) = 0)
+		    then []
+		    else
+			List.map (fn a => 
+				     let
+					 val term = term_post_implies_inv class a model
+					 val path = ["po_cstr_","post_",(string_of_path (name_of class)),(name_of_op a)]
+				     in
+					 (path,term)
+				     end) (creation_operations_of class model)
 	val _ = trace function_ends ("WFCPOG_Constructor_Consistency_Constraint.check_override_classifier\n")
     in
 	pos

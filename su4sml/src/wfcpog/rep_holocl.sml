@@ -316,6 +316,4 @@ fun get_holocl_abstraction_relation  abs_class conc_class model =
     in
 	predicate
     end
-
-
 end
