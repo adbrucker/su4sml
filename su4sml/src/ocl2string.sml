@@ -143,6 +143,24 @@ fun ocl2string show_types oclterm =
       |  OperationCall
              (src,styp,["holOclLib","Boolean","OclLocalValid"],[(Literal(arg,atyp),_)],rtyp)
 	 => string_of_infix show_types  (Literal(arg,atyp)) atyp "|=" src styp   rtyp
+
+
+    |  OperationCall
+             (src,styp,["holOclLib","methodology","refinement","OclLocalValidR"],
+	      [(Literal(arg,atyp),_)],rtyp)
+	 => string_of_infix show_types  (Literal(arg,atyp)) atyp "|=_R" src styp   rtyp
+
+
+
+      |  OperationCall
+	 (S,_,["holOclLib","methodology","refinement", "OclForwardRefinement"],
+	  [(T,_),(R,_)],Boolean)
+	 => "refine "
+	   ^(ocl2string show_types S)
+	   ^" "
+	   ^(ocl2string show_types T)
+	   ^" "
+	   ^(ocl2string show_types R)
       | Iterator ("holOclLib.exists",vars,src,styp,c,ctyp,rtyp) 
 	=> if show_types 
 	  then "Ex "^(cs_list (map (fn (a,t) => a^":"^(string_of_OclType t)) vars))
