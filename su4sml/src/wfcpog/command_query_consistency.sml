@@ -182,5 +182,8 @@ fun strong_is_query po (model as (clist,alist)) =
     in
 	res
     end
+
+ (* | OperationCall (src,styp,["oclLib",_,"modifiedOnly"],[],_) 
+	=> OclModifiedOnly styp u (ocl2holocl u  src)             *)
 end;
     
