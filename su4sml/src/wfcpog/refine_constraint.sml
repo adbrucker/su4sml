@@ -68,7 +68,7 @@ open Rep_OclType
 open Rep2String
 open ModelImport
 open Rep_HolOcl_Namespace
-
+open Rep_HolOcl_Helper
 (* wfcpo-gen *)
 open WFCPOG_Library
 
@@ -344,42 +344,13 @@ fun check_syntax wfpo (model:Rep.Model as (clist,alist)) =
 	check
     end
 
-fun get_holocl_operation var_name oper class model = 
-    let
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.get_holocl_operation\n") 
-	(** use Rep_Encoder to get operation as HOL-OCL-Term **)
-	(* val term = Rep_Encoder. .... *)
-	val hol_name = (name_of class)@[(name_of_op oper)]
-	val typ = type_of class
-	val predicate = Predicate(Variable(var_name,typ),typ,hol_name,args2varargs (arguments_of_op oper))
-	val _ = trace function_ends ("WFCPOG_Refine_Constraint.get_holocl_operation\n") 
-    in
-	predicate
-    end
-
-fun get_holocl_abstraction_relation  abs_path conc_path class_name model =
-    let
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.get_holocl_abstraction_relation\n")
-	val predicate_name = "R_"^(string_of_path abs_path)^"_"^(string_of_path conc_path)^"_"^class_name
-	val abs_state = Variable(varcounter.nextStr(),OclState)
-	val conc_state = Variable(varcounter.nextStr(),OclState)
-	val abs_type = type_of (class_of (abs_path@[class_name]) model)
-	val conc_type = type_of (class_of (conc_path@[class_name]) model)
-	val abs_term = Variable(varcounter.nextStr(),abs_type)
-	val conc_term = Variable(varcounter.nextStr(),conc_type)
-	val predicate = Predicate(abs_state,OclState,[predicate_name],[(conc_state,OclState),(abs_term,abs_type),(conc_term,conc_type)])
-	val _ = trace function_ends ("WFCPOG_Refine_Constraint.get_holocl_abstraction_relation\n")
-    in
-	predicate
-    end
-
 
 fun refine_operation abs_oper conc_oper abs_class conc_class model = 
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.refine_classifier\n")
-	val R = get_holocl_abstraction_relation (package_of abs_class) (package_of conc_class) (List.last(name_of abs_class)) model
-	val S = get_holocl_operation (name_of_op abs_oper) abs_oper abs_class model
-	val T = get_holocl_operation (name_of_op conc_oper) conc_oper conc_class model
+	val R = get_holocl_abstraction_relation abs_class conc_class model
+	val S = get_holocl_operation abs_oper abs_class model
+	val T = get_holocl_operation conc_oper conc_class model
 	val refine = OperationCall(S,DummyT,["holOclLib","methodology","refinement","OclForwardRefinement"],[(T,DummyT),(R,DummyT)],Boolean)
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.refine_classifier\n")	
     in

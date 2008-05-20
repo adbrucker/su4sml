@@ -243,12 +243,16 @@ sig
     val holocl_xor        : Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm
     val holocl_localValid_state      : Rep_OclTerm.OclTerm -> string -> Rep_OclTerm.OclTerm
     val holocl_localValid_transition : Rep_OclTerm.OclTerm -> string -> string -> Rep_OclTerm.OclTerm
+    val get_holocl_operation         : Rep_Core.operation -> Rep_Core.Classifier -> Rep_Core.transform_model -> Rep_OclTerm.OclTerm
+    val get_holocl_abstraction_relation: Rep_Core.Classifier -> Rep_Core.Classifier -> Rep_Core.transform_model -> Rep_OclTerm.OclTerm
 end
 structure Rep_HolOcl_Helper:REP_HOLOCL_HELPER = 
 struct 
-
+open Rep_Core
+open Rep_Logger
 open Rep_OclType
 open Rep_OclTerm
+open WFCPOG_Library
 
 exception HolOcl_Helper_InvalidArguments of string
 
@@ -282,4 +286,36 @@ fun holocl_localValid_transition term var_name1 var_name2 =
     in
 	OperationCall(term,Boolean,["holOclLib","Boolean","OclLocalValid"],[(tuple_term,OclState)],Boolean)
     end
+
+fun get_holocl_operation oper class model = 
+    let
+	val _ = trace function_calls ("WFCPOG_Refine_Constraint.get_holocl_operation\n") 
+	(** use Rep_Encoder to get operation as HOL-OCL-Term **)
+	(* val term = Rep_Encoder. .... *)
+	val hol_name = (name_of class)@[(name_of_op oper)]
+	val styp = type_of class
+	val src = Predicate(Variable(string_of_path (name_of class),styp),styp,hol_name,args2varargs (arguments_of_op oper))
+	val predicate = Predicate(src,Boolean,hol_name,args2varargs (arguments_of_op oper))
+	val _ = trace function_ends ("WFCPOG_Refine_Constraint.get_holocl_operation\n") 
+    in
+	predicate
+    end
+
+fun get_holocl_abstraction_relation  abs_class conc_class model =
+    let
+	val _ = trace function_calls ("WFCPOG_Refine_Constraint.get_holocl_abstraction_relation\n")
+	val predicate_name = "R_"^(string_of_path (package_of abs_class))^"_"^(string_of_path (package_of conc_class))^"_"^(List.last (name_of abs_class))
+	val abs_typ = type_of abs_class
+	val conc_typ = type_of conc_class
+	val abs_state = Variable("tau_concrete",OclState)
+	val conc_state = Variable("tau_abstract",OclState)
+	val abs_term = Predicate(Variable(string_of_path (name_of abs_class),abs_typ),abs_typ,(name_of abs_class),[])   
+	val conc_term = Predicate(Variable(string_of_path (name_of conc_class),conc_typ),conc_typ,(name_of conc_class),[])
+	val predicate = Predicate(abs_state,OclState,[predicate_name],[(conc_state,OclState),(abs_term,abs_typ),(conc_term,conc_typ)])
+	val _ = trace function_ends ("WFCPOG_Refine_Constraint.get_holocl_abstraction_relation\n")
+    in
+	predicate
+    end
+
+
 end
