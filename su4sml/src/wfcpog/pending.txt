@@ -1,0 +1,4 @@
+
+
+XMI_Parser:
+  - support for parsing stereotypes 'create','destroy'
