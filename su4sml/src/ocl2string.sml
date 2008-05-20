@@ -158,9 +158,9 @@ fun ocl2string show_types oclterm =
 	 => "refine "
 	   ^(ocl2string show_types S)
 	   ^" "
-	   ^(ocl2string show_types T)
-	   ^" "
 	   ^(ocl2string show_types R)
+	   ^" "
+	   ^(ocl2string show_types T)
       | Iterator ("holOclLib.exists",vars,src,styp,c,ctyp,rtyp) 
 	=> if show_types 
 	  then "Ex "^(cs_list (map (fn (a,t) => a^":"^(string_of_OclType t)) vars))
