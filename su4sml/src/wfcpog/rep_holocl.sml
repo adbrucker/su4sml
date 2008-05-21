@@ -290,8 +290,6 @@ fun holocl_localValid_transition term var_name1 var_name2 =
 fun get_holocl_operation oper class model = 
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.get_holocl_operation\n") 
-	(** use Rep_Encoder to get operation as HOL-OCL-Term **)
-	(* val term = Rep_Encoder. .... *)
 	val hol_name = (name_of class)@[(name_of_op oper)]
 	val styp = type_of class
 	val src = Predicate(Variable(string_of_path (name_of class),styp),styp,hol_name,args2varargs (arguments_of_op oper))
@@ -309,8 +307,8 @@ fun get_holocl_abstraction_relation  abs_class conc_class model =
 	val conc_typ = type_of conc_class
 	val abs_state = Variable("tau_concrete",OclState)
 	val conc_state = Variable("tau_abstract",OclState)
-	val abs_term = Predicate(Variable(string_of_path (name_of abs_class),abs_typ),abs_typ,(name_of abs_class),[])   
-	val conc_term = Predicate(Variable(string_of_path (name_of conc_class),conc_typ),conc_typ,(name_of conc_class),[])
+	val abs_term = Variable(string_of_path (name_of abs_class),abs_typ)
+	val conc_term = Variable(string_of_path (name_of conc_class),conc_typ)
 	val predicate = Predicate(abs_state,OclState,[predicate_name],[(conc_state,OclState),(abs_term,abs_typ),(conc_term,conc_typ)])
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.get_holocl_abstraction_relation\n")
     in
