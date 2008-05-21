@@ -348,10 +348,11 @@ fun check_syntax wfpo (model:Rep.Model as (clist,alist)) =
 fun refine_operation abs_oper conc_oper abs_class conc_class model = 
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.refine_classifier\n")
-	val R = get_holocl_abstraction_relation abs_class conc_class model
-	val S = get_holocl_operation abs_oper abs_class model
+	val refine = get_holocl_abstraction_relation abs_class conc_class model
+(* 	val S = get_holocl_operation abs_oper abs_class model
 	val T = get_holocl_operation conc_oper conc_class model
 	val refine = OperationCall(S,DummyT,["holOclLib","methodology","refinement","OclForwardRefinement"],[(T,DummyT),(R,DummyT)],Boolean)
+*)
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.refine_classifier\n")	
     in
 	(["po_refine_"^(string_of_path (name_of abs_class))^"_"^(string_of_path (name_of conc_class))^"_"^(name_of_op abs_oper)],refine)
