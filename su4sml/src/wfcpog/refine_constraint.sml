@@ -344,7 +344,7 @@ fun check_syntax wfpo (model:Rep.Model as (clist,alist)) =
 	check
     end
 
-
+(* 
 fun refine_operation abs_oper conc_oper abs_class conc_class model = 
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.refine_classifier\n")
@@ -355,7 +355,8 @@ fun refine_operation abs_oper conc_oper abs_class conc_class model =
     in
 	(["po_refine_"^(string_of_path (name_of abs_class))^"_"^(string_of_path (name_of conc_class))^"_"^(name_of_op abs_oper)],refine)
     end
-(* 
+*)
+
 fun refine_operation abs_oper conc_oper abs_class conc_class model = 
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.refine_classifier\n")
@@ -367,7 +368,7 @@ fun refine_operation abs_oper conc_oper abs_class conc_class model =
     in
 	(["po_refine_"^(string_of_path (name_of abs_class))^"_"^(string_of_path (name_of conc_class))^"_"^(name_of_op abs_oper)],refine)
     end
-*)
+
 fun refine_classifier abs_class conc_class model = 
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.refine_classifier\n")

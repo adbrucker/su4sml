@@ -292,7 +292,7 @@ fun get_holocl_operation oper class model =
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.get_holocl_operation\n") 
 	val hol_name = string_of_path ((name_of class)@[name_of_op oper])
 	val styp = type_of class
-	val src = Variable((string_of_path ((name_of class)@[name_of_op oper])),styp)
+	val src = Variable((string_of_path ((name_of class)@[(varcounter.nextStr())])),styp)
 	val predicate = Predicate(src,Boolean,[hol_name],args2varargs (arguments_of_op oper))
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.get_holocl_operation\n") 
     in
