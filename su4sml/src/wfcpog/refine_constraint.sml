@@ -349,7 +349,7 @@ fun refine_operation abs_oper conc_oper abs_class conc_class model =
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.refine_classifier\n")
 	val state = Variable("mystate",OclState)
- 	val op_term = get_holocl_operation abs_oper abs_class model
+ 	val op_term = get_holocl_operation ("abs") abs_oper abs_class model
 	val refine = OperationCall (op_term,DummyT,["holOclLib","Boolean","OclLocalValid"],[(state,OclState)],Boolean)
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.refine_classifier\n")	
     in
@@ -361,8 +361,8 @@ fun refine_operation abs_oper conc_oper abs_class conc_class model =
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.refine_classifier\n")
  	val R = get_holocl_abstraction_relation abs_class conc_class model
- 	val S = get_holocl_operation abs_oper abs_class model
-	val T = get_holocl_operation conc_oper conc_class model
+ 	val S = get_holocl_operation ("abs") abs_oper abs_class model
+	val T = get_holocl_operation ("conc") conc_oper conc_class model
 	val refine = OperationCall(S,DummyT,["holOclLib","methodology","refinement","OclForwardRefinement"],[(T,DummyT),(R,DummyT)],Boolean)
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.refine_classifier\n")	
     in

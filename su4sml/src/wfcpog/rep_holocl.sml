@@ -243,7 +243,7 @@ sig
     val holocl_xor        : Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm -> Rep_OclTerm.OclTerm
     val holocl_localValid_state      : Rep_OclTerm.OclTerm -> string -> Rep_OclTerm.OclTerm
     val holocl_localValid_transition : Rep_OclTerm.OclTerm -> string -> string -> Rep_OclTerm.OclTerm
-    val get_holocl_operation         : Rep_Core.operation -> Rep_Core.Classifier -> Rep_Core.transform_model -> Rep_OclTerm.OclTerm
+    val get_holocl_operation         : string -> Rep_Core.operation -> Rep_Core.Classifier -> Rep_Core.transform_model -> Rep_OclTerm.OclTerm
     val get_holocl_abstraction_relation: Rep_Core.Classifier -> Rep_Core.Classifier -> Rep_Core.transform_model -> Rep_OclTerm.OclTerm
 end
 structure Rep_HolOcl_Helper:REP_HOLOCL_HELPER = 
@@ -287,12 +287,12 @@ fun holocl_localValid_transition term var_name1 var_name2 =
 	OperationCall(term,Boolean,["holOclLib","Boolean","OclLocalValid"],[(tuple_term,OclState)],Boolean)
     end
 
-fun get_holocl_operation oper class model = 
+fun get_holocl_operation abs_or_conc oper class model = 
     let
 	val _ = trace function_calls ("WFCPOG_Refine_Constraint.get_holocl_operation\n") 
 	val hol_name = string_of_path ((name_of class)@[name_of_op oper])
 	val styp = type_of class
-	val src = Variable((string_of_path ((name_of class)@[(varcounter.nextStr())])),styp)
+	val src = Variable((abs_or_conc^"_"^(name_of_op oper)),styp)
 	val predicate = Predicate(src,Boolean,[hol_name],args2varargs (arguments_of_op oper))
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.get_holocl_operation\n") 
     in
