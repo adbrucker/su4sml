@@ -293,7 +293,8 @@ fun get_holocl_operation abs_or_conc oper class model =
 	val hol_name = string_of_path ((name_of class)@[name_of_op oper])
 	val styp = type_of class
 	val src = Variable((abs_or_conc^"_"^(name_of_op oper)),styp)
-	val predicate = Predicate(src,Boolean,[hol_name],args2varargs (arguments_of_op oper))
+	val predicate = Predicate(src,Boolean,[hol_name],args2varargs 
+	  (map (fn (n,t) => (abs_or_conc^"_"^n,t)) (arguments_of_op oper)))
 	val _ = trace function_ends ("WFCPOG_Refine_Constraint.get_holocl_operation\n") 
     in
 	predicate
