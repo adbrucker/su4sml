@@ -158,6 +158,7 @@ type transform_model = (Classifier list * association list)
 val union         : transform_model -> transform_model -> transform_model
 val intersection  : transform_model -> transform_model -> transform_model
 val minus         : transform_model -> transform_model -> transform_model
+val isDisjunct    : transform_model -> transform_model -> bool
 
 (** 
  * TODO: Description 
@@ -2359,6 +2360,10 @@ fun intersection ((a_cl,a_assoc):transform_model)
 
 fun minus ((a_cl,a_assoc):transform_model)
 	      ((b_cl,b_assoc):transform_model)  = (ListMinus a_cl b_cl, ListMinus a_assoc b_assoc)
+
+fun isDisjunct ((a_cl,a_assoc):transform_model)
+	      ((b_cl,b_assoc):transform_model)  = (List.length (ListIntersect a_cl b_cl) = 0)
+						  andalso  (List.length (ListIntersect a_assoc b_assoc) = 0)
 
 
 
