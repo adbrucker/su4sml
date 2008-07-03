@@ -5,7 +5,8 @@
  * rep_core.sml --- core repository datastructures for su4sml
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2005-2007 ETH Zurich, Switzerland
+ *                    2008 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
