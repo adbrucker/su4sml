@@ -154,7 +154,9 @@ type transform_model = (Classifier list * association list)
 (**
  * TODO: Description 
  *)
-val joinModel      : transform_model -> transform_model -> transform_model
+val union         : transform_model -> transform_model -> transform_model
+val intersection  : transform_model -> transform_model -> transform_model
+val minus         : transform_model -> transform_model -> transform_model
 
 (** 
  * TODO: Description 
@@ -2334,11 +2336,31 @@ fun rm_init_attr (attr:attribute) = {
     init = NONE
 }:attribute
 
+fun ListIntersect [] ys      = []
+  | ListIntersect (x::xs) ys = if List.exists (fn y => (x = y)) ys
+			       then [x]@(ListIntersect xs ys)  
+			       else (ListIntersect xs ys)
 
-fun joinModel ((a_cl,a_assoc):transform_model)
+fun ListMinus [] ys      = []
+  | ListMinus (x::xs) ys = if List.exists (fn y => (x = y)) ys
+			       then (ListIntersect xs ys)
+			       else [x]@(ListIntersect xs ys)  
+
+
+ 
+
+fun union ((a_cl,a_assoc):transform_model)
 	      ((b_cl,b_assoc):transform_model)  = 
     (a_cl@b_cl,a_assoc@b_assoc)
     
+fun intersection ((a_cl,a_assoc):transform_model)
+	      ((b_cl,b_assoc):transform_model)  = (ListIntersect a_cl b_cl, ListIntersect a_assoc b_assoc)
+
+fun minus ((a_cl,a_assoc):transform_model)
+	      ((b_cl,b_assoc):transform_model)  = (ListMinus a_cl b_cl, ListMinus a_assoc b_assoc)
+
+
+
 fun init_to_inv cls_name (attr:attribute) = 
     (case (#init attr) of
        NONE => (SOME ("init_"^(#name attr)),
