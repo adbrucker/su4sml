@@ -159,6 +159,8 @@ val union         : transform_model -> transform_model -> transform_model
 val intersection  : transform_model -> transform_model -> transform_model
 val minus         : transform_model -> transform_model -> transform_model
 val isDisjunct    : transform_model -> transform_model -> bool
+val toString      : transform_model -> string
+val rmDuplicates  : transform_model -> transform_model
 
 (** 
  * TODO: Description 
@@ -2345,11 +2347,14 @@ fun ListIntersect [] ys      = []
 
 fun ListMinus [] ys      = []
   | ListMinus (x::xs) ys = if List.exists (fn y => (x = y)) ys
-			       then (ListIntersect xs ys)
-			       else [x]@(ListIntersect xs ys)  
-
-
+			       then (ListMinus xs ys)
+			       else [x]@(ListMinus xs ys)  
+fun ListRmDuplicates []      = []
+  | ListRmDuplicates (x::xs) = if List.exists (fn y => (x = y)) xs
+			       then (ListRmDuplicates xs)
+			       else [x]@(ListRmDuplicates xs)  
  
+fun rmDuplicates ((a_cl,a_assoc):transform_model) = (ListRmDuplicates a_cl, ListRmDuplicates a_assoc)
 
 fun union ((a_cl,a_assoc):transform_model)
 	      ((b_cl,b_assoc):transform_model)  = 
@@ -2365,7 +2370,14 @@ fun isDisjunct ((a_cl,a_assoc):transform_model)
 	      ((b_cl,b_assoc):transform_model)  = (List.length (ListIntersect a_cl b_cl) = 0)
 						  andalso  (List.length (ListIntersect a_assoc b_assoc) = 0)
 
-
+fun toString ((cl,assoc):transform_model) = 
+    let fun cmap f l = String.concat (map f l)
+    in
+      (Int.toString(List.length cl))^" Classifier(s): "
+      ^(cmap (fn c => ((string_of_path o name_of) c)^" ") cl)^"\n"
+      ^(Int.toString(List.length assoc))^" Association(s): "
+      ^(cmap (fn c => ((string_of_path o name_of_association) c)^" ") assoc)^"\n"
+    end
 
 fun init_to_inv cls_name (attr:attribute) = 
     (case (#init attr) of
