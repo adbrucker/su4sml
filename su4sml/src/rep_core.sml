@@ -2340,35 +2340,38 @@ fun rm_init_attr (attr:attribute) = {
     init = NONE
 }:attribute
 
-fun ListIntersect [] ys      = []
-  | ListIntersect (x::xs) ys = if List.exists (fn y => (x = y)) ys
-			       then [x]@(ListIntersect xs ys)  
-			       else (ListIntersect xs ys)
+fun ListIntersect f [] ys      = []
+  | ListIntersect f (x::xs) ys = if List.exists (fn y => ((f x) = (f y))) ys
+			       then [x]@(ListIntersect f xs ys)  
+			       else (ListIntersect f xs ys)
 
-fun ListMinus [] ys      = []
-  | ListMinus (x::xs) ys = if List.exists (fn y => (x = y)) ys
-			       then (ListMinus xs ys)
-			       else [x]@(ListMinus xs ys)  
-fun ListRmDuplicates []      = []
-  | ListRmDuplicates (x::xs) = if List.exists (fn y => (x = y)) xs
-			       then (ListRmDuplicates xs)
-			       else [x]@(ListRmDuplicates xs)  
+fun ListMinus f [] ys      = []
+  | ListMinus f (x::xs) ys = if List.exists (fn y => ((f x)= (f y))) ys
+			       then (ListMinus f xs ys)
+			       else [x]@(ListMinus f xs ys)  
+fun ListRmDuplicates f []      = []
+  | ListRmDuplicates f (x::xs) = if List.exists (fn y => ((f x) = (f y))) xs
+			       then (ListRmDuplicates f xs)
+			       else [x]@(ListRmDuplicates f xs)  
  
-fun rmDuplicates ((a_cl,a_assoc):transform_model) = (ListRmDuplicates a_cl, ListRmDuplicates a_assoc)
+fun rmDuplicates ((a_cl,a_assoc):transform_model) = (ListRmDuplicates name_of a_cl, 
+						     ListRmDuplicates name_of_association a_assoc)
 
 fun union ((a_cl,a_assoc):transform_model)
 	      ((b_cl,b_assoc):transform_model)  = 
     (a_cl@b_cl,a_assoc@b_assoc)
     
 fun intersection ((a_cl,a_assoc):transform_model)
-	      ((b_cl,b_assoc):transform_model)  = (ListIntersect a_cl b_cl, ListIntersect a_assoc b_assoc)
+	      ((b_cl,b_assoc):transform_model)  = (ListIntersect name_of a_cl b_cl, 
+	      	ListIntersect name_of_association a_assoc b_assoc)
 
 fun minus ((a_cl,a_assoc):transform_model)
-	      ((b_cl,b_assoc):transform_model)  = (ListMinus a_cl b_cl, ListMinus a_assoc b_assoc)
+	      ((b_cl,b_assoc):transform_model)  = (ListMinus name_of a_cl b_cl, 
+	      	 ListMinus name_of_association a_assoc b_assoc)
 
 fun isDisjunct ((a_cl,a_assoc):transform_model)
-	      ((b_cl,b_assoc):transform_model)  = (List.length (ListIntersect a_cl b_cl) = 0)
-						  andalso  (List.length (ListIntersect a_assoc b_assoc) = 0)
+	      ((b_cl,b_assoc):transform_model)  = (List.length (ListIntersect name_of a_cl b_cl) = 0)
+						  andalso  (List.length (ListIntersect name_of_association a_assoc b_assoc) = 0)
 
 fun toString ((cl,assoc):transform_model) = 
     let fun cmap f l = String.concat (map f l)
