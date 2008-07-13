@@ -54,11 +54,11 @@ OS.FileSys.chDir "compiler";
 
 use "compiler_ext.sig";
 
-val ml_system  = getOpt (OS.Process.getEnv "ML_SYSTEM", "poly-5.2")
+val ml_system  = getOpt (OS.Process.getEnv "ML_SYSTEM", "polyml-5.2")
 
 val use_wrapper = if (String.isSubstring "poly" ml_system)
-		  then if (String.isSubstring "poly-5.0" ml_system)
-			  orelse (String.isSubstring "poly-5.1" ml_system)
+		  then if (String.isSubstring "polyml-5.0" ml_system)
+			  orelse (String.isSubstring "polyml-5.1" ml_system)
 		       then (use "../contrib/HashTable.sml"; "polyml.sml")
 		       else (use "../contrib/HashTable.sml"; "polyml-5.2.sml")
                   else "smlnj.sml";
