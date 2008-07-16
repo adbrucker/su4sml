@@ -714,7 +714,9 @@ fun check_context (Cond (path,op_name,op_sign,result_type,cond,pre_name,expr)) (
 	    then
 		(SOME((Cond (path,op_name,op_sign,(#result oper),cond,pre_name,resolve_OclTerm expr model)))) 
 	    else
-		NONE
+		(* NONE *)
+		raise TC_WrongContextChecked (Cond (path,op_name,op_sign,result_type,cond,pre_name,expr))
+
 	val _ = trace function_ends ("TypeChecker.check_context Cond(...)\n\n\n")
     in
 	res
@@ -738,7 +740,9 @@ fun check_context (Cond (path,op_name,op_sign,result_type,cond,pre_name,expr)) (
 		    (SOME ((Attr (path,(#attr_type attr),attrorassoc,resolve_OclTerm expr model))))
 		end
 	    else
-		NONE
+	(*	NONE *)
+                raise TC_WrongContextChecked (Attr (path,typ,attrorassoc,expr))
+
 	val _ = trace function_ends ("TypeChecker.check_context\n\n\n")
     in
 	res
