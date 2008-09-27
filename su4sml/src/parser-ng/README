@@ -1,0 +1,3 @@
+This directory contains the next-generation (ng) parser infrastructure
+for su4sml. With this branch of development, we will switch to ml-ulex 
+and ml-antlr.
