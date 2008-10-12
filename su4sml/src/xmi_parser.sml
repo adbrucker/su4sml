@@ -116,12 +116,12 @@ fun owner_scope atts =
 		  | SOME s => unknown_attribute_value atts "ownerScope" s
     end 
 
-fun ordering atts = 
+fun ordering default atts = 
     let val att = optional_value_of "ordering" atts 
     in 
 	case att of SOME "unordered" => XMI.Unordered
 		  | SOME "ordered"   => XMI.Ordered
-		  | NONE             => XMI.Unordered
+		  | NONE             => default (* XMI.Unordered *)
 		  | SOME s => unknown_attribute_value atts "ordering" s
     end 
 
@@ -387,7 +387,7 @@ fun mkAttribute tree =
 	  name          = atts |> name,
 	  visibility    = atts |> visibility,
 	  changeability = atts |> changeability,
-	  ordering      = atts |> ordering, 
+	  ordering      = atts |> ordering XMI.Ordered, 
 	  initialValue  = tree |> get_optional "UML:Attribute.initialValue"
                          |> map_optional (get_optional 
                                               "OCL.Expressions.\
@@ -421,7 +421,7 @@ fun mkAssociationEnd association  tree:XMI_Core.AssociationEnd =
 	      name           = atts |> optional_value_of "name", 
 	      association    = association,
 	      isNavigable    = atts |> bool_value_of "isNavigable" ,
-	      ordering       = atts |> ordering,
+	      ordering       = atts |> ordering XMI.Unordered,
 	      aggregation    = atts |> aggregation,
 	      targetScope    = atts |> target_scope,
 	      multiplicity   = tree |> get_optional "UML:AssociationEnd.\
