@@ -6,6 +6,7 @@
  * This file is part of su4sml.
  *
  * Copyright (c) 2005-2007 ETH Zurich, Switzerland
+ *               2008      Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -54,7 +55,6 @@ open Rep_Helper
 open Rep_Logger
 open Rep_OclType
 open Rep_OclTerm
-(* open Rep_Core *)
 
 
 fun ocl2string show_types oclterm =     
