@@ -5,7 +5,7 @@
  * ocl2string --- "pretty printing" for OCL terms
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2005-2007 ETH Zurich, Switzerland
  *
  * All rights reserved.
  *
@@ -40,13 +40,21 @@
 (* $Id$ *)
 
 (** "pretty printing" for OCL expressions. *)
-structure Ocl2String = 
+
+signature OCL2STRING = 
+sig
+
+  val ocl2string: bool -> Rep_OclTerm.OclTerm -> string
+
+end
+
+structure Ocl2String:OCL2STRING = 
 struct
 open Rep_Helper
 open Rep_Logger
 open Rep_OclType
 open Rep_OclTerm
-open Rep_Core
+(* open Rep_Core *)
 
 
 fun ocl2string show_types oclterm =     
