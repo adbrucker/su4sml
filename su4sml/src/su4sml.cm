@@ -48,3 +48,4 @@ Group is
 #endif
   ocl_parser/parser.cm
   codegen/codegen.cm
+  su4sml.sml

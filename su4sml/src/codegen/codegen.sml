@@ -239,5 +239,3 @@ fun main (_,[xmi_file,lang])          = ((if   is_supported lang
   | main _                            = (print_usage(); OS.Process.success)
                                         
 end
-
-val _ = Codegen.main(CommandLine.name(),CommandLine.arguments())
