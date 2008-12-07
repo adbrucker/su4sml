@@ -6,6 +6,7 @@
  * This file is part of su4sml.
  *
  * Copyright (c) 2006, 2007 ETH Zurich, Switzerland
+ *               2008       Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -40,7 +41,7 @@
 (* $Id$ *)
 
 signature TESTSUITE = sig
-  val runTest : unit -> unit list
+  val runTest : unit -> unit
 end
 
 structure testsuite:TESTSUITE = struct
@@ -159,15 +160,15 @@ val testcases = [
    }:testcase,
    {
     name = "SimpleChair (AbstractsimpleChair01)",
-    uml  = prefix^"SimpleChair/SimpleChair.zargo",
-    ocl  = prefix^"SimpleChair/AbstractSimpleChair01.ocl",
+    uml  = prefix^"SimpleChair/specification/SimpleChair.zargo",
+    ocl  = prefix^"SimpleChair/specification/AbstractSimpleChair01.ocl",
     exclude = [],
     result = initResult
    }:testcase,
    {
     name = "SimpleChair (AbstractSimpleChair04)",
-    uml  = prefix^"SimpleChair/SimpleChair.zargo",
-    ocl  = prefix^"SimpleChair/AbstractSimpleChair04.ocl",
+    uml  = prefix^"SimpleChair/specification/SimpleChair.zargo",
+    ocl  = prefix^"SimpleChair/specification/AbstractSimpleChair04.ocl",
     exclude = ["AbstractSimpleChair01", "AbstractSimpleChair02", 
 	       "AbstractSimpleChair03",  "ConcreteSimpleChair01", 
 	       "ConcreteSimpleChair02"],
@@ -279,14 +280,45 @@ fun printResult (tc:testcase) =
 							andalso (#rmpkg res)
 					    ))^"\n")
     in
-	()
+      ()	
+    end
+
+
+
+fun printSummary res = 
+    let
+      fun printBool b = if b then "passed" else "FAILED"
+      fun tcsummary (tc:testcase) = 
+	  let
+	    val res = (#result tc) 
+	  in
+	    (#parse res) 
+	    andalso (#preprocess res) 
+	    andalso (#typecheck res) 
+	    andalso (#update res) 
+	    andalso (#codegen res)
+	    andalso (#transform res)
+	    andalso (#rmpkg res)
+	  end
+      val summary = foldl (fn (a,b) => a andalso b) true (map tcsummary res)
+      val _ = print ("\n")
+      val _ = print (" ******************************\n")
+      val _ = print (" * Overall result:     "^(printBool summary)^" *\n")      
+      val _ = print (" ******************************\n")
+    in
+      ()
     end
 
 (* val _ = (Ext_Library.log_level := 1);(); *)
-
-fun runTest () = map printResult  (map test testcases)
-
+		
+  fun runTest () = let 
+    val results = (map test testcases)
+    val _       = map printResult results
+    val _       = printSummary results
+  in 
+    ()
+  end
 end
-  
+ 
 val _ = testsuite.runTest()
 
