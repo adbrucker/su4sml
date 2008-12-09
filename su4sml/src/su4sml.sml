@@ -137,7 +137,7 @@ fun main (name:string,args:(string list)) =
     let 
       val prgName = (hd o rev) (String.fields (fn s => s = #"/" orelse s = #"\\") name); 
       val _ = print ("Name: "^prgName^"\n");
-      val _ = (Rep_Logger.log_level := 0)
+      val _ = (Rep_Logger.log_level := 2)
     in
       case (prgName,args) of 
 	(n, [])                       => print_usage n
@@ -150,7 +150,7 @@ fun main (name:string,args:(string list)) =
       | (_, "check-model"::_)         => let val _ =  print "not yet supported \n" in 0 end
       (* codegen         *)
       | (_, ["codegen", "help"])      => let val _ =  Codegen.print_usage() in 0 end
-      | ("su4sml",  "codegen"::args)  => main("codegen",args) 
+      | ("su4sml",  "codegen"::args)  => Codegen.main("su4sml",args)
       | (_, "codegen"::_)             => let val _ =  Codegen.print_usage() in 0 end
       (* transform-model *)
       | (_, ["transform-model", "help"]) => let val _ =  print "not yet supported \n" in 0 end
