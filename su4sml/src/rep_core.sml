@@ -1197,7 +1197,7 @@ fun type_of_path ["Integer"] (model:transform_model) = Integer
 	type_of cl
     end
 
-and class_of_term source (c:Classifier list, a:association list) =
+fun class_of_term source (c:Classifier list, a:association list) =
     let
 	val typ = type_of_term (source)
 	val _ = trace rep_core ("type_of_term term = " ^ (string_of_OclType typ) ^ "\n")
@@ -1208,7 +1208,8 @@ and class_of_term source (c:Classifier list, a:association list) =
 		fun substitute_args typ [] = []
 		  | substitute_args typ ((s,t)::tail) =
 		    let 
-			val _ = trace low ("substitute argument : " ^ (string_of_OclType typ) ^ " template parameter of " ^ (string_of_OclType t) ^ " \n")
+			val _ = trace low ("substitute argument : " ^ (string_of_OclType typ) 
+					   ^" template parameter of " ^ (string_of_OclType t) ^ " \n")
 		    in
 			(s,substitute_typ typ t)::(substitute_args typ tail)
 		    end
@@ -1217,7 +1218,8 @@ and class_of_term source (c:Classifier list, a:association list) =
 		  | substitute_parent (OrderedSet(t)) typ = SOME(Set(typ))
 		  | substitute_parent (Bag(t)) typ = SOME(Collection(typ))
 		  | substitute_parent (Sequence(t)) typ = SOME(Collection(typ))
-		  | substitute_parent x typ = raise TemplateInstantiationError ("Parent tmpl type must be a collection.\n")
+		  | substitute_parent x typ = raise TemplateInstantiationError 
+							("Parent tmpl type must be a collection.\n")
 
 		and substitute_operations typ [] = []
 		  | substitute_operations typ ((oper:operation)::tail) =
@@ -1367,7 +1369,7 @@ and class_of_term source (c:Classifier list, a:association list) =
 	    end
     end
 
-and class_of (name:Path) (model as (clist,alist)) = 
+fun class_of (name:Path) (model as (clist,alist)) = 
      let
 	 val _ = trace rep_core ("top level package: " ^ (List.hd (name)) ^ "\n")
 	 val _ = trace rep_core ("remaining package: " ^ (String.concat (List.tl name)) ^ "\n") 
@@ -1382,7 +1384,7 @@ and class_of (name:Path) (model as (clist,alist)) =
 		end
      end
 
-and class_of_type (typ:OclType) (model:transform_model) = 
+fun class_of_type (typ:OclType) (model:transform_model) = 
     let
 	val _ = trace rep_core ("Rep_Core.class_of_type\n")
 	val res = class_of_term (Variable ("x",typ)) model
@@ -1391,7 +1393,7 @@ and class_of_type (typ:OclType) (model:transform_model) =
 	res
     end	      
 
-and type_of_parents (Primitive {parent,...}) (model:transform_model) =
+fun  type_of_parents (Primitive {parent,...}) (model:transform_model) =
     (    
      case parent of 
 	 NONE => [OclAny]
@@ -1489,7 +1491,7 @@ conforms_to x y (model:transform_model) =
     end
 
 (* RETURN: OclTerm *)
-and upcast (term,typ) =  
+fun upcast (term,typ) =  
     if (type_equals (type_of_term term) typ) then
 	term
     else
@@ -1563,17 +1565,20 @@ fun operation_of cl fq_name =
 fun type_of_att ({name,attr_type,...}:attribute) = attr_type
 
 fun same_op (sub_op:operation) (super_op:operation) (model:transform_model) =
-    if ((name_of_op sub_op = name_of_op super_op ) andalso (sig_conforms_to (arguments_of_op sub_op) (arguments_of_op super_op) model))
+    if ((name_of_op sub_op = name_of_op super_op ) 
+	andalso (sig_conforms_to (arguments_of_op sub_op) (arguments_of_op super_op) model))
     then true
     else false
 
 fun same_att (sub_att:attribute) (super_att:attribute) (model:transform_model) = 
-    if ((name_of_att sub_att = name_of_att super_att) andalso (conforms_to (type_of_att sub_att) (type_of_att super_att) model))
+    if ((name_of_att sub_att = name_of_att super_att) 
+	andalso (conforms_to (type_of_att sub_att) (type_of_att super_att) model))
     then true
     else false
 
 fun same_ae (sub_ae:associationend) (super_ae:associationend) (model:transform_model) = 
-    if ((name_of_aend sub_ae = name_of_aend super_ae) andalso (conforms_to (type_of_aend sub_ae) (type_of_aend super_ae) model))
+    if ((name_of_aend sub_ae = name_of_aend super_ae) 
+	andalso (conforms_to (type_of_aend sub_ae) (type_of_aend super_ae) model))
     then true
     else false
 
@@ -1682,7 +1687,8 @@ fun parent_of_template (cl as Class{parent,...}:Classifier) (model:transform_mod
 					     | true => class_of_type (Collection(OclAny)) model
 			   )
     )		   
-  | parent_of_template (tmp as Template{classifier,...}) (model:transform_model) = raise TemplateError ("parent_of_template should never be used during Instantiation of a template.\n")
+  | parent_of_template (tmp as Template{classifier,...}) (model:transform_model) = 
+    raise TemplateError ("parent_of_template should never be used during Instantiation of a template.\n")
 
     
 fun parents_of_help (C:Classifier) (model:transform_model) = 
@@ -1725,7 +1731,8 @@ fun parents_of_help (C:Classifier) (model:transform_model) =
 		  val T' = type_of class_T'
 		  val ordset_T' = class_of_type (OrderedSet(T')) model
 	      in
-		 [set_T]@(parents_of_help set_T model)@[col_T]@(parents_of_help col_T model)@[ordset_T']@(parents_of_help ordset_T' model)
+		 [set_T]@(parents_of_help set_T model)@[col_T]@(parents_of_help col_T model)@[ordset_T']
+		 @(parents_of_help ordset_T' model)
 	      end
 	    | Bag(T) =>
 	      let
@@ -1751,7 +1758,8 @@ fun parents_of_help (C:Classifier) (model:transform_model) =
 	      let 
 		  val _ = trace rep_core ("parent_of_template \n")
 		  val parent = parent_of_template C model
-		  val _ = trace rep_core ("parent_of_template end, classifier = " ^ (String.concat (name_of parent)) ^ "\n")
+		  val _ = trace rep_core ("parent_of_template end, classifier = " 
+					  ^ (String.concat (name_of parent)) ^ "\n")
 	      in
 		  [parent]@(parents_of_help parent model)
 	      end
