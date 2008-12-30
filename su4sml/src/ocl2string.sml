@@ -115,10 +115,13 @@ fun ocl2string show_types oclterm =
       | Literal (lit, typ)          => if show_types 
 					then "("^lit^":"^(string_of_OclType typ)^")" 
 					else lit
+
   | CollectionLiteral (parts, typ as Bag x) => "Bag{"^(collection_part_list show_types parts)^"}" 
   | CollectionLiteral (parts, typ as Set x) => "Set{"^(collection_part_list show_types parts)^"}" 
   | CollectionLiteral (parts, typ as OrderedSet x) => "OrderedSet{"^(collection_part_list show_types parts)^"}" 
   | CollectionLiteral (parts, typ as Sequence x) => "Sequence{"^(collection_part_list show_types parts)^"}" 
+  | CollectionLiteral (parts, typ as Collection x) => "Collection{"^(collection_part_list show_types parts)^"}" 
+
 
       | If (cterm,ctyp, tterm,ttyp,eterm,etyp,iftyp) =>  if show_types 
 							     then "(if ("^(ocl2string show_types cterm)^":"^(string_of_OclType ctyp)
@@ -317,7 +320,8 @@ fun ocl2string show_types oclterm =
 	in
 	    "Tuple{"^(String.substring(x,0,size-1))^"}\n"
 	end
-      | _ => error "error: unknown OCL-term in in ocl2string"
+
+      | _ => error "error: unknown OCL-term in in ocl2string" 
     end
 end
 

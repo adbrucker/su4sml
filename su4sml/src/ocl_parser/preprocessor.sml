@@ -6,6 +6,7 @@
  * This file is part of su4sml.
  *
  * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ *               2008 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -368,16 +369,25 @@ fun embed_iterator_variables arg_list term = embed_method_arguments arg_list ter
    It can be easily extended here 
 *)
 (* RETURN: CollectionPart list  *)
-fun generate_variables_coll_list  ((CollectionItem (term,typ))::tail)  path meth_name model = 
-    (CollectionItem(generate_variables term path meth_name model,typ))::(generate_variables_coll_list tail path meth_name model)
-  | generate_variables_coll_list ((CollectionRange (first_term,last_term,typ))::tail) path meth_name model =
-    (CollectionRange(generate_variables first_term path meth_name model,generate_variables last_term path meth_name model,typ))::(generate_variables_coll_list tail path meth_name model)
+fun generate_variables_coll_list  ((CollectionItem (term,typ))::tail) path meth_name model 
+  = (CollectionItem(generate_variables term path meth_name model,typ))
+    ::(generate_variables_coll_list tail path meth_name model)
+  | generate_variables_coll_list ((CollectionRange (first_term,last_term,typ))::tail) 
+				 path meth_name model 
+    = (CollectionRange(generate_variables 
+			   first_term path meth_name model, 
+		       generate_variables last_term path meth_name model,typ))
+      ::(generate_variables_coll_list tail path meth_name model)
+  | generate_variables_coll_list [] path meth_name model =  []
 
 (* RETURN: OclTerm *)
 and generate_variables (Literal (paras)) path meth_name model = Literal (paras)
   | generate_variables (Variable (paras)) path meth_name model = Variable (paras)
+  | generate_variables (CollectionLiteral ([],dummyT)) path meth_name model = 
+    (CollectionLiteral  ([],Set OclAny)) (* HACK/ DefaultType for Empty List: OclAny *)
   | generate_variables (CollectionLiteral (collpart_list,typ)) path meth_name model = 
     (CollectionLiteral  (generate_variables_coll_list collpart_list path meth_name model,typ))
+
   | generate_variables (If (cond,cond_type,then_e,then_type,else_e,else_type,res_type)) path meth_name model= 
     (If (generate_variables cond path meth_name model,cond_type,generate_variables then_e path meth_name model,then_type,generate_variables else_e path meth_name model,else_type,res_type))
   | generate_variables (AttributeCall (src,src_type,["result"],_)) path meth_name model =
@@ -438,6 +448,24 @@ fun check_for_self_paras arg_list typ [] model = []
       res
   end
 
+and check_for_self_collpart  arg_list typ model (CollectionItem (term,ctyp)) = 
+    let
+	val _ = trace function_calls ("Preprocessor.check_for_self_collpart CollectionItem(...)\n")
+	val res = (CollectionItem (check_for_self arg_list typ term model,ctyp))
+	val _ = trace function_ends ("Preprocessor.check_for_self_collpart\n")
+    in
+	res
+    end
+  | check_for_self_collpart arg_list typ model (CollectionRange (term1,term2,ctyp)) = 
+    let
+	val _ = trace function_calls ("Preprocessor.check_for_self_collpart CollectionRange(...)\n")
+	val res = (CollectionRange (check_for_self arg_list typ term1 model, 
+				    check_for_self arg_list typ term2 model, ctyp))
+	val _ = trace function_ends ("Preprocessor.check_for_self_collpart\n")
+    in
+	res
+    end
+
 (* RETURN: OclTerm *)
 and check_for_self arg_list typ (AttributeCall (Variable("dummy_source",_),_,path,_))  model=
     let
@@ -454,6 +482,17 @@ and check_for_self arg_list typ (AttributeCall (Variable("dummy_source",_),_,pat
     in
 	res
     end
+
+  | check_for_self arg_list typ (CollectionLiteral (collpart,ctyp)) model =
+    let
+ 	val _ = trace function_calls ("Preprocessor.check_for_self: dummy_source CollectionLiteral\n")
+
+	val res = (CollectionLiteral (List.map (check_for_self_collpart arg_list typ model) collpart,ctyp))
+ 	val _ = trace function_ends ("Preprocessor.check_for_self\n")
+    in
+      res
+    end
+
 | check_for_self arg_list typ (AttributeCall (source_term,source_typ,path,ret_typ)) model = 
   let
       val _ = trace function_calls ("Preprocessor.check_for_self: complex AttributeCall\n")

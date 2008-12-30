@@ -1691,6 +1691,7 @@ fun parent_of_template (cl as Class{parent,...}:Classifier) (model:transform_mod
     raise TemplateError ("parent_of_template should never be used during Instantiation of a template.\n")
 
     
+(* never ending *)
 fun parents_of_help (C:Classifier) (model:transform_model) = 
     let
 	val this_type = type_of C
@@ -1703,6 +1704,14 @@ fun parents_of_help (C:Classifier) (model:transform_model) =
 	  | Bag(OclAny) => []
 	  | Sequence(OclAny) => []
 	  | OrderedSet(OclAny) => []
+
+	  | Collection(Collection _) => []
+	  | Set(Set _) => []
+	  | Bag(Bag _) => []
+	  | Sequence(Sequence _) => []
+	  | OrderedSet(OrderedSet _) => []
+
+				       
 	  | Collection(T) =>
 	    let
 		val class_T = class_of_type (T) model
@@ -1720,7 +1729,7 @@ fun parents_of_help (C:Classifier) (model:transform_model) =
 		val T' = type_of class_T'
 		val set_T' = class_of_type (Set(T')) model
 	    in
-		[col_T]@(parents_of_help col_T model)@[set_T']@(parents_of_help set_T' model)
+		[col_T]@(parents_of_help col_T model)@[set_T']@(parents_of_help set_T' model) 
 	    end
 	  | OrderedSet(T) => 
 	      let
@@ -1772,8 +1781,9 @@ fun parent_of (C:Classifier) model = parent_of_template C model
 fun parents_of (C:Classifier) model = 
     let
 	val _ = trace rep_core ("parents_of ... \n")
+	val helper = (parents_of_help C model)
     in
-	(if (parents_of_help C model = [])
+	(if (helper = [])
 	then
 	    (
 	     if (isColl_Type (type_of C)) 
@@ -2109,14 +2119,13 @@ fun substitute_templ_para (Collection(tt)) t = Collection (t)
   | substitute_templ_para (Bag (tt)) t = Bag (t)
   | substitute_templ_para t1 t2 = raise TemplateError ("Not possible to replace template parameter of a basic type. Type is: " ^ string_of_OclType t1 ^ " \n")
 
-fun type_of_template_parameter typ =
-    case typ of
-	Set(t) => t
-      | Sequence(t) => t
-      | Bag(t) => t
-      | Collection(t) => t
-      | OrderedSet(t) => t
-      | t => raise NoCollectionTypeError t
+fun type_of_template_parameter (Set t)        = t 
+  | type_of_template_parameter (Sequence t)   = t
+  | type_of_template_parameter (Bag t)        = t
+  | type_of_template_parameter (Collection t) = t
+  | type_of_template_parameter (OrderedSet t) = t  
+  | type_of_template_parameter t              = raise NoCollectionTypeError t
+
 
 fun consistency_constraint cls_name (aend,revAend) = 
     let 
@@ -3505,7 +3514,10 @@ fun get_overloaded_methods class op_name ([],_) = raise NoModelReferenced ("in '
 
 fun get_overloaded_attrs_or_assocends class attr_name (model as (clist,alist)) = 
     let
-	val _ = trace function_calls ("Rep_Core.get_overloaded_attrs_or_assocends, look for attr_or_assoc = " ^ attr_name ^ "\n")
+	val _ = trace function_calls 
+		      ("Rep_Core.get_overloaded_attrs_or_assocends, look for attr_or_assoc = " 
+		       ^ attr_name 
+		       ^ "\n")
 	val parents = parents_of class model
         (* Attributes *)
 	val loc_atts = List.map (fn a => (class,a)) (local_attributes_of class)

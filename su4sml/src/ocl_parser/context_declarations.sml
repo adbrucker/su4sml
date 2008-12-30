@@ -5,7 +5,8 @@
  * context_declarations.sml --- 
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2005-2007 ETH Zurich, Switzerland
+ *           (c) 2008       Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -43,7 +44,7 @@ signature CONTEXT =
 sig
 
     (* datatypes *)
-    datatype ConditionType = pre | post | body
+    datatype ConditionType = pre | post | body (* | def *)
     datatype AttrOrAssoc = derive | init | def
     datatype context =
 	 Empty_context of string *

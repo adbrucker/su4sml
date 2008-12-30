@@ -46,9 +46,6 @@ sig
     val parseOCL         : string -> Context.context list
     val parseModel       : string -> Rep_Core.Classifier list
     val import           : string -> string -> string list -> Rep_Core.transform_model
-(*    val removePackages   : (Rep_Core.transform_model * Context.context list) 
-			   -> string list
-			   -> (Rep_Core.transform_model * Context.context list) *)
     val removePackages   : string list -> Rep_Core.transform_model 
 			   -> Rep_Core.transform_model
     val removeOclLibrary : Rep_Core.Classifier list  -> Rep_Core.Classifier list

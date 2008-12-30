@@ -5,7 +5,8 @@
  * type_checker.sml --- 
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2005-2007 ETH Zurich, Switzerland
+ *               2008      Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -187,10 +188,11 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
 			    end
 		end
 	end	
-	
+	exception unkown 
 (* RETURN: OclTerm (OperationCall/AttributeCall) *)
 fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
     let
+        val _ = if isColl_Type (type_of_term rterm) then print "\n error in AsSet_Desugarotr\n"  else ()
 	val _ = (trace function_calls ("TypeChecker.AsSet_desugarator class= " ^ (string_of_OclType (type_of_term rterm)) ^ " , attr\n"))
 	val res = if (attr_or_meth = 0) 
 		  then (* OperationCall *)
@@ -204,8 +206,11 @@ fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
 		      in
 			  if (List.length ops = 0)
 			  then
+			    let val _ = print ("RAise: "^(Ocl2String.ocl2string false rterm))
+in
 			      raise TC_NoSuchOperationError ("interefere_methods: No operation signature matches given types (source: "^(Ocl2String.ocl2string false rterm)^").")
-			  else
+	end
+		  else
 			      upcast_op ops new_rterm rargs model
 		      end
 		  else (* AttributeCall *)
@@ -366,14 +371,12 @@ and resolve_OclTerm (Literal (s,typ)) model =
 			 (
 			  (
 			   let
-			       val _ = trace type_checker ("==> 2-dim Inheritance check: ma attribute/assocend\n")
+			       val _ = trace type_checker ("==> 2-dim Inheritance check: attribute/assocend\n")
 			       val rtyp = type_of_term rterm
-			       val _ = trace type_checker (string_of_OclType rtyp ^ "manu \n")
+			       val _ = trace type_checker (string_of_OclType rtyp ^"\n")
 			       val templ_type = type_of_template_parameter rtyp
 			       val pclass = class_of_term (Variable ("x",templ_type)) model
-			       val _ = trace type_checker ("manu 2")
 			       val ntempl_type = type_of_parent pclass 
-			       val _ = trace type_checker ("manu 3")
 			       val new_type = substitute_templ_para rtyp ntempl_type
 			       val new_class = class_of_term (Variable ("x",new_type)) model
 			       val attrs = get_overloaded_attrs_or_assocends new_class (List.last attr_path) model
@@ -385,7 +388,7 @@ and resolve_OclTerm (Literal (s,typ)) model =
 			   end    
 			  ) 
 			  handle TC_DesugaratorCall arg => desugarator (#1 arg) (#2 arg) (#3 arg) (#4 arg) (#5 arg)
-			       | NoCollectionTypeError t => AsSet_desugarator  rterm attr_path 1 [] model
+			       | NoCollectionTypeError t => AsSet_desugarator  rterm attr_path 1 [] model 
 			       | Empty => AsSet_desugarator rterm attr_path 1 [] model
 			 )
 	  end
@@ -499,7 +502,7 @@ let
 			 (     
 			  (
 			   let
-			       val _ = trace type_checker ("==> 2-dim Inheritance check: attribute/assocend\n")
+			       val _ = trace type_checker ("==> no 2-dim Inheritance check: attribute/assocend\n")
 			       val rtyp = type_of_term rterm
 			       val _ = trace type_checker (string_of_OclType rtyp ^ "\n")
 			       val templ_type = type_of_template_parameter rtyp
@@ -826,14 +829,38 @@ fun check_context_list [] model = []
 	       raise TC_OperationWithTypeError mes
 	   end
      )::(check_context_list context_list_tail model))
-    handle TC_WrongContextChecked h => 
+    handle(*  TC_WrongContextChecked h =>  *)
+(* 	   let *)
+(* 	       val s1 =  ("\n\n#################################################\n") *)
+(* 	       val s2 =  ("WrongContextChecked:\n") *)
+(* 	       val s3 =  ("In Context: " ^ (cxt_list2string [h]) ^ "\n") *)
+(* 	       val _ = trace exce (s1^s2^s3) *)
+(* 	   in *)
+(* 	       raise TC_RootError ("Something went wrong!\n") *)
+(* 	   end *)
+(* 	 | *) TC_NoSuchAttributeError s => 
 	   let
-	       val s1 =  ("\n\n#################################################\n")
-	       val s2 =  ("WrongContextChecked:\n")
-	       val s3 =  ("In Context: " ^ (cxt_list2string [h]) ^ "\n")
-	       val _ = trace exce (s1^s2^s3)
-	   in
-	       raise TC_RootError ("Something went wrong!\n")
+	     val s1 =  ("\n\n#################################################\n")
+	     val s2 =  ("Attribute not found: "^s^ "\n")
+	     val _ = print s2	       
+	   in (* ADB TODO *)
+	     raise TC_RootError ("Something went wrong!\n")
 	   end
- end
+	 | GetClassifierError s =>
+	   let
+	     val s1 =  ("\n\n#################################################\n")
+	     val s2 =  ("Classifier not found: "^s^ "\n")
+	     val _ = print s2
+	   in (* ADB TODO *)
+	     raise TC_RootError ("Something went wrong!\n")
+	   end
+	 | TC_NoSuchOperationError s =>
+	   let
+	     val s1 =  ("\n\n#################################################\n")
+	     val s2 =  ("Operation not found: "^s^ "\n")
+	     val _ = print s2
+	   in (* ADB TODO *)
+	     raise TC_RootError ("Something went wrong!\n")
+	   end
+  end
  
