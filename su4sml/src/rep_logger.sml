@@ -145,115 +145,12 @@ struct
    fun debug3 msg = msg |> mk_debug_string |> trace DEBUG_3
    fun debug4 msg = msg |> mk_debug_string |> trace DEBUG_4
    fun debug5 msg = msg |> mk_debug_string |> trace  DEBUG_5
- 
-
-(*
-   fun printStackTrace e =
+ 	    
+(*   fun printStackTrace e =
        let val ss = CompilerExt.exnHistory e
        in
-         print_stderr ("uncaught exception " ^ (General.exnMessage e) ^ " at:\n");
-         app (fn s => print_stderr ("\t" ^ s ^ "\n")) ss
+         print("uncaught exception " ^ (General.exnMessage e) ^ " at:\n");
+         app (fn s => print ("\t" ^ s ^ "\n")) ss
        end
-  *)     
-end
-(*
-signature REP_LOGGER =
-sig
-end 
-structure Rep_Logger:>REP_LOGGER =
-struct
-open Rep_Helper
-(* minimal tracing support (modifed version of ocl_parser tracing *)
-val log_level = ref 6
-
-val line_offset = ref 4
-
-fun get_spaces 0 = ""
-  | get_spaces x = (" ")^(get_spaces (x-1))
-
-fun init_offset () = line_offset:=4
- 
-
-fun get_offset () = get_spaces (!line_offset)
-
-fun inc_offset () = line_offset := (!line_offset)+2
-
-fun dec_offset () = 
-    if (!line_offset = 0)
-    then line_offset := 0
-    else line_offset := (!line_offset)-2
-
-(* debugging-levels *)
-val zero = 0
-val exce = 6
-val high = 10
-val medium = 20
-val isa_metho = 21 
-val function_calls = 25
-val function_ends = 26
-val function_arguments = 27
-val important = 40
-val wgen = 50
-val type_checker = 60
-val preprocessor = 61
-val rep_core = 80
-val low = 100
-val development = 200
-
-
-
-fun add_spaces [x] = [x]
-  | add_spaces (h::tail) = 
-    if (h = #"\n")
-    then ((#"\n")::(String.explode (get_offset())))@(add_spaces tail)
-    else (h)::(add_spaces tail)
-
-fun embed_newline s = 
-    let
-	val char_list = String.explode s
-    in
-	String.implode (add_spaces (char_list))
-    end
-
-
-fun trace lev s = 
-    case lev of
-	6 => 
-	    if (lev  <= !log_level ) 
-	    then print(embed_newline s) 
-	    else ()
-      |	25 => 
-	let
-	    val _ = if (lev  <= !log_level ) 
-		    then print((get_offset())^(embed_newline s)) 
-		    else ()
-	in
-	    inc_offset()
-	end
-      | 26 => 
-	let
-	    val x = dec_offset()
-	in
-	    if (lev  <= !log_level ) 
-	    then (print (get_offset()^(embed_newline s)))
-	    else ()
-	end
-
-      | x => 
-	if x < 20 
-	then 
-	    (
-	     if (lev  <= !log_level) 
-	     then print(s) 
-	     else ()
-	    )
-	else 
-	    (
-	     if (lev  <= !log_level ) 
-	     then (print ((get_offset())^(embed_newline s)))
-	     else ()
-	    )
-
-end
-
 *)
+end
