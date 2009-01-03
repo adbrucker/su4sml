@@ -70,7 +70,6 @@ THIS POINTS HAVE TO BE NOTICED TO UNDERSTAND THE SEMANTICS OF:
 *)
 
 
-open Rep_Logger
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType
@@ -1412,7 +1411,7 @@ PACKAGE1 = PACKAGE1 ()
  val  path_name_cs1 = path_name_cs1 ()
  val  ENDPACKAGE1 = ENDPACKAGE1 ()
  in (
-trace low ("Starts creatind empty package ... " ^ "\n"); ([Empty_context ("this is an empty context", Literal ("empty",OclVoid))])
+Logger.debug3 ("Starts creatind empty package ... " ^ "\n"); ([Empty_context ("this is an empty context", Literal ("empty",OclVoid))])
 )
 end)
  in ( LrTable.NT 10, ( result, PACKAGE1left, ENDPACKAGE1right), 
@@ -1430,7 +1429,7 @@ PACKAGE1 ()
 context_declaration_list_cs1 ()
  val  ENDPACKAGE1 = ENDPACKAGE1 ()
  in (
-trace low ("Starts creating contextes ..." ^ "\n"); (list_extend_path path_name_cs context_declaration_list_cs)
+Logger.debug3 ("Starts creating contextes ..." ^ "\n"); (list_extend_path path_name_cs context_declaration_list_cs)
 )
 end)
  in ( LrTable.NT 10, ( result, PACKAGE1left, ENDPACKAGE1right), 
@@ -1528,7 +1527,7 @@ end
  SIMPLE_NAME1right)) :: rest671)) => let val  result = 
 MlyValue.simple_name (fn _ => let val  (SIMPLE_NAME as SIMPLE_NAME1) =
  SIMPLE_NAME1 ()
- in (trace low ("simple_name..." ^ "\n");SIMPLE_NAME)
+ in (Logger.debug3 ("simple_name..." ^ "\n");SIMPLE_NAME)
 end)
  in ( LrTable.NT 32, ( result, SIMPLE_NAME1left, SIMPLE_NAME1right), 
 rest671)
@@ -1712,7 +1711,7 @@ ocl_expression_cs1right)) :: ( _, ( MlyValue.COLON COLON1, _, _)) :: (
  val  (ocl_expression_cs as ocl_expression_cs1) = ocl_expression_cs1
  ()
  in (
-trace low ("INV COLON ocl_expression_cs ..." ^ "\n"); (NONE,ocl_expression_cs)
+Logger.debug3 ("INV COLON ocl_expression_cs ..." ^ "\n"); (NONE,ocl_expression_cs)
 )
 end)
  in ( LrTable.NT 23, ( result, INV1left, ocl_expression_cs1right), 
@@ -1729,7 +1728,7 @@ INV1 ()
  val  (ocl_expression_cs as ocl_expression_cs1) = ocl_expression_cs1
  ()
  in (
-trace low ("INV simple_name COLON ocl_expression_cs ..." ^ "\n");(SOME(simple_name),ocl_expression_cs)
+Logger.debug3 ("INV simple_name COLON ocl_expression_cs ..." ^ "\n");(SOME(simple_name),ocl_expression_cs)
 )
 end)
  in ( LrTable.NT 23, ( result, INV1left, ocl_expression_cs1right), 
@@ -1774,7 +1773,7 @@ op_constraint_stereotype_cs1) = op_constraint_stereotype_cs1 ()
  val  (ocl_expression_cs as ocl_expression_cs1) = ocl_expression_cs1
  ()
  in (
-trace low ("operation_constraint_cs 1..." ^ "\n"); (op_constraint_stereotype_cs,NONE,ocl_expression_cs)
+Logger.debug3 ("operation_constraint_cs 1..." ^ "\n"); (op_constraint_stereotype_cs,NONE,ocl_expression_cs)
 )
 end)
  in ( LrTable.NT 26, ( result, op_constraint_stereotype_cs1left, 
@@ -1793,7 +1792,7 @@ op_constraint_stereotype_cs1 ()
  val  (ocl_expression_cs as ocl_expression_cs1) = ocl_expression_cs1
  ()
  in (
-trace low ("operation_constraint_cs 23454..." ^ "\n"); (op_constraint_stereotype_cs,SOME(simple_name),ocl_expression_cs)
+Logger.debug3 ("operation_constraint_cs 23454..." ^ "\n"); (op_constraint_stereotype_cs,SOME(simple_name),ocl_expression_cs)
 )
 end)
  in ( LrTable.NT 26, ( result, op_constraint_stereotype_cs1left, 
@@ -1852,7 +1851,7 @@ ocl_attribute_defined_entity_decl_cs as
 ocl_attribute_defined_entity_decl_cs1) = 
 ocl_attribute_defined_entity_decl_cs1 ()
  in (
-trace low ("AttributeCall 1 ..." ^ "\n");AttributeCall (Literal ("self2",DummyT),DummyT,[#1(ocl_attribute_defined_entity_decl_cs)],#2(ocl_attribute_defined_entity_decl_cs))
+Logger.debug3 ("AttributeCall 1 ..." ^ "\n");AttributeCall (Literal ("self2",DummyT),DummyT,[#1(ocl_attribute_defined_entity_decl_cs)],#2(ocl_attribute_defined_entity_decl_cs))
 )
 end)
  in ( LrTable.NT 34, ( result, 
@@ -1903,7 +1902,8 @@ PAREN_OPEN1left, _)) :: rest671)) => let val  result =
 MlyValue.operation_signature_cs (fn _ => let val  PAREN_OPEN1 = 
 PAREN_OPEN1 ()
  val  PAREN_CLOSE1 = PAREN_CLOSE1 ()
- in (trace low  ("operation_signature_cs ..." ^ "\n");[("",OclVoid)])
+ in (
+Logger.debug3  ("operation_signature_cs ..." ^ "\n");[("",OclVoid)])
 
 end)
  in ( LrTable.NT 24, ( result, PAREN_OPEN1left, PAREN_CLOSE1right), 
@@ -1921,7 +1921,7 @@ PAREN_OPEN1 = PAREN_OPEN1 ()
 operation_return_type_specifier_cs1) = 
 operation_return_type_specifier_cs1 ()
  in (
-trace low ("operation_signature_cs ..." ^ "\n");[("",operation_return_type_specifier_cs)]
+Logger.debug3 ("operation_signature_cs ..." ^ "\n");[("",operation_return_type_specifier_cs)]
 )
 end)
  in ( LrTable.NT 24, ( result, PAREN_OPEN1left, 
@@ -1937,7 +1937,7 @@ PAREN_OPEN1 ()
 formal_parameter_list_cs1 ()
  val  PAREN_CLOSE1 = PAREN_CLOSE1 ()
  in (
-trace low ("operation_signature_cs ..." ^ "\n");formal_parameter_list_cs@[("",OclVoid)]
+Logger.debug3 ("operation_signature_cs ..." ^ "\n");formal_parameter_list_cs@[("",OclVoid)]
 )
 end)
  in ( LrTable.NT 24, ( result, PAREN_OPEN1left, PAREN_CLOSE1right), 
@@ -1958,7 +1958,7 @@ formal_parameter_list_cs1 ()
 operation_return_type_specifier_cs1) = 
 operation_return_type_specifier_cs1 ()
  in (
-trace low ("operation_signature_cs ..." ^ "\n");formal_parameter_list_cs@[("",operation_return_type_specifier_cs)]
+Logger.debug3 ("operation_signature_cs ..." ^ "\n");formal_parameter_list_cs@[("",operation_return_type_specifier_cs)]
 )
 end)
  in ( LrTable.NT 24, ( result, PAREN_OPEN1left, 
@@ -1971,7 +1971,7 @@ MlyValue.operation_return_type_specifier_cs (fn _ => let val  COLON1 =
  COLON1 ()
  val  (type_specifier as type_specifier1) = type_specifier1 ()
  in (
-trace low ("Contextes created form list of Attributes ..." ^ "\n");type_specifier
+Logger.debug3 ("Contextes created form list of Attributes ..." ^ "\n");type_specifier
 )
 end)
  in ( LrTable.NT 40, ( result, COLON1left, type_specifier1right), 
@@ -2182,8 +2182,9 @@ end
 logical_exp_cs1left, logical_exp_cs1right)) :: rest671)) => let val  
 result = MlyValue.ocl_expression_cs (fn _ => let val  (logical_exp_cs
  as logical_exp_cs1) = logical_exp_cs1 ()
- in (trace low ("ocl_expression_cs..." ^ "\n");logical_exp_cs)
-end)
+ in (Logger.debug3 ("ocl_expression_cs..." ^ "\n");logical_exp_cs)
+end
+)
  in ( LrTable.NT 54, ( result, logical_exp_cs1left, 
 logical_exp_cs1right), rest671)
 end
@@ -2191,7 +2192,7 @@ end
 let_exp_cs1right)) :: rest671)) => let val  result = 
 MlyValue.ocl_expression_cs (fn _ => let val  (let_exp_cs as 
 let_exp_cs1) = let_exp_cs1 ()
- in (trace low ("ocl_expression_cs..." ^ "\n");let_exp_cs)
+ in (Logger.debug3 ("ocl_expression_cs..." ^ "\n");let_exp_cs)
 end)
  in ( LrTable.NT 54, ( result, let_exp_cs1left, let_exp_cs1right), 
 rest671)
@@ -2314,7 +2315,8 @@ end
 identifier_cs1left, identifier_cs1right)) :: rest671)) => let val  
 result = MlyValue.path_name_cs (fn _ => let val  (identifier_cs as 
 identifier_cs1) = identifier_cs1 ()
- in (trace low ("path_name finished..." ^ "\n");[identifier_cs])
+ in (Logger.debug3 ("path_name finished..." ^ "\n");[identifier_cs])
+
 end)
  in ( LrTable.NT 11, ( result, identifier_cs1left, identifier_cs1right
 ), rest671)
@@ -2326,7 +2328,7 @@ path_name_head_cs1, path_name_head_cs1left, _)) :: rest671)) => let
 path_name_head_cs as path_name_head_cs1) = path_name_head_cs1 ()
  val  (identifier_cs as identifier_cs1) = identifier_cs1 ()
  in (
-trace low ("path_name generation ..." ^ "\n");path_name_head_cs@[identifier_cs]
+Logger.debug3 ("path_name generation ..." ^ "\n");path_name_head_cs@[identifier_cs]
 )
 end)
  in ( LrTable.NT 11, ( result, path_name_head_cs1left, 
@@ -2336,8 +2338,9 @@ end
  simple_name1right)) :: rest671)) => let val  result = 
 MlyValue.identifier_cs (fn _ => let val  (simple_name as simple_name1)
  = simple_name1 ()
- in (trace low ("path_name generation..." ^ "\n");simple_name)
-end)
+ in (Logger.debug3 ("path_name generation..." ^ "\n");simple_name)
+end
+)
  in ( LrTable.NT 59, ( result, simple_name1left, simple_name1right), 
 rest671)
 end
@@ -2373,9 +2376,9 @@ end
  _)) :: rest671)) => let val  result = MlyValue.path_name_head_cs (fn
  _ => let val  (identifier_cs as identifier_cs1) = identifier_cs1 ()
  val  DBL_COLON1 = DBL_COLON1 ()
- in (trace low ("path_name generation..." ^ "\n");[identifier_cs])
-end
-)
+ in (Logger.debug3 ("path_name generation..." ^ "\n");[identifier_cs])
+
+end)
  in ( LrTable.NT 12, ( result, identifier_cs1left, DBL_COLON1right), 
 rest671)
 end
@@ -2388,7 +2391,7 @@ path_name_head_cs1 ()
  val  (identifier_cs as identifier_cs1) = identifier_cs1 ()
  val  DBL_COLON1 = DBL_COLON1 ()
  in (
-trace low ("path_name generation..." ^ "\n");path_name_head_cs@[identifier_cs]
+Logger.debug3 ("path_name generation..." ^ "\n");path_name_head_cs@[identifier_cs]
 )
 end)
  in ( LrTable.NT 12, ( result, path_name_head_cs1left, DBL_COLON1right
@@ -2400,7 +2403,7 @@ primitive_literal_exp_cs1right)) :: rest671)) => let val  result =
 MlyValue.literal_exp_cs (fn _ => let val  (primitive_literal_exp_cs
  as primitive_literal_exp_cs1) = primitive_literal_exp_cs1 ()
  in (
-trace low ("primitive_literal_exp_cs..." ^ "\n");primitive_literal_exp_cs
+Logger.debug3 ("primitive_literal_exp_cs..." ^ "\n");primitive_literal_exp_cs
 )
 end)
  in ( LrTable.NT 62, ( result, primitive_literal_exp_cs1left, 
@@ -2423,8 +2426,8 @@ MlyValue.primitive_literal_exp_cs (fn _ => let val  (
 numeric_literal_exp_cs as numeric_literal_exp_cs1) = 
 numeric_literal_exp_cs1 ()
  in (
-trace low ("numeric_literal_exp_cs..." ^ "\n");numeric_literal_exp_cs)
-
+Logger.debug3 ("numeric_literal_exp_cs..." ^ "\n");numeric_literal_exp_cs
+)
 end)
  in ( LrTable.NT 65, ( result, numeric_literal_exp_cs1left, 
 numeric_literal_exp_cs1right), rest671)
@@ -2436,8 +2439,8 @@ MlyValue.primitive_literal_exp_cs (fn _ => let val  (
 string_literal_exp_cs as string_literal_exp_cs1) = 
 string_literal_exp_cs1 ()
  in (
-trace low ("string_literal_exp_cs..." ^ "\n");string_literal_exp_cs)
-
+Logger.debug3 ("string_literal_exp_cs..." ^ "\n");string_literal_exp_cs
+)
 end)
  in ( LrTable.NT 65, ( result, string_literal_exp_cs1left, 
 string_literal_exp_cs1right), rest671)
@@ -2458,7 +2461,7 @@ INTEGER_LITERAL1left, INTEGER_LITERAL1right)) :: rest671)) => let val
  result = MlyValue.numeric_literal_exp_cs (fn _ => let val  (
 INTEGER_LITERAL as INTEGER_LITERAL1) = INTEGER_LITERAL1 ()
  in (
-trace low ("INTEGER_LITERAL..." ^ "\n");Literal (INTEGER_LITERAL,Integer)
+Logger.debug3 ("INTEGER_LITERAL..." ^ "\n");Literal (INTEGER_LITERAL,Integer)
 )
 end)
  in ( LrTable.NT 66, ( result, INTEGER_LITERAL1left, 
@@ -2500,8 +2503,9 @@ end
 relational_exp_cs1left, relational_exp_cs1right)) :: rest671)) => let
  val  result = MlyValue.logical_exp_cs (fn _ => let val  (
 relational_exp_cs as relational_exp_cs1) = relational_exp_cs1 ()
- in (trace low ("logical_exp_cs..." ^ "\n");relational_exp_cs)
-end)
+ in (Logger.debug3 ("logical_exp_cs..." ^ "\n");relational_exp_cs)
+end
+)
  in ( LrTable.NT 73, ( result, relational_exp_cs1left, 
 relational_exp_cs1right), rest671)
 end
@@ -2514,7 +2518,7 @@ relational_exp_cs1 ()
  val  (logical_exp_tail_cs_p as logical_exp_tail_cs_p1) = 
 logical_exp_tail_cs_p1 ()
  in (
-trace low ("logical_exp_cs..." ^ "\n");OperationCall(relational_exp_cs,Boolean,[OclLibPackage,"Boolean",#1(logical_exp_tail_cs_p)],[(#2(logical_exp_tail_cs_p),Boolean)],Boolean)
+Logger.debug3 ("logical_exp_cs..." ^ "\n");OperationCall(relational_exp_cs,Boolean,[OclLibPackage,"Boolean",#1(logical_exp_tail_cs_p)],[(#2(logical_exp_tail_cs_p),Boolean)],Boolean)
 )
 end)
  in ( LrTable.NT 73, ( result, relational_exp_cs1left, 
@@ -2592,7 +2596,7 @@ end
 additive_exp_cs1left, additive_exp_cs1right)) :: rest671)) => let val 
  result = MlyValue.relational_exp_cs (fn _ => let val  (
 additive_exp_cs as additive_exp_cs1) = additive_exp_cs1 ()
- in (trace low ("additive_exp_cs..." ^ "\n");additive_exp_cs)
+ in (Logger.debug3 ("additive_exp_cs..." ^ "\n");additive_exp_cs)
 end)
  in ( LrTable.NT 75, ( result, additive_exp_cs1left, 
 additive_exp_cs1right), rest671)
@@ -2605,7 +2609,7 @@ MlyValue.additive_exp_cs additive_exp_cs1, additive_exp_cs1left, _))
  val  (relational_exp_tail_cs as relational_exp_tail_cs1) = 
 relational_exp_tail_cs1 ()
  in (
-trace low ("additive_exp_cs relational_exp_tail_cs ..." ^ "\n");OperationCall(additive_exp_cs,DummyT,[OclLibPackage,"DummyT",#1(relational_exp_tail_cs)],[(#2(relational_exp_tail_cs),DummyT)],Boolean)
+Logger.debug3 ("additive_exp_cs relational_exp_tail_cs ..." ^ "\n");OperationCall(additive_exp_cs,DummyT,[OclLibPackage,"DummyT",#1(relational_exp_tail_cs)],[(#2(relational_exp_tail_cs),DummyT)],Boolean)
 )
 end)
  in ( LrTable.NT 75, ( result, additive_exp_cs1left, 
@@ -2618,7 +2622,7 @@ MlyValue.relational_exp_tail_cs (fn _ => let val  (rel_op as rel_op1)
  = rel_op1 ()
  val  (additive_exp_cs as additive_exp_cs1) = additive_exp_cs1 ()
  in (
-trace low ("relational_exp_tail_cs..." ^ "\n");(rel_op, additive_exp_cs)
+Logger.debug3 ("relational_exp_tail_cs..." ^ "\n");(rel_op, additive_exp_cs)
 )
 end)
  in ( LrTable.NT 77, ( result, rel_op1left, additive_exp_cs1right), 
@@ -2635,7 +2639,7 @@ end
 |  ( 113, ( ( _, ( MlyValue.REL_GT REL_GT1, REL_GT1left, REL_GT1right)
 ) :: rest671)) => let val  result = MlyValue.rel_op (fn _ => let val 
  (REL_GT as REL_GT1) = REL_GT1 ()
- in (trace low (">..." ^ "\n");REL_GT)
+ in (Logger.debug3 (">..." ^ "\n");REL_GT)
 end)
  in ( LrTable.NT 82, ( result, REL_GT1left, REL_GT1right), rest671)
 
@@ -2643,7 +2647,7 @@ end
 |  ( 114, ( ( _, ( MlyValue.REL_LT REL_LT1, REL_LT1left, REL_LT1right)
 ) :: rest671)) => let val  result = MlyValue.rel_op (fn _ => let val 
  (REL_LT as REL_LT1) = REL_LT1 ()
- in (trace low ("<..." ^ "\n");REL_LT)
+ in (Logger.debug3 ("<..." ^ "\n");REL_LT)
 end)
  in ( LrTable.NT 82, ( result, REL_LT1left, REL_LT1right), rest671)
 
@@ -2679,8 +2683,8 @@ multiplicative_exp_cs1right)) :: rest671)) => let val  result =
 MlyValue.additive_exp_cs (fn _ => let val  (multiplicative_exp_cs as 
 multiplicative_exp_cs1) = multiplicative_exp_cs1 ()
  in (
-trace low ("multiplicative_exp_cs..." ^ "\n");multiplicative_exp_cs)
-
+Logger.debug3 ("multiplicative_exp_cs..." ^ "\n");multiplicative_exp_cs
+)
 end)
  in ( LrTable.NT 79, ( result, multiplicative_exp_cs1left, 
 multiplicative_exp_cs1right), rest671)
@@ -2694,7 +2698,7 @@ multiplicative_exp_cs1) = multiplicative_exp_cs1 ()
  val  (additive_exp_tail_cs_p as additive_exp_tail_cs_p1) = 
 additive_exp_tail_cs_p1 ()
  in (
-trace low ("multiplicative_exp_cs additive_exp_tail_cs_p..." ^ "\n");OperationCall (multiplicative_exp_cs,DummyT,[OclLibPackage,"DummyT",#1(additive_exp_tail_cs_p)],[(#2(additive_exp_tail_cs_p),DummyT)],DummyT)
+Logger.debug3 ("multiplicative_exp_cs additive_exp_tail_cs_p..." ^ "\n");OperationCall (multiplicative_exp_cs,DummyT,[OclLibPackage,"DummyT",#1(additive_exp_tail_cs_p)],[(#2(additive_exp_tail_cs_p),DummyT)],DummyT)
 )
 end)
  in ( LrTable.NT 79, ( result, multiplicative_exp_cs1left, 
@@ -2756,7 +2760,7 @@ end
 unary_exp_cs1left, unary_exp_cs1right)) :: rest671)) => let val  
 result = MlyValue.multiplicative_exp_cs (fn _ => let val  (
 unary_exp_cs as unary_exp_cs1) = unary_exp_cs1 ()
- in (trace low ("unary_exp_cs ..." ^ "\n");unary_exp_cs)
+ in (Logger.debug3 ("unary_exp_cs ..." ^ "\n");unary_exp_cs)
 end)
  in ( LrTable.NT 83, ( result, unary_exp_cs1left, unary_exp_cs1right),
  rest671)
@@ -2880,7 +2884,7 @@ rest671)) => let val  result = MlyValue.postfix_exp_cs (fn _ => let
  val  (postfix_exp_tail_cs_p as postfix_exp_tail_cs_p1) = 
 postfix_exp_tail_cs_p1 ()
  in (
-trace low ("literal_call_exp_cs..." ^ "\n");nest_source ([primary_exp_cs]@postfix_exp_tail_cs_p)
+Logger.debug3 ("literal_call_exp_cs..." ^ "\n");nest_source ([primary_exp_cs]@postfix_exp_tail_cs_p)
 )
 end)
  in ( LrTable.NT 90, ( result, primary_exp_cs1left, 
@@ -2890,7 +2894,8 @@ end
 literal_exp_cs1left, literal_exp_cs1right)) :: rest671)) => let val  
 result = MlyValue.primary_exp_cs (fn _ => let val  (literal_exp_cs as 
 literal_exp_cs1) = literal_exp_cs1 ()
- in (trace low ("literal_call_exp_cs..." ^ "\n");literal_exp_cs)
+ in (Logger.debug3 ("literal_call_exp_cs..." ^ "\n");literal_exp_cs)
+
 end)
  in ( LrTable.NT 93, ( result, literal_exp_cs1left, 
 literal_exp_cs1right), rest671)
@@ -2912,8 +2917,9 @@ end
  => let val  result = MlyValue.primary_exp_cs (fn _ => let val  (
 property_call_exp_cs as property_call_exp_cs1) = property_call_exp_cs1
  ()
- in (trace low ("property_call_exp_cs..." ^ "\n");property_call_exp_cs
-)
+ in (
+Logger.debug3 ("property_call_exp_cs..." ^ "\n");property_call_exp_cs)
+
 end)
  in ( LrTable.NT 93, ( result, property_call_exp_cs1left, 
 property_call_exp_cs1right), rest671)
@@ -2951,7 +2957,7 @@ postfix_exp_tail_cs1left, postfix_exp_tail_cs1right)) :: rest671)) =>
  let val  result = MlyValue.postfix_exp_tail_cs_p (fn _ => let val  (
 postfix_exp_tail_cs as postfix_exp_tail_cs1) = postfix_exp_tail_cs1 ()
  in (
-trace low ("end of recursion..." ^ Ocl2String.ocl2string false postfix_exp_tail_cs ^ "\n");[postfix_exp_tail_cs]
+Logger.debug3 ("end of recursion..." ^ Ocl2String.ocl2string false postfix_exp_tail_cs ^ "\n");[postfix_exp_tail_cs]
 )
 end)
  in ( LrTable.NT 91, ( result, postfix_exp_tail_cs1left, 
@@ -2966,7 +2972,7 @@ MlyValue.postfix_exp_tail_cs_p (fn _ => let val  (postfix_exp_tail_cs
  val  (postfix_exp_tail_cs_p as postfix_exp_tail_cs_p1) = 
 postfix_exp_tail_cs_p1 ()
  in (
-trace low ("add_source ..." ^ "\n" ^  "done");([postfix_exp_tail_cs]@postfix_exp_tail_cs_p)
+Logger.debug3 ("add_source ..." ^ "\n" ^  "done");([postfix_exp_tail_cs]@postfix_exp_tail_cs_p)
 )
 end)
  in ( LrTable.NT 91, ( result, postfix_exp_tail_cs1left, 
@@ -3079,7 +3085,7 @@ iterator_name_cs as iterator_name_cs1) = iterator_name_cs1 ()
  val  (expression as expression1) = expression1 ()
  val  PAREN_CLOSE1 = PAREN_CLOSE1 ()
  in (
-trace low ("arrow_property_call_cs: iterator with vars..." ^ "\n");Iterator (iterator_name_cs,iterator_vars_cs,Variable("dummy_source",DummyT),DummyT,expression,DummyT,DummyT)
+Logger.debug3 ("arrow_property_call_cs: iterator with vars..." ^ "\n");Iterator (iterator_name_cs,iterator_vars_cs,Variable("dummy_source",DummyT),DummyT,expression,DummyT,DummyT)
 )
 end)
  in ( LrTable.NT 95, ( result, iterator_name_cs1left, 
@@ -3093,7 +3099,7 @@ PAREN_CLOSE1right)) :: ( _, ( MlyValue.PAREN_OPEN PAREN_OPEN1, _, _))
  val  PAREN_OPEN1 = PAREN_OPEN1 ()
  val  PAREN_CLOSE1 = PAREN_CLOSE1 ()
  in (
-trace low ("arrow_property_call_exp_cs..." ^ "\n");OperationCall (Variable ("dummy_source",DummyT),DummyT,(["arrow"]@[simple_name]),[],DummyT)
+Logger.debug3 ("arrow_property_call_exp_cs..." ^ "\n");OperationCall (Variable ("dummy_source",DummyT),DummyT,(["arrow"]@[simple_name]),[],DummyT)
 )
 end)
  in ( LrTable.NT 95, ( result, simple_name1left, PAREN_CLOSE1right), 
@@ -3358,7 +3364,8 @@ simple_type_specifier_cs1, simple_type_specifier_cs1left,
 simple_type_specifier_cs1right)) :: rest671)) => let val  result = 
 MlyValue.type_specifier (fn _ => let val  (simple_type_specifier_cs
  as simple_type_specifier_cs1) = simple_type_specifier_cs1 ()
- in (trace low ("type_specifier ..." ^ "\n");simple_type_specifier_cs)
+ in (
+Logger.debug3 ("type_specifier ..." ^ "\n");simple_type_specifier_cs)
 
 end)
  in ( LrTable.NT 19, ( result, simple_type_specifier_cs1left, 
@@ -3380,7 +3387,7 @@ end
 MlyValue.simple_type_specifier_cs (fn _ => let val  (simple_name as 
 simple_name1) = simple_name1 ()
  in (
-trace wgen ("simple_type_name_specifier_cs : " ^ simple_name ^ "\n");string_to_type simple_name
+Logger.debug3 ("simple_type_name_specifier_cs : " ^ simple_name ^ "\n");string_to_type simple_name
 )
 end)
  in ( LrTable.NT 52, ( result, simple_name1left, simple_name1right), 

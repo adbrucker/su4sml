@@ -41,7 +41,7 @@
 
 structure XmlTreeHooks : Hooks =
 struct
-open IgnoreHooks XmlTree UniChar HookData Rep_Logger
+open IgnoreHooks XmlTree UniChar HookData 
 
 type AppData = Dtd.Dtd * Tree list * (Tag * Tree list) list
 type AppFinal = Tree
@@ -71,7 +71,7 @@ fun hookStartTag ((dtd,content, stack), (_,elem,atts,_,empty)) =
 	else (dtd,nil,((elemName,attNames),content)::stack)
     end
 	
-fun hookEndTag ((dtd,_,nil),_) = error "in hookEndTag: illformed XML"
+fun hookEndTag ((dtd,_,nil),_) = Logger.error "in hookEndTag: illformed XML"
   | hookEndTag ((dtd,content,(tag,content')::stack),_) =
     (dtd,Node (tag,rev content)::content',stack)
 
@@ -85,7 +85,7 @@ fun hookCharRef ((dtd,content,stack),(_,c,_)) = (* FIX *)
     (dtd,content,stack)
 
 fun hookFinish (dtd,[elem],nil) = elem
-  | hookFinish _ = error "in hookFinish: illformed XML"
+  | hookFinish _ = Logger.error "in hookFinish: illformed XML"
 
 
 fun print_message (pos,msg) = 

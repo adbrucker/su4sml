@@ -57,7 +57,6 @@ structure WFCPOG_Interface_Constraint:WFCPOG_INTERFACE_CONSTRAINT =
 struct 
 
 (* su4sml *)
-open Rep_Logger
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType

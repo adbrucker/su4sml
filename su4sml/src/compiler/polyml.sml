@@ -70,7 +70,7 @@ fun eval verbose txt =
 		if verbose then print (output ()) else ()
 	    end
     in	
-	eval_fh (fn s => print (s^"\n"), fn s => Rep_Logger.error (s^"\n")) verbose txt
+	eval_fh (fn s => print (s^"\n"), fn s => Logger.error (s^"\n")) verbose txt
     end
 
 fun exnHistory _ = []

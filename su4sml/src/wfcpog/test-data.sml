@@ -1,7 +1,6 @@
 
 
 open OclLibrary
-open Rep_Logger
 open WFCPOG
 open WFCPOG_Registry
 open WFCPOG_TestSuite

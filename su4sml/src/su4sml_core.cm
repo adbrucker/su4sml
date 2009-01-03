@@ -59,6 +59,7 @@ Group is
   contrib/HashTable.sml
 #endif
     ../lib/fxp/src/fxlib.cm
+  config.sml
   rep_helper.sml
   rep_logger.sml
   listeq.sml 

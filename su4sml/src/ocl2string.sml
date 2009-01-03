@@ -52,7 +52,6 @@ end
 structure Ocl2String:OCL2STRING = 
 struct
 open Rep_Helper
-open Rep_Logger
 open Rep_OclType
 open Rep_OclTerm
 
@@ -321,14 +320,13 @@ fun ocl2string show_types oclterm =
 	    "Tuple{"^(String.substring(x,0,size-1))^"}\n"
 	end
 
-      | _ => error "error: unknown OCL-term in in ocl2string" 
+      | _ => Logger.error "error: unknown OCL-term in in ocl2string" 
     end
 end
 
 (** "pretty printing" of Repository models *)
 structure Rep2String = 
 struct
-open Rep_Logger
 
 fun precond2string (SOME n,t) = "    pre "^n^":\n         "^ 
 				(Ocl2String.ocl2string false t)^"\n"
@@ -394,8 +392,8 @@ fun classifier2string (C as Rep.Class x) =
   | classifier2string (C as Rep.Template x) =
     "template of "^ (classifier2string (#classifier x))
 
-fun printClass (x:Rep.Classifier) = trace medium (classifier2string x)
+fun printClass (x:Rep.Classifier) = Logger.info (classifier2string x)
 
 fun printList (x:Rep.Classifier list) = 
-    trace medium (String.concatWith "\n\n" (map classifier2string x ))
+    Logger.info (String.concatWith "\n\n" (map classifier2string x ))
 end

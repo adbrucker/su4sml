@@ -5,7 +5,8 @@
  * xmi_idtable.sml --- 
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2005-2007 ETH Zurich, Switzerland
+ *               2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -42,7 +43,6 @@
 structure Xmi_IDTable = 
 struct
 open Rep_Helper
-open Rep_Logger
 
 (**
  * special keys:
@@ -91,85 +91,85 @@ fun next_unique_name t:string=
 	 Int.toString number
 	)
     end 
-    handle Option => error ("expected UniqueName to be defined in table")
+    handle Option => Logger.error ("expected UniqueName to be defined in table")
  
 fun find_tagdefinition t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of TagDefinition x => x
        | _                => raise Option) 
-    handle Option => error ("expected TagDefinition "^xmiid^" in table")
+    handle Option => Logger.error ("expected TagDefinition "^xmiid^" in table")
 
 fun find_state t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of State x => x
        | _                => raise Option) 
-    handle Option => error ("expected State "^xmiid^" in table")
+    handle Option => Logger.error ("expected State "^xmiid^" in table")
 
 fun find_event t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of Event x => x
        | _                => raise Option) 
-    handle Option => error ("expected Event "^xmiid^" in table")
+    handle Option => Logger.error ("expected Event "^xmiid^" in table")
 
 fun find_transition t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of Transition x => x
        | _                => raise Option) 
-    handle Option => error ("expected Transition "^xmiid^" in table")
+    handle Option => Logger.error ("expected Transition "^xmiid^" in table")
 
 fun find_dependency t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of Dependency x => x
        | _                => raise Option) 
-    handle Option => error ("expected Dependency "^xmiid^" in table")
+    handle Option => Logger.error ("expected Dependency "^xmiid^" in table")
 
 fun find_generalization t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of Generalization x => x
        | _                => raise Option) 
-    handle Option => error ("expected Generalization "^xmiid^" in table")
+    handle Option => Logger.error ("expected Generalization "^xmiid^" in table")
 
 fun find_stereotype t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Stereotype x => x
        | _                => raise Option) 
-    handle Option => error ("expected Stereotype "^xmiid^" in table")
+    handle Option => Logger.error ("expected Stereotype "^xmiid^" in table")
 
 fun find_attribute t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Attribute x => x
        | _                => raise Option) 
-    handle Option => error ("expected Attribute "^xmiid^" in table")
+    handle Option => Logger.error ("expected Attribute "^xmiid^" in table")
 
 fun find_operation t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Operation x => x
        | _                => raise Option) 
-    handle Option => error ("expected Operation "^xmiid^" in table")
+    handle Option => Logger.error ("expected Operation "^xmiid^" in table")
 
 fun find_type t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of Type x  => x
        | _                => raise Option) 
-    handle Option => error ("expected Type "^xmiid^" in table (find_type)")
+    handle Option => Logger.error ("expected Type "^xmiid^" in table (find_type)")
 
 fun find_assoc t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of (Association(path,assoc))  => assoc
        | _                => raise Option) 
-    handle Option => error ("expected Type "^xmiid^" in table (find_assocs)")
+    handle Option => Logger.error ("expected Type "^xmiid^" in table (find_assocs)")
 
 fun find_aend t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of (AssociationEnd(path,aend)) => aend
        | _                => raise Option) 
-    handle Option => error ("expected AssociationEnd "^xmiid^" in table (find_aend)")
+    handle Option => Logger.error ("expected AssociationEnd "^xmiid^" in table (find_aend)")
 
 fun find_variable_dec t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Variable x => x
        | _                => raise Option) 
-    handle Option => error ("expected VariableDeclaration "^xmiid^" in table")
+    handle Option => Logger.error ("expected VariableDeclaration "^xmiid^" in table")
 
 fun find_parent t xmiid = #2 (find_generalization t xmiid)
 
@@ -177,42 +177,42 @@ fun find_package t xmiid  =
     (case valOf (HashTable.find t xmiid) 
       of Package path => path
        | _                => raise Option) 
-    handle Option => error ("expected Path "^xmiid^" in table")
+    handle Option => Logger.error ("expected Path "^xmiid^" in table")
 					
 fun path_of_classifier (Rep_OclType.Classifier x) = x
-  | path_of_classifier _ = error ("path_of_classifier called on non-Classifier argument")
+  | path_of_classifier _ = Logger.error ("path_of_classifier called on non-Classifier argument")
 
 fun find_constraint t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Constraint c => c
        | _                => raise Option) 
-    handle Option => error ("expected Constraint "^xmiid^" in table")
+    handle Option => Logger.error ("expected Constraint "^xmiid^" in table")
 
 fun find_associationend t xmiid  = 
     (case valOf (HashTable.find t xmiid) 
       of AssociationEnd (path,ae) => ae
        | _                   => raise Option) 
-    handle Option => error ("expected AssociationEnd "^xmiid^" in table")
+    handle Option => Logger.error ("expected AssociationEnd "^xmiid^" in table")
 
 
 fun path_of_association t xmiid  = 
     (case valOf (HashTable.find t xmiid) 
       of Association (path,ae) => path
        | _                   => raise Option) 
-    handle Option => error ("expected Association "^xmiid^" in table") 
+    handle Option => Logger.error ("expected Association "^xmiid^" in table") 
 
 fun path_of_associationend t xmiid  = 
     (case valOf (HashTable.find t xmiid) 
       of AssociationEnd (path,ae) => path
        | _                   => raise Option) 
-    handle Option => error ("expected AssociationEnd "^xmiid^" in table") 
+    handle Option => Logger.error ("expected AssociationEnd "^xmiid^" in table") 
 
 
 fun find_association t xmiid  = 
     (case valOf (HashTable.find t xmiid) 
       of Association (p,a) => a
        | _                   => raise Option) 
-    handle Option => error ("expected Association "^xmiid^" in table")
+    handle Option => Logger.error ("expected Association "^xmiid^" in table")
 
 
 fun find_association_of_associationend t xmiid =
@@ -227,7 +227,7 @@ fun find_classifier_associations t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Type(_,assocs,_,_,_) => assocs
        | _                   => raise Option) 
-    handle Option => error ("expected Association "^xmiid^" in table")
+    handle Option => Logger.error ("expected Association "^xmiid^" in table")
 		     
 fun filter_exists t cs = 
 	filter (fn x => Option.isSome (HashTable.find t x)) cs 
@@ -261,12 +261,12 @@ fun filter_bodyconstraint t cs
 
 fun find_classifier_entries t xmiid =
     let
-	val _ = trace function_calls "Xmi_IDTable.find_classifier_entries \n"
+	val _ = Logger.debug2 "Xmi_IDTable.find_classifier_entries \n"
 	val res = (case valOf (HashTable.find t xmiid) of 
 		      Type c => c
 		    | _  => raise Option
-		  ) handle Option => error ("expected Classifier "^xmiid^" in table (in find_classifer_entries)")
-	val _ = trace function_ends "end Xmi_IDTable.find_classifiers_entries \n"
+		  ) handle Option => Logger.error ("expected Classifier "^xmiid^" in table (in find_classifer_entries)")
+	val _ = Logger.debug2 "end Xmi_IDTable.find_classifiers_entries \n"
     in
 	res
     end
@@ -275,7 +275,7 @@ fun find_classifier_entries t xmiid =
 	    (case valOf (HashTable.find t xmiid) 
       of Type (_,_,_,c,_) => c
        | _                => raise Option) 
-    handle Option => error ("expected Classifier "^xmiid^" in table (in find_classifer)")
+    handle Option => Logger.error ("expected Classifier "^xmiid^" in table (in find_classifer)")
 
 fun exists_classifier t xmiid =
     (case valOf (HashTable.find t xmiid) 
@@ -287,19 +287,19 @@ fun find_classifierInState_classifier t cis_id =
       of ClassifierInState c => find_classifier t c
        | Type (_,_,_,c,_)      => c
 	   | _                   => raise Option)
-    handle Option =>  error ("expected ClassifierInState "
+    handle Option =>  Logger.error ("expected ClassifierInState "
 				       ^cis_id^" in table")
 fun find_association_of_associationclass t xmiid =
     (case valOf (HashTable.find t xmiid) 
       of Type (_,_,ac,_,_) => ac
        | _                => raise Option) 
-    handle Option => error ("expected associationclass "^xmiid^" in table (in find_association_of_associationclass)") 
+    handle Option => Logger.error ("expected associationclass "^xmiid^" in table (in find_association_of_associationclass)") 
 
 fun find_activity_graph_of t xmiid = 
     (case valOf (HashTable.find t xmiid) 
       of Type (_,_,_,_,ag) => ag
        | _                => raise Option) 
-    handle Option => error ("expected Classifier "^xmiid^" in table (in find_activity_graph_of)")
+    handle Option => Logger.error ("expected Classifier "^xmiid^" in table (in find_activity_graph_of)")
 
 			
 fun find_classifier_type t xmiid
@@ -319,20 +319,20 @@ fun find_classifier_type t xmiid
 		      | Rep_OclType.Set        (Rep_OclType.Classifier [x]) => Rep_OclType.Set (find_classifier_type t x)
 		      | Rep_OclType.Bag        (Rep_OclType.Classifier [x]) => Rep_OclType.Bag (find_classifier_type t x)
 		      | Rep_OclType.OrderedSet (Rep_OclType.Classifier [x]) => Rep_OclType.OrderedSet (find_classifier_type t x)
-		      | _ => error ("unexpected Classifier-Type "^xmiid^" in table")
+		      | _ => Logger.error ("unexpected Classifier-Type "^xmiid^" in table")
 	 end
-	handle Option => error ("expected Classifier "^xmiid^" in table (in find_classifier_type)")
+	handle Option => Logger.error ("expected Classifier "^xmiid^" in table (in find_classifier_type)")
 		    
 
 fun find_association_path t xmiid = 
     case valOf (HashTable.find t xmiid) of (Association (x,xs)) => x
 					 | _  => raise Option
-    handle Option => error ("expected Association "^xmiid^" in table (in find_association_path)")	    
+    handle Option => Logger.error ("expected Association "^xmiid^" in table (in find_association_path)")	    
 
 fun find_association_name t xmiid = 
     case valOf (HashTable.find t xmiid) of (Association (_,{xmiid,name,connection})) => name
 					 | _  => raise Option
-    handle Option => error ("expected Association "^xmiid^" in table (in find_association_name)")
+    handle Option => Logger.error ("expected Association "^xmiid^" in table (in find_association_name)")
 
 fun insert_constraint table (c:XMI.Constraint) =
     HashTable.insert table (#xmiid c, Constraint c)
@@ -379,7 +379,7 @@ fun insert_activity_graph table (XMI.mk_ActivityGraph ag) =
 						 table (context, Type (c,xs,assocs,ac,
 XMI.mk_ActivityGraph ag::ags))
 	   | _                => raise Option) 
-	      handle Option => error ("expected Type "^context^" in table (insert_activity_graph)");
+	      handle Option => Logger.error ("expected Type "^context^" in table (insert_activity_graph)");
 	List.app (insert_transition table) (#transitions ag);
 	insert_state table (#top ag)
     end
@@ -396,13 +396,13 @@ fun insert_classifierInState table cls_id cis_id =
 (** insert an association into the hashtable *)
 fun insert_association table package_prefix (association:XMI.Association) = 
     let 
-	val _ = trace function_calls ("Xmi_IDTable.insert_association\n")
+	val _ = Logger.debug2 ("Xmi_IDTable.insert_association\n")
 	val id      = #xmiid association
 	val name    = #name association
 	val path    = if (isSome name) then package_prefix@[valOf name]
 		      else package_prefix@["association_"^(next_unique_name table)]
 	val res = HashTable.insert table (id,Association(path,association))
-	val _ = trace function_ends  ("Xmi_IDTable.insert_association\n")
+	val _ = Logger.debug2  ("Xmi_IDTable.insert_association\n")
     in
 	res
 	
@@ -410,7 +410,7 @@ fun insert_association table package_prefix (association:XMI.Association) =
 
 
 fun insert_classifier table package_prefix class = 
-    let val _ = trace function_calls ("Xmi_IDTable.insert_classifier\n")
+    let val _ = Logger.debug2 ("Xmi_IDTable.insert_classifier\n")
 	val id      = XMI.classifier_xmiid_of class
 	val name    = XMI.classifier_name_of class
 	val path    = package_prefix @ [name]
@@ -440,7 +440,7 @@ fun insert_classifier table package_prefix class =
 			   else if String.isPrefix "OrderedSet(" name 
 			   then Rep_OclType.OrderedSet (Rep_OclType.Classifier [
 							XMI.classifier_elementtype_of class])
-			   else error ("didn't recognize ocltype "^name) 
+			   else Logger.error ("didn't recognize ocltype "^name) 
 		      else Rep_OclType.Classifier path
 	(* This function is called before the associations are handled, *)
 	(* so we do not have to take care of them now...                *)
@@ -464,7 +464,7 @@ fun insert_classifier table package_prefix class =
 		val _ = HashTable.insert table (id,Type (ocltype,assocs,acPath,class,ag))
 	    in
 		(case class 
-		  of XMI.Class c => (trace function_calls "insert_classifier: Class\n";
+		  of XMI.Class c => (Logger.debug2 "insert_classifier: Class\n";
 				     List.app (insert_attribute table path) (#attributes c);
 				     List.app (insert_operation table path) (#operations c);
 				     List.app (insert_classifierInState table id) (#classifierInState c);
@@ -477,7 +477,7 @@ fun insert_classifier table package_prefix class =
 		   | XMI.Set c => (List.app (insert_operation table path) (#operations c); ())
 		   | XMI.Bag c => (List.app (insert_operation table path) (#operations c); ())
 		   | XMI.OrderedSet c => (List.app (insert_operation table path) (#operations c); ())
-		   | XMI.AssociationClass c => (trace function_calls "insert_classifier: AssociationClass\n";
+		   | XMI.AssociationClass c => (Logger.debug2 "insert_classifier: AssociationClass\n";
 						List.app (insert_attribute table path) (#attributes c);   
 						List.app (insert_operation table path) (#operations c);              
 						List.app (insert_classifierInState table id) [];
@@ -487,7 +487,7 @@ fun insert_classifier table package_prefix class =
 		   | _ => ()
 		)
 	    end
-	val _ = trace function_ends ("end Xmi_IDTable.insert_classifier \n")
+	val _ = Logger.debug2 ("end Xmi_IDTable.insert_classifier \n")
     in
 	res
     end
@@ -496,34 +496,34 @@ fun insert_classifier table package_prefix class =
 (* recursively insert mapping of xmi.id's to model elements into Hashtable *)
 fun insert_package table package_prefix (XMI.Package p) =
     let
-	val _ = trace function_calls ("Xmi_IDTable.insert_package\n")
+	val _ = Logger.debug2 ("Xmi_IDTable.insert_package\n")
 	val full_name = package_prefix @ [#name p]
 	val res = 
 	    let
 		val _ = List.app (insert_generalization table)           (#generalizations p)
-		val _ = trace 24 "insert_package: constraints\n"
+		val _ = Logger.debug3 "insert_package: constraints\n"
 		val _ = List.app (insert_constraint     table)           (#constraints p)
-		val _ = trace 24 "insert_package: stereotypes\n"
+		val _ = Logger.debug3 "insert_package: stereotypes\n"
 		val _ = List.app (insert_stereotype     table)           (#stereotypes p)
-		val _ = trace 24 "insert_package: classifiers\n"
+		val _ = Logger.debug3 "insert_package: classifiers\n"
 		val _ = List.app (insert_classifier     table full_name) (#classifiers p)
-		val _ = trace 24 "insert_package: associations\n"
+		val _ = Logger.debug3 "insert_package: associations\n"
 		val _ = List.app (insert_association    table full_name) (#associations p)
-		val _ = trace 24 "insert_package: packages\n"
+		val _ = Logger.debug3 "insert_package: packages\n"
 		val _ = List.app (insert_package        table full_name) (#packages p)
-		val _ = trace 24 "insert_package: activity_graphs\n"
+		val _ = Logger.debug3 "insert_package: activity_graphs\n"
 		val _ = List.app (insert_activity_graph table)           (#activity_graphs p)
-		val _ = trace 24 "insert_package: dependencies\n"
+		val _ = Logger.debug3 "insert_package: dependencies\n"
 		val _ = List.app (insert_dependency     table)           (#dependencies p)
-		val _ = trace 24 "insert_package: tag defenitions\n"
+		val _ = Logger.debug3 "insert_package: tag defenitions\n"
 		val _ = List.app (insert_tagdefinition  table)           (#tag_definitions p)
-		val _ = trace 24 "insert_package: events\n"
+		val _ = Logger.debug3 "insert_package: events\n"
 		val _ = List.app (insert_event          table)           (#events p)
-		val _ = trace 24 "insert_package: insert package\n"
+		val _ = Logger.debug3 "insert_package: insert package\n"
 	    in
 		HashTable.insert table (#xmiid p,Package full_name)
 	    end
-	val _ = trace function_ends ("Xmi_IDTable.insert_package \n")
+	val _ = Logger.debug2 ("Xmi_IDTable.insert_package \n")
     in
 	res
     end 
@@ -532,7 +532,7 @@ fun insert_package table package_prefix (XMI.Package p) =
 (* therefore we handle the top-level model seperately                        *)
 fun insert_model table (XMI.Package p) = 
     let 
-	val _ = trace function_calls ("insert_model\n")
+	val _ = Logger.debug2 ("insert_model\n")
 	val full_name = nil
 	val res = 
 	    let
@@ -549,7 +549,7 @@ fun insert_model table (XMI.Package p) =
 	    in
 		HashTable.insert table (#xmiid p,Package full_name)
 	    end
-	val _ = trace function_ends ("Xmi_IDTable.insert_model\n")
+	val _ = Logger.debug2 ("Xmi_IDTable.insert_model\n")
     in
 	res
     end 
@@ -576,7 +576,7 @@ fun class_taggedvalues_of table (XMI.Class c) =
   | class_taggedvalues_of table (XMI.Primitive c) =
     map (fn x => (find_tagdefinition table (#tag_type x),#dataValue x))
         (#taggedValue c)
-  | class_taggedvalues_of table _ = error "in class_taggedvalues_of: \
+  | class_taggedvalues_of table _ = Logger.error "in class_taggedvalues_of: \
                                           \argument doesn't support tagged values"
 	
 
@@ -590,7 +590,7 @@ fun class_taggedvalue_of table tag (XMI.Class c) =
   | class_taggedvalue_of table tag (XMI.Primitive c) =
     Option.map #2 ((List.find (fn (x,y) => x=tag))
                        (class_taggedvalues_of table (XMI.Primitive c)))
-  | class_taggedvalue_of table tag _ = error "in class_taggedvalues_of: \
+  | class_taggedvalue_of table tag _ = Logger.error "in class_taggedvalues_of: \
                                              \argument doesn't support tagged values"
 	
 

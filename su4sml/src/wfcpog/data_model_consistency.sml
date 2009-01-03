@@ -51,7 +51,6 @@ structure WFCPOG_Data_Model_Consistency_Constraint : WFCPOG_DATA_MODEL_CONSISTEN
 struct
 
 (* su4sml *)
-open Rep_Logger
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType

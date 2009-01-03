@@ -70,7 +70,6 @@ end
 structure Base_Cartridge : BASE_CARTRIDGE =
 struct
 
-open Rep_Logger
 (* translation functions *)
 (* type translation table *)
 
@@ -187,7 +186,7 @@ fun lookup env "classifier_name"  	 = Rep_Core.short_name_of (curClassifier' env
   | lookup env "counter"                 = Int.toString (!(#counter env))
   | lookup env "counter_next"            = ((#counter env) := !(#counter env)+1; 
                                             Int.toString (!(#counter env)))
-  | lookup _ s = (warn ("in Base_Cartridge.lookup: unknown variable \""^s^"\"."); "$"^s^"$")
+  | lookup _ s = (Logger.warn ("in Base_Cartridge.lookup: unknown variable \""^s^"\"."); "$"^s^"$")
 
 
 (** 
@@ -254,7 +253,7 @@ fun test env "isClass"       = (case (#curClassifier env)  of
   | test env "operation_isPackage"   = ((#visibility (curOperation' env)) = XMI.package)
   | test env "operation_isStatic"    = ((#scope (curOperation' env)) = XMI.ClassifierScope)
   | test env "operation_isQuery"     = #isQuery (curOperation' env)
-  | test env  s = error ("in Base_Cartridge.test: undefined predicate: \""^s^"\".")
+  | test env  s = Logger.error ("in Base_Cartridge.test: undefined predicate: \""^s^"\".")
 
 		  
 (* fun foreach_classifier: environment -> environment list *)
@@ -434,7 +433,7 @@ fun foreach "classifier_list" env = foreach_classifier env
   | foreach listType env = map (pack env) 
 			       (<SuperCartridge>.foreach name (unpack env))
    *)
-  | foreach s _ = (error_msg ("in Base_Cartridge.foreach: unknown list \""^s^"\".");
+  | foreach s _ = (Logger.error ("in Base_Cartridge.foreach: unknown list \""^s^"\".");
                    [])
 		  
 end

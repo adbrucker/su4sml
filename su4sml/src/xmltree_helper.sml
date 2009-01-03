@@ -68,7 +68,6 @@ structure XmlTreeHelper : sig
 end =
 struct
 open Rep_Helper
-open Rep_Logger
 open XmlTree
 
 infix 1 |>
@@ -80,7 +79,7 @@ fun filter_children string tree = filter string (node_children tree)
 fun find_some string trees = (List.find (fn x => string = tagname x) trees)
 
 fun find string trees = valOf (List.find (fn x => string = tagname x) trees) 
-    handle Option => error ("in XmlTree.find: no element "^string)
+    handle Option => Logger.error ("in XmlTree.find: no element "^string)
 
 
 fun some_id' atts = let val xmiid = atts |> optional_value_of "xmi.id" 
@@ -100,10 +99,10 @@ fun some_id' atts = let val xmiid = atts |> optional_value_of "xmi.id"
 fun some_id tree = some_id' (attributes tree)
 
 fun value_of string atts = XmlTree.value_of string atts
-    handle ex => error ((General.exnMessage ex)^(some_id' atts))
+    handle ex => Logger.error ((General.exnMessage ex)^(some_id' atts))
  
 fun find_child string tree = find string (node_children tree)
-    handle ex => error ((General.exnMessage ex)^" inside node "^(tagname tree)^(some_id tree)^"\n")
+    handle ex => Logger.error ((General.exnMessage ex)^" inside node "^(tagname tree)^(some_id tree)^"\n")
 			   
 fun dfs string tree = if tagname tree = string 
 		      then SOME tree
@@ -126,7 +125,7 @@ fun skipM   string tree   = if  has_child string tree
 fun is (tree,string) = string = tagname tree
 infix 2 is
 fun assert string tree  = if tree is string then tree
-                          else error ("expected "^string^" but found "^
+                          else Logger.error ("expected "^string^" but found "^
                                                 (tagname tree)^(some_id tree)^"\n")
 
 (* navigate to association ends with multiplicity 1..* *)

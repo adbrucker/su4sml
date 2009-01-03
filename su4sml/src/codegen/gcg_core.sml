@@ -54,7 +54,6 @@ end
 functor GCG_Core (C: CARTRIDGE): GCG  = 
 struct
 
-open Rep_Logger
 
 val curFile = ref ""
 val out = ref TextIO.stdOut
@@ -67,14 +66,14 @@ fun closeFile () = if (!curFile = "")
 		        
 (* FIXME: set out to a real NullStream *)
 fun openNull file = (closeFile ();
-		     info ("skipping "^file);
+		     Logger.info ("skipping "^file);
 		     out := (TextIO.openOut "/dev/null");
 		     curFile := "/dev/null"
 		    )
      
 
 fun openFile file = (closeFile ();
-		     info ("opening  "^file);
+		     Logger.info ("opening  "^file);
 		     Gcg_Helper.assureDir file;
 		     out := (TextIO.openOut file);
 		     curFile := file
@@ -91,7 +90,7 @@ fun initOut () =  (out := TextIO.stdOut;
 		  
 fun writeLine s = TextIO.output (!out,s)
                   
-fun eval s = (info "<eval>"; CompilerExt.eval true s)
+fun eval s = (Logger.info "<eval>"; CompilerExt.eval true s)
 
 (** applies f to every other element in l starting with the second
  *)
@@ -103,7 +102,7 @@ fun substituteVars e s =
     let val tkl = Gcg_Helper.joinEscapeSplitted "$" (Gcg_Helper.fieldSplit #"$" s)
     in
 	String.concat (map2EveryOther (C.lookup e) tkl)
-        handle ex => (error_msg ("in GCG_Core.substituteVars: \
+        handle ex => (Logger.error ("in GCG_Core.substituteVars: \
                                  \variable lookup failure in string \""^s^"\".");
                       s)
     end
@@ -117,7 +116,7 @@ fun write env (Tpl_Parser.RootNode(l))                   = List.app (write env) 
     let fun collectEval [] 	                         = ""
   	  | collectEval ((Tpl_Parser.TextLeaf(expr))::t) = expr^"\n"^(collectEval t)
   	  | collectEval _	                         = 
-  	    error "in GCG_Core.write: No TextLeaf in EvalLeaf" 
+  	    Logger.error "in GCG_Core.write: No TextLeaf in EvalLeaf" 
     in
   	eval (substituteVars env (collectEval l))
     end
@@ -131,7 +130,7 @@ fun write env (Tpl_Parser.RootNode(l))                   = List.app (write env) 
   	 then writeThen env l
   	 else case (List.last l) of nd as (Tpl_Parser.ElseNode(_)) => write env nd
   			  	  | _                              => ())
-        handle ex => error ("in GCG_Core.write: problem in IfNode "^cond)
+        handle ex => Logger.error ("in GCG_Core.write: problem in IfNode "^cond)
     end
   | write env (Tpl_Parser.ElseNode(l))                   = List.app (write env) l
   | write env (Tpl_Parser.ForEachNode(listType,children))=
@@ -139,7 +138,7 @@ fun write env (Tpl_Parser.RootNode(l))                   = List.app (write env) 
 	fun write_children e     = List.app (fn tree => write e tree) children
     in 
 	List.app (fn e => write_children e) list_of_environments
-        handle ex => (error_msg ("in GCG_Core.write: error in foreach node "^listType^
+        handle ex => (Logger.error ("in GCG_Core.write: error in foreach node "^listType^
                                 ": "^General.exnMessage ex);
                       ())
     end
@@ -154,7 +153,7 @@ fun generate model template
 	 (*printTTree tree;*)
 	 write env tree;
 	 closeFile ();
-         info "codegen  finished successfully"
+         Logger.info "codegen  finished successfully"
         ) 
 	handle ex => (closeFile(); raise ex)
     end

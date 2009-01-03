@@ -5,7 +5,8 @@
  * rep_parser.sml --- an xmi-parser for the import interface for su4sml
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2005-2007 ETH Zurich, Switzerland
+ *               2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -45,11 +46,10 @@ structure RepParser :
               val transformXMI_ext : XMI.XmiContent -> Rep.transform_model
               val readFile      : string -> Rep.Model
               val importArgoUML : string -> Rep.Model
-              val test: (string * string list) -> OS.Process.status
+        (*      val test: (string * string list) -> OS.Process.status *)
               (* generic exception if something is wrong *)
           end  =
 struct
-open Rep_Logger
 
 open Xmi_IDTable
 
@@ -179,7 +179,7 @@ fun transform_expression t (XMI.LiteralExp {symbol,expression_type}) =
                          find_classifier_type t expression_type
                         )
     end
-  | transform_expression t _ = error "unsupported OCL expression type"
+  | transform_expression t _ = Logger.error "unsupported OCL expression type"
 and transform_collection_part t (XMI.CollectionItem {item,expression_type}) =
     Rep_OclTerm.CollectionItem (transform_expression t item,
 				find_classifier_type t expression_type)
@@ -195,7 +195,7 @@ fun transform_constraint t ({xmiid,name,body,...}:XMI.Constraint) =
 	               | NONE     => NONE
     in	
     	(n_name,transform_expression t body)
-	handle ex => (print ("Warning: in RepParser.transform_constraint: \
+	handle ex => (Logger.warn ("Warning: in RepParser.transform_constraint: \
                              \Could not parse Constraint: "^General.exnMessage ex^"\n"^
                             "using the trivial constraint 'true' instead");
                       (NONE, triv_expr))
@@ -211,7 +211,7 @@ fun transform_bodyconstraint result_type t ({xmiid,name,body,...}:XMI.Constraint
 					      equal,[(body,body_type)],
 					      Rep_OclType.Boolean))
     end
-    handle ex => (print ("Warning: in RepParser.transform_bodyconstraint: \
+    handle ex => (Logger.warn ("Warning: in RepParser.transform_bodyconstraint: \
                          \Could not parse Constraint: "^
                          General.exnMessage ex^"\n"^
                          "using the trivial constraint 'true' instead");
@@ -219,7 +219,7 @@ fun transform_bodyconstraint result_type t ({xmiid,name,body,...}:XMI.Constraint
                  
 fun transform_parameter t {xmiid,name,kind,type_id} =
     (name, find_classifier_type t type_id
-           handle _ => (warn ("no type found for parameter '"^name^
+           handle _ => (Logger.warn ("no type found for parameter '"^name^
                               "', defaulting to OclVoid"); 
                         Rep_OclType.OclVoid)
     )
@@ -228,11 +228,11 @@ fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
 			   constraints,ownerScope} =
     let val result_type   = (
             case filter (fn x => #kind x = XMI.Return) parameter
-             of []      => (warn ("no return type found for operation '"^name^
+             of []      => (Logger.warn ("no return type found for operation '"^name^
                                   "', defaulting to OclVoid"); 
                             Rep_OclType.OclVoid)
               | [x]     => (find_classifier_type t (#type_id x)
-                            handle _ => (warn ("return parameter for \
+                            handle _ => (Logger.warn ("return parameter for \
                                                \operation '"^name^
                                                "' has no declared type, \
                                                \defaulting to OclVoid"); 
@@ -240,12 +240,12 @@ fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
               | x::y::_ => 
                 let 
                   val ret_type = find_classifier_type t (#type_id x)
-                      handle _ => (warn ("return parameter for operation '"
+                      handle _ => (Logger.warn ("return parameter for operation '"
                                          ^name^"' has no declared type, \
                                                \defaulting to OclVoid"); 
                                    Rep_OclType.OclVoid)
                 in 
-                  (warn ("operation '"^name^
+                  (Logger.warn ("operation '"^name^
                          "' has multiple return parameters. Using only '"^
                          (Rep_OclType.string_of_OclType ret_type)^"'.");
                    ret_type)
@@ -277,7 +277,7 @@ fun transform_operation t {xmiid,name,isQuery,parameter,visibility,
 fun transform_attribute t ({xmiid,name,type_id,changeability,visibility,ordering,
 			    multiplicity,taggedValue,ownerScope,targetScope,stereotype,initialValue}) =
     let val cls_type = find_classifier_type t type_id 
-            handle _ => (warn ("no type found for attribute '"^name^
+            handle _ => (Logger.warn ("no type found for attribute '"^name^
                                "', defaulting to OclVoid"); 
                          Rep_OclType.OclVoid)
     in
@@ -354,7 +354,7 @@ fun transform_state t (XMI.CompositeState {xmiid,outgoing,incoming,subvertex,
 		      outgoing = outgoing,
 		      incoming = incoming,
 		      kind = kind }
-  | transform_state t _ = error ("in transform_state: unsupported StateVertex type \
+  | transform_state t _ = Logger.error ("in transform_state: unsupported StateVertex type \
                                  \(Subactivity states, object flow states and \
                                  \sync states are not supported).") 
 (* a primitive hack: we take the body of the guard g as the name of an *)
@@ -408,24 +408,24 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 				       classifierInState,activity_graphs,
 				       state_machines}) =
     let 
-	val _ = trace function_calls ("RepParser.transform_classifier: Class\n")
-	val _ = trace function_arguments ("class name: "^ name ^"\n")
+	val _ = Logger.debug2 ("RepParser.transform_classifier: Class\n")
+	val _ = Logger.debug2 ("class name: "^ name ^"\n")
         val assocs = find_classifier_associations t xmiid
-	val _ = trace high ("number of associations added: "^(Int.toString (List.length assocs))^"\n")
+	val _ = Logger.debug1 ("number of associations added: "^(Int.toString (List.length assocs))^"\n")
         val parents = map ((find_classifier_type t) o (find_parent t)) 
 			  generalizations 
 	val filtered_parents   = filter (fn x => x <> Rep_OclType.OclAny) parents
         val filtered_parent = case filtered_parents
                                of []  => NONE
                                 | [x] => SOME x
-                                | x::y::_ => (warn ("Class '"^name^"' has multiple parents."^
+                                | x::y::_ => (Logger.warn ("Class '"^name^"' has multiple parents."^
                                                     " Using only '"^
                                                     (Rep_OclType.string_of_OclType x)^"'."); 
                                               SOME x)
  	val checked_invariants = filter_exists t invariant
 (*        val navigable_aends    = filter #isNavigable (find_aends t xmiid)*)
 	val class_type = find_classifier_type t xmiid
-	val _ = print ("transform_classifier: adding "^name^"\n")
+	val _ = Logger.info ("transform_classifier: adding "^name^"\n")
 	val res = 
 	    Rep.Class {name = (* type_of_classifier *) class_type,
 		       parent = case filtered_parents 
@@ -443,7 +443,7 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
                        activity_graphs = List.concat [map (transform_activitygraph t) activity_graphs,
 						      map (transform_statemachine t) state_machines], 
 		       thyname = NONE}
-	val _ = trace function_ends ("RepParser.transform_classifier\n")
+	val _ = Logger.debug2 ("RepParser.transform_classifier\n")
     in
 	res
     end
@@ -453,21 +453,21 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 						  clientDependency,connection,
 						  supplierDependency,taggedValue}) =
     let 
-	val _ = trace function_calls ("RepParser.transform_classifier: AssociationClass\n")
-	val _ = trace function_arguments ("associationclass name: "^ name ^"\n")
+	val _ = Logger.debug2 ("RepParser.transform_classifier: AssociationClass\n")
+	val _ = Logger.debug2 ("associationclass name: "^ name ^"\n")
 	val (_,assocs,assoc,_,_) = find_classifier_entries t xmiid
-	val _ = trace high ("number of associations added: "^(Int.toString (List.length assocs))^"\n")
-	val _ = trace high ("ac association found: "^(Bool.toString (assoc <> []))^"\n")
-	val _ = print "associations retrieved\n"
+	val _ = Logger.debug1 ("number of associations added: "^(Int.toString (List.length assocs))^"\n")
+	val _ = Logger.debug1 ("ac association found: "^(Bool.toString (assoc <> []))^"\n")
+	val _ = Logger.info  "associations retrieved\n"
 	val parents = map ((find_classifier_type t) o (find_parent t)) 
 			  generalizations 
-	val _ = trace high "parents retrieved\n"
+	val _ = Logger.debug1 "parents retrieved\n"
         (* FIXME: filter for classes vs. interfaces *)  
 	val filtered_parents = filter (fn x => x <> Rep_OclType.OclAny) parents 
 	val checked_invariants = filter_exists t invariant
 	(*val navigable_aends    = filter #isNavigable connection *)
 	val class_type = find_classifier_type t xmiid
-	val _ = print ("transform_classifier: adding "^name^"\n")
+	val _ = Logger.debug1 ("transform_classifier: adding "^name^"\n")
 	val res = 
 	    Rep.AssociationClass {name = (* type_of_classifier *)class_type,
 				  parent = case filtered_parents 
@@ -484,16 +484,16 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 				  associations = assocs,
 				  visibility = visibility,
 				  association = assoc}
-	val _ = trace function_ends ("RepParser.transform_classifier\n")
+	val _ = Logger.debug2 ("RepParser.transform_classifier\n")
     in
 	res
     end
   | transform_classifier t (XMI.Primitive {xmiid,name,generalizations,operations,invariant,taggedValue}) =
     let 
-	val _ = trace function_calls ("RepParser.transform_classifier: Primitive\n")
-	val _ = trace function_arguments ("primitive name: "^ name ^"\n")
+	val _ = Logger.debug2 ("RepParser.transform_classifier: Primitive\n")
+	val _ = Logger.debug2 ("primitive name: "^ name ^"\n")
 	val (_,assocs,_,_,_) = find_classifier_entries t xmiid
-	val _ = trace high ("number of associations added: "^(Int.toString (List.length assocs))^"\n")
+	val _ = Logger.debug1 ("number of associations added: "^(Int.toString (List.length assocs))^"\n")
 	val checked_invariants = filter_exists t invariant
 	val res = 
             Rep.Primitive {name = (* case *) find_classifier_type t xmiid (*of Rep_OclType.Classifier x => x
@@ -508,14 +508,14 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 			   stereotypes = nil (*FIX *),
 			   interfaces = nil (* FIX *),
 			   thyname = NONE}
-	val _ = trace function_ends ("RepParser.transform_classifier\n")
+	val _ = Logger.debug2 ("RepParser.transform_classifier\n")
     in
 	res
     end
   | transform_classifier t (XMI.Enumeration {xmiid,name,generalizations,
 					     operations,literals,invariant}) =
     let 
-	val _ = trace function_calls ("RepParser.transform_classifier: Enumeration\n")
+	val _ = Logger.debug2 ("RepParser.transform_classifier: Enumeration\n")
 	val checked_invariants = filter_exists t invariant
 	val res = 
             Rep.Enumeration {name = (* case *) find_classifier_type t xmiid (* of Rep_OclType.Classifier x => x
@@ -528,14 +528,14 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 			     stereotypes = nil, (* FIX *)
 			     interfaces = nil, (* FIX *)
 		             thyname = NONE}
-	val _ = trace function_ends ("RepParser.transform_classifier\n")
+	val _ = Logger.debug2 ("RepParser.transform_classifier\n")
     in
 	res
     end
   | transform_classifier t (XMI.Interface { xmiid, name, generalizations, operations, invariant,
 		                            ...}) =
     let 
-	val _ = trace function_calls ("RepParser.transform_classifier: Interface\n")
+	val _ = Logger.debug2 ("RepParser.transform_classifier: Interface\n")
         val checked_invariants = filter_exists t invariant
 	val res = 
             Rep.Interface { name        = find_classifier_type t xmiid,
@@ -547,25 +547,25 @@ fun transform_classifier t (XMI.Class {xmiid,name,isActive,visibility,isLeaf,
 					       (find_constraint t)) checked_invariants,
 	                    thyname     = NONE 
 			  }
-	val _ = trace function_ends ("RepParser.transform_classifier\n")
+	val _ = Logger.debug2 ("RepParser.transform_classifier\n")
     in
 	res
     end
-  | transform_classifier t (_) = error "Not supported Classifier type found."
+  | transform_classifier t (_) = Logger.error "Not supported Classifier type found."
 			               
 
 (** transform an XMI.Association into a Rep.association *)
 fun transform_association t ({xmiid,name,connection}:XMI.Association):
     Rep.association =
     let 
-      val _ = trace function_calls ("RepParser.transform_association\n")
-      val _ = trace function_arguments ("transform_association xmiid: "
+      val _ = Logger.debug2 ("RepParser.transform_association\n")
+      val _ = Logger.debug2 ("transform_association xmiid: "
                                         ^xmiid^"\n")
       val associationPath = find_association_path t xmiid
-      val _ = print ("transform_association path: "^(string_of_path 
+      val _ = Logger.info ("transform_association path: "^(string_of_path 
                                                          associationPath)^
                      "\n")
-      val _ = print ("transform_association path length: "^
+      val _ = Logger.info ("transform_association path length: "^
                      (Int.toString (List.length associationPath)) ^"\n")
       val (associationEnds,qualifierPairs) = 
           ListPair.unzip (map (transform_aend t associationPath) connection)
@@ -574,7 +574,7 @@ fun transform_association t ({xmiid,name,connection}:XMI.Association):
 	   aends = associationEnds,
 	   qualifiers = qualifierPairs,
 	   aclass = NONE (* regular association *)}
-      val _ = trace function_ends ("RepParser.transform_association\n")
+      val _ = Logger.debug2 ("RepParser.transform_association\n")
     in
 	res
     end
@@ -583,17 +583,17 @@ fun transformAssociationFromAssociationClass t (XMI.AssociationClass
                                                     {xmiid,connection,...}):
     Rep.association =
     let
-      val _ = trace function_calls ("RepParser.transformAssociationFromAassociation Class\n")
+      val _ = Logger.debug2 ("RepParser.transformAssociationFromAassociation Class\n")
       val id = xmiid^"_association"
       val associationPath = find_association_path t id
-      val _ = trace low ("transform_association path: "^
+      val _ = Logger.debug4 ("transform_association path: "^
                          (string_of_path associationPath)^"\n")
-      val _ = trace low ("transform_association path length: "^
+      val _ = Logger.debug4 ("transform_association path length: "^
                          (Int.toString (List.length associationPath)) ^"\n")
       val (associationEnds,qualifierPairs) = 
           ListPair.unzip (map (transform_aend t associationPath) connection)
       val aClass =  SOME (path_of_OclType (find_classifier_type t xmiid))
-      val _  = trace function_ends ("RepParser.transformAssociationFromAssociationClass\n")
+      val _  = Logger.debug2 ("RepParser.transformAssociationFromAssociationClass\n")
     in
       {name = associationPath (* path_of_association *),
        aends = associationEnds,
@@ -605,7 +605,7 @@ fun transformAssociationFromAssociationClass t (XMI.AssociationClass
 fun transform_package t (XMI.Package p) :transform_model =
     let 
       (* we do not transform the ocl library *)
-      val _ = trace function_calls ("RepParser.transform_package\n")
+      val _ = Logger.debug2 ("RepParser.transform_package\n")
       val filteredPackages = 
           filter (fn (XMI.Package x) => 
 		     ((#name x <> "oclLib") andalso (#name x <> "UML_OCL")))
@@ -621,7 +621,7 @@ fun transform_package t (XMI.Package p) :transform_model =
       val associations = local_associations @ (List.concat res_associations)
       val classifiers =local_classifiers @ (List.concat res_classifiers)
       val res  = (classifiers, associations )
-      val _ = trace function_ends ("RepParser.transform_package\n")
+      val _ = Logger.debug2 ("RepParser.transform_package\n")
     in
 	res
     end
@@ -670,40 +670,37 @@ fun transformXMI_ext ({classifiers,constraints,packages,stereotypes,
                   
       fun test2 (classifiers,associations) =
 	  let
-	    val _ = print "test2\n"
-	    val _ = print "classifiers\n"
-	    val _ = map (print o (fn x => x^"\n")  o string_of_path o name_of) 
+	    val _ = Logger.info "test2\n"
+	    val _ = Logger.info "classifiers\n"
+	    val _ = map (Logger.info o (fn x => x^"\n")  o string_of_path o name_of) 
                         classifiers
-	    val _ = print "associations\n"
-	    val _ = map (print o (fn x => x^"\n")  o string_of_path o 
+	    val _ = Logger.info "associations\n"
+	    val _ = map (Logger.info o (fn x => x^"\n")  o string_of_path o 
                          (fn {name,aends,qualifiers,aclass} => name)) 
                         associations
-	    val _ = print "operations\n"
+	    val _ = Logger.info "operations\n"
 	    fun printClassifier cls = 
 		let
-		  val _ = print ("output of transformXMI_ext:\n")
-		  val _ = print ("classifier: "^ (string_of_path (name_of cls))
+		  val _ = Logger.info ("output of transformXMI_ext:\n")
+		  val _ = Logger.info ("classifier: "^ (string_of_path (name_of cls))
                                  ^"\n") 
-		  val _ = print ("associations: \n")
-		  val _ = map (print o(fn x => x ^ "\n") o string_of_path ) 
+		  val _ = Logger.info ("associations: \n")
+		  val _ = map (Logger.info o(fn x => x ^ "\n") o string_of_path ) 
                               (associations_of cls)
-		  val _ = print ("operations: \n")
-		  val _ = map (print o (fn {name,...} => name)) 
+		  val _ = Logger.info ("operations: \n")
+		  val _ = map (Logger.info o (fn {name,...} => name)) 
                               (operations_of cls) 
 		in
 		  print "\n"
 		end
 	    val _ = map printClassifier classifiers
 	  in
-	    trace 27 "\n### transformXMI_ext done\n\n";
+	    Logger.debug2 "\n### transformXMI_ext done\n\n";
 	    (classifiers,associations)
 	  end
     in 
-      trace 27 "### transformXMI: populate hash table\n";
       insert_model xmiid_table model        (* fill xmi.id table *);
-      trace 27 "### transformXMI: fix associations\n";
       fix_associations xmiid_table model    (* handle associations *);  
-      trace 27 "### transformXMI: transform XMI into Rep\n";
       test2 (transform_package xmiid_table model) (* transform classifiers *)
     end
 
@@ -718,7 +715,7 @@ fun transformXMI x:Classifier list = fst (transformXMI_ext x)
 fun normalize_ext ((clsses,accs):transform_model):Rep.Model =
     (map (Rep.normalize accs) clsses,accs)
 
-fun readFile f = (info ("opening "^f);
+fun readFile f = (Logger.info ("opening "^f);
                   (normalize_ext o transformXMI_ext o XmiParser.readFile) f)
 (*    handle ex as (IllFormed msg) => raise ex *)
 
@@ -744,16 +741,6 @@ fun importArgoUML file =
 
 
 
-fun printStackTrace e =
-    let val ss = CompilerExt.exnHistory e
-    in
-        print_stderr ("uncaught exception " ^ (General.exnMessage e) ^ " at:\n");
-        app (fn s => print_stderr ("\t" ^ s ^ "\n")) ss
-    end
-    
-
-
-
 
 
     
@@ -761,8 +748,8 @@ fun printStackTrace e =
  *****************************************************
  * Test function.
  *)
-fun test (_,filename::_) = (Rep2String.printList (fst (readFile filename)); OS.Process.success)
-    handle ex => (printStackTrace ex; OS.Process.failure)
+(* fun test (_,filename::_) = (Rep2String.printList (fst (readFile filename)); OS.Process.success) *)
+(*     handle ex => (printStackTrace ex; OS.Process.failure) *)
 
 
 

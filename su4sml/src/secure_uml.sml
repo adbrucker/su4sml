@@ -68,7 +68,6 @@ end
 functor SecureUML(structure Design: DESIGN_LANGUAGE):SECUREUML =
 struct
 open Rep_Helper
-open Rep_Logger
 
 
 structure Design : DESIGN_LANGUAGE = Design
@@ -170,11 +169,11 @@ fun filter_role cs = List.filter (classifier_has_stereotype "secuml.role") cs
 
                      
 fun mkRole (C as Rep.Class c) = Rep.string_of_path (Rep.name_of C)
-  | mkRole _                  = error ("in mkRole: argument is not a class")
+  | mkRole _                  = Logger.error ("in mkRole: argument is not a class")
 
 (* FIXME: handle groups also *)
 fun mkSubject (C as Rep.Class c) = User (Rep.string_of_path (Rep.name_of C))
-  | mkSubject _                  = error ("in mkSubject: argument is not a class")
+  | mkSubject _                  = Logger.error ("in mkSubject: argument is not a class")
 fun mkPermission (cs,ascs) (c as Rep.Class _) = 
     let val classifiers = (Rep.connected_classifiers_of ascs c cs)
         val role_classes = List.filter (classifier_has_stereotype "secuml.role") 
@@ -184,24 +183,24 @@ fun mkPermission (cs,ascs) (c as Rep.Class _) =
                                                       Design.root_stereotypes)
                                          classifiers
         val root_resource = hd root_classes
-            handle Empty => error ("in mkPermission: no root resource found "^
+            handle Empty => Logger.error ("in mkPermission: no root resource found "^
                                    "for permission "^Rep.string_of_path (Rep.name_of c))
         val action_attributes = 
             List.filter (fn x => ListEq.overlaps (#stereotypes x) (Design.action_stereotypes)) 
                         (Rep.attributes_of c)
-            handle ex => (error_msg "could not parse permission attributes"; raise ex)
+            handle ex => (Logger.error "could not parse permission attributes"; raise ex)
     in 
         { name  = (Rep.string_of_path (Rep.name_of c)),
           roles = (map (Rep.string_of_path o Rep.name_of) role_classes),
           (* FIXME: find attached constraints *)
           constraints = nil, 
           actions = if action_attributes = [] 
-                    then error ("in mkPermission: Permission "^
+                    then Logger.error ("in mkPermission: Permission "^
                                 (Rep.string_of_path (Rep.name_of c))^
                                 "has no action attributes")
                     else map (Design.parse_action root_resource) action_attributes }
     end
-  | mkPermission _ _ = error "in mkPermission: argument is not a class"
+  | mkPermission _ _ = Logger.error "in mkPermission: argument is not a class"
                        
 
 fun mkSubjectAssignment (cs,ascs) (c as (Rep.Class _)) = 
@@ -314,7 +313,7 @@ fun removeSecureUmlAends (Rep.Class {name=class_name,...},(assocs,removed_assocs
  * removes the classes with SecureUML stereotypes. 
  *)
 fun parse (model as (cs,assocs):Rep.Model) = 
-    let val _ = info "parsing  security configuration"
+    let val _ = Logger.info "parsing  security configuration"
 	val non_secureumlstereotypes = List.filter (classifier_has_no_stereotype ["secuml.permission",
 										  "secuml.role",
 										  "secuml.subject",
@@ -400,7 +399,7 @@ fun parse (model as (cs,assocs):Rep.Model) =
                            (List.filter classifier_has_parent (filter_role cs)),
          sa          = map (mkSubjectAssignment model) (filter_subject cs)})
     end
-    handle ex => (error_msg "in SecureUML.parse: security configuration \
+    handle ex => (Logger.warn "in SecureUML.parse: security configuration \
                             \could not be parsed";
                   raise ex)
 

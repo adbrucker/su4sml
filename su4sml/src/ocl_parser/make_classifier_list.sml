@@ -60,7 +60,6 @@ end
 structure Update_Model:UPDATE_MODEL =
 struct
 
-open Rep_Logger
 open Rep_Core;
 open Context;
 
@@ -133,19 +132,19 @@ fun add_operations cond_type (op_name,cond_name,term) [] = raise OperationUpdate
     case cond_type of
 	pre => 
 	let
-	    val _ = trace low ("pre\n")
+	    val _ = Logger.debug3 ("pre\n")
 	in
 	    add_precondition (op_name,cond_name,term) op_list
 	end
       | post => 
 	let 
-	    val _ = trace low ("post\n")
+	    val _ = Logger.debug3 ("post\n")
 	in
 	    add_postcondition (op_name,cond_name,term) op_list
 	end
       | body =>
 	let
-	    val _ = trace low ("body\n")
+	    val _ = Logger.debug3 ("body\n")
 	in
 	    add_body (op_name,cond_name,term) op_list
 	end
@@ -170,7 +169,7 @@ fun add_attribute (attr_name,term) ((attr: attribute)::attribute_tail) =
 (* INVARIANTS *)
 fun context_to_classifier (Inv (path,string_opt,term)) model = 
     let 
-	val _ = trace low ("Invariant to Classifier ... " ^ "\n")     
+	val _ = Logger.debug3 ("Invariant to Classifier ... " ^ "\n")     
 	val c = class_of_type (Rep_OclType.Classifier (path)) model 
     in
 	(
@@ -223,7 +222,7 @@ fun context_to_classifier (Inv (path,string_opt,term)) model =
   (* Attribute constraints *)
   |  context_to_classifier (Attr (path,typ,attrorassoc,term)) model = 
      let
-   	 val _ = trace low ("Attribute to Classifier ... " ^ "\n")
+   	 val _ = Logger.debug3 ("Attribute to Classifier ... " ^ "\n")
 	 val c = class_of_type (Rep_OclType.Classifier (real_path path)) model
      in
 	 (
@@ -278,7 +277,7 @@ fun context_to_classifier (Inv (path,string_opt,term)) model =
   (* Operation constraints *)
   | context_to_classifier (Cond (path,op_name,args,ret_typ,cond_type,cond_name,term)) model=
     let
-	val _ = trace low ("Cond to Classifier ... " ^ "\n") 
+	val _ = Logger.debug3 ("Cond to Classifier ... " ^ "\n") 
 	val c = class_of_type (Rep_OclType.Classifier (path)) model
     in
 	(
@@ -347,41 +346,37 @@ fun gen_updated_classifier_list [] model = model
       gen_updated_classifier_list context_list_tail (merge_classifier updated_classifier model)
       handle AlreadyInitValueError (attr_path,term,mes) =>
 	     let
-		 val _ = trace zero ("\n\n#################################################\n")
-		 val _ = trace zero ("AlreadyInitValueError:\n")
-		 val _ = trace zero ("Error Message: " ^ mes ^ "\n")
-		 val _ = trace zero ("In attribute or association: " ^ (attr_path) ^ "\n")
-		 val _ = trace zero ("In Term: " ^ Ocl2String.ocl2string false term ^ "\n")
+	       val _ = Logger.error("AlreadyInitValueError:\n"
+			            ^"Error Message: " ^ mes ^ "\n"
+				    ^"In attribute or association: " ^ (attr_path) ^ "\n"
+				    ^"In Term: " ^ Ocl2String.ocl2string false term ^ "\n")
 	     in
-		 []
+	       []
 	     end
 	   | NotYetSupportedError mes =>
 	     let
-		 val _ = trace zero ("\n\n#################################################\n")
-		 val _ = trace zero ("NotYetSupportedError:\n")
-		 val _ = trace zero ("Error Message: " ^ mes ^ "\n")
+	       val _ = Logger.error ("NotYetSupportedError:\n"
+				     ^"Error Message: " ^ mes ^ "\n")
 	     in
-		 []
+	       []
 	     end
 	   | ContextToClassifierError (term,mes) =>
 	     let
-		 val _ = trace zero ("\n\n#################################################\n")
-		 val _ = trace zero ("ContextToClassifierError:\n")
-		 val _ = trace zero ("Error Message: " ^ mes ^ "\n")
-		 val _ = trace zero ("In Term: " ^ Ocl2String.ocl2string false term ^ "\n")
+	       val _ = Logger.error ("ContextToClassifierError:\n"
+				     ^"Error Message: " ^ mes ^ "\n"
+				     ^"In Term: " ^ Ocl2String.ocl2string false term ^ "\n")
 	     in
-		 []
+	       []
 	     end
 	   | OperationUpdateError (meth_path,cond_type,term,mes) =>
 	     let
-		 val _ = trace zero ("\n\n#################################################\n")
-		 val _ = trace zero ("AlreadyInitValueError:\n")
-		 val _ = trace zero ("Error Message: " ^ mes ^ "\n")
-		 val _ = trace zero ("In condition: " ^ (cond_type_to_string cond_type) ^ "\n")
-		 val _ = trace zero ("In operation: " ^ (meth_path) ^ "\n")
-		 val _ = trace zero ("In Term: " ^ Ocl2String.ocl2string false term ^ "\n")
+	       val _ = Logger.error ("AlreadyInitValueError:\n"
+				     ^"Error Message: " ^ mes ^ "\n"
+				     ^"In condition: " ^ (cond_type_to_string cond_type) ^ "\n"
+				     ^"In operation: " ^ (meth_path) ^ "\n"
+				     ^"In Term: " ^ Ocl2String.ocl2string false term ^ "\n")
 	     in
-		 []
+	       []
 	     end
   end
 | gen_updated_classifier_list (NONE::context_list_tail) model = gen_updated_classifier_list context_list_tail model

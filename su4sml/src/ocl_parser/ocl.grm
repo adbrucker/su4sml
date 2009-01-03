@@ -60,7 +60,6 @@ THIS POINTS HAVE TO BE NOTICED TO UNDERSTAND THE SEMANTICS OF:
 *)
 
 
-open Rep_Logger
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType
@@ -326,8 +325,8 @@ package_constraint_list_cs_p :   package_constraint_list_cs							(package_const
                                | package_constraint_list_cs package_constraint_list_cs_p			(package_constraint_list_cs@package_constraint_list_cs_p)
 
 (* RETURN: context list *)
-package_constraint_list_cs :    PACKAGE path_name_cs ENDPACKAGE							(trace low ("Starts creatind empty package ... " ^ "\n"); ([Empty_context ("this is an empty context", Literal ("empty",OclVoid))]))
-                               | PACKAGE path_name_cs context_declaration_list_cs ENDPACKAGE			(trace low ("Starts creating contextes ..." ^ "\n"); (list_extend_path path_name_cs context_declaration_list_cs))
+package_constraint_list_cs :    PACKAGE path_name_cs ENDPACKAGE							(Logger.debug3 ("Starts creatind empty package ... " ^ "\n"); ([Empty_context ("this is an empty context", Literal ("empty",OclVoid))]))
+                               | PACKAGE path_name_cs context_declaration_list_cs ENDPACKAGE			(Logger.debug3 ("Starts creating contextes ..." ^ "\n"); (list_extend_path path_name_cs context_declaration_list_cs))
 
 (* RETURN: context list *)
 context_declaration_list_cs :     context_declaration_cs							(context_declaration_cs)
@@ -344,7 +343,7 @@ attr_or_assoc_cs :               CONTEXT path_name_cs COLON type_specifier init_
  
 
 (* RETURN: string *)
-simple_name :			  SIMPLE_NAME								(trace low ("simple_name..." ^ "\n");SIMPLE_NAME)
+simple_name :			  SIMPLE_NAME								(Logger.debug3 ("simple_name..." ^ "\n");SIMPLE_NAME)
 
 (* RETURN: context list *)
 classifier_context_declaration_cs :      CONTEXT path_name_cs classifier_constraint_cs_p			(inv_list (path_name_cs, classifier_constraint_cs_p))
@@ -376,15 +375,15 @@ init_or_der_value_cs :                    INIT COLON ocl_expression_cs						(INI
                                         | DERIVE COLON ocl_expression_cs					(DERIVE, ocl_expression_cs)
 
 (* RETURN: (string option, OclTerm) 1.name 2.expression *)
-classifier_constraint_cs :                INV COLON ocl_expression_cs						(trace low ("INV COLON ocl_expression_cs ..." ^ "\n"); (NONE,ocl_expression_cs))
-					| INV simple_name COLON ocl_expression_cs				(trace low ("INV simple_name COLON ocl_expression_cs ..." ^ "\n");(SOME(simple_name),ocl_expression_cs))
+classifier_constraint_cs :                INV COLON ocl_expression_cs						(Logger.debug3 ("INV COLON ocl_expression_cs ..." ^ "\n"); (NONE,ocl_expression_cs))
+					| INV simple_name COLON ocl_expression_cs				(Logger.debug3 ("INV simple_name COLON ocl_expression_cs ..." ^ "\n");(SOME(simple_name),ocl_expression_cs))
 					| DEF COLON definition_constraint_cs					(NONE,definition_constraint_cs)		
 					| DEF simple_name COLON definition_constraint_cs			(SOME(simple_name),definition_constraint_cs)
 									
 
 (* RETURN: (ConditionType, string option, OclTerm) 1.{Pre|Post|Body} 2. name 3.expression*)
-operation_constraint_cs :                 op_constraint_stereotype_cs COLON ocl_expression_cs			(trace low ("operation_constraint_cs 1..." ^ "\n"); (op_constraint_stereotype_cs,NONE,ocl_expression_cs))
-                                        | op_constraint_stereotype_cs simple_name COLON ocl_expression_cs	(trace low ("operation_constraint_cs 23454..." ^ "\n"); (op_constraint_stereotype_cs,SOME(simple_name),ocl_expression_cs))
+operation_constraint_cs :                 op_constraint_stereotype_cs COLON ocl_expression_cs			(Logger.debug3 ("operation_constraint_cs 1..." ^ "\n"); (op_constraint_stereotype_cs,NONE,ocl_expression_cs))
+                                        | op_constraint_stereotype_cs simple_name COLON ocl_expression_cs	(Logger.debug3 ("operation_constraint_cs 23454..." ^ "\n"); (op_constraint_stereotype_cs,SOME(simple_name),ocl_expression_cs))
 
 (* RETURN: (string option, OclTerm) 1.name 2.expression *)
 guard_constraint_cs :                     GUARD COLON ocl_expression_cs						(NONE,ocl_expression_cs)
@@ -395,7 +394,7 @@ guard_constraint_cs :                     GUARD COLON ocl_expression_cs						(NO
 definition_constraint_cs :             defined_entity_decl_cs EQUALS ocl_expression_cs				(OperationCall (defined_entity_decl_cs,DummyT,[OclLibPackage,"DummyT",EQUALS],[(ocl_expression_cs,DummyT)],DummyT))	
 
 (* RETURN: OclTerm *)
-defined_entity_decl_cs :               ocl_attribute_defined_entity_decl_cs					(trace low ("AttributeCall 1 ..." ^ "\n");AttributeCall (Literal ("self2",DummyT),DummyT,[#1(ocl_attribute_defined_entity_decl_cs)],#2(ocl_attribute_defined_entity_decl_cs)))
+defined_entity_decl_cs :               ocl_attribute_defined_entity_decl_cs					(Logger.debug3 ("AttributeCall 1 ..." ^ "\n");AttributeCall (Literal ("self2",DummyT),DummyT,[#1(ocl_attribute_defined_entity_decl_cs)],#2(ocl_attribute_defined_entity_decl_cs)))
                                         | ocl_operation_defined_entity_decl_cs					(OperationCall (Literal ("self2",DummyT),DummyT,[#1(ocl_operation_defined_entity_decl_cs)],List.map gen_literal_term (real_signature (#2(ocl_operation_defined_entity_decl_cs))),#2(List.last (#2(ocl_operation_defined_entity_decl_cs)))))
 
 (* RETURN: (string * OclType) *)
@@ -408,12 +407,12 @@ ocl_operation_defined_entity_decl_cs :	simple_name operation_signature_cs					(s
 
 (* RETURN: (string * OclType) list *)
 (* last element of list is the return type. Only second part of tuple then used *)
-operation_signature_cs :                  PAREN_OPEN PAREN_CLOSE						(trace low  ("operation_signature_cs ..." ^ "\n");[("",OclVoid)])
-                                        | PAREN_OPEN PAREN_CLOSE operation_return_type_specifier_cs		(trace low ("operation_signature_cs ..." ^ "\n");[("",operation_return_type_specifier_cs)])
-                                        | PAREN_OPEN formal_parameter_list_cs PAREN_CLOSE 			(trace low ("operation_signature_cs ..." ^ "\n");formal_parameter_list_cs@[("",OclVoid)])
-                                        | PAREN_OPEN formal_parameter_list_cs PAREN_CLOSE operation_return_type_specifier_cs	(trace low ("operation_signature_cs ..." ^ "\n");formal_parameter_list_cs@[("",operation_return_type_specifier_cs)])
+operation_signature_cs :                  PAREN_OPEN PAREN_CLOSE						(Logger.debug3  ("operation_signature_cs ..." ^ "\n");[("",OclVoid)])
+                                        | PAREN_OPEN PAREN_CLOSE operation_return_type_specifier_cs		(Logger.debug3 ("operation_signature_cs ..." ^ "\n");[("",operation_return_type_specifier_cs)])
+                                        | PAREN_OPEN formal_parameter_list_cs PAREN_CLOSE 			(Logger.debug3 ("operation_signature_cs ..." ^ "\n");formal_parameter_list_cs@[("",OclVoid)])
+                                        | PAREN_OPEN formal_parameter_list_cs PAREN_CLOSE operation_return_type_specifier_cs	(Logger.debug3 ("operation_signature_cs ..." ^ "\n");formal_parameter_list_cs@[("",operation_return_type_specifier_cs)])
 (* RETURN: OclType *) 
-operation_return_type_specifier_cs :      COLON type_specifier							(trace low ("Contextes created form list of Attributes ..." ^ "\n");type_specifier)
+operation_return_type_specifier_cs :      COLON type_specifier							(Logger.debug3 ("Contextes created form list of Attributes ..." ^ "\n");type_specifier)
 (* RETURN: (ConditionType) *)
 op_constraint_stereotype_cs :             PRE									(PRE)
                                         | POST									(POST)
@@ -472,9 +471,9 @@ tuple_type_specifier_cs :                 TUPLE_TYPE PAREN_OPEN PAREN_CLOSE     
 *)
 
 (* RETURN: OclTerm *)
-ocl_expression_cs :                       logical_exp_cs							(trace low ("ocl_expression_cs..." ^ "\n");logical_exp_cs)
+ocl_expression_cs :                       logical_exp_cs							(Logger.debug3 ("ocl_expression_cs..." ^ "\n");logical_exp_cs)
 
-					| let_exp_cs								(trace low ("ocl_expression_cs..." ^ "\n");let_exp_cs)
+					| let_exp_cs								(Logger.debug3 ("ocl_expression_cs..." ^ "\n");let_exp_cs)
                                         
 (* RETURN: OclTerm *)
 let_exp_cs :                              LET initialized_variable_list_cs IN expression			(gen_let_term initialized_variable_list_cs expression) 	
@@ -508,30 +507,30 @@ ocl_op_name :				  OCLISKINDOF								(OCLISKINDOF)
 					| OCLISTYPEOF								(OCLISTYPEOF)
 					| OCLASTYPE								(OCLASTYPE)
 (* RETURN: Path *)
-path_name_cs :				  identifier_cs								(trace low ("path_name finished..." ^ "\n");[identifier_cs])
-					| path_name_head_cs identifier_cs					(trace low ("path_name generation ..." ^ "\n");path_name_head_cs@[identifier_cs])
+path_name_cs :				  identifier_cs								(Logger.debug3 ("path_name finished..." ^ "\n");[identifier_cs])
+					| path_name_head_cs identifier_cs					(Logger.debug3 ("path_name generation ..." ^ "\n");path_name_head_cs@[identifier_cs])
 
 (* RETURN : string *)
-identifier_cs :                           simple_name								(trace low ("path_name generation..." ^ "\n");simple_name)
+identifier_cs :                           simple_name								(Logger.debug3 ("path_name generation..." ^ "\n");simple_name)
                                         | ITERATE                                                               (ITERATE)     
 					| iterator_name_cs	                         			(iterator_name_cs)
                                         | ocl_op_name								(ocl_op_name)
 
 (* RETURN: Path *)
-path_name_head_cs :			  identifier_cs DBL_COLON						(trace low ("path_name generation..." ^ "\n");[identifier_cs])
-		                        | path_name_head_cs identifier_cs DBL_COLON                             (trace low ("path_name generation..." ^ "\n");path_name_head_cs@[identifier_cs])
+path_name_head_cs :			  identifier_cs DBL_COLON						(Logger.debug3 ("path_name generation..." ^ "\n");[identifier_cs])
+		                        | path_name_head_cs identifier_cs DBL_COLON                             (Logger.debug3 ("path_name generation..." ^ "\n");path_name_head_cs@[identifier_cs])
 
 (* RETURN: OclTerm *)
-literal_exp_cs :                         primitive_literal_exp_cs						(trace low ("primitive_literal_exp_cs..." ^ "\n");primitive_literal_exp_cs)                         
+literal_exp_cs :                         primitive_literal_exp_cs						(Logger.debug3 ("primitive_literal_exp_cs..." ^ "\n");primitive_literal_exp_cs)                         
                                        | collection_literal_exp_cs						(collection_literal_exp_cs)
 (* NOT YET SUPPORTED ...
                                         | tuple_literal_exp_cs							(tuple_literal_exp_cs)
 *)
 
-primitive_literal_exp_cs :                numeric_literal_exp_cs						(trace low ("numeric_literal_exp_cs..." ^ "\n");numeric_literal_exp_cs)
-                                        | string_literal_exp_cs							(trace low ("string_literal_exp_cs..." ^ "\n");string_literal_exp_cs)
+primitive_literal_exp_cs :                numeric_literal_exp_cs						(Logger.debug3 ("numeric_literal_exp_cs..." ^ "\n");numeric_literal_exp_cs)
+                                        | string_literal_exp_cs							(Logger.debug3 ("string_literal_exp_cs..." ^ "\n");string_literal_exp_cs)
                                         | boolean_literal_exp_cs						(boolean_literal_exp_cs)
-numeric_literal_exp_cs :                  INTEGER_LITERAL        	                              		(trace low ("INTEGER_LITERAL..." ^ "\n");Literal (INTEGER_LITERAL,Integer))
+numeric_literal_exp_cs :                  INTEGER_LITERAL        	                              		(Logger.debug3 ("INTEGER_LITERAL..." ^ "\n");Literal (INTEGER_LITERAL,Integer))
                                         | REAL_LITERAL                  	                       		(Literal (REAL_LITERAL,Real))
 string_literal_exp_cs :                   STRING_LITERAL                        	               		(Literal (STRING_LITERAL,String))
 boolean_literal_exp_cs :                  TRUE                                          	       		(Literal ("true",Boolean))
@@ -541,8 +540,8 @@ tuple_literal_exp_cs :                    TUPLE BRACE_OPEN initialized_variable_
 *)
 
 (* RETURN: OclTerm *)
-logical_exp_cs :                          relational_exp_cs							(trace low ("logical_exp_cs..." ^ "\n");relational_exp_cs)
-                                        | relational_exp_cs logical_exp_tail_cs_p 		        	(trace low ("logical_exp_cs..." ^ "\n");OperationCall(relational_exp_cs,Boolean,[OclLibPackage,"Boolean",#1(logical_exp_tail_cs_p)],[(#2(logical_exp_tail_cs_p),Boolean)],Boolean))
+logical_exp_cs :                          relational_exp_cs							(Logger.debug3 ("logical_exp_cs..." ^ "\n");relational_exp_cs)
+                                        | relational_exp_cs logical_exp_tail_cs_p 		        	(Logger.debug3 ("logical_exp_cs..." ^ "\n");OperationCall(relational_exp_cs,Boolean,[OclLibPackage,"Boolean",#1(logical_exp_tail_cs_p)],[(#2(logical_exp_tail_cs_p),Boolean)],Boolean))
 
 (* RETURN: (logic_op, OclTerm) *)
 logical_exp_tail_cs_p :                   logical_exp_tail_cs                                           	(logical_exp_tail_cs)
@@ -557,23 +556,23 @@ logic_op :                                LOG_AND                               
                                         | LOG_IMPL								(LOG_IMPL)
 
 (* RETURN: OclTerm *)
-relational_exp_cs :                       additive_exp_cs							(trace low ("additive_exp_cs..." ^ "\n");additive_exp_cs)
-                                        | additive_exp_cs relational_exp_tail_cs                        	(trace low ("additive_exp_cs relational_exp_tail_cs ..." ^ "\n");OperationCall(additive_exp_cs,DummyT,[OclLibPackage,"DummyT",#1(relational_exp_tail_cs)],[(#2(relational_exp_tail_cs),DummyT)],Boolean))
+relational_exp_cs :                       additive_exp_cs							(Logger.debug3 ("additive_exp_cs..." ^ "\n");additive_exp_cs)
+                                        | additive_exp_cs relational_exp_tail_cs                        	(Logger.debug3 ("additive_exp_cs relational_exp_tail_cs ..." ^ "\n");OperationCall(additive_exp_cs,DummyT,[OclLibPackage,"DummyT",#1(relational_exp_tail_cs)],[(#2(relational_exp_tail_cs),DummyT)],Boolean))
 
 (* RETURN: (rel_op, Ocl_Term) *)
-relational_exp_tail_cs :                  rel_op additive_exp_cs						(trace low ("relational_exp_tail_cs..." ^ "\n");(rel_op, additive_exp_cs))
+relational_exp_tail_cs :                  rel_op additive_exp_cs						(Logger.debug3 ("relational_exp_tail_cs..." ^ "\n");(rel_op, additive_exp_cs))
 
 (* RETURN: string *)
 rel_op :                                  EQUALS                                        	                (EQUALS)
-                                        | REL_GT								(trace low (">..." ^ "\n");REL_GT)
-                                        | REL_LT								(trace low ("<..." ^ "\n");REL_LT)
+                                        | REL_GT								(Logger.debug3 (">..." ^ "\n");REL_GT)
+                                        | REL_LT								(Logger.debug3 ("<..." ^ "\n");REL_LT)
                                         | REL_GTE                                                    		(REL_GTE) 
                                         | REL_LTE                                                    		(REL_LTE)
 					| REL_NOTEQUAL                                                          (REL_NOTEQUAL)
 
 (* RETURN: OclTerm *)
-additive_exp_cs :                         multiplicative_exp_cs							(trace low ("multiplicative_exp_cs..." ^ "\n");multiplicative_exp_cs)
-                                        | multiplicative_exp_cs additive_exp_tail_cs_p     			(trace low ("multiplicative_exp_cs additive_exp_tail_cs_p..." ^ "\n");OperationCall (multiplicative_exp_cs,DummyT,[OclLibPackage,"DummyT",#1(additive_exp_tail_cs_p)],[(#2(additive_exp_tail_cs_p),DummyT)],DummyT))
+additive_exp_cs :                         multiplicative_exp_cs							(Logger.debug3 ("multiplicative_exp_cs..." ^ "\n");multiplicative_exp_cs)
+                                        | multiplicative_exp_cs additive_exp_tail_cs_p     			(Logger.debug3 ("multiplicative_exp_cs additive_exp_tail_cs_p..." ^ "\n");OperationCall (multiplicative_exp_cs,DummyT,[OclLibPackage,"DummyT",#1(additive_exp_tail_cs_p)],[(#2(additive_exp_tail_cs_p),DummyT)],DummyT))
 
 (* RETURN: (add_op, Ocl_Term) *)
 additive_exp_tail_cs_p :                  additive_exp_tail_cs                                      	 	(additive_exp_tail_cs)
@@ -585,7 +584,7 @@ additive_exp_tail_cs :                    add_op multiplicative_exp_cs          
 add_op:                                   PLUS                                                       		(PLUS)
                                         | MINUS                                    	                  	(MINUS) 
 (* RETURN: OclTerm *)
-multiplicative_exp_cs:                    unary_exp_cs                                  	                (trace low ("unary_exp_cs ..." ^ "\n");unary_exp_cs)
+multiplicative_exp_cs:                    unary_exp_cs                                  	                (Logger.debug3 ("unary_exp_cs ..." ^ "\n");unary_exp_cs)
                                         | unary_exp_cs multiplicative_exp_tail_cs_p              	        (OperationCall (unary_exp_cs,DummyT,[OclLibPackage,"DummyT",#1(multiplicative_exp_tail_cs_p)],[(#2(multiplicative_exp_tail_cs_p),DummyT)],DummyT))
 
 (* RETURN: (mult_op, Ocl_Term ) *)
@@ -607,22 +606,22 @@ unary_op :                                MINUS                                 
 
 (* RETURN: OclTerm *)
 postfix_exp_cs :                          primary_exp_cs  							(primary_exp_cs)
-                                        | primary_exp_cs postfix_exp_tail_cs_p                          	(trace low ("literal_call_exp_cs..." ^ "\n");nest_source ([primary_exp_cs]@postfix_exp_tail_cs_p))
+                                        | primary_exp_cs postfix_exp_tail_cs_p                          	(Logger.debug3 ("literal_call_exp_cs..." ^ "\n");nest_source ([primary_exp_cs]@postfix_exp_tail_cs_p))
 (* NOT YET IMPLEMENTED 
 					| msg_operator_cs signal_spec_exp_cs
 *)
 (* RETURN: OclTerm *)
-primary_exp_cs :                          literal_exp_cs                          	                      	(trace low ("literal_call_exp_cs..." ^ "\n");literal_exp_cs)
+primary_exp_cs :                          literal_exp_cs                          	                      	(Logger.debug3 ("literal_call_exp_cs..." ^ "\n");literal_exp_cs)
                                         | PAREN_OPEN expression PAREN_CLOSE             	             	(expression)
-                                        | property_call_exp_cs                                  	        (trace low ("property_call_exp_cs..." ^ "\n");property_call_exp_cs)
+                                        | property_call_exp_cs                                  	        (Logger.debug3 ("property_call_exp_cs..." ^ "\n");property_call_exp_cs)
                                         | if_exp_cs                                                     	(if_exp_cs)
 
 (* RETURN: OclTerm *)
 if_exp_cs:                                IF logical_exp_cs THEN ocl_expression_cs ELSE ocl_expression_cs ENDIF                              (If (logical_exp_cs,DummyT,ocl_expression_cs1,DummyT,ocl_expression_cs2,DummyT,DummyT))
 
 (* RETURN: OclTerm list *)
-postfix_exp_tail_cs_p :                   postfix_exp_tail_cs							(trace low ("end of recursion..." ^ Ocl2String.ocl2string false postfix_exp_tail_cs ^ "\n");[postfix_exp_tail_cs])
-                                        | postfix_exp_tail_cs postfix_exp_tail_cs_p				(trace low ("add_source ..." ^ "\n" ^  "done");([postfix_exp_tail_cs]@postfix_exp_tail_cs_p))
+postfix_exp_tail_cs_p :                   postfix_exp_tail_cs							(Logger.debug3 ("end of recursion..." ^ Ocl2String.ocl2string false postfix_exp_tail_cs ^ "\n");[postfix_exp_tail_cs])
+                                        | postfix_exp_tail_cs postfix_exp_tail_cs_p				(Logger.debug3 ("add_source ..." ^ "\n" ^  "done");([postfix_exp_tail_cs]@postfix_exp_tail_cs_p))
 
 (* RETURN: OclTerm *)
 postfix_exp_tail_cs :                     DOT property_call_exp_cs						(property_call_exp_cs) 
@@ -646,8 +645,8 @@ property_call_exp_cs :                    path_name_cs								(AttributeCall (Va
 
 (* RETURN: OclTerm *)
 arrow_property_call_exp_cs:             iterator_name_cs PAREN_OPEN expression PAREN_CLOSE (Iterator (iterator_name_cs,[],Variable("dummy_source",DummyT),DummyT,expression,DummyT,DummyT))
-    					| iterator_name_cs PAREN_OPEN iterator_vars_cs expression PAREN_CLOSE (trace low ("arrow_property_call_cs: iterator with vars..." ^ "\n");Iterator (iterator_name_cs,iterator_vars_cs,Variable("dummy_source",DummyT),DummyT,expression,DummyT,DummyT))
-					| simple_name PAREN_OPEN PAREN_CLOSE                                     (trace low ("arrow_property_call_exp_cs..." ^ "\n");OperationCall (Variable ("dummy_source",DummyT),DummyT,(["arrow"]@[simple_name]),[],DummyT))
+    					| iterator_name_cs PAREN_OPEN iterator_vars_cs expression PAREN_CLOSE (Logger.debug3 ("arrow_property_call_cs: iterator with vars..." ^ "\n");Iterator (iterator_name_cs,iterator_vars_cs,Variable("dummy_source",DummyT),DummyT,expression,DummyT,DummyT))
+					| simple_name PAREN_OPEN PAREN_CLOSE                                     (Logger.debug3 ("arrow_property_call_exp_cs..." ^ "\n");OperationCall (Variable ("dummy_source",DummyT),DummyT,(["arrow"]@[simple_name]),[],DummyT))
 					| simple_name PAREN_OPEN actual_parameter_list_cs PAREN_CLOSE            (OperationCall (Variable ("dummy_source",DummyT),DummyT,(["arrow"]@[simple_name]),actual_parameter_list_cs,DummyT))
 (*
                                         | ITERATE PAREN_OPEN initialized_variable_cs VERTICAL_BAR expression PAREN_CLOSE  (Iterate ([],(#1 initialized_variable_cs),(#2 initialized_variable_cs),(#3 initialized_variable_cs),Variable ("dummy_source",DummyT),DummyT,expression,DummyT,DummyT))
@@ -711,7 +710,7 @@ formal_parameter_cs :			  simple_name formal_parameter_type_specifier				(simple
 formal_parameter_type_specifier :         COLON type_specifier							(type_specifier)
 
 (* RETURN: OclType *)
-type_specifier:                           simple_type_specifier_cs                                              (trace low ("type_specifier ..." ^ "\n");simple_type_specifier_cs)
+type_specifier:                           simple_type_specifier_cs                                              (Logger.debug3 ("type_specifier ..." ^ "\n");simple_type_specifier_cs)
                                         | collection_type_specifier_cs                                          (collection_type_specifier_cs)  
 (*
 	                                | typle_type_specifier_cs
@@ -719,7 +718,7 @@ type_specifier:                           simple_type_specifier_cs              
 *)
 
 (* RETURN: OclType *)
-simple_type_specifier_cs :                simple_name                                                           (trace wgen ("simple_type_name_specifier_cs : " ^ simple_name ^ "\n");string_to_type simple_name)                                                          
+simple_type_specifier_cs :                simple_name                                                           (Logger.debug3 ("simple_type_name_specifier_cs : " ^ simple_name ^ "\n");string_to_type simple_name)                                                          
 
 
 (* RETURN: (string * OclType * OclTerm) list *)

@@ -43,7 +43,6 @@
 (* Probably, some things have to be adjusted to Java syntax *)
 functor Java_Cartridge(SuperCart : BASE_CARTRIDGE) : BASE_CARTRIDGE =
 struct
-open Rep_Logger
 open Rep_OclType
 	 
 	 

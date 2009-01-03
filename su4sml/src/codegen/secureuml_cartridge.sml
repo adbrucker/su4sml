@@ -75,7 +75,6 @@ functor SecureUML_Cartridge(structure SuperCart : BASE_CARTRIDGE;
                             structure D: DESIGN_LANGUAGE) : SECUREUML_CARTRIDGE =
 struct
 
-open Rep_Logger
 structure Security = SecureUML(structure Design = D)
 
 (*type Model = Rep.Classifier list * Security.Configuration*)
@@ -154,7 +153,7 @@ fun lookup env "permission_name" = #name (curPermission' env)
   | lookup env "subject_name"    = (Security.subject_name_of o valOf o curSubject) env
   | lookup env "superrole_name"  = (name_of_role o valOf o curSuperrole) env
   | lookup env s                 =  SuperCart.lookup (unpack env) s
-    handle Option => error "variable outside of context"
+    handle Option => Logger.error "variable outside of context"
 (********** ADDING IF-CONDITION TYPE *****************************************)
 fun test env "first_permission" = (curPermission' env = hd (PermissionSet env))
   | test env "first_role"       = (curRole' env = hd (#roles (curPermission' env)))
@@ -193,7 +192,7 @@ fun foreach_role (env:environment)
 (** iterate over all superroles in the context of a role *)
 fun foreach_superrole (env:environment) =
     let val cur = valOf (curRole env )
-                  handle Option => error ("no current role")
+                  handle Option => Logger.error ("no current role")
         val superroles = List.mapPartial (fn (r,s) => if r=cur then SOME s
                                                       else NONE) 
                                          (#rh (security_conf  env))

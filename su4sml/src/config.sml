@@ -2,11 +2,10 @@
  * su4sml --- a SML repository for managing (Secure)UML/OCL models
  *             http://projects.brucker.ch/su4sml/
  *                                                                            
- * polyml.sml --- interactive eval for poly/ml 5.2 and later 
+ * config.sml --- 
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007 ETH Zurich, Switzerland
- *               2008      Achim D. Brucker, Germany
+ * Copyright (c) 2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -38,46 +37,26 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************)
-(* $Id: polyml.sml 7549 2008-03-27 21:54:01Z brucker $ *)
+(* $Id$ *)
 
-structure CompilerExt : COMPILER_EXT = 
+signature CONFIG = 
+sig
+    val su4sml_home                : unit -> string
+end
+
+structure Config:>CONFIG = 
 struct
 
-exception EvalNotSupported
-fun drop_last [] = []
-  | drop_last [x] = []
-  | drop_last (x :: xs) = x :: drop_last xs;
-
-fun eval verbose txt =
-    let 
-	fun eval_fh (print, err) verbose txt =
-	    let
-		val in_buffer = ref (explode txt);
-		val out_buffer = ref ([]: string list);
-		fun output () = SML90.implode (drop_last (rev (! out_buffer)));
-		    
-		fun get () =
-		    (case ! in_buffer of
-			 [] => NONE
-		       | c :: cs => (in_buffer := cs; SOME  c));
-		fun put s = out_buffer := s :: ! out_buffer;
-		    
-
-		val parameters =
-		    [PolyML.Compiler.CPOutStream put]
-
-		fun exec () =
-		    (case ! in_buffer of
-			 [] => ()
-		       | _ => (PolyML.compiler (get, parameters) (); exec ()));
-	    in
-		exec () handle exn => (err (output ()); raise exn);
-		if verbose then print (output ()) else ()
-	    end
-    in	
-	eval_fh (fn s => print (s^"\n"), fn s => Logger.error (s^"\n")) verbose txt
-    end
-
-fun exnHistory _ = []
+(* HOLOCL_HOME resp. SU4SML_HOME should point to the top-level directory *)
+(* of the corresponding library.  The semantics of UML2CDL_HOME should   *)
+(* probably be fixed                                                     *)
+fun su4sml_home () = case OS.Process.getEnv "HOLOCL_HOME" of
+			 SOME p => p^"/lib/su4sml/src"
+		       | NONE   => (case OS.Process.getEnv "SU4SML_HOME" of
+				        SOME p => p^"/src"
+				      | NONE => (case OS.Process.getEnv "UML2CDL_HOME" of 
+                                                     SOME p => p^"../../../src"
+                                                   | NONE => ".")
+                                   )
 
 end

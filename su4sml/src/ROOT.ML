@@ -39,6 +39,7 @@
  ******************************************************************************)
 (* $Id$ *)
 
+use "config.sml";
 use "rep_helper.sml";
 use "rep_logger.sml";
 use "stringHandling.sml";

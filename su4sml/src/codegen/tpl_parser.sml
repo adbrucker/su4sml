@@ -61,14 +61,13 @@ end
 
 structure Tpl_Parser :  TPL_PARSER = 
 struct
-open Rep_Logger
 open Gcg_Helper
 
 val tplStream = ref (TextIO.openString "@// dummy template\n");
 
 fun opentFile file = (TextIO.closeIn (!tplStream) ; 
                       tplStream := (TextIO.openIn file))
-    handle ex => error ("in Tpl_Parser.opentFile: \
+    handle ex => Logger.error ("in Tpl_Parser.opentFile: \
                         \couldn't open preprocessed template file: "^
                         General.exnMessage ex)
                  
@@ -157,7 +156,7 @@ fun getType l = let val sl = tokenize l
                     then "text" (* rather: comment? *)
                     else hd (tokenSplit #" " (String.concat sl))
                 end
-                handle ex => error ("in Tpl_Parser.getType: "^General.exnMessage ex)
+                handle ex => Logger.error ("in Tpl_Parser.getType: "^General.exnMessage ex)
 
 (** 
  * getContent line 
@@ -169,7 +168,7 @@ fun getContent l = let val sl = tokenize l
                        else if  (length sl = 1) then hd sl
                        else String.concat (tl (fieldSplit #" " (String.concat (tl sl))))
                    end
-    handle ex => error ("in Tpl_Parser.getContent: "^General.exnMessage ex)
+    handle ex => Logger.error ("in Tpl_Parser.getContent: "^General.exnMessage ex)
 
 (** cleans line, replaces nl and tabs so that no space char is left out. *)
 fun preprocess s = replaceSafely "@spc" " " (replaceSafely "@tab" "\t" (replaceSafely "@nl" "\n" (cleanLine s)))
@@ -194,18 +193,18 @@ fun buildTree (SOME line) =
                                      :: buildTree (readNextLine())
           | getNode ("eval", expr) = EvalLeaf [ TextLeaf expr ]:: buildTree (readNextLine())
           | getNode ("end",_)      = []
-          | getNode (t,c)          = error ("in Tpl_Parser.buildTree: error while parsing \
+          | getNode (t,c)          = Logger.error ("in Tpl_Parser.buildTree: error while parsing \
                                             \node \""^t^"\" with content \""^c^"\".")
         val prLine = preprocess line  
     in
         getNode ((getType prLine),(getContent prLine))
      end
-     handle ex => error ("in Tpl_Parser.buildTree: error "^General.exnMessage ex))
+     handle ex => Logger.error ("in Tpl_Parser.buildTree: error "^General.exnMessage ex))
   | buildTree NONE  = []
     
 
 
-fun codegen_home _ = getOpt (OS.Process.getEnv "CODEGEN_HOME", su4sml_home()^"/codegen")
+fun codegen_home _ = getOpt (OS.Process.getEnv "CODEGEN_HOME", Config.su4sml_home()^"/codegen")
                      
 (** calls the external cpp ( C PreProcessor).
  * writes merged template to a file with extension .tmp instead of .tpl
@@ -223,7 +222,7 @@ fun call_cpp file =
 (**  parse template-file
  *  @return the parsed template tree                 
  *)
-fun parse file = let val _         = info ("parsing  template "^file)
+fun parse file = let val _         = Logger.info ("parsing  template "^file)
                      val mergedTpl = call_cpp file;
                      val _         = opentFile mergedTpl;
                      val pt        = RootNode(buildTree (readNextLine()));

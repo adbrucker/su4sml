@@ -93,29 +93,29 @@ fun check uml ocl = let
   val ocl = ModelImport.parseOCL ocl
       handle _ => []
   val OclParse = if ocl = [] then false else true
-  val _         = print "### Preprocess Context List ###\n"
+  val _         = Logger.info "### Preprocess Context List ###\n"
   val fixed_ocl = Preprocessor.preprocess_context_list
                       ocl ((OclLibrary.oclLib)@(#1 xmi))
       handle _ => []
   val OclPreprocess = if fixed_ocl = [] then false else true
   val OclPreprocess = OclPreprocess andalso OclParse
-  val _         = print "### Finished Preprocess Context List ###\n\n"
+  val _         = Logger.info "### Finished Preprocess Context List ###\n\n"
 		  
-  val _         = print "### Type Checking ###\n"
+  val _         = Logger.info "### Type Checking ###\n"
   val typed_cl  = TypeChecker.check_context_list
                       fixed_ocl (((OclLibrary.oclLib)@(#1 xmi)),#2 xmi)
       handle _ => []
   val OclTC     = if typed_cl = [] then false else true
   val OclTC     = OclTC andalso OclPreprocess
-  val _         = print "### Finished Type Checking ###\n\n"
+  val _         = Logger.info "### Finished Type Checking ###\n\n"
 		  
-  val _         = print"### Updating Classifier List ###\n"
+  val _         = Logger.info "### Updating Classifier List ###\n"
   val model     = Update_Model.gen_updated_classifier_list
                       typed_cl ((OclLibrary.oclLib)@(#1 xmi))
       handle _ => []
   val modelUpdate = if model = [] then false else true
   val modelUpdate = modelUpdate andalso OclTC
-  val _         = print "### Finished Updating Classifier List ###\n"
+  val _         = Logger.info "### Finished Updating Classifier List ###\n"
   
 		  
   fun printBool b = if b then "passed" else "FAILED"
@@ -136,8 +136,7 @@ end
 fun main (name:string,args:(string list)) = 
     let 
       val prgName = (hd o rev) (String.fields (fn s => s = #"/" orelse s = #"\\") name); 
-      val _ = print ("Name: "^prgName^"\n");
-      val _ = (Rep_Logger.log_level := 2)
+      val _ = Logger.set_log_level Logger.WARN
     in
       case (prgName,args) of 
 	(n, [])                       => print_usage n

@@ -6,7 +6,7 @@
  * This file is part of su4sml.
  *
  * Copyright (c) 2005-2007 ETH Zurich, Switzerland
- *               2008      Achim D. Brucker, Germany
+ *               2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -73,7 +73,6 @@ end
 structure TypeChecker:TYPECHECKER  = 
  struct
 
-open Rep_Logger
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType
@@ -127,7 +126,7 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
     then (* OperationCall *)
 	let
 	    (* check 'fromSet' *)
-	    val _ = trace type_checker ("==> FromSet-desugarator: operation ... \n")
+	    val _ = Logger.debug3 ("==> FromSet-desugarator: operation ... \n")
 	    val new_type = type_of_template_parameter (type_of_term rterm)
 	    val iterVar = (("anonIterVar_" ^ (varcounter.nextStr())),new_type)
 	    val class = class_of_term (Variable (iterVar)) model
@@ -146,7 +145,7 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
     else (* AttributeCall *)
 	let
 	    (* check 'fromSet' *)
-	    val _ = trace type_checker ("==> FromSet-desugarator: attribute/assocend ... \n")
+	    val _ = Logger.debug3 ("==> FromSet-desugarator: attribute/assocend ... \n")
 	    val new_type = type_of_template_parameter (type_of_term rterm)
 	    val iterVar = (("anonIterVar_" ^ (varcounter.nextStr())),new_type)
 	    val class = class_of_term (Variable (iterVar)) model
@@ -158,7 +157,7 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
 		let
 		    val insert_term = upcast_att_aend attrs_or_assocs (Variable iterVar) model
 		    val it_type = type_of_term insert_term
-		    val _ = trace development ("association type " ^ string_of_OclType it_type ^ "\n")
+		    val _ = Logger.debug4 ("association type " ^ string_of_OclType it_type ^ "\n")
         	    (* special case *)
         	   (* if it is an attribute, there needs to be added a collection type constructor *)
 		
@@ -193,13 +192,13 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
 fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
     let
         val _ = if isColl_Type (type_of_term rterm) then print "\n error in AsSet_Desugarotr\n"  else ()
-	val _ = (trace function_calls ("TypeChecker.AsSet_desugarator class= " ^ (string_of_OclType (type_of_term rterm)) ^ " , attr\n"))
+	val _ = (Logger.debug2 ("TypeChecker.AsSet_desugarator class= " ^ (string_of_OclType (type_of_term rterm)) ^ " , attr\n"))
 	val res = if (attr_or_meth = 0) 
 		  then (* OperationCall *)
 		      let
-			  val _ = trace type_checker ("==> AsSet-desugarator: operation ... \n")
+			  val _ = Logger.debug3 ("==> AsSet-desugarator: operation ... \n")
 			  val rtyp = Set(type_of_term rterm)
-			  val _ = trace type_checker ("Type of source term " ^ string_of_OclType rtyp ^ " ---> try Set(" ^ string_of_OclType rtyp ^ ")\n")
+			  val _ = Logger.debug3 ("Type of source term " ^ string_of_OclType rtyp ^ " ---> try Set(" ^ string_of_OclType rtyp ^ ")\n")
 			  val class = class_of_term (Variable ("anonIterVar_" ^ (varcounter.nextStr()),rtyp)) model
 			  val ops = get_overloaded_methods class (List.last path) model
 			  val new_rterm = CollectionLiteral([CollectionItem(rterm,type_of_term rterm)],rtyp)
@@ -215,14 +214,14 @@ in
 		      end
 		  else (* AttributeCall *)
 		      let
-			  val _ = trace type_checker ("==> AsSet-desugarator: attribute/assocend\n")
+			  val _ = Logger.debug3 ("==> AsSet-desugarator: attribute/assocend\n")
 			  val rtyp = Set(type_of_term rterm)
-			  val _ = trace type_checker (string_of_OclType rtyp ^ "\n")
+			  val _ = Logger.debug3 (string_of_OclType rtyp ^ "\n")
 			  val class = class_of_term (Variable ("anonIterVar_" ^ (varcounter.nextStr()),Set(rtyp))) model
 			  val attrs = get_overloaded_attrs_or_assocends class (List.last path) model
 			  (* source term is a dummy-Term *) 
 			  val new_rterm = CollectionLiteral([CollectionItem(rterm,type_of_term rterm)],rtyp)
-			  val _ = trace type_checker ("'AsSetError' ... \n")
+			  val _ = Logger.debug3 ("'AsSetError' ... \n")
 		      in
 			  if (List.length attrs = 0) 
 			  then 
@@ -230,7 +229,7 @@ in
 			  else 
 			      upcast_att_aend attrs new_rterm model
 		      end
-	val _ = trace function_ends ("TypeChecker.AsSet_desugarator class= " ^ (string_of_OclType (type_of_term rterm)) ^ " , attr\n")
+	val _ = Logger.debug2 ("TypeChecker.AsSet_desugarator class= " ^ (string_of_OclType (type_of_term rterm)) ^ " , attr\n")
     in
 	res
     end
@@ -243,17 +242,17 @@ in
 (* RETURN: CollectionPart *)
 fun resolve_CollectionPart model (CollectionItem (term,typ))  =
     let
-	val _ = trace function_calls ("TypeChecker.resolve_CollectionPart " ^ (ocl2string false term) ^ "\n")
+	val _ = Logger.debug2 ("TypeChecker.resolve_CollectionPart " ^ (ocl2string false term) ^ "\n")
 	val rterm = resolve_OclTerm term model
 	val rtyp = type_of_term rterm
 	val res = (CollectionItem (rterm,rtyp))
-	val _ = trace function_ends ("TypeChecker.resolve_CollectionPart " ^ (ocl2string false term) ^ "\n")
+	val _ = Logger.debug2 ("TypeChecker.resolve_CollectionPart " ^ (ocl2string false term) ^ "\n")
     in
 	res
     end
   | resolve_CollectionPart model (CollectionRange (term1,term2,typ))  = 
     let
-	val _ = trace function_calls ("TypeChecker.resolve_CollectionPart " ^ (ocl2string false term1) ^ "\n")
+	val _ = Logger.debug2 ("TypeChecker.resolve_CollectionPart " ^ (ocl2string false term1) ^ "\n")
 	val rterm1 = resolve_OclTerm term1 model
 	val rtyp1 = type_of_term rterm1
 	val rterm2 = resolve_OclTerm term2 model
@@ -263,14 +262,14 @@ fun resolve_CollectionPart model (CollectionItem (term,typ))  =
 		(CollectionRange (rterm1,rterm2,rtyp1))
 	    else
 		raise (TC_CollectionRangeError ((CollectionRange (term1,term2,typ)),("Begin and end of Range not of same type.\n")))
-    	val _ = trace function_ends ("TypeChecker.resolve_CollectionPart " ^ (ocl2string false term1) ^ "\n")
+    	val _ = Logger.debug2 ("TypeChecker.resolve_CollectionPart " ^ (ocl2string false term1) ^ "\n")
     in
 	res
     end
 
 and resolve_CollectionLiteral (CollectionLiteral (part_list,typ)) model = 
     let
-	val _ = trace function_calls ("TypeChecker.resolve_CollectionLiteral\n ")
+	val _ = Logger.debug2 ("TypeChecker.resolve_CollectionLiteral\n ")
 	val rpart_list = List.map (resolve_CollectionPart model) part_list
 	val tlist = List.map (type_of_CollPart) rpart_list
 	val res = 
@@ -279,7 +278,7 @@ and resolve_CollectionLiteral (CollectionLiteral (part_list,typ)) model =
 		rpart_list
 	    else
 		raise TC_wrongCollectionLiteral ((CollectionLiteral (part_list,typ)),"Not all Literals have the same type.\n")
-	val _ = trace function_ends ("TypeChecker.resolve_CollectionLiteral\n ")
+	val _ = Logger.debug2 ("TypeChecker.resolve_CollectionLiteral\n ")
     in
 	res
     end
@@ -297,17 +296,17 @@ and resolve_arguments [] model = []
 (* RETURN: OclTerm *)
 and resolve_OclTerm (Literal (s,typ)) model = 
   let
-      val _ = trace function_calls ("TypeChecker.resolve_OclTerm Literal " ^ ocl2string false (Literal(s,typ)) ^ "\n")
-      val _ = trace medium ("RESOLVE Literal: " ^ s ^ "\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm Literal " ^ ocl2string false (Literal(s,typ)) ^ "\n")
+      val _ = Logger.debug2 ("RESOLVE Literal: " ^ s ^ "\n")
       val res = (Literal (s,typ))
-      val _ = trace function_ends ("TypeChecker.resolve_OclTerm Literal " ^ ocl2string false (Literal(s,typ)) ^ "\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm Literal " ^ ocl2string false (Literal(s,typ)) ^ "\n")
   in
       res
   end
 (* TupleLiteral *)
   | resolve_OclTerm (Tuple(x)) model =
     let
-	val _ = trace function_calls ("TypeChecker.resolve_OclTerm TupleLiteral " ^ ocl2string false (Tuple(x)) ^ "\n")
+	val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm TupleLiteral " ^ ocl2string false (Tuple(x)) ^ "\n")
 	val res = Tuple (List.map (fn (a,b,c) => 
 				  let
 				      val rterm = resolve_OclTerm b model
@@ -315,24 +314,24 @@ and resolve_OclTerm (Literal (s,typ)) model =
 				  in
 				      (a,rterm,rtype)
 				  end) x)
-	val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
+	val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm\n")
     in
 	res
     end
 (* Variable *)
   | resolve_OclTerm (Variable ("self",typ)) model = 
     let
-	val _ = trace function_calls ("TypeChecker.resolve_OclTerm Variable " ^ ocl2string false (Variable("self",typ)) ^ "\n")
+	val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm Variable " ^ ocl2string false (Variable("self",typ)) ^ "\n")
 	val res = (Variable ("self",typ)) 
-	val _ = trace function_ends ("TypeChecker.resolve_OclTerm Variable " ^ ocl2string false (Variable("self",typ)) ^ "\n")
+	val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm Variable " ^ ocl2string false (Variable("self",typ)) ^ "\n")
     in
 	res
     end
   | resolve_OclTerm (Variable (name,typ)) model = 
   let
-      val _ = trace function_calls ("TypeChecker.resolve_OclTerm Variable " ^ ocl2string false (Variable(name,typ)) ^ "\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm Variable " ^ ocl2string false (Variable(name,typ)) ^ "\n")
       val res = Variable (name,typ)
-      val _ = trace function_ends ("TypeChecker.resolve_OclTerm Variable " ^ ocl2string false (Variable(name,typ)) ^ "\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm Variable " ^ ocl2string false (Variable(name,typ)) ^ "\n")
   in
       res 
   end
@@ -343,20 +342,20 @@ and resolve_OclTerm (Literal (s,typ)) model =
 (* self.self -> self *)
 | resolve_OclTerm (AttributeCall (term,_,["self"],_)) model = 
   let
-      val _ = trace function_calls ("TypeChecker.resolve_OclTerm, AttributeCall, self, " ^ ocl2string false term ^ "\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm, AttributeCall, self, " ^ ocl2string false term ^ "\n")
       val res = (resolve_OclTerm term model)
-      val _ = trace function_ends ("TypeChecker.resolve_OclTerm, AttributeCall, self " ^ ocl2string false term ^ "\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm, AttributeCall, self " ^ ocl2string false term ^ "\n")
   in
       res
   end
 | resolve_OclTerm (AttributeCall (term,_,attr_path,_)) (model as (cls,assocs)) =
   let 
-      val _ = trace function_calls ("TypeChecker.resolve_OclTerm, AttributeCall, attribute name =  " ^ (List.last attr_path) ^ ", " ^ ocl2string true term ^ "\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm, AttributeCall, attribute name =  " ^ (List.last attr_path) ^ ", " ^ ocl2string true term ^ "\n")
       (* resolve source term *)
       val rterm = resolve_OclTerm term model
-      val _ = trace wgen ("res AttCall : arrow or not " ^ List.hd (attr_path) ^ "\n")
-      val _ = trace wgen ("res AttCall (" ^ (List.last attr_path) ^ ") : rterm = " ^ Ocl2String.ocl2string false rterm ^ "\n")
-      val _ = trace wgen ("res AttCall (" ^ (List.last attr_path) ^ ") : rtype = " ^ string_of_OclType (type_of_term rterm) ^ "\n")
+      val _ = Logger.debug3 ("res AttCall : arrow or not " ^ List.hd (attr_path) ^ "\n")
+      val _ = Logger.debug3 ("res AttCall (" ^ (List.last attr_path) ^ ") : rterm = " ^ Ocl2String.ocl2string false rterm ^ "\n")
+      val _ = Logger.debug3 ("res AttCall (" ^ (List.last attr_path) ^ ") : rtype = " ^ string_of_OclType (type_of_term rterm) ^ "\n")
       val res = 
 	  let
 	  in
@@ -371,16 +370,16 @@ and resolve_OclTerm (Literal (s,typ)) model =
 			 (
 			  (
 			   let
-			       val _ = trace type_checker ("==> 2-dim Inheritance check: attribute/assocend\n")
+			       val _ = Logger.debug3 ("==> 2-dim Inheritance check: attribute/assocend\n")
 			       val rtyp = type_of_term rterm
-			       val _ = trace type_checker (string_of_OclType rtyp ^"\n")
+			       val _ = Logger.debug3 (string_of_OclType rtyp ^"\n")
 			       val templ_type = type_of_template_parameter rtyp
 			       val pclass = class_of_term (Variable ("x",templ_type)) model
 			       val ntempl_type = type_of_parent pclass 
 			       val new_type = substitute_templ_para rtyp ntempl_type
 			       val new_class = class_of_term (Variable ("x",new_type)) model
 			       val attrs = get_overloaded_attrs_or_assocends new_class (List.last attr_path) model
-			       val _ = trace type_checker ("parent type of term:" ^ string_of_OclType new_type ^ "\n")
+			       val _ = Logger.debug3 ("parent type of term:" ^ string_of_OclType new_type ^ "\n")
 			   in
 			       if (List.length attrs = 0) 
 			       then raise TC_DesugaratorCall (rterm,attr_path,1,[],model) 
@@ -392,7 +391,7 @@ and resolve_OclTerm (Literal (s,typ)) model =
 			       | Empty => AsSet_desugarator rterm attr_path 1 [] model
 			 )
 	  end
-      val _ = trace function_ends ("TypeChecker.resolve_OclTerm \n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm \n")
   in
       res
   end
@@ -406,18 +405,18 @@ and resolve_OclTerm (Literal (s,typ)) model =
 	| attributes_to_path (AttributeCall(term,_,[correct_package_part],res_typ)) = 
 	  (correct_package_part)::(attributes_to_path term)
       (* prefix type of iterator variable *)
-      val _ = trace function_calls ("TypeChecker.resolve_OclTerm, OperationCallWithType = oclIsTypeOf, " ^ ocl2string true term ^"\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm, OperationCallWithType = oclIsTypeOf, " ^ ocl2string true term ^"\n")
       val rterm = resolve_OclTerm term model
-      val _ = trace type_checker ("res OpCall: oclIsTypeOf 2:  " ^ "\n")
+      val _ = Logger.debug3 ("res OpCall: oclIsTypeOf 2:  " ^ "\n")
       val rtyp = type_of_term rterm
-      val _ = trace type_checker ("res OpCall: oclIsTypeOf 3: "  ^ "\n")
+      val _ = Logger.debug3 ("res OpCall: oclIsTypeOf 3: "  ^ "\n")
       val path = (attributes_to_path source)@[string_path]
-      val _ = trace type_checker ("Path of the given type: " ^ string_of_path (path) ^ "\n")
+      val _ = Logger.debug3 ("Path of the given type: " ^ string_of_path (path) ^ "\n")
       val typ  = type_of_path path model
 		handle GetClassifierError s => raise TC_OperationWithTypeError ("Wrong or ommited package in a OperationWithType call. Please ajust the the package of the type.\n" ^ "OclTerm is: " ^ ocl2string true opcall ^ "\n")
-      val _ = trace type_checker ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
+      val _ = Logger.debug3 ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
       val res = OperationWithType (rterm,rtyp,"oclIsTypeOf",typ,Boolean)
-      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm\n")
   in
       res
   end  
@@ -429,18 +428,18 @@ let
 	| attributes_to_path (AttributeCall(term,_,[correct_package_part],res_typ)) = 
 	  (correct_package_part)::(attributes_to_path term)
       (* prefix type of iterator variable *)
-      val _ = trace function_calls ("TypeChecker.resolve_OclTerm, OperationCallWithType = oclIsTypeOf, " ^ ocl2string true term ^"\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm, OperationCallWithType = oclIsTypeOf, " ^ ocl2string true term ^"\n")
       val rterm = resolve_OclTerm term model
-      val _ = trace type_checker ("res OpCall: oclIsTypeOf 2:  " ^ "\n")
+      val _ = Logger.debug3 ("res OpCall: oclIsTypeOf 2:  " ^ "\n")
       val rtyp = type_of_term rterm
-      val _ = trace type_checker ("res OpCall: oclIsTypeOf 3: "  ^ "\n")
+      val _ = Logger.debug3 ("res OpCall: oclIsTypeOf 3: "  ^ "\n")
       val path = (attributes_to_path source)@[string_path]
-      val _ = trace type_checker ("Path of the given type: " ^ string_of_path (path) ^ "\n")
+      val _ = Logger.debug3 ("Path of the given type: " ^ string_of_path (path) ^ "\n")
       val typ  = type_of_path path model
 		handle GetClassifierError s => raise TC_OperationWithTypeError ("Wrong or ommited package in a OperationWithType call. Please ajust the the package of the type.\n" ^ "OclTerm is: " ^ ocl2string true opcall ^ "\n")
-      val _ = trace type_checker ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
+      val _ = Logger.debug3 ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
       val res = OperationWithType (rterm,rtyp,"oclIsKindOf",typ,Boolean)
-      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm\n")
   in
       res
   end
@@ -452,43 +451,43 @@ let
 	| attributes_to_path (AttributeCall(term,_,[correct_package_part],res_typ)) = 
 	  (correct_package_part)::(attributes_to_path term)
       (* prefix type of iterator variable *)
-      val _ = trace function_calls ("TypeChecker.resolve_OclTerm, OperationCallWithType = oclIsTypeOf, " ^ ocl2string true term ^"\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm, OperationCallWithType = oclIsTypeOf, " ^ ocl2string true term ^"\n")
       val rterm = resolve_OclTerm term model
-      val _ = trace type_checker ("res OpCall: oclIsTypeOf 2:  " ^ "\n")
+      val _ = Logger.debug3 ("res OpCall: oclIsTypeOf 2:  " ^ "\n")
       val rtyp = type_of_term rterm
-      val _ = trace type_checker ("res OpCall: oclIsTypeOf 3: "  ^ "\n")
+      val _ = Logger.debug3 ("res OpCall: oclIsTypeOf 3: "  ^ "\n")
       val path = (attributes_to_path source)@[string_path]
-      val _ = trace type_checker ("Path of the given type: " ^ string_of_path (path) ^ "\n")
+      val _ = Logger.debug3 ("Path of the given type: " ^ string_of_path (path) ^ "\n")
       val typ  = type_of_path path model
 		handle GetClassifierError s => raise TC_OperationWithTypeError ("Wrong or ommited package in a OperationWithType call. Please ajust the the package of the type.\n" ^ "OclTerm is: " ^ ocl2string true opcall ^ "\n")
-      val _ = trace type_checker ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
+      val _ = Logger.debug3 ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
       val res = OperationWithType (rterm,rtyp,"oclAsType",typ,typ)
-      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm\n")
   in
       res
   end
 (* HARD CODED STUFF *)
 | resolve_OclTerm (OperationCall (term,typ,[OclLibPackage,"OclAny","atPre"],[],_)) model = 
   let
-      val _ = trace function_calls  ("TypeChecker.resolve_OclTerm, OperationCall atPre, " ^ ocl2string true term ^ "\n")
+      val _ = Logger.debug2  ("TypeChecker.resolve_OclTerm, OperationCall atPre, " ^ ocl2string true term ^ "\n")
       (* resolve source term *)
       val rterm = resolve_OclTerm term model
       val rtyp = type_of_term rterm
-      val _ = trace type_checker  ("res OpCall: Type of source : " ^ string_of_OclType rtyp ^ "\n")
+      val _ = Logger.debug3  ("res OpCall: Type of source : " ^ string_of_OclType rtyp ^ "\n")
       val res = OperationCall (rterm,rtyp,[OclLibPackage,"OclAny","atPre"],[],rtyp)
-      val _ = trace function_ends ("TypeChecker.resovle_OclTerm\n")
+      val _ = Logger.debug2 ("TypeChecker.resovle_OclTerm\n")
   in
       res
   end
 | resolve_OclTerm (OperationCall (term,typ,meth_path,args,res_typ)) (model as (cls,assocs)) =
   let
-      val _ = trace function_calls ("TypeChecker.resolve_OclTerm, OperatioCall: name = " ^ (List.last (meth_path)) ^ ", " ^ ocl2string true term ^ "\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm, OperatioCall: name = " ^ (List.last (meth_path)) ^ ", " ^ ocl2string true term ^ "\n")
       (* resolve source term *)
       val rterm = resolve_OclTerm term model
-      val _ = trace type_checker  ("res OpCall: Type of source : " ^ string_of_OclType (type_of_term rterm) ^ "\n")
+      val _ = Logger.debug3  ("res OpCall: Type of source : " ^ string_of_OclType (type_of_term rterm) ^ "\n")
       (* resolve arguments *)
       val rargs = resolve_arguments args model
-      val _ = trace type_checker  ("res OpCall: args resolved ...\n")
+      val _ = Logger.debug3  ("res OpCall: args resolved ...\n")
       val res = 
 	  let
 	  in
@@ -502,17 +501,17 @@ let
 			 (     
 			  (
 			   let
-			       val _ = trace type_checker ("==> no 2-dim Inheritance check: attribute/assocend\n")
+			       val _ = Logger.debug3 ("==> no 2-dim Inheritance check: attribute/assocend\n")
 			       val rtyp = type_of_term rterm
-			       val _ = trace type_checker (string_of_OclType rtyp ^ "\n")
+			       val _ = Logger.debug3 (string_of_OclType rtyp ^ "\n")
 			       val templ_type = type_of_template_parameter rtyp
 			       val pclass = class_of_term (Variable ("x",templ_type)) model
 			       val ntempl_type = type_of_parent pclass 
-			       val _ = trace type_checker (string_of_OclType ntempl_type ^ "\n")
+			       val _ = Logger.debug3 (string_of_OclType ntempl_type ^ "\n")
 			       val new_type = substitute_templ_para rtyp ntempl_type
 			       val new_class = class_of_term (Variable ("x",new_type)) model
 			       val ops = get_overloaded_methods new_class (List.last meth_path) model
-			       val _ = trace type_checker ("parent type of term: " ^ string_of_OclType new_type ^ "\n")
+			       val _ = Logger.debug3 ("parent type of term: " ^ string_of_OclType new_type ^ "\n")
 			   in
 			       if (List.length ops = 0) 
 			       then raise TC_DesugaratorCall (rterm, meth_path, 0, rargs, model) 
@@ -524,7 +523,7 @@ let
 			       | Empty => AsSet_desugarator rterm meth_path 0 rargs model
 			 )
 	  end
-      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm\n")
   in
       res
   end
@@ -532,37 +531,37 @@ let
 | resolve_OclTerm (Iterator (name,iter_vars,source_term,_,expr,expr_typ,res_typ)) (model as (cls,assocs)) =
   let
       (* resolve source term, type *)      
-      val _ = trace function_calls ("TypeChecker.resolve_OclTerm,  Itertor: name = " ^ name ^ "\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm,  Itertor: name = " ^ name ^ "\n")
       val rterm = resolve_OclTerm source_term model
       val rtyp = type_of_term rterm
-      val _ = trace type_checker ("res Iter (" ^ name ^ "): source type " ^ string_of_OclType (type_of_term  rterm) ^ "\n\n")
+      val _ = Logger.debug3 ("res Iter (" ^ name ^ "): source type " ^ string_of_OclType (type_of_term  rterm) ^ "\n\n")
       (* get source classifier *)
       val source_class = class_of_term rterm model
-      val _ = trace type_checker ("res Iter (" ^ name ^ "): type of classifier: " ^ string_of_OclType (type_of source_class) ^ "\n")
+      val _ = Logger.debug3 ("res Iter (" ^ name ^ "): type of classifier: " ^ string_of_OclType (type_of source_class) ^ "\n")
       (* prefix types *)
       val prfx = (package_of_template_parameter (type_of source_class))
-      val _ = trace type_checker ("res Iter (" ^ name ^ "): Type prefixed ... \n")
+      val _ = Logger.debug3 ("res Iter (" ^ name ^ "): Type prefixed ... \n")
       val piter_vars = List.map (fn (a,b) => (a,prefix_type prfx b)) iter_vars
       val piter_types = List.map (fn (a,b) => b) piter_vars 
-      val _ = trace type_checker ("res Iter (" ^ name ^ "): first iter types: " ^ string_of_OclType (List.hd piter_types) ^ "\n") 
+      val _ = Logger.debug3 ("res Iter (" ^ name ^ "): first iter types: " ^ string_of_OclType (List.hd piter_types) ^ "\n") 
       (* check if iterator types correspond to source type *)
       val static_iter_type = type_of_template_parameter (type_of (source_class))
-      val _ = trace type_checker ("Length of iter_types: " ^ Int.toString (List.length piter_types) ^ "\n")
-      val _ = trace type_checker ("parent of classifier: " ^ string_of_OclType (type_of_parent source_class) ^ "\n")
-      val _ = trace type_checker ("static iter type : " ^ string_of_OclType static_iter_type ^ "  \n")
-      val _ = trace type_checker ("iter types: " ^ string_of_OclType (List.hd piter_types) ^ "\n")
+      val _ = Logger.debug3 ("Length of iter_types: " ^ Int.toString (List.length piter_types) ^ "\n")
+      val _ = Logger.debug3 ("parent of classifier: " ^ string_of_OclType (type_of_parent source_class) ^ "\n")
+      val _ = Logger.debug3 ("static iter type : " ^ string_of_OclType static_iter_type ^ "  \n")
+      val _ = Logger.debug3 ("iter types: " ^ string_of_OclType (List.hd piter_types) ^ "\n")
       val h2 = List.map (fn a => conforms_to a static_iter_type model) (piter_types)
       val check = List.all (fn a => a=true) h2
       val res = 
 	  if (check) then
 	      let
-		  val _ = trace type_checker  ("res Iter: types conforms \n")
+		  val _ = Logger.debug3  ("res Iter: types conforms \n")
 		  val bound_expr = embed_bound_variables piter_vars expr
-		  val _ = trace type_checker ("res Iter: term : " ^ Ocl2String.ocl2string false bound_expr ^ "\n")
+		  val _ = Logger.debug3 ("res Iter: term : " ^ Ocl2String.ocl2string false bound_expr ^ "\n")
 		  val rexpr = resolve_OclTerm bound_expr model
-		  val _ = trace type_checker (" manuel " ^ string_of_OclType (type_of_term rexpr) ^ "\n")
-		  val _ = trace type_checker (" ma     " ^ string_of_OclType (Set(static_iter_type)) ^ "\n")
-		  val _ = trace type_checker  ("res Iter: Iterator name = " ^ name ^ " \n\n\n")
+		  val _ = Logger.debug3 (" manuel " ^ string_of_OclType (type_of_term rexpr) ^ "\n")
+		  val _ = Logger.debug3 (" ma     " ^ string_of_OclType (Set(static_iter_type)) ^ "\n")
+		  val _ = Logger.debug3  ("res Iter: Iterator name = " ^ name ^ " \n\n\n")
 	      in
 		  (
 		   case name of
@@ -585,7 +584,7 @@ let
 	      end
 	  else      
 	      raise TC_IteratorTypeMissMatch (Iterator (name,iter_vars,source_term,DummyT,expr,expr_typ,res_typ),("Iterator variable doesn't conform to choosen set \n"))
-      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm\n")
   in
       res
   end
@@ -593,25 +592,25 @@ let
 | resolve_OclTerm (Iterate (iter_vars,acc_var_name,acc_var_type,acc_var_term,sterm,stype,bterm,btype,res_type)) (model as (cls,assocs)) = 
   let
       (* resolve source term, type *)
-      val _ = trace function_calls ("TypeChecker.resolve_OclTerm, Iterate: accumulator " ^ acc_var_name ^ "\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm, Iterate: accumulator " ^ acc_var_name ^ "\n")
       val rterm = resolve_OclTerm sterm model
       val rtyp = type_of_term rterm
-      val _ = trace medium ("res Iterate: source type " ^ string_of_OclType (type_of_term  rterm) ^ "\n\n")
+      val _ = Logger.debug2 ("res Iterate: source type " ^ string_of_OclType (type_of_term  rterm) ^ "\n\n")
       (* get source classifier *)
       val source_class = class_of_term rterm model
-      val _ = trace medium ("res Iterate: type of classifier: " ^ string_of_OclType (type_of source_class) ^ "\n")
+      val _ = Logger.debug2 ("res Iterate: type of classifier: " ^ string_of_OclType (type_of source_class) ^ "\n")
       (* prefix types *)
       val prfx = (package_of_template_parameter (type_of source_class))
-      val _ = trace medium ("res Iterate: Type prefixed ... \n")
+      val _ = Logger.debug2 ("res Iterate: Type prefixed ... \n")
       val piter_vars = List.map (fn (a,b) => (a,prefix_type prfx b)) iter_vars
       val piter_types = List.map (fn (a,b) => b) piter_vars 
-      val _ = trace medium ("res Iterate: first iter types: " ^ string_of_OclType (List.hd piter_types) ^ "\n") 
+      val _ = Logger.debug2 ("res Iterate: first iter types: " ^ string_of_OclType (List.hd piter_types) ^ "\n") 
       (* check if iterator types correspond to source type *)
       val static_iter_type = type_of_template_parameter (type_of (source_class))
-      val _ = trace medium ("Length of iter_types: " ^ Int.toString (List.length piter_types) ^ "\n")
-      val _ = trace medium ("parent of classifier: " ^ string_of_OclType (type_of_parent source_class) ^ "\n")
-      val _ = trace medium ("\nstatic iter type : " ^ string_of_OclType static_iter_type ^ "  \n")
-      val _ = trace medium ("iter types: " ^ string_of_OclType (List.hd piter_types) ^ "\n")
+      val _ = Logger.debug2 ("Length of iter_types: " ^ Int.toString (List.length piter_types) ^ "\n")
+      val _ = Logger.debug2 ("parent of classifier: " ^ string_of_OclType (type_of_parent source_class) ^ "\n")
+      val _ = Logger.debug2 ("\nstatic iter type : " ^ string_of_OclType static_iter_type ^ "  \n")
+      val _ = Logger.debug2 ("iter types: " ^ string_of_OclType (List.hd piter_types) ^ "\n")
       val h2 = List.map (fn a => conforms_to a static_iter_type model) (piter_types)
       val check = List.all (fn a => a=true) h2
       (* check if initial value of accumulator has correct type *)
@@ -621,14 +620,14 @@ let
 	  if (check) then
 	      if (racc_var_type = acc_var_type) then
 		  let
-		      val _ = trace medium  ("res Iterate: types conforms \n")
+		      val _ = Logger.debug2  ("res Iterate: types conforms \n")
 		      val bound_expr = embed_bound_variables piter_vars bterm
 		      val bound_expr2 = embed_bound_variables [(acc_var_name,acc_var_type)] bound_expr
-		      val _ = trace medium ("myres Iterate: term : " ^ Ocl2String.ocl2string false bound_expr2 ^ "\n")
+		      val _ = Logger.debug2 ("myres Iterate: term : " ^ Ocl2String.ocl2string false bound_expr2 ^ "\n")
 		      val rexpr = resolve_OclTerm bound_expr2 model
-		      val _ = trace medium (" manuel " ^ string_of_OclType (type_of_term rexpr) ^ "\n")
-		      val _ = trace medium (" ma     " ^ string_of_OclType (Set(static_iter_type)) ^ "\n")
-		      val _ = trace medium  ("res Iterate: \n\n\n")
+		      val _ = Logger.debug2 (" manuel " ^ string_of_OclType (type_of_term rexpr) ^ "\n")
+		      val _ = Logger.debug2 (" ma     " ^ string_of_OclType (Set(static_iter_type)) ^ "\n")
+		      val _ = Logger.debug2  ("res Iterate: \n\n\n")
 		  in
 		      Iterate(piter_vars,acc_var_name,racc_var_type,racc_var_term,rterm,rtyp,rexpr,type_of_term rexpr,racc_var_type)
 		  end
@@ -636,21 +635,21 @@ let
 		  raise TC_IterateAccumulatorTypeError ("Type of accumulator does not conform to type of expression of accumulator")
 	  else
 	      raise TC_IterateTypeMissMatch ("Iterate variables doesn't conform to choosen set \n")
-      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm\n")
   in
       res
   end     
 | resolve_OclTerm (CollectionLiteral ([],typ)) model = 
   let
-      val _ = trace function_calls ("TypeChecker.resolve_OclTerm CollectionLiteral\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm CollectionLiteral\n")
       val res = CollectionLiteral ([],typ)
-      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm\n")
   in
       res
   end
 | resolve_OclTerm (CollectionLiteral (coll_parts,temp_typ)) model = 
   let
-      val _ = trace function_calls ("TypeChecker.resolve_OclTerm CollectionLiteral\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm CollectionLiteral\n")
       val r_coll_parts = List.map (resolve_CollectionPart model) coll_parts
       val typ = type_of_CollPart (List.hd r_coll_parts)
       val res =
@@ -658,25 +657,25 @@ let
 	      (CollectionLiteral (r_coll_parts,substitute_templ_para temp_typ typ))
 	  else
 	      raise (TC_wrongCollectionLiteral ((CollectionLiteral (coll_parts,temp_typ)), ("not all Literals have type of Collection")))
-      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm\n")
   in
       res
   end
 | resolve_OclTerm (Let (str,typ,rhs_term,_,in_term,_)) model = 
   let
-      val _ = trace function_calls ("TypeChecker.resolve_OclTerm a Let-Expression \n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm a Let-Expression \n")
       val rrhs_term = resolve_OclTerm rhs_term model
       val rrhs_typ = type_of_term rrhs_term
       val rin_term = resolve_OclTerm in_term model
       val rin_typ = type_of_term rin_term
       val res = (Let (str,typ,rrhs_term,rrhs_typ,rin_term,rin_typ))
-      val _ = trace function_ends ("TypeChecker.resolve_OclTerm")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm")
   in
       res
   end
 | resolve_OclTerm (If (cond_term,cond_typ,if_expr,if_typ,else_expr,else_typ,ret_typ)) model = 
   let
-      val _ = trace function_calls ("TypeChecker.resolve_OclTerm a If-Expression \n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm a If-Expression \n")
       val rterm = resolve_OclTerm cond_term model
       val rtyp = type_of_term rterm
 
@@ -695,7 +694,7 @@ let
 		  raise TC_TypeCheckerResolveIfError (If (cond_term,cond_typ,if_expr,if_typ,else_expr,else_typ,ret_typ),("Types of if-expression and else-expression don't conform each other \n"))
 	  else
 	      raise TC_TypeCheckerResolveIfError (If (cond_term,cond_typ,if_expr,if_typ,else_expr,else_typ,ret_typ),("Type of condition is not Boolean. \n"))
-      val _ = trace function_ends ("TypeChecker.resolve_OclTerm\n")
+      val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm\n")
   in
       res
   end
@@ -704,14 +703,14 @@ let
 (* RETURN: context option *)
 fun check_context (Cond (path,op_name,op_sign,result_type,cond,pre_name,expr)) (model as (cls,assocs)) =
     let
-	val _ = trace function_calls ("TypeChecker.check_context Cond(...)\n")
-	val _ = trace type_checker ("pre/post/body         : "  ^  Ocl2String.ocl2string false expr ^ "\n")
+	val _ = Logger.debug2 ("TypeChecker.check_context Cond(...)\n")
+	val _ = Logger.debug3 ("pre/post/body         : "  ^  Ocl2String.ocl2string false expr ^ "\n")
 	val classifier = class_of_type  (Classifier (path)) model
 	val oper = get_operation op_name classifier model
 	val check1 = (op_sign = (#arguments oper))
 	val check2 = (result_type = (#result oper))
-	val _ = trace type_checker ("check1 = " ^ Bool.toString check1 ^ ", check2 = " ^ Bool.toString check2 ^ "\n")
-	val _ = List.map (fn (a,b) => (trace type_checker (a ^ ":" ^ (string_of_OclType b) ^ "   "))) op_sign
+	val _ = Logger.debug3 ("check1 = " ^ Bool.toString check1 ^ ", check2 = " ^ Bool.toString check2 ^ "\n")
+	val _ = List.map (fn (a,b) => (Logger.debug3 (a ^ ":" ^ (string_of_OclType b) ^ "   "))) op_sign
 	val res = 
 	    if check1  andalso check2 
 	    then
@@ -720,25 +719,25 @@ fun check_context (Cond (path,op_name,op_sign,result_type,cond,pre_name,expr)) (
 		(* NONE *)
 		raise TC_WrongContextChecked (Cond (path,op_name,op_sign,result_type,cond,pre_name,expr))
 
-	val _ = trace function_ends ("TypeChecker.check_context Cond(...)\n\n\n")
+	val _ = Logger.debug2 ("TypeChecker.check_context Cond(...)\n\n\n")
     in
 	res
     end
   | check_context (Attr (path,typ,attrorassoc,expr)) (model as (cls,assocs)) =
     let
-	val _ = trace function_calls ("TypeChecker.check_context Attr(..._)\n")
-	val _ = trace type_checker ("init/derive           : " ^ Ocl2String.ocl2string false expr ^ "\n")
+	val _ = Logger.debug2 ("TypeChecker.check_context Attr(..._)\n")
+	val _ = Logger.debug3 ("init/derive           : " ^ Ocl2String.ocl2string false expr ^ "\n")
 	val classifier = class_of_type (Classifier (real_path path)) model
-	val _ = trace type_checker ( "classifier found ... " ^ "\n")
+	val _ = Logger.debug3 ( "classifier found ... " ^ "\n")
 	val attr_list = attributes_of classifier
-	val _ = trace type_checker ( "attr_list found ... " ^ "\n")
+	val _ = Logger.debug3 ( "attr_list found ... " ^ "\n")
 	val attr = valOf (get_attribute (List.last path) attr_list)
-	val _ = trace type_checker ( "attribute found ... " ^ "\n")
+	val _ = Logger.debug3 ( "attribute found ... " ^ "\n")
 	val res = 
 	    if (typ = #attr_type attr)
 	    then
 		let
-		    val _ = trace type_checker (" ... " ^ "\n")
+		    val _ = Logger.debug3 (" ... " ^ "\n")
 		in
 		    (SOME ((Attr (path,(#attr_type attr),attrorassoc,resolve_OclTerm expr model))))
 		end
@@ -746,16 +745,16 @@ fun check_context (Cond (path,op_name,op_sign,result_type,cond,pre_name,expr)) (
 	(*	NONE *)
                 raise TC_WrongContextChecked (Attr (path,typ,attrorassoc,expr))
 
-	val _ = trace function_ends ("TypeChecker.check_context\n\n\n")
+	val _ = Logger.debug2 ("TypeChecker.check_context\n\n\n")
     in
 	res
     end
   | check_context (Inv (path,name,expr)) model = 
     let
-	val _ = trace function_calls ("TypeChecker.check_context Inv(...)\n")
-	val _ = trace type_checker ("inv                   : " ^ Ocl2String.ocl2string false expr ^ "\n")
+	val _ = Logger.debug2 ("TypeChecker.check_context Inv(...)\n")
+	val _ = Logger.debug3 ("inv                   : " ^ Ocl2String.ocl2string false expr ^ "\n")
       val res = (SOME (Inv (path,name, resolve_OclTerm expr model)))
-      val _ = trace function_ends ("TypeChecker.check_context\n\n\n")
+      val _ = Logger.debug2 ("TypeChecker.check_context\n\n\n")
   in 
       res
   end
@@ -769,88 +768,78 @@ fun check_context_list [] model = []
   | check_context_list (h::context_list_tail) model  = 
     ((check_context h model
       handle TC_wrongCollectionLiteral (term,mes) =>
-	   let
+	     let
 	       val s1 =  ("wrongCollectionLiteral:\n")
 	       val s2 =  ("Error Message: " ^ mes ^ "\n")
 	       val s3 =  ("In Term: " ^ Ocl2String.ocl2string false term ^ "\n")
-	       val _ = trace exce (s1^s2^s3)
-	   in
-	       raise TC_WrongContextChecked h
-	   end
-	 | TC_CollectionRangeError (part,mes) =>
-	   let
+	     in
+	       Logger.errorExn (TC_WrongContextChecked h) (s1^s2^s3)
+	     end
+	   | TC_CollectionRangeError (part,mes) =>
+	     let
     	       val s1 =  ("CollectionRangeError:\n")
 	       val s2 =  ("Error Message: " ^ mes ^ "\n")
-	       val _ = trace exce (s1^s2)
-	   in
-	       raise TC_WrongContextChecked h
-	   end
-	 | TC_IteratorTypeMissMatch (term,mes) =>
-	   let
+	     in
+	       Logger.errorExn (TC_WrongContextChecked h) (s1^s2)
+	     end
+	   | TC_IteratorTypeMissMatch (term,mes) =>
+	     let
 	       val s1 =  ("IteratorTypeMissMatch:\n")
 	       val s2 =  ("Error Message: " ^ mes ^ "\n")
 	       val s3 =  ("In Term: " ^ Ocl2String.ocl2string false term ^ "\n")
-	       val _ = trace exce (s1^s2^s3)
 	   in
-	       raise TC_WrongContextChecked h
+	       Logger.errorExn (TC_WrongContextChecked h) (s1^s2^s3)
 	   end
 	 | TC_NoSuchIteratorNameError (term,mes) => 
 	   let
 	       val s1 =  ("NoSuchIteratorNameError:\n")
 	       val s2 =  ("Error Message: " ^ mes ^ "\n")
 	       val s3 =  ("In Term: " ^ Ocl2String.ocl2string false term ^ "\n")
-	       val _ = trace exce (s1^s2^s3)
 	   in
-	       raise TC_WrongContextChecked h
+	     Logger.errorExn (TC_WrongContextChecked h) (s1^s2^s3)
 	   end
 	 | TC_TypeCheckerResolveIfError (term,mes) => 
 	   let
 	       val s1 =  ("TypeCheckerResolveIfError:\n")
 	       val s2 =  ("Error Message: " ^ mes ^ "\n")
 	       val s3 =  ("In Term: " ^ Ocl2String.ocl2string false term ^ "\n")
-	       val _ = trace exce (s1^s2^s3)
 	   in
-	       raise TC_WrongContextChecked h
+	     Logger.errorExn (TC_WrongContextChecked h) (s1^s2^s3)
 	   end
 	 | TC_NotYetSupportedError mes => 
 	   let
 	       val s1 =  ("TC_NotYetSupportedError:\n")
 	       val s2 =  ("Error Message: " ^ mes ^ "\n")
-	       val _ = trace exce (s1^s2)
 	   in
-	       raise TC_WrongContextChecked h
+	       Logger.errorExn (TC_WrongContextChecked h) (s1^s2)
 	   end
 	 | TC_OperationWithTypeError mes => 
 	   let	       
 	       val s1 =  ("TC_OperationWithType:\n")
 	       val s2 =  ("Error Message: " ^ mes ^ "\n")
-	       val _ = trace exce (s1^s2)
 	   in
-	       raise TC_WrongContextChecked h
+	     Logger.errorExn (TC_WrongContextChecked h) (s1^s2)
 	   end
  	 |  TC_NoSuchAttributeError mes => 
 	   let	       
 	       val s1 =  ("TC_NoSuchAttributeError:\n")
 	       val s2 =  ("Error Message: " ^ mes ^ "\n")
-	       val _ = trace exce (s1^s2)
 	   in
-	       raise TC_WrongContextChecked h
+	     Logger.errorExn (TC_WrongContextChecked h) (s1^s2)
 	   end
 	 | GetClassifierError mes =>
 	   let	       
 	       val s1 =  ("GetClassifierError:\n")
 	       val s2 =  ("Error Message: " ^ mes ^ "\n")
-	       val _ = trace exce (s1^s2)
 	   in
-	       raise TC_WrongContextChecked h
+	       Logger.errorExn (TC_WrongContextChecked h) (s1^s2)
 	   end
 	 | TC_NoSuchOperationError mes =>
 	   let	       
 	       val s1 =  ("TC_NoSuchOperationError:\n")
 	       val s2 =  ("Error Message: " ^ mes ^ "\n")
-	       val _ = trace exce (s1^s2)
 	   in
-	       raise TC_WrongContextChecked h
+	       Logger.errorExn (TC_WrongContextChecked h) (s1^s2)
 	   end
      )::(check_context_list context_list_tail model))
     handle TC_WrongContextChecked h =>
@@ -858,9 +847,8 @@ fun check_context_list [] model = []
 	       val s1 =  ("\n\n#################################################\n")
 	       val s2 =  ("WrongContextChecked:\n")
 	       val s3 =  ("In Context: " ^ (cxt_list2string [h]) ^ "\n")
-	       val _ = trace exce (s1^s2^s3)
 	   in
-	       raise TC_RootError ("Something went wrong!\n")
+	       Logger.errorExn (TC_RootError "Something went wrong!\n") (s1^s2^s3)
 	   end
   end
  

@@ -70,7 +70,6 @@ end
 structure preMap = 
 struct 
 open Rep_Helper
-open Rep_Logger
 
 val entries : (string * int) list ref = ref nil
 
@@ -100,7 +99,6 @@ end
 structure Ocl2DresdenJava = 
 struct 
 open Rep_Helper
-open Rep_Logger
 open Rep_OclType 
 open Rep_OclTerm 
 open Rep_Core 
@@ -497,7 +495,7 @@ fun preExtract env on curOp =
 								    | _ => (getPres src)^(join "\n" (map (getPres o fst) args))
 	    in
 		case precond of
-		    OperationCall (src,styp,["oclLib","OclAny","atPre"],[],_) => error "atPre()-operation should not be reached."
+		    OperationCall (src,styp,["oclLib","OclAny","atPre"],[],_) => Logger.error "atPre()-operation should not be reached."
 		  | OperationCall (src,styp,op_name,args,rtype) => resSave src styp op_name args rtype
 		  | Literal (_,_) => ""
 		  | If (cond,_,thenb,_,elseb,_,_) => (getPres cond)^(getPres thenb)^(getPres elseb)

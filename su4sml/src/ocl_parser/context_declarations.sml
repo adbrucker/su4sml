@@ -6,7 +6,7 @@
  * This file is part of su4sml.
  *
  * Copyright (c) 2005-2007 ETH Zurich, Switzerland
- *           (c) 2008       Achim D. Brucker, Germany
+ *           (c) 2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -107,7 +107,6 @@ structure Context:CONTEXT =
 struct
 
 
-open Rep_Logger
 open Rep_Core
 open Rep_OclType
 open Rep_OclTerm
@@ -219,26 +218,26 @@ fun real_signature ([]) = []
 fun add_source (source,(AttributeCall (_, _, path, res_typ ))) = 
     let
 	val test = (AttributeCall (source,DummyT,path,res_typ))
-	val _ = trace low ("source added for AttributeCall..." ^ Ocl2String.ocl2string true test ^ "\n"); 
+	val _ = Logger.debug4 ("source added for AttributeCall..." ^ Ocl2String.ocl2string true test ^ "\n"); 
     in
 	(AttributeCall (source, DummyT, path, res_typ))
     end
   | add_source (source,(OperationCall (_,_,path,paras,res_typ))) = 
     let
-	val _ = trace low ("source added for OperationCall..." ^ "\n"); 
+	val _ = Logger.debug1 ("source added for OperationCall..." ^ "\n"); 
     in
 	(OperationCall (source,DummyT,path,paras,res_typ))
     end
   | add_source (source, Literal(s,t)) = Literal (s,t)
   | add_source (source, CollectionLiteral (part_list,typ)) = 
     let 
-	val _ = trace low ("source added for AttributeCall..." ^ "\n"); 
+	val _ = Logger.debug1 ("source added for AttributeCall..." ^ "\n"); 
     in
 	(CollectionLiteral (part_list,typ))
     end
   | add_source (source, Iterator(name,iter_vars_list,_,_,body_term,body_typ,res_typ)) =
     let
-	val _ = trace low ("source added for Iterator..." ^ "\n"); 
+	val _ = Logger.debug1 ("source added for Iterator..." ^ "\n"); 
     in
 	(Iterator (name,iter_vars_list,source,DummyT,body_term,body_typ,res_typ))
     end
@@ -250,13 +249,13 @@ fun add_source (source,(AttributeCall (_, _, path, res_typ ))) =
     If (paras)
   | add_source (source, Iterate([],acc_var_name,acc_var_type,acc_var_term,sterm,stype,bterm,btype,res_type)) =
     let
-	val _ = trace low ("source added for Iterate ..." ^ "\n");
+	val _ = Logger.debug1 ("source added for Iterate ..." ^ "\n");
     in
 	(Iterate ([],acc_var_name,acc_var_type,acc_var_term,source,DummyT,bterm,btype,res_type))
     end
   | add_source (source, Iterate(iter_vars,acc_var_name,acc_var_type,acc_var_term,sterm,stype,bterm,btype,res_type)) =
     let
-	val _ = trace high ("source added for Iterate ..." ^ "\n");
+	val _ = Logger.debug1 ("source added for Iterate ..." ^ "\n");
     in
 	(Iterate (iter_vars,acc_var_name,acc_var_type,acc_var_term,source,DummyT,bterm,btype,res_type))
     end
@@ -275,20 +274,20 @@ fun add_source_to_list source (h::tail) = (add_source (source,h))::tail
 (* RETURN: OclTerm *)
 fun nest_source (OperationCall (sterm,styp,[OclLibPackage,rtyp,"-"],[],res_typ)::tail) =
     let
-	val _ = trace low ("unary_exp_cs Call: '-' ... \n")
+	val _ = Logger.debug1 ("unary_exp_cs Call: '-' ... \n")
     in
 	foldl (switch add_source) (OperationCall (sterm,styp,[OclLibPackage,rtyp,"-"],[],res_typ)) tail
     end
   | nest_source (OperationCall (sterm,styp,[OclLibPackage,rtyp,"not"],[],res_typ)::tail) =
     let
-	val _ = trace low ("unary_exp_cs Call: 'not' ... \n")
+	val _ = Logger.debug1 ("unary_exp_cs Call: 'not' ... \n")
     in
 	foldl (switch add_source) (OperationCall (sterm,styp,[OclLibPackage,rtyp,"not"],[],res_typ)) tail
     end
   | nest_source term_list = 
     let 
-	val _ = trace low ("source nested for AttributeCall..." ^ "\n"); 
-        val _ = trace low ((Ocl2String.ocl2string true (List.last term_list)) ^ "bla\n"); 
+	val _ = Logger.debug1 ("source nested for AttributeCall..." ^ "\n"); 
+        val _ = Logger.debug1 ((Ocl2String.ocl2string true (List.last term_list)) ^ "bla\n"); 
     in
 	foldl (switch add_source) (Variable ("dummy_source",DummyT)) term_list
     end
@@ -296,13 +295,13 @@ fun nest_source (OperationCall (sterm,styp,[OclLibPackage,rtyp,"-"],[],res_typ):
 (* RETURN: context list *)
 fun attr_list (context,Typ,[]) = 
     let 
-	val _ = trace low ("Contextes created form list of Attributes ..." ^ "\n") 
+	val _ = Logger.debug1 ("Contextes created form list of Attributes ..." ^ "\n") 
     in 
 	[] 
     end
   | attr_list (context,Typ,((asser,expr)::tail)) = 
     let 
-	val _ = trace low ("Contextes created form list of Attributes ..." ^ "\n") 
+	val _ = Logger.debug1 ("Contextes created form list of Attributes ..." ^ "\n") 
     in 
 	(Attr (context,Typ,asser,expr))::(attr_list (context,Typ,tail)) 
     end
@@ -310,13 +309,13 @@ fun attr_list (context,Typ,[]) =
 (* RETURN: context list *)    
 fun inv_list (context,[]) = 
     let 
-	val _ = trace low ("Contextes created form list of invs ..." ^ "\n") 
+	val _ = Logger.debug4 ("Contextes created form list of invs ..." ^ "\n") 
     in 
 	[] 
     end	
   | inv_list (context,((name,expr)::tail)) = 
     let 
-	val _ = trace low ("Contextes created form list of invs ..." ^ "\n") 
+	val _ = Logger.debug4 ("Contextes created form list of invs ..." ^ "\n") 
     in 
 	(Inv(context,name,expr))::(inv_list (context,tail)) 
     end
@@ -324,13 +323,13 @@ fun inv_list (context,[]) =
 (* RETURN: context list *)
 fun cond_list (path,sign,[]) = 
     let 
-	val _ = trace low ("Contextes created form list of conds ..." ^ "\n")
+	val _ = Logger.debug4 ("Contextes created form list of conds ..." ^ "\n")
     in 
 	[] 
     end
   | cond_list (path,sign,((asser,name_cond,expr)::tail))  = 
     let 
-	val _ = trace low ("Contextes created form list of conds ..." ^ "\n") 
+	val _ = Logger.debug4 ("Contextes created form list of conds ..." ^ "\n") 
     in 
 	Cond(real_path path,List.last path,real_signature sign, #2(List.last sign),asser,name_cond,expr)::cond_list (path,sign,tail)
     end
@@ -354,7 +353,7 @@ fun cxt_list2string ([]) = ""
 
 fun rename_classifier path (Class{name=name,parent=parent,attributes=attributes,operations=operations,associations=associations,invariant=invariant,stereotypes=stereotypes,interfaces=interfaces,thyname=thyname,visibility=visibility,activity_graphs=activity_graphs}) =
     let
-	val _ = trace function_calls ("Context.rename_classifier\n")
+	val _ = Logger.debug2 ("Context.rename_classifier\n")
 	val res = Class {
 		  name = Classifier (path),
 		  parent=parent,
@@ -368,14 +367,14 @@ fun rename_classifier path (Class{name=name,parent=parent,attributes=attributes,
 		  visibility=visibility,
 		  activity_graphs=activity_graphs
 		  }
-	val _ = trace function_ends ("Context.rename_classifier\n")
+	val _ = Logger.debug2 ("Context.rename_classifier\n")
     in
 	res
     end
 
 fun merge_classifier ((a as Class{attributes=a_atts,operations=a_ops,invariant=a_invs,associations=a_assocs,...}),(b as Class{attributes=b_atts,operations=b_ops,invariant=b_invs,associations=b_assocs,...})) = 
     let
-	val _ = trace function_calls ("Context.merge_classifier\n")
+	val _ = Logger.debug2 ("Context.merge_classifier\n")
 	val res = Class {
 		  name = OclVoid,
 		  parent=NONE,
@@ -389,14 +388,14 @@ fun merge_classifier ((a as Class{attributes=a_atts,operations=a_ops,invariant=a
 		  visibility=public:Rep_Core.Visibility,
 		  activity_graphs=[]
 		  }
-	val _ = trace function_ends ("Context.merge_classifier\n")
+	val _ = Logger.debug2 ("Context.merge_classifier\n")
     in
 	res
     end
 
 fun merge_classifiers list =
     let
-	val _ = trace function_calls ("Context.merge_classifiers\n")
+	val _ = Logger.debug2 ("Context.merge_classifiers\n")
 	val Empty_Class = Class{
 			  name = OclVoid,
 			  parent=NONE,
@@ -411,7 +410,7 @@ fun merge_classifiers list =
 			  activity_graphs=[]
 			  }
 	val res = List.foldr (merge_classifier) Empty_Class list 
-	val _ = trace function_ends ("Context.merge_classifier\n")
+	val _ = Logger.debug2 ("Context.merge_classifier\n")
     in
 	res
     end
@@ -419,7 +418,7 @@ fun merge_classifiers list =
 
 fun operations_to_classifier ops = 
     let
-	val _ = trace function_calls ("Context.operation_to_classifier\n")
+	val _ = Logger.debug2 ("Context.operation_to_classifier\n")
 	val res = Class{
 			  name = OclVoid,
 			  parent=NONE,
@@ -433,14 +432,14 @@ fun operations_to_classifier ops =
 			  visibility=public:Rep_Core.Visibility,
 			  activity_graphs=[]
 			  }
-	val _ = trace function_ends ("Context.operation_to_classifier\n")
+	val _ = Logger.debug2 ("Context.operation_to_classifier\n")
     in
 	res
     end
 
 fun attributes_to_classifier atts = 
     let
-	val _ = trace function_calls ("Context.attributes_to_classifier\n")
+	val _ = Logger.debug2 ("Context.attributes_to_classifier\n")
 	val res = Class{
 			  name = OclVoid,
 			  parent=NONE,
@@ -454,14 +453,14 @@ fun attributes_to_classifier atts =
 			  visibility=public:Rep_Core.Visibility,
 			  activity_graphs=[]
 			  }
-	val _ = trace function_ends ("Context.attributes_to_classifier\n")
+	val _ = Logger.debug2 ("Context.attributes_to_classifier\n")
     in
 	res
     end
 
 fun constraints_to_classifier invs = 
     let
-	val _ = trace function_calls ("Context.constraints_to_classifier\n")
+	val _ = Logger.debug2 ("Context.constraints_to_classifier\n")
 	val res = Class{
 			  name = OclVoid,
 			  parent=NONE,
@@ -475,19 +474,19 @@ fun constraints_to_classifier invs =
 			  visibility=public:Rep_Core.Visibility,
 			  activity_graphs=[]
 			  }
-	val _ = trace function_ends ("Context.constraints_to_classifier\n")
+	val _ = Logger.debug2 ("Context.constraints_to_classifier\n")
     in
 	res
     end
 
 fun dispatch_pre_or_post (cond_type:ConditionType) (list:(ConditionType * string option * OclTerm) list) = 
     let
-	val _ = trace function_calls ("Context.dispatch_pre_or_post")
+	val _ = Logger.debug2 ("Context.dispatch_pre_or_post")
 	val filter = List.filter (fn (a,b,c) => if cond_type = a
 						then true
 						else false) list
 	val res = List.map (fn (a,b,c) => (b,c)) filter
-	val _ = trace function_ends ("Context.dispatch_pre_or_post")
+	val _ = Logger.debug2 ("Context.dispatch_pre_or_post")
     in
 	res
     end

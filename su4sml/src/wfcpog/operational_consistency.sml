@@ -49,7 +49,6 @@ struct
 
 
 (* SU4SML *)
-open Rep_Logger
 open Rep_Core
 open Rep
 open Rep_OclTerm

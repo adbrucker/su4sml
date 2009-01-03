@@ -112,7 +112,6 @@ struct
 exception WFCPOG_RegistryError of string
 exception WFCPOG_MethodologyError of string
 
-open Rep_Logger
 open WFCPOG
 open Datatab
 

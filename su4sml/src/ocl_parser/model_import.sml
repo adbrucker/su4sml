@@ -58,7 +58,6 @@ open List
 open Posix.Error
 
 (* su4sml *)
-open Rep_Logger
 open Rep_Core
      
 (* OclParser *)
@@ -87,7 +86,7 @@ fun importArgoUMLUnNormalized file =
         val base =  if String.isSuffix ".zargo" file
                     then String.substring(file,0, (String.size file) -6)
                     else file
-        val _ = print ("*** Syscall: unzip -p -ca "^base^".zargo "^(basename base)^".xmi > "^tmpFile^"\n")
+        val _ = Logger.info ("*** Syscall: unzip -p -ca "^base^".zargo "^(basename base)^".xmi > "^tmpFile)
         val _ = OS.Process.system ("unzip -p -ca "^base^".zargo "^(basename base)^".xmi > "^tmpFile)
         val model = readFileUnNormalized tmpFile
         val _ = OS.FileSys.remove tmpFile
@@ -103,11 +102,11 @@ fun importArgoUMLUnNormalized file =
 
 fun parseUML umlFile  = 
     let
-	val _        =  trace high "### Parsing UML Model ###\n"
+	val _        =  Logger.info "### Parsing UML Model ###\n"
 	val umlModel = if  String.isSuffix ".zargo" umlFile
 		       then importArgoUMLUnNormalized umlFile
 		       else readFileUnNormalized umlFile
-	val _        = trace high ("### Finished Parsing UML Model ("
+	val _        = Logger.info ("### Finished Parsing UML Model ("
 			      ^(Int.toString(length (#1 umlModel)))
 			      ^" Classifiers found)###\n\n")
     in
@@ -116,11 +115,11 @@ fun parseUML umlFile  =
 
 fun parseOCL oclFile =
     let
-	val _ =  trace high "### Parsing OCL File ###\n"
+	val _ =  Logger.info "### Parsing OCL File ###\n"
 	val context_classes = case oclFile of 
 		      "" =>      ([],[])
 		    | filename => OclParser.parse_contextlist oclFile;
-	val _ =  trace high ("### Finished Parsing OCL File ("
+	val _ =  Logger.info ("### Finished Parsing OCL File ("
 			^(Int.toString(length (#1 context_classes)))
 			^" Constraints Found) ###\n\n")
     in
@@ -129,11 +128,11 @@ fun parseOCL oclFile =
 
 fun parseModel oclFile =  
     let
-	val _ =  trace high "### Parsing OCL File ###\n"
+	val _ =  Logger.info "### Parsing OCL File ###\n"
 	val context_classes = case oclFile of 
 		      "" =>      ([],[])
 		    | filename => OclParser.parse_contextlist oclFile;
-	val _ =  trace high ("### Finished Parsing OCL File ("
+	val _ =  Logger.info ("### Finished Parsing OCL File ("
 			^(Int.toString(length (#2 context_classes)))
 			^" Constraints Found) ###\n\n")
     in
@@ -145,11 +144,11 @@ fun removePackages packageList (cl,al) =
         fun filter_package_assoc model p = filter 
 					 (fn a => not ((rev o tl o rev) (Rep_Core.name_of_association a) = p)) model
         fun filter_package model p = filter (fn cl => not (Rep_Core.package_of cl = p)) model
-        val _ =  trace high "### Excluding Packages ###\n"
+        val _ =  Logger.info "### Excluding Packages ###\n"
         fun stringToPath s = (String.tokens (fn s => (s = (#":"))) s)
         val cl =foldr (fn (p,m) => filter_package m (stringToPath  p)) cl packageList
         val al =foldr (fn (p,m) => filter_package_assoc m (stringToPath  p)) al packageList
-        val _ =  trace high ("### Finished excluding Packages ("
+        val _ =  Logger.info ("### Finished excluding Packages ("
                  ^(Int.toString(length cl))
                  ^ " Classifiers found ###\n\n")
         (* TODO: Implement check for dangeling references/Types and Ocl Expressions *)
@@ -175,41 +174,41 @@ fun removeOclLibrary (model) =
 fun import xmifile oclfile excludePackages = 
     let
         val xmi = parseUML xmifile
-	val _ = init_offset()
+  (*	val _ = init_offset() *)
 	val ocl = parseOCL oclfile
         val (xmi_cls, xmi_assocs) = xmi
-	val _ = init_offset()
+  (*	val _ = init_offset() *)
 
 
 	val model = case ocl of 
 			[] => (xmi_cls,xmi_assocs)
 		      | ocl => let
-			    val _         = init_offset()
+(* 		    val _         = init_offset() *)
 
-			    val _         = trace high "### Preprocess Context List ###\n"
+			    val _         = Logger.info "### Preprocess Context List ###\n"
 			    val fixed_ocl = Preprocessor.preprocess_context_list ocl ((OclLibrary.oclLib)@xmi_cls)
-			    val _         = trace high "### Finished Preprocess Context List ###\n\n"	
-			    val _         = init_offset()
+			    val _         = Logger.info "### Finished Preprocess Context List ###\n\n"	
+(* 			    val _         = init_offset() *)
 
-			    val _         = trace high "### Type Checking ###\n"
+			    val _         = Logger.info "### Type Checking ###\n"
 			    val typed_cl  = TypeChecker.check_context_list fixed_ocl (((OclLibrary.oclLib)@xmi_cls),xmi_assocs);
-			    val _         = trace high "### Finished Type Checking ###\n\n"
-			    val _         = init_offset()
+			    val _         = Logger.info "### Finished Type Checking ###\n\n"
+(* 			    val _         = init_offset() *)
 
-			    val _         = print"### Updating Classifier List ###\n"
+			    val _         = Logger.info "### Updating Classifier List ###\n"
 			    val model     = Update_Model.gen_updated_classifier_list typed_cl ((OclLibrary.oclLib)@xmi_cls);
-			    val _         = trace high ("### Finished Updating Classifier List "
+			    val _         = Logger.info ("### Finished Updating Classifier List "
 							^(Int.toString(length model))
 							^ " Classifiers found (11 from 'oclLib') ###\n")
-			    val _         = init_offset()
+(* 			    val _         = init_offset() *)
 
-			    val _         = trace high "### Fixing Types ###\n"
+			    val _         = Logger.info "### Fixing Types ###\n"
 	                    val model = removeOclLibrary  model
                             val model = removePackages excludePackages (model,xmi_assocs)
 			    (*
 			    val model     = FixTyping.transform_ocl_spec FixTyping.transformForHolOcl model 
 			    *)
-			    val _         = trace high "### Finished Fixing Types ###\n\n"
+			    val _         = Logger.info "### Finished Fixing Types ###\n\n"
 			in 
 			    model 
 			end

@@ -1,7 +1,6 @@
 (* open structures *)
 
 (* SU4SML *)
-open Rep_Logger
 open OclLibrary
 open ModelImport
 open Rep_Core

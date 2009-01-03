@@ -6,7 +6,7 @@
  * This file is part of su4sml.
  *
  * Copyright (c) 2005-2007 ETH Zurich, Switzerland
- *                    2008 Achim D. Brucker, Germany
+ *               2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -865,7 +865,6 @@ end
 structure Rep_Core  :  REP_CORE = 
 struct
 open Rep_Helper
-open Rep_Logger
 open Rep_OclTerm
 open Rep_OclType
 open XMI_DataTypes
@@ -1075,9 +1074,9 @@ fun local_operations_of (Class{operations,...}) = operations
 fun local_attributes_of (Class{attributes,...}) = attributes
   | local_attributes_of (AssociationClass{attributes,...}) = attributes					    
   | local_attributes_of (Interface{...})        = 
-         error "in Rep.local_attributes_of: argument is Interface"
+         Logger.error "in Rep.local_attributes_of: argument is Interface"
   | local_attributes_of (Enumeration{...})      = 
-         error "in Rep.local_attributes_of: argument is Enumeration"  
+         Logger.error "in Rep.local_attributes_of: argument is Enumeration"  
   | local_attributes_of (Primitive{...})         = []  
   | local_attributes_of (Template{parameter,classifier}) = raise AttributeNotFoundError ("..._attributes_of a template not possible.\n")
 
@@ -1087,7 +1086,7 @@ fun attributes_of class = local_attributes_of class
 
 fun class_of_design_model path (model as (clist,alist)) = 
     let
-	val _ = trace rep_core ("path of class = " ^ (String.concat (path)) ^ "\n")
+	val _ = Logger.debug3 ("path of class = " ^ (String.concat (path)) ^ "\n")
     in
 	if (List.hd (path) = "holOclLib")
 	then raise HOLOCL_ClassifierError ("You try to access an HOLOCL Classifier "^(string_of_path path) ^" which is not part of the model.\n")
@@ -1099,14 +1098,14 @@ fun class_of_design_model path (model as (clist,alist)) =
 
 fun type_of_parent (Class {parent,...}) = 
     let
-	val _ = trace development ("type_of_parent : Class{parent,...} \n")
+	val _ = Logger.debug4 ("type_of_parent : Class{parent,...} \n")
     in
 	Option.valOf(parent)
 	handle Option.Option => OclAny
     end
   | type_of_parent (AssociationClass {parent,...}) = 
     let
-	val _ = trace development ("type_of_parent : AssociationClass{parent,...} \n")
+	val _ = Logger.debug4 ("type_of_parent : AssociationClass{parent,...} \n")
     in
 	Option.valOf(parent) 
 	handle Option.Option => OclAny
@@ -1200,7 +1199,7 @@ fun type_of_path ["Integer"] (model:transform_model) = Integer
 fun class_of_term source (c:Classifier list, a:association list) =
     let
 	val typ = type_of_term (source)
-	val _ = trace rep_core ("type_of_term term = " ^ (string_of_OclType typ) ^ "\n")
+	val _ = Logger.debug3 ("type_of_term term = " ^ (string_of_OclType typ) ^ "\n")
 	fun class_of_t typ m = 
 	    hd (List.filter (fn a => if ((type_of a) = typ) then true else false) m)
 	fun substitute_classifier typ classifier =
@@ -1208,7 +1207,7 @@ fun class_of_term source (c:Classifier list, a:association list) =
 		fun substitute_args typ [] = []
 		  | substitute_args typ ((s,t)::tail) =
 		    let 
-			val _ = trace low ("substitute argument : " ^ (string_of_OclType typ) 
+			val _ = Logger.debug4 ("substitute argument : " ^ (string_of_OclType typ) 
 					   ^" template parameter of " ^ (string_of_OclType t) ^ " \n")
 		    in
 			(s,substitute_typ typ t)::(substitute_args typ tail)
@@ -1224,10 +1223,9 @@ fun class_of_term source (c:Classifier list, a:association list) =
 		and substitute_operations typ [] = []
 		  | substitute_operations typ ((oper:operation)::tail) =
 		    let 
-			val _ = trace low ("substitute operation : " ^ (#name oper) ^ " ... \n")
+			val _ = Logger.debug4 ("substitute operation : " ^ (#name oper) ^ " ... \n")
 			val args = substitute_args typ (#arguments oper)
 			val res = substitute_typ typ (#result oper)
-			val _ = trace 100 ("check\n")
 		    in
 			({
 			 name = #name oper,
@@ -1244,7 +1242,7 @@ fun class_of_term source (c:Classifier list, a:association list) =
 		    end
 		and substitute_typ typ templ_type =
 		    let 
-			val _ = trace low ("substitute type : " ^ (string_of_OclType typ) ^ " instead of " ^ (string_of_OclType templ_type) ^ " \n")
+			val _ = Logger.debug4 ("substitute type : " ^ (string_of_OclType typ) ^ " instead of " ^ (string_of_OclType templ_type) ^ " \n")
 		    in    
 			case templ_type of  
 			    (* innerst type *)
@@ -1273,15 +1271,15 @@ fun class_of_term source (c:Classifier list, a:association list) =
 			  (* else error *)
 			  | _ => raise TemplateInstantiationError ("Template type not of type: Sequence, Set, OrderedSet, Collection or Bag")
 		    end
-		val _ = trace rep_core ("substitute classifier: parameter type: " ^ string_of_OclType typ ^ " template type: " ^ string_of_OclType (type_of classifier) ^ "\n") 
+		val _ = Logger.debug3 ("substitute classifier: parameter type: " ^ string_of_OclType typ ^ " template type: " ^ string_of_OclType (type_of classifier) ^ "\n") 
                 (* val typ = parameter type *)
 		val styp = substitute_typ typ (type_of classifier)
-		val _ = trace rep_core ("substitute_classifier: end substitute_type \n")
+		val _ = Logger.debug3 ("substitute_classifier: end substitute_type \n")
 		val ops = substitute_operations typ (local_operations_of classifier)
-		val _ = trace 100 ("substitute parent.\n")
+		val _ = Logger.debug4 ("substitute parent.\n")
 			
 		val sparent = substitute_parent (type_of classifier) typ
-		val _ = trace 100 ("end substitute parent.\n")
+		val _ = Logger.debug4 ("end substitute parent.\n")
 	    in
 		(Class
 		     {
@@ -1310,7 +1308,7 @@ fun class_of_term source (c:Classifier list, a:association list) =
 	fun  templ_of temp_typ para_typ [] = raise TemplateInstantiationError ("Error during instantiating a template" ^ "\n")
 	   | templ_of temp_typ para_typ (Template{parameter,classifier}::tail) =
 	     let
-		 val _ = trace low ("Instantiate Template for classifier: " ^ (string_of_OclType (type_of classifier)) ^ "\n")
+		 val _ = Logger.debug4 ("Instantiate Template for classifier: " ^ (string_of_OclType (type_of classifier)) ^ "\n")
 	     in
 		 if ((type_of classifier) = temp_typ) then
 		     substitute_classifier para_typ classifier
@@ -1319,11 +1317,11 @@ fun class_of_term source (c:Classifier list, a:association list) =
 	     end
 	   | templ_of temp_typ para_typ (h::tail) = 
 	     let
-		 val _ = trace development ("shit")
+		 val _ = Logger.debug4 ("shit")
 	     in
 		 templ_of temp_typ para_typ tail
 	     end
-	val _ = trace rep_core ("Now dispatch type ...\n")  
+	val _ = Logger.debug3 ("Now dispatch type ...\n")  
     in
 	case typ of
 	    (* Primitive types of lib *)
@@ -1341,29 +1339,29 @@ fun class_of_term source (c:Classifier list, a:association list) =
 	  | OclVoid => class_of_t OclVoid c
 	  | OclAny => 
 	    let 
-		val _ = trace rep_core ("type is OclAny")
+		val _ = Logger.debug3 ("type is OclAny")
 	    in
 		class_of_t OclAny c
 	    end
 	  (* Model types *)
 	  | Classifier (path) =>
 	    let
-		val _ = trace development ("class_of_term: Classifier ("^(string_of_path path)^")\n")
+		val _ = Logger.debug4 ("class_of_term: Classifier ("^(string_of_path path)^")\n")
 		val res = class_of_t (Classifier (path)) c
-		val _ = trace development ("found: "^(string_of_path (name_of res)) ^"\n")
+		val _ = Logger.debug4 ("found: "^(string_of_path (name_of res)) ^"\n")
 	    in
 		(*class_of_t (Classifier (path)) model*)
 		res
 	    end
 	  | DummyT => 
 	    let
-		val _ = trace development ("GetClassifierError: DummyT \n")
+		val _ = Logger.debug4 ("GetClassifierError: DummyT \n")
 	    in
 		raise GetClassifierError ("No classifier of type: 'DummyT' \n")
 	    end
 	  | TemplateParameter (string) => 
 	    let
-		val _ = trace development ("GetClassifierError: TemplateParameter ("^ string ^") \n")
+		val _ = Logger.debug4 ("GetClassifierError: TemplateParameter ("^ string ^") \n")
 	    in
 		raise GetClassifierError ("No classifier of type: 'TemplateParameter (string)' \n")
 	    end
@@ -1371,14 +1369,14 @@ fun class_of_term source (c:Classifier list, a:association list) =
 
 fun class_of (name:Path) (model as (clist,alist)) = 
      let
-	 val _ = trace rep_core ("top level package: " ^ (List.hd (name)) ^ "\n")
-	 val _ = trace rep_core ("remaining package: " ^ (String.concat (List.tl name)) ^ "\n") 
+	 val _ = Logger.debug3 ("top level package: " ^ (List.hd (name)) ^ "\n")
+	 val _ = Logger.debug3 ("remaining package: " ^ (String.concat (List.tl name)) ^ "\n") 
      in
 	 class_of_term (Variable("x",type_of_path name model)) model
 	 handle TemplateInstantiationError s =>
 		let
-		    val _ = trace rep_core ("The path of the template parameter is not in the desing model.\n")
-		    val _ = trace rep_core ("Path = " ^ s ^ "\n")
+		    val _ = Logger.debug3 ("The path of the template parameter is not in the desing model.\n")
+		    val _ = Logger.debug3 ("Path = " ^ s ^ "\n")
 		in
 		    raise TemplateError ("shit\n")
 		end
@@ -1386,9 +1384,9 @@ fun class_of (name:Path) (model as (clist,alist)) =
 
 fun class_of_type (typ:OclType) (model:transform_model) = 
     let
-	val _ = trace rep_core ("Rep_Core.class_of_type\n")
+	val _ = Logger.debug3 ("Rep_Core.class_of_type\n")
 	val res = class_of_term (Variable ("x",typ)) model
-	val _ = trace rep_core ("Rep_Core.class_of_type\n")
+	val _ = Logger.debug3 ("Rep_Core.class_of_type\n")
     in
 	res
     end	      
@@ -1432,7 +1430,7 @@ fun type_equals Integer (Classifier ([OclLibPackage,"Real"])) = true
 fun conforms_to_up _ OclAny (_:transform_model) = true
   | conforms_to_up (Set(T1)) (Collection(T2)) model =
     let
-	val _ = trace low ("conforms_to_up: set -> collection \n")
+	val _ = Logger.debug4 ("conforms_to_up: set -> collection \n")
     in
 	if (conforms_to T1 T2 model) then 
 	    true
@@ -1441,7 +1439,7 @@ fun conforms_to_up _ OclAny (_:transform_model) = true
     end
   | conforms_to_up (Bag(T1)) (Collection(T2)) model =
     let
-	val _ = trace low ("conforms_to_up: bag -> collection \n")
+	val _ = Logger.debug4 ("conforms_to_up: bag -> collection \n")
     in    
 	if (conforms_to T1 T2 model) then 
 	    true
@@ -1450,7 +1448,7 @@ fun conforms_to_up _ OclAny (_:transform_model) = true
     end
   | conforms_to_up (Sequence(T1)) (Collection(T2)) model =
     let
-	val _ = trace low ("conforms_to_up: sequence -> collection \n")
+	val _ = Logger.debug4 ("conforms_to_up: sequence -> collection \n")
     in
 	if (conforms_to T1 T2 model) then 
 	    true
@@ -1459,7 +1457,7 @@ fun conforms_to_up _ OclAny (_:transform_model) = true
     end
   | conforms_to_up (OrderedSet(T1)) (Collection(T2)) model =
     let
-	val _ = trace low ("conforms_to_up:  orderedset -> collection \n")
+	val _ = Logger.debug4 ("conforms_to_up:  orderedset -> collection \n")
     in
 	if (conforms_to T1 T2 model) then 
 	    true
@@ -1470,7 +1468,7 @@ fun conforms_to_up _ OclAny (_:transform_model) = true
     let
 	val class = class_of_type typ1 model
 	val parents_types = type_of_parents (class) model
-	val _ = trace low ("conforms_to_up:  ... \n")
+	val _ = Logger.debug4 ("conforms_to_up:  ... \n")
     in
 	member (typ2) (parents_types)
     end
@@ -1479,7 +1477,7 @@ and
 (* RETRUN: Boolean *)
 conforms_to x y (model:transform_model) =
     let
-	val _ = trace low ("conforms_to: " ^ string_of_OclType x ^ " -> " ^ string_of_OclType y ^ " ? \n")
+	val _ = Logger.debug4 ("conforms_to: " ^ string_of_OclType x ^ " -> " ^ string_of_OclType y ^ " ? \n")
     in
 	if (x = y) then 
 	    true
@@ -1505,9 +1503,9 @@ fun parent_name_of (C as Class{parent,...}) =
     (case parent  of NONE   => name_of OclAnyAC
 		   | SOME p => path_of_OclType p )
   | parent_name_of (Interface{...}) =
-    error "in Rep.parent_name_of: unsupported argument type Interface"
+    Logger.error "in Rep.parent_name_of: unsupported argument type Interface"
   | parent_name_of (E as Enumeration{parent,...}) = 
-    (case parent  of NONE => error ("in Rep.parent_name_of: Enumeration "^
+    (case parent  of NONE => Logger.error ("in Rep.parent_name_of: Enumeration "^
                                     ((string_of_path o name_of) E)
                                     ^" has no parent")
 		   | SOME p  => path_of_OclType p )  
@@ -1516,7 +1514,7 @@ fun parent_name_of (C as Class{parent,...}) =
     (* error ("Primitive "^((string_of_path o name_of) D)^" has no parent") *)
 		   | SOME p  => path_of_OclType p )
   | parent_name_of (Template _) = 
-    error "in Rep.parent_name_of: unsupported argument type Template"
+    Logger.error "in Rep.parent_name_of: unsupported argument type Template"
 
 fun sig_conforms_to [] [] model = true
   | sig_conforms_to [] list model = 
@@ -1645,7 +1643,7 @@ fun isValueType Integer         = true
   | isValueType (Classifier s)  = false
   | isValueType DummyT          = false
   | isValueType OclVoid         = false
-  | isValueType t               = error ("Error in isValueType(_,"^(string_of_OclType t)^")")
+  | isValueType t               = Logger.error ("Error in isValueType(_,"^(string_of_OclType t)^")")
 
 
 
@@ -1695,7 +1693,7 @@ fun parent_of_template (cl as Class{parent,...}:Classifier) (model:transform_mod
 fun parents_of_help (C:Classifier) (model:transform_model) = 
     let
 	val this_type = type_of C
-	val _ = trace rep_core ("type of C = " ^ (string_of_OclType this_type) ^ "\n")
+	val _ = Logger.debug3 ("type of C = " ^ (string_of_OclType this_type) ^ "\n")
     in
 	case this_type of
 	    OclAny => []
@@ -1765,9 +1763,9 @@ fun parents_of_help (C:Classifier) (model:transform_model) =
 	      end
 	    | some_type => 
 	      let 
-		  val _ = trace rep_core ("parent_of_template \n")
+		  val _ = Logger.debug3 ("parent_of_template \n")
 		  val parent = parent_of_template C model
-		  val _ = trace rep_core ("parent_of_template end, classifier = " 
+		  val _ = Logger.debug3 ("parent_of_template end, classifier = " 
 					  ^ (String.concat (name_of parent)) ^ "\n")
 	      in
 		  [parent]@(parents_of_help parent model)
@@ -1780,7 +1778,7 @@ fun parent_of (C:Classifier) model = parent_of_template C model
 
 fun parents_of (C:Classifier) model = 
     let
-	val _ = trace rep_core ("parents_of ... \n")
+	val _ = Logger.debug3 ("parents_of ... \n")
 	val helper = (parents_of_help C model)
     in
 	(if (helper = [])
@@ -1832,50 +1830,50 @@ fun incomingAendsOfAssociation name allAssociations associationPath =
 
 fun local_associationends_of (all_associations:association list) (Class{name,associations,...}):associationend list = 
     let 
-	val _ = trace rep_core ("local_associationends_of 1 ... \n")
-	val _ = trace rep_core ("classifier = " ^ (string_of_OclType name) ^ "\n")
+	val _ = Logger.debug3 ("local_associationends_of 1 ... \n")
+	val _ = Logger.debug3 ("classifier = " ^ (string_of_OclType name) ^ "\n")
 	val oppAends = List.concat (List.map (fn a => 
 						 let
-						     val _ = trace rep_core ("Association path = ")
-						     val _ = trace rep_core (string_of_path a ^ "\n")
+						     val _ = Logger.debug3 ("Association path = ")
+						     val _ = Logger.debug3 (string_of_path a ^ "\n")
 						 in
 						     (oppositeAendsOfAssociation name all_associations a)
 						 end
 					     ) associations)
-	val _ = trace rep_core ("local_associationends_of 2 ... \n")
+	val _ = Logger.debug3 ("local_associationends_of 2 ... \n")
 	val selfAends = map (incomingAendsOfAssociation name all_associations) associations
-	val _ = trace rep_core ("local_associationends_of 3 ... \n")
+	val _ = Logger.debug3 ("local_associationends_of 3 ... \n")
 	val filteredSelfAends = List.concat (List.filter (fn x => length x >= 2) selfAends)
-	val _ = trace rep_core ("local_associationends_of 4 ... \n")
+	val _ = Logger.debug3 ("local_associationends_of 4 ... \n")
     in
         oppAends@filteredSelfAends
     end
   | local_associationends_of all_associations (AssociationClass{name,associations,association,...}) = 
     (* association only contains endpoints to the other, pure classes *)
     let
-	val _ = trace rep_core ("local_associationends_of 1 AssoCl ... \n")
+	val _ = Logger.debug3 ("local_associationends_of 1 AssoCl ... \n")
 	val assocs = if List.exists (fn x => x = association ) associations 
                      then associations
 		     else association::associations
-	val _ = trace rep_core ("local_associationends_of 2 AssoCl ... \n")
+	val _ = Logger.debug3 ("local_associationends_of 2 AssoCl ... \n")
 	val oppAends = List.concat (map (oppositeAendsOfAssociation name all_associations) assocs)
-	val _ = trace rep_core ("local_associationends_of 3 AssoCl ... \n")
+	val _ = Logger.debug3 ("local_associationends_of 3 AssoCl ... \n")
 	val selfAends = map (incomingAendsOfAssociation name all_associations) associations
-	val _ = trace rep_core ("local_associationends_of 4 AssoCl ... \n")
+	val _ = Logger.debug3 ("local_associationends_of 4 AssoCl ... \n")
 	val filteredSelfAends = List.concat (List.filter (fn x => length x >= 2) selfAends)
-	val _ = trace rep_core ("local_associationends_of 5 AssoCl ... \n")
+	val _ = Logger.debug3 ("local_associationends_of 5 AssoCl ... \n")
     in
         oppAends@filteredSelfAends
     end
   | local_associationends_of all_associations (Primitive{name,associations,...}) = []
     (* let 
-	val _ = trace rep_core ("local_associationends_of 1 Primi... \n")
+	val _ = Logger.debug3 ("local_associationends_of 1 Primi... \n")
 	val oppAends = List.concat (map (oppositeAendsOfAssociation name all_associations) associations)
-	val _ = trace rep_core ("local_associationends_of 2 primi ... \n")
+	val _ = Logger.debug3 ("local_associationends_of 2 primi ... \n")
 	val selfAends = map (incomingAendsOfAssociation name all_associations) associations
-	val _ = trace rep_core ("local_associationends_of 3 primi ... \n")
+	val _ = Logger.debug3 ("local_associationends_of 3 primi ... \n")
 	val filteredSelfAends = List.concat (List.filter (fn x => length x >= 2) selfAends)
-	val _ = trace rep_core ("local_associationends_of 4 primi ... \n")
+	val _ = Logger.debug3 ("local_associationends_of 4 primi ... \n")
     in
         oppAends@filteredSelfAends
     end *)
@@ -1886,22 +1884,22 @@ fun associationends_of assocs classes = local_associationends_of assocs classes
 (* get all inherited operations of a classifier, without the local operations *)
 fun inherited_operations_of class (model as (clist,alist)) =
     let
-	val _ = trace rep_core ("inh ops 0\n")
+	val _ = Logger.debug3 ("inh ops 0\n")
 	val c_parents = parents_of class model
-	val _ = trace rep_core ("inh ops: parents = " ^ (String.concat (List.map (fn a => (string_of_path (name_of a))) c_parents)) ^ " \n")
+	val _ = Logger.debug3 ("inh ops: parents = " ^ (String.concat (List.map (fn a => (string_of_path (name_of a))) c_parents)) ^ " \n")
 	val ops_of_par = (List.map (operations_of) c_parents)
-	val _ = trace rep_core ("inh ops 2\n")
+	val _ = Logger.debug3 ("inh ops 2\n")
     in
 	List.foldr (fn (a,b) => embed_local_operations a b model) (List.last (ops_of_par)) ops_of_par
     end
 
 fun inherited_attributes_of class (model as (clist,alist)) = 
     let
-	val _ = trace rep_core ("inh att 0\n")
+	val _ = Logger.debug3 ("inh att 0\n")
 	val c_parents = parents_of class model
-	val _ = trace rep_core ("inh att 0\n")
+	val _ = Logger.debug3 ("inh att 0\n")
 	val atts_of_par = (List.map (attributes_of) c_parents)
-	val _ = trace rep_core ("inh att 0\n")
+	val _ = Logger.debug3 ("inh att 0\n")
     in
 	if (List.length(atts_of_par) = 0)
 	then []
@@ -1910,12 +1908,12 @@ fun inherited_attributes_of class (model as (clist,alist)) =
 	
 fun inherited_associationends_of class (model as (clist,alist)) =
     let
-	val _ = trace rep_core ("inh assoEnd 0\n")
+	val _ = Logger.debug3 ("inh assoEnd 0\n")
 	val c_parents = parents_of class model
-	val _ = trace rep_core ("inh assoEnd 1: parents = " ^ (String.concat (List.map (fn a => string_of_path (name_of a)) (c_parents))) ^ "\n")
+	val _ = Logger.debug3 ("inh assoEnd 1: parents = " ^ (String.concat (List.map (fn a => string_of_path (name_of a)) (c_parents))) ^ "\n")
 	val assE_of_par = (List.map (associationends_of alist) c_parents)
-	val _ = trace rep_core ("inh assoEnd 2\n")
-	val _ = trace rep_core ("inh assoEnd 3:  assocEnds of parents: " ^ (String.concat (List.map (fn a => (name_of_aend a)) (List.concat assE_of_par))) ^ "\n")
+	val _ = Logger.debug3 ("inh assoEnd 2\n")
+	val _ = Logger.debug3 ("inh assoEnd 3:  assocEnds of parents: " ^ (String.concat (List.map (fn a => (name_of_aend a)) (List.concat assE_of_par))) ^ "\n")
     in
 	if (List.length(assE_of_par) = 0)
 	then []
@@ -1926,9 +1924,9 @@ fun inherited_associationends_of class (model as (clist,alist)) =
 fun all_operations_of class model =
     let 
 	val lo = local_operations_of class
-	val _ = trace rep_core ("all ops of classifier : "^ (string_of_path (name_of class)) ^ "\n")
+	val _ = Logger.debug3 ("all ops of classifier : "^ (string_of_path (name_of class)) ^ "\n")
 	val io = inherited_operations_of class model
-	val _ = trace rep_core ("all ops 2\n")
+	val _ = Logger.debug3 ("all ops 2\n")
     in
 	embed_local_operations lo io model
     end
@@ -1936,9 +1934,9 @@ fun all_operations_of class model =
 fun all_attributes_of class model = 
     let
 	val la = local_attributes_of class
-	val _ = trace rep_core ("all atts of classifier : "^ (string_of_path (name_of class)) ^ "\n")
+	val _ = Logger.debug3 ("all atts of classifier : "^ (string_of_path (name_of class)) ^ "\n")
 	val ia = inherited_attributes_of class model
-	val _ = trace rep_core ("all atts 2\n")
+	val _ = Logger.debug3 ("all atts 2\n")
     in
 	embed_local_attributes la ia model
     end
@@ -1946,11 +1944,11 @@ fun all_attributes_of class model =
 fun all_associationends_of class (model as (clist,alist)) = 
     let
 	val la = local_associationends_of alist class
-	val _ = trace rep_core ("all assocEnds of classifier : " ^ (String.concat (name_of class)) ^ "\n")
-	val _ = trace rep_core ("name of loacal assends: " ^ (String.concat (List.map (fn a => (name_of_aend a)) la)) ^ "\n")
+	val _ = Logger.debug3 ("all assocEnds of classifier : " ^ (String.concat (name_of class)) ^ "\n")
+	val _ = Logger.debug3 ("name of loacal assends: " ^ (String.concat (List.map (fn a => (name_of_aend a)) la)) ^ "\n")
 	val ia = inherited_associationends_of class model
-	val _ = trace rep_core ("name of inherited assends: " ^ (String.concat (List.map (fn a => (name_of_aend a)) ia)) ^ "\n")
-	val _ = trace rep_core ("all assocEnds \n")
+	val _ = Logger.debug3 ("name of inherited assends: " ^ (String.concat (List.map (fn a => (name_of_aend a)) ia)) ^ "\n")
+	val _ = Logger.debug3 ("all assocEnds \n")
     in
 	embed_local_assocEnds la ia model
     end
@@ -2258,12 +2256,12 @@ fun normalize (all_associations:association list)
                             invariant,stereotypes,interfaces,thyname,
                             visibility,activity_graphs})):Classifier =
     let
-	val _ = trace function_calls ("Rep_Core:normalize: class\n")
-	val _ = trace function_arguments 
+	val _ = Logger.debug2 ("Rep_Core:normalize: class\n")
+	val _ = Logger.debug2 
                       ("number of associations: "^(Int.toString(List.length 
                                                                     associations)
                                                   )^"\n")
-	val _ = map (trace function_arguments o (fn x => 
+	val _ = map (Logger.debug2 o (fn x => 
                                                     "association path: "^x^"\n")
                      o string_of_path) associations
 	fun mapPath (aend1,aend2) = (aend1,path_of_aend aend2)
@@ -2271,7 +2269,7 @@ fun normalize (all_associations:association list)
 	(*     val aendPathPairs = map mapPath (bidirectionalPairs name all_associations
 								   associations)*)
 	val aendPathPairs = bidirectionalPairs name all_associations associations
-	val _ = trace function_ends ("Rep_Core: end normalize \n")
+	val _ = Logger.debug2 ("Rep_Core: end normalize \n")
     in
 	Class {name   = name,
 	       parent = parent,
@@ -2298,8 +2296,8 @@ fun normalize (all_associations:association list)
                                             thyname,visibility, activity_graphs})) =
     (* FIXME: how to handle AssociationClass.association? *)
     let
-	val _ = trace function_calls ("Rep_Core.normalize  AssociationClass\n")
-	val _ = trace function_arguments 
+	val _ = Logger.debug2 ("Rep_Core.normalize  AssociationClass\n")
+	val _ = Logger.debug2 
                       ("number of associations: "^
                        (Int.toString (List.length associations ))^"\n")
 	fun mapPath (aend1,aend2) = (aend1,path_of_aend aend2)
@@ -2326,7 +2324,7 @@ fun normalize (all_associations:association list)
 	    associations = [],
 	    visibility=visibility,
 	    association = [] (* FIXME? *)}
-	val _ = trace function_ends ("Rep_Core.normalize")
+	val _ = Logger.debug2 ("Rep_Core.normalize")
     in
 	res
     end
@@ -2532,7 +2530,7 @@ fun update_thyname tname (Class{name,parent,attributes,operations,invariant,
               interfaces=interfaces,
               thyname=(SOME tname)} 
   | update_thyname _ (Template T) = 
-    error ("in update_thyname: Template does not have a theory")
+    Logger.error ("in update_thyname: Template does not have a theory")
 
 fun update_invariant invariant' (Class{name,parent,attributes,operations,
                                        invariant,stereotypes,interfaces,
@@ -2596,7 +2594,7 @@ fun update_invariant invariant' (Class{name,parent,attributes,operations,
               interfaces=interfaces,
               thyname=thyname} 
   | update_invariant _ (Template T) = 
-    error ("in update_invariant: Template does not have an invariant")
+    Logger.error ("in update_invariant: Template does not have an invariant")
                                       
 
 fun update_operations operations' (Class{name,parent,attributes,invariant,
@@ -2663,7 +2661,7 @@ fun update_operations operations' (Class{name,parent,attributes,invariant,
               interfaces=interfaces,
               thyname=thyname} 
   | update_operations _ (Template T) = 
-    error ("in update_operations: Template does not have operations")
+    Logger.error ("in update_operations: Template does not have operations")
      
       
 fun update_precondition pre' ({name,precondition,postcondition,body,arguments,
@@ -2703,7 +2701,7 @@ fun visibility_of (Class{visibility,...})            = visibility
 
 
 fun short_name_of C =  case (name_of C)  of
-	[] => error "in Rep.short_name_of: empty type"
+	[] => Logger.error "in Rep.short_name_of: empty type"
 	| p => (hd o rev)  p
 
 fun stereotypes_of (Class{stereotypes,...})       = stereotypes  
@@ -2711,7 +2709,7 @@ fun stereotypes_of (Class{stereotypes,...})       = stereotypes
   | stereotypes_of (Interface{stereotypes,...})   = stereotypes
   | stereotypes_of (Enumeration{stereotypes,...}) = stereotypes
   | stereotypes_of (Primitive{stereotypes,...})    = stereotypes
-  | stereotypes_of (Template _) = error "in Rep.stereotypes_of: \
+  | stereotypes_of (Template _) = Logger.error "in Rep.stereotypes_of: \
                                         \unsupported argument type Template"
 
 
@@ -2758,7 +2756,7 @@ fun substitute_package [] tpackage [] = raise Rep_CoreError ("Not possible to su
 
 fun parent_short_name_of C =  
     (case (parent_name_of C) of
-       [] => error "in Rep.parent_short_name_of: empty type"
+       [] => Logger.error "in Rep.parent_short_name_of: empty type"
      | p => (hd o rev)  p)
 	    
 fun parent_package_of (Class{parent,...})       = 
@@ -2776,9 +2774,9 @@ fun parent_package_of (Class{parent,...})       =
                                      else []
 				 end)
   | parent_package_of (Interface{...})        = 
-    error "in Rep.parent_package_of: unsupported argument type Interface"
+    Logger.error "in Rep.parent_package_of: unsupported argument type Interface"
   | parent_package_of (E as Enumeration{parent,...}) = 
-    (case parent of  NONE => error ("in Rep.parent_package_of: Enumeration "^
+    (case parent of  NONE => Logger.error ("in Rep.parent_package_of: Enumeration "^
                                     (string_of_path o name_of) E^
                                     " has no parent")
 		   | SOME q   => let val p = path_of_OclType q in 
@@ -2788,14 +2786,14 @@ fun parent_package_of (Class{parent,...})       =
 				end )
   | parent_package_of (Primitive{parent,...})    = 
     (case parent of NONE => package_of OclAnyC
-	  (* NONE => error "Primitive has no parent" *)
+	  (* NONE => Logger.error "Primitive has no parent" *)
 		 |  SOME q   => let val p = path_of_OclType q in
 				   if (length p) > 1 
                                    then (take (((length p) -1),p))  
                                    else []
 			       end)
   | parent_package_of (Template{...})        = 
-    error "in Rep.parent_package_of: unsupported argument type Template"
+    Logger.error "in Rep.parent_package_of: unsupported argument type Template"
 						
 
 (* Get parent interfaces of a Classifier. *)
@@ -2804,7 +2802,7 @@ fun parent_interfaces_of (Interface{parents,...}) = parents
   | parent_interfaces_of (AssociationClass{interfaces,...}) = interfaces
   | parent_interfaces_of (Enumeration{interfaces,...}) = interfaces
   | parent_interfaces_of (Primitive{interfaces,...}) = interfaces
-  | parent_interfaces_of (Template{...}) = error "parent_interfaces_of <Template> not supported"
+  | parent_interfaces_of (Template{...}) = Logger.error "parent_interfaces_of <Template> not supported"
 
 
 
@@ -2818,7 +2816,7 @@ fun p_invariant_of (Class{invariant,...})       = invariant
   | p_invariant_of (Interface{invariant,...})   = invariant
   | p_invariant_of (Enumeration{invariant,...}) = invariant
   | p_invariant_of (Primitive{invariant,...})   = invariant
-  | p_invariant_of (Template _) = error "in Rep.p_invariant_of: \
+  | p_invariant_of (Template _) = Logger.error "in Rep.p_invariant_of: \
                                         \unsupported argument type Template"
 
 fun invariant_of C = 
@@ -2847,29 +2845,29 @@ fun name_of_ae ({name,...}:associationend) = name
 
 fun thy_name_of (C as Class{thyname,...}) = 
      (case thyname of  SOME tname =>  tname
-		     | NONE => error  ("Class "^((string_of_path o name_of) C)^
+		     | NONE => Logger.error  ("Class "^((string_of_path o name_of) C)^
                                        " has no thyname"))
   |  thy_name_of (AC as AssociationClass{thyname,...}) = 
      (case thyname of  SOME tname =>  tname
-		     | NONE => error  ("AssociationClass "^((string_of_path o 
+		     | NONE => Logger.error  ("AssociationClass "^((string_of_path o 
                                                              name_of) AC)^
                                        " has no thyname"))
   | thy_name_of (I as Interface{thyname,...})   = 
      (case thyname of SOME tname =>  tname
-		    | NONE => error  ("Interface "^((string_of_path o 
+		    | NONE => Logger.error  ("Interface "^((string_of_path o 
                                                      name_of) I)
                                       ^" has no thyname"))
   | thy_name_of (E as Enumeration{thyname,...}) = 
     (case thyname of SOME tname =>  tname
-		   | NONE => error  ("Enumeration "^((string_of_path o 
+		   | NONE => Logger.error  ("Enumeration "^((string_of_path o 
                                                       name_of) E)
                                      ^" has no thyname"))
   | thy_name_of (P as Primitive{thyname,...})    = 
     (case thyname of SOME tname =>  tname
-		   | NONE => error  ("Primitive "^((string_of_path o 
+		   | NONE => Logger.error  ("Primitive "^((string_of_path o 
                                                     name_of) P)^
                                      " has no thyname"))
-  | thy_name_of (Template _) = error "in Rep.thy_name_of: \
+  | thy_name_of (Template _) = Logger.error "in Rep.thy_name_of: \
                                      \unsupported argument type Template"
 
 
@@ -3326,7 +3324,7 @@ fun connected_classifiers_of (all_associations:association list)
 fun upcastable_args [] [] model = true
   | upcastable_args ((str,typ)::tail) ((term,ttyp)::args) model =
     let
-	val _ = trace low ("must conform to: " ^ (string_of_OclType typ) ^ "\n")
+	val _ = Logger.debug4 ("must conform to: " ^ (string_of_OclType typ) ^ "\n")
     in
 	if (conforms_to (type_of_term term) typ model) then 
 	    true
@@ -3341,7 +3339,7 @@ fun upcastable_args [] [] model = true
 fun upcast_args [] [] model = []
   | upcast_args ((str,typ)::tail) ((term,_)::args) model  =
     let
-	val _ = trace low ("interfere args" ^ "\n")
+	val _ = Logger.debug4 ("interfere args" ^ "\n")
     in
 	if (type_equals typ (type_of_term term)) then
 	    (term,type_of_term term)::(upcast_args tail args model)
@@ -3362,17 +3360,17 @@ fun upcast_type t1 t2 model =
 (* RETURN: OclTerm *)
 fun upcast_op [] source args model = 
     let
-	val _ = trace development ("UpcastingError ... \n")
+	val _ = Logger.debug4 ("UpcastingError ... \n")
     in
 	raise UpcastingError ("interefere_methods: No operation signature matches given types.")
     end
   | upcast_op ((class,meth)::class_meth_list) source args model =
     let
-	val _ = trace low ("Interfere method      : name : '" ^ name_of_op meth ^ "'\n")
+	val _ = Logger.debug4 ("Interfere method      : name : '" ^ name_of_op meth ^ "'\n")
        val check_source = conforms_to (type_of_term source) (type_of class) model
        val check_args = upcastable_args (#arguments meth) args model
-       val _ = trace low ("Upcastable ?       : Source conforms : "  ^ Bool.toString check_source ^ "   Args conforms : " ^ Bool.toString check_args ^ "\n")
-       val _ = trace low ("Return type of method : " ^ string_of_OclType (result_of_op meth) ^ "\n\n")
+       val _ = Logger.debug4 ("Upcastable ?       : Source conforms : "  ^ Bool.toString check_source ^ "   Args conforms : " ^ Bool.toString check_args ^ "\n")
+       val _ = Logger.debug4 ("Return type of method : " ^ string_of_OclType (result_of_op meth) ^ "\n\n")
     in
 	if (check_source andalso check_args) then
 	    (* signature matches given types *)
@@ -3385,7 +3383,7 @@ fun upcast_op [] source args model =
 fun upcast_att (class,attr:attribute) source (model:transform_model) =
    let
        val check_source = conforms_to (type_of_term source) (type_of class) model
-       val _ = trace low ("interfere attribute: check_source "^ Bool.toString check_source ^ "\n\n")
+       val _ = Logger.debug4 ("interfere attribute: check_source "^ Bool.toString check_source ^ "\n\n")
    in
        if check_source then
 	   (* signature matches given types *)
@@ -3398,8 +3396,8 @@ fun upcast_att (class,attr:attribute) source (model:transform_model) =
 fun upcast_aend (class,assocend:associationend) source (model:transform_model) = 
     let 
 	val check_source = conforms_to (type_of_term source) (type_of class) model 
-	val _ = trace low ("Interfere assocend: check_source " ^ Bool.toString check_source ^ "\n")
-	val _ = trace low ("type of assoc " ^ string_of_OclType (convert_aend_type assocend) ^ "\n")
+	val _ = Logger.debug4 ("Interfere assocend: check_source " ^ Bool.toString check_source ^ "\n")
+	val _ = Logger.debug4 ("type of assoc " ^ string_of_OclType (convert_aend_type assocend) ^ "\n")
     in
 	if check_source then
 	    (* billk_tag *)
@@ -3464,12 +3462,12 @@ fun end_of_recursion classifier =
 
 fun get_overloaded_methods class op_name model = 
     let
-	val _ = trace rep_core ("get_overloaded_methods, look for operation = " ^ op_name ^ "\n")
+	val _ = Logger.debug3 ("get_overloaded_methods, look for operation = " ^ op_name ^ "\n")
 	val parents = parents_of class model
 	val loc_ops = List.map (fn a => (class,a)) (local_operations_of class)
 	val cl_op_list = (loc_ops)@(List.concat (List.map (fn a => (List.map (fn b => (a,b)) (all_operations_of a model))) parents))
 	val cls_ops = List.filter (fn (a,b) => if (name_of_op b = op_name) then true else false) cl_op_list
-	val _ = trace rep_core ("number of overloaded operations found = " ^ Int.toString(List.length(cls_ops)) ^ "\n")
+	val _ = Logger.debug3 ("number of overloaded operations found = " ^ Int.toString(List.length(cls_ops)) ^ "\n")
     in
 	cls_ops
     end
@@ -3480,14 +3478,14 @@ fun last_implementation_of_op class op_name model =
 fun get_overloaded_methods class op_name ([],_) = raise NoModelReferenced ("in 'get_overloaded_methods' ...\n")
   | get_overloaded_methods class op_name (model as (classifiers,associations)) =
    let
-       val _ = trace function_calls "get_overloaded_methods\n"
-       val _ = trace low("\n")
+       val _ = Logger.debug2 "get_overloaded_methods\n"
+       val _ = Logger.debug4("\n")
        val ops = local_operations_of class
-       val _ = trace low("Look for methods for classifier: " ^ string_of_OclType (type_of class) ^ "\n")
+       val _ = Logger.debug4("Look for methods for classifier: " ^ string_of_OclType (type_of class) ^ "\n")
        val ops2 = List.filter (fn a => (if ((#name a) = op_name) then true else false)) ops
-       val _ = trace low("operation name                 : " ^ op_name ^ "  Found " ^ Int.toString (List.length ops2) ^ " method(s) \n")
+       val _ = Logger.debug4("operation name                 : " ^ op_name ^ "  Found " ^ Int.toString (List.length ops2) ^ " method(s) \n")
        val parent = parent_of class model
-       val _ = trace low("Parent class                   : " ^ string_of_OclType (type_of parent) ^ "\n\n")
+       val _ = Logger.debug4("Parent class                   : " ^ string_of_OclType (type_of parent) ^ "\n\n")
        val cl_op = List.map (fn a => (class,a)) ops2
    in
        if (class = class_of_type OclAny model) 
@@ -3514,7 +3512,7 @@ fun get_overloaded_methods class op_name ([],_) = raise NoModelReferenced ("in '
 
 fun get_overloaded_attrs_or_assocends class attr_name (model as (clist,alist)) = 
     let
-	val _ = trace function_calls 
+	val _ = Logger.debug2 
 		      ("Rep_Core.get_overloaded_attrs_or_assocends, look for attr_or_assoc = " 
 		       ^ attr_name 
 		       ^ "\n")
@@ -3524,7 +3522,7 @@ fun get_overloaded_attrs_or_assocends class attr_name (model as (clist,alist)) =
 	val cl_att_list = (loc_atts)@(List.concat (List.map (fn a => (List.map (fn b => (a,b)) (all_attributes_of a model))) parents))
 	val cls_atts = 	List.filter (fn (a,b) => if (name_of_att b = attr_name) then true else false) cl_att_list
         (* Associations *)
-	val _ = trace rep_core ("middle get_overloaded_attrs_or_assocends \n")
+	val _ = Logger.debug3 ("middle get_overloaded_attrs_or_assocends \n")
 	val loc_assE = List.map (fn a => (class,a)) (local_associationends_of alist class)   
 	val cl_assE_list = (loc_assE)@(List.concat (List.map (fn a => (List.map (fn b => (a,b)) (all_associationends_of a model))) parents))
 	val cls_assEs = List.filter (fn (a,b) => if (name_of_aend b = attr_name) then true else false) cl_assE_list
@@ -3551,7 +3549,7 @@ fun get_overloaded_attrs_or_assocends class attr_name (model as (clist,alist)) =
 		else
 		    raise AttributeAssocEndNameClash ("Attributes and AssocEnd in same inheritance tree are named equal.\n")
 		)
-	val  _ = trace function_ends ("Rep_Core.get_overloaded_attrs_or_assocends\n")
+	val  _ = Logger.debug2 ("Rep_Core.get_overloaded_attrs_or_assocends\n")
     in
 	res
     end
@@ -3559,29 +3557,29 @@ fun get_overloaded_attrs_or_assocends class attr_name (model as (clist,alist)) =
 fun get_meth source op_name args (model as (classifiers,associations))=
     (* object type *)
     let
-	val _ = trace function_calls ("Rep_Core: get_meth: Type of Classifier : " ^ string_of_OclType (type_of_term source ) ^ "\n")
+	val _ = Logger.debug2 ("Rep_Core: get_meth: Type of Classifier : " ^ string_of_OclType (type_of_term source ) ^ "\n")
 	val class = class_of_term source model
 	val meth_list = get_overloaded_methods class op_name model
 	val res = upcast_op meth_list source args model
-	val _ = trace function_ends ("Rep_Core: overloaded methods found: " ^ Int.toString (List.length meth_list) ^ "\n")
+	val _ = Logger.debug2 ("Rep_Core: overloaded methods found: " ^ Int.toString (List.length meth_list) ^ "\n")
     in
 	res
     end
 
 fun get_attr_or_assoc source attr_name (model as (classifiers,associations)) =
     let 
-	val _ = trace function_calls ("Rep_Core.get_attr_or_assoc\n")
-	val _ = trace rep_core ("GET ATTRIBUTES OR ASSOCENDS: source term.\n")
+	val _ = Logger.debug2 ("Rep_Core.get_attr_or_assoc\n")
+	val _ = Logger.debug3 ("GET ATTRIBUTES OR ASSOCENDS: source term.\n")
 	val class = class_of_term source model
 	val attr_or_assocend_list = get_overloaded_attrs_or_assocends class attr_name model
 	val res = 
 	    let 
 		val x = upcast_att_aend attr_or_assocend_list source model
-		val _ = trace rep_core ("Return type of attribute: " ^ string_of_OclType (type_of_term x) ^ "\n\n")
+		val _ = Logger.debug3 ("Return type of attribute: " ^ string_of_OclType (type_of_term x) ^ "\n\n")
 	    in
 		x
 	    end
-	val _ = trace function_ends ("Rep_Core.end get_attr_or_assoc\n")
+	val _ = Logger.debug2 ("Rep_Core.end get_attr_or_assoc\n")
     in
 	res
     end
@@ -3693,7 +3691,6 @@ fun string_to_type "Integer" = Integer
 		val cons = (#1 tokens)
 		(* delete first "(" and last ")" element *)
 		val tail = List.tl (real_path (#2 tokens))
-		val _ = trace important ("tail "^ (String.implode tail) ^ "\n")
 	    in
 		string_to_cons (String.implode cons) (string_to_type (String.implode tail))
 	    end

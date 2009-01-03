@@ -63,7 +63,6 @@ structure WFCPOG_Taxonomy_Constraint:WFCPOG_TAXONOMY_CONSTRAINT =
 struct
 
 (* su4sml *)
-open Rep_Logger
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType

@@ -17,7 +17,6 @@ end
 
 structure WFCPOG_TestSuite : WFCPOG_TESTSUITE =
 struct
-open Rep_Logger
 open Rep_OclTerm
 open Rep_OclType
 open WFCPOG

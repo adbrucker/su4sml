@@ -61,7 +61,6 @@ struct
 
 (* su4sml *)
 open Rep_Helper
-open Rep_Logger
 open Rep_Core
 open Rep_OclTerm
 open Rep_OclType

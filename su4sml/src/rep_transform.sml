@@ -110,7 +110,6 @@ datatype transformFlag = BinaryAssociationsOnly
 type modelTransformation = Rep_Core.transform_model * transformFlag list
 			   -> Rep_Core.transform_model * transformFlag list
 open Rep_Helper
-open Rep_Logger
 open Transform_Library
 open Rep_OclTerm
 open Rep_OclType
@@ -137,8 +136,8 @@ fun get_association (all_assocs: Rep_Core.association list) (assoc_path:Path):
   in
     (case assoc of 
        [x] => x
-     | []  => error ("in get_association: no match found ("^(string_of_path (assoc_path))^")")
-     | _   => error "in get_association: more than 1 match found")
+     | []  => Logger.error ("in get_association: no match found ("^(string_of_path (assoc_path))^")")
+     | _   => Logger.error "in get_association: more than 1 match found")
   end
   
 fun get_other_associationends (all_assocs:association list) (assoc_path:Path)
@@ -194,7 +193,7 @@ fun transformAggregation (allClassifiers,allAssociations) =
 fun transformQualifiers ((allClassifiers,allAssociations):transform_model):
     transform_model =
     let
-      val _ = trace function_calls "transformQualifiers\n"
+      val _ = Logger.debug2 "transformQualifiers\n"
       (* connects the dummy class to the new qualifier classes *)
       fun handleQualifier assocPath (role,attributes) =
           let
@@ -478,7 +477,7 @@ fun transformQualifiers ((allClassifiers,allAssociations):transform_model):
 fun transformNAryAssociationsToAssociationClasses (allClassifiers,
                                                    allAssociations) =
     let
-      val _ = trace function_calls "transformNAryAssociationsTo\
+      val _ = Logger.debug2 "transformNAryAssociationsTo\
                                    \AssociationClasses\n"
       fun toAssocClass (assoc as {name,aends,qualifiers,aclass=NONE}) =
           let
@@ -528,7 +527,7 @@ fun transformAssociationClassIntoClass (AssociationClass
 fun transformAssociationClassesToNAryAssociations (allClassifiers,
                                                    allAssociations) =
     let
-      val _ = trace function_calls "transformAssociationClassesTo\
+      val _ = Logger.debug2 "transformAssociationClassesTo\
                                    \NAryAssociations\n"
       fun morph {name,aends,qualifiers,aclass} class =
           let
@@ -583,7 +582,7 @@ fun generalTransfromNAryAssociation dummy (association as {name,aends,
                                                            aclass=NONE},
 			                   (classifiers,processedAssocs)) =
     let
-      val _ = trace function_calls "generalTransformNAryAssociation\n"
+      val _ = Logger.debug2 "generalTransformNAryAssociation\n"
       fun modifyClassifier ((assocs,classifier),classifiers) =
           let
             val ([cls],rem) = List.partition (fn x => name_of x = 
@@ -655,7 +654,7 @@ fun generalTransfromNAryAssociation dummy (association as {name,aends,
  *)
 fun transformAssociationClasses (allClassifiers,allAssociations) =
     let
-      val _ = trace function_calls "transformAssociationClasses\n"
+      val _ = Logger.debug2 "transformAssociationClasses\n"
       fun transformAssociationClass ({name,aends,qualifiers=[],
                                       aclass=SOME aClass},
                                      (classifiers,procAssocs)) =
@@ -699,7 +698,7 @@ fun transformAssociationClasses (allClassifiers,allAssociations) =
  *)
 fun transformNAryAssociations (allClassifiers,allAssociations) =
     let
-      val _ = trace function_calls "transformNAryAssociations\n"
+      val _ = Logger.debug2 "transformNAryAssociations\n"
       fun transformNAryAssociation (association,(classifiers,procAssocs)) =
           generalTransfromNAryAssociation 
               (newDummyClass (package_of_association association))
@@ -723,7 +722,7 @@ fun transformNAryAssociations (allClassifiers,allAssociations) =
 
 fun transformMultiplicities (allClassifiers,allAssociations) =
     let
-      val _ = trace function_calls "transformMultiplicities\n"
+      val _ = Logger.debug2 "transformMultiplicities\n"
       fun withinBound selfVar targetType role (low,high)=
           let
             val returnType = Set targetType
@@ -749,7 +748,7 @@ fun transformMultiplicities (allClassifiers,allAssociations) =
                                                 aclass=NONE},
                                       localClassifiers) =
           let
-	          val _ = trace function_calls "addMultiplicityConstraints\n"
+	          val _ = Logger.debug2 "addMultiplicityConstraints\n"
 	          val aType = type_of_aend a
 	          val bType = type_of_aend b
             val aPath = path_of_aend a
@@ -826,20 +825,11 @@ fun transformClassifiers (model:transform_model):Rep.Classifier list =
  * read and transform an .xmi file.
  * @return a list of rep classifiers, or nil in case of problems
  *) 
-fun transformFile f:transform_model = (info ("opening "^f);
+fun transformFile f:transform_model = (Logger.info ("opening "^f);
                        (normalize_ext  o transformClassifiersExt o 
                         RepParser.transformXMI_ext o XmiParser.readFile) f)
 (*    handle ex as (IllFormed msg) => raise ex *)
 
 exception FileNotFound of string
-
-fun printStackTrace e =
-    let val ss = CompilerExt.exnHistory e
-    in
-      print_stderr ("uncaught exception " ^ (General.exnMessage e) ^ " at:\n");
-      app (fn s => print_stderr ("\t" ^ s ^ "\n")) ss
-    end
-
-
 
 end

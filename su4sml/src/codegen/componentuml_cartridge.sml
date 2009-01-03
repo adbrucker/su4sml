@@ -45,7 +45,6 @@ struct
 structure SuperCart = SecureUML_Cartridge(structure SuperCart=S; structure D=ComponentUML)
 
 structure Design = SuperCart.Security.Design
-open Rep_Logger
 
 (* TODO: fill out *)
 type environment = { curPermissionList : SuperCart.Security.Permission list option, 
@@ -141,7 +140,7 @@ fun test env "first_permission" =
 fun foreach_permission env name = 
     let val action = Option.valOf (List.find (fn  x => ComponentUML.action_type_of x = name) 
                                              (atomic_actions_from_context env))
-                     handle Option => error ("error in finding action "^name)
+                     handle Option => Logger.error ("error in finding action "^name)
         val permissions = permissions_for_action env action
         fun env_from_list_item c = { curPermissionList = SOME permissions,
                                      curPermission = SOME c,

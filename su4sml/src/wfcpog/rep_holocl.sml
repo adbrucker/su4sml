@@ -249,7 +249,6 @@ end
 structure Rep_HolOcl_Helper:REP_HOLOCL_HELPER = 
 struct 
 open Rep_Core
-open Rep_Logger
 open Rep_OclType
 open Rep_OclTerm
 open WFCPOG_Library

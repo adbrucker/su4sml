@@ -241,7 +241,6 @@ structure Transform_Library:TRANSFORM_LIBRARY =
 struct
 
 open Rep_Helper
-open Rep_Logger
 open StringHandling
 open Rep_OclTerm
 open Rep_OclHelper
@@ -522,7 +521,7 @@ fun mapCalls f [] = []
 fun updateAssociationReferences classifiers [] = classifiers
   | updateAssociationReferences classifiers updates =
     let
-      val _ = trace function_calls "updateAssociationReferences\n"
+      val _ = Logger.debug2 "updateAssociationReferences\n"
           
       fun findNewPath oldAssoc newAssocs source path =
           let
@@ -613,7 +612,7 @@ fun updateAssociationReferences classifiers [] = classifiers
       
       fun handleConstraint oldAssoc newAssocs (name,term) =
           let
-            val _ = trace function_calls "handleConstraint\n"
+            val _ = Logger.debug2 "handleConstraint\n"
           in
             (name,traverseOcl oldAssoc newAssocs term)
           end
@@ -661,7 +660,7 @@ fun updateAssociationReferences classifiers [] = classifiers
                                                
       fun updateReferences ((oldAssoc,newAssocs),tmpClassifiers) =
           let
-            val _  = trace function_calls "updateReferences\n"
+            val _  = Logger.debug2 "updateReferences\n"
           in
             map (modifyClassifier oldAssoc newAssocs) tmpClassifiers
           end
@@ -742,7 +741,7 @@ fun modifyAssociationsOfClassifier (newAssociations:association list)
 fun uniquenessOclConstraint (source:Classifier)
                             (associations:association list) =
     let
-      val _ = trace function_calls "uniquenessOclConstraint\n"
+      val _ = Logger.debug2 "uniquenessOclConstraint\n"
       fun assocAendCalls (self:OclTerm) (iter:OclTerm) {name,aends=[a,b],
                                                         qualifiers,
                                                         aclass} = 
@@ -801,7 +800,7 @@ fun binaryAssociations (source:Classifier) (sourceRole:string option)
                        (targetRolePairs:(Classifier*string option) list):
     (association list * associationend list)=
     let
-      val _ = trace function_calls "binaryAssociations\n"
+      val _ = Logger.debug2 "binaryAssociations\n"
       fun generateAssociation srcRole (target,roleOpt):
           (association * associationend)=
           let
@@ -839,7 +838,7 @@ fun binaryAssociations (source:Classifier) (sourceRole:string option)
 fun orderedBinaryAssociations (source:Classifier) (targets:Classifier list) 
                               aends: (association list * associationend list)=
     let
-      val _ = trace function_calls "orderedBinaryAssociations\n"
+      val _ = Logger.debug2 "orderedBinaryAssociations\n"
 
       fun order [] [] = []
         | order [] (x::xs) = 
@@ -898,7 +897,7 @@ fun fixAends source (aends:associationend list) =
 
 fun multiplicityOclConstraints source multis oppAends =
     let
-      val _ = trace function_calls "multiplicityOclConstraint\n"
+      val _ = Logger.debug2 "multiplicityOclConstraint\n"
       fun bound set (low,high) =
           if low = high then
             ocl_eq (ocl_size set) (Literal(Int.toString high,Integer))
@@ -932,7 +931,7 @@ fun multiplicityOclConstraints source multis oppAends =
  *)
 fun consistencyOclConstraint source reference selfAend roles refRoles =
     let
-      val _ = trace function_calls "consistencyOclConstraint\n"
+      val _ = Logger.debug2 "consistencyOclConstraint\n"
       fun implies selfVar refVar {name=selfPath,aend_type=selfType,
                                   multiplicity,init,visibility,ordered} 
                   ((role as {name=newPath,aend_type=newType,ordered=ord2,
@@ -986,7 +985,7 @@ fun splitNAryAssociation (association as {name,qualifiers,aends=[a,b],
   | splitNAryAssociation (association as {name,qualifiers,
                                           aends,aclass}) classifiers =
     let
-      val _ = trace function_calls "splitNAryAssociation\n"
+      val _ = Logger.debug2 "splitNAryAssociation\n"
       fun updateClassifier ((clsType,newAssocs),classifiers) =
         let
 	        val ([cls],rem) = List.partition (fn x => type_of x = clsType )

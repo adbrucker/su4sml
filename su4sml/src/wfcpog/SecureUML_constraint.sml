@@ -70,7 +70,6 @@ struct
 
 (* su4sml *)
 open Rep_Core
-open Rep_Logger
 open Rep_OclTerm
 open Rep_OclType
 open Rep2String

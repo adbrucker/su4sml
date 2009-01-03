@@ -44,7 +44,6 @@ structure SecureUML2HolOcl:sig
 end = struct 
 
 open Rep_Helper
-open Rep_Logger
 open Rep_Core
 open XMI_DataTypes
 open Rep_OclTerm

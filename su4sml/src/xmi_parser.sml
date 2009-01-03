@@ -5,7 +5,8 @@
  * xmi_parser.sml --- an xmi-parser for the import interface for su4sml
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2005-2007 ETH Zurich, Switzerland
+ *               2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -44,7 +45,6 @@ structure XmiParser : sig
 end =
 struct
 open Rep_Helper
-open Rep_Logger
 open XmlTree
 open XmlTreeHelper
 
@@ -58,7 +58,7 @@ fun bool_value_of string atts =
     let val att = value_of string atts
     in 
 	(valOf o Bool.fromString) att 
-	handle Option => error ("boolean attribute \""^string^
+	handle Option => Logger.error ("boolean attribute \""^string^
 				"\" has non-boolean value \""^att^
                                 "\" (xmi.id = "^(value_of "xmi.id" atts)^")")
     end
@@ -68,7 +68,7 @@ fun int_value_of string atts =
     let val att = value_of string atts
     in 
 	(valOf o Int.fromString) att 
-	handle Option => error ("integer attribute \""^string^
+	handle Option => Logger.error ("integer attribute \""^string^
 				"\" has non-integer value \""^att^
                                 "\" (xmi.id = "^(value_of "xmi.id" atts)^")")
     end
@@ -82,7 +82,7 @@ fun xmiidref t = t |> attributes |> value_of "xmi.idref"
 fun optional_name_or_empty atts = atts |> optional_value_of "name"
                                        |> get_optional_or_default ""
 
-fun unknown_attribute_value atts att s = error ("attribute \""^att^
+fun unknown_attribute_value atts att s = Logger.error ("attribute \""^att^
                                                 "\" has unknown value \""^s^
                                                 "\" (xmi.id = "^(atts |> xmiid)^")")
                                          
@@ -281,7 +281,7 @@ fun mkOCLExpression (tree as Node(("UML15OCL.Expressions.BooleanLiteralExp",
           }
   | mkOCLExpression (tree as Node(("UML15OCL.Expressions.AssociationClassCall\
                                    \Exp",atts),_))
-    =  error ("AssociationClassCallExp is not yet implemented"^some_id tree)
+    =  Logger.error ("AssociationClassCallExp is not yet implemented"^some_id tree)
   | mkOCLExpression (tree as Node(("UML15OCL.Expressions.VariableExp",atts),_))
     = XMI.VariableExp 
           { referredVariable = tree |> xmiidref_to
@@ -347,7 +347,7 @@ fun mkOCLExpression (tree as Node(("UML15OCL.Expressions.BooleanLiteralExp",
 	          expression_type = tree |> expression_type 
           }	  
   | mkOCLExpression tree = 
-    error ("unknown OCLExpression type \""^(tagname tree)^"\""^some_id tree^
+    Logger.error ("unknown OCLExpression type \""^(tagname tree)^"\""^some_id tree^
            ".")
 and mkVariableDec vtree = 
     let val atts = vtree |> assert "UML15OCL.Expressions.VariableDeclaration"
@@ -363,7 +363,7 @@ and mkVariableDec vtree =
                                  |> xmiidref 
 	    }
     end
-        (* handle IllFormed msg => error ("in mkVariableDec: "^msg)*)
+        (* handle IllFormed msg => Logger.error ("in mkVariableDec: "^msg)*)
  
 fun mkTaggedValue tree =
     let val atts = tree |> assert "UML:TaggedValue" |> attributes
@@ -378,7 +378,7 @@ fun mkTaggedValue tree =
                           |> xmiidref
 	}
     end
-(*handle IllFormed msg => error ("in mkTaggedValue: "^msg)*)
+(*handle IllFormed msg => Logger.error ("in mkTaggedValue: "^msg)*)
 
 fun mkAttribute tree = 
     let val atts = tree |> assert "UML:Attribute" |> attributes
@@ -408,7 +408,7 @@ fun mkAttribute tree =
                          |> map mkTaggedValue 
   }
     end
-(*handle IllFormed msg => error ("in mkAttribute: "^msg)*)
+(*handle IllFormed msg => Logger.error ("in mkAttribute: "^msg)*)
 
 fun mkQualifier tree =
     get_maybe "UML:Attribute" tree
@@ -437,7 +437,7 @@ fun mkAssociationEnd association  tree:XMI_Core.AssociationEnd =
                               |> xmiidref
       }
     end
-(*handle IllFormed msg => error ("in mkAssociationEnd: "^msg)*)
+(*handle IllFormed msg => Logger.error ("in mkAssociationEnd: "^msg)*)
 
 (* This is a hack to handle the implicit association end to *)
 (* the AssociationClass itself. *) 
@@ -478,12 +478,12 @@ fun mkAssociationFromAssociationClass tree =
                             |> map (mkAssociationEnd id)
 	}
     end
-(*handle IllFormed msg => error ("in mkAssociation: "^msg)*)
+(*handle IllFormed msg => Logger.error ("in mkAssociation: "^msg)*)
 
 
 fun mkAssociation tree = 
     let 
-	    val _ = trace function_calls ("XmiParser.mkAssociation\n")
+	    val _ = Logger.debug2 ("XmiParser.mkAssociation\n")
 	    val atts = tree |> assert "UML:Association" |> attributes
 	    val   id = atts |> xmiid
 	    (* FIXME: empty string is returned as (SOME "") instead of NONE *)
@@ -496,11 +496,11 @@ fun mkAssociation tree =
 			connection = tree |> get_many "UML:Association.connection" 
 					  |> map (mkAssociationEnd id)
 		      }
-	    val _ = trace function_ends ("end XmiParser.mkAssociation")
+	    val _ = Logger.debug2 ("end XmiParser.mkAssociation")
     in
 	res
     end
-(* handle IllFormed msg => error ("in mkAssociation: "^msg)*)
+(* handle IllFormed msg => Logger.error ("in mkAssociation: "^msg)*)
     
 val filterAssociations = filter "UML:Association"
 val filterAssociationClasses = filter "UML:AssociationClass"
@@ -551,7 +551,7 @@ fun mkDependency tree =
                             |> xmiidref 
         }
     end
-(*handle IllFormed msg => error ("in mkDependency: "^msg) *)
+(*handle IllFormed msg => Logger.error ("in mkDependency: "^msg) *)
 
 fun mkConstraint tree = 
     let val atts = tree |> assert "UML:Constraint" |> attributes
@@ -566,7 +566,7 @@ fun mkConstraint tree =
                       |> mkOCLExpression 
 	}
     end
-(*handle IllFormed msg => error ("in mkConstraint: "^msg)*)
+(*handle IllFormed msg => Logger.error ("in mkConstraint: "^msg)*)
 
 
 fun mkParameter tree = 
@@ -580,7 +580,7 @@ fun mkParameter tree =
                          |> get_optional_or_default ""
         }
     end
-(*handle IllFormed msg => error ("in mkParameter: "^msg)*)
+(*handle IllFormed msg => Logger.error ("in mkParameter: "^msg)*)
 
 fun mkOperation tree = 
     let val atts = tree |> assert "UML:Operation" |> attributes
@@ -596,7 +596,7 @@ fun mkOperation tree =
                                |> map xmiidref
 	}
     end
-(*handle IllFormed msg =>  error ("in mkOperation: "^msg)*)
+(*handle IllFormed msg =>  Logger.error ("in mkOperation: "^msg)*)
 
 fun mkTagDefinition tree =
     let val atts = tree |> assert "UML:TagDefinition" |> attributes
@@ -607,14 +607,14 @@ fun mkTagDefinition tree =
                               |> mkMultiplicity 
         }
     end
-(*handle IllFormed msg => error ("in mkTagDefinition: "^msg)*)
+(*handle IllFormed msg => Logger.error ("in mkTagDefinition: "^msg)*)
 
 fun mkStereotypeR tree = 
     let val atts = tree |> assert "UML:Stereotype" |> attributes
     in
         tree |> xmiidref
     end 
-(*handle IllFormed msg => error ("in mkStereotype: "^msg)*)
+(*handle IllFormed msg => Logger.error ("in mkStereotype: "^msg)*)
 
 fun mkAction tree = 
     let val atts      = tree |> attributes
@@ -630,7 +630,7 @@ fun mkAction tree =
 	      body            = expr_atts |> body ,
 	      expression      = "" (* FIXME: is this even useful? *)}
     end
-(*handle IllFormed msg => error ("in mkAction: "^msg)*)
+(*handle IllFormed msg => Logger.error ("in mkAction: "^msg)*)
     
 (* This works for ArgoUML, i.e. 1.4 metamodels... *)
 fun mkProcedure tree = 
@@ -644,7 +644,7 @@ fun mkProcedure tree =
            elem = "UML:TerminateAction" orelse
 	   elem = "UML:UninterpretedAction" 
         then mkAction tree
-	else error ("unknown Action type \""^elem^"\""^(some_id tree)^".")
+	else Logger.error ("unknown Action type \""^elem^"\""^(some_id tree)^".")
     end
 
 fun mkGuard tree = 
@@ -662,7 +662,7 @@ fun mkGuard tree =
                                    expr is "UML:BooleanExpression"
 				then expr_atts |> language 
                                 else
-                                    error ("unknown expression type \""^(tagname expr)^
+                                    Logger.error ("unknown expression type \""^(tagname expr)^
                                            "\""^some_id expr^"."),
               body            = if expr is "UML:BooleanExpression" then
                                     SOME (expr_atts |> body)
@@ -671,7 +671,7 @@ fun mkGuard tree =
 				then SOME (mkOCLExpression expr)
 				else NONE}
     end
-(*handle IllFormed msg => error ("in mkGuard: "^msg)*)
+(*handle IllFormed msg => Logger.error ("in mkGuard: "^msg)*)
 
 
 fun mkTransition tree = 
@@ -694,7 +694,7 @@ fun mkTransition tree =
                                      |> map mkTaggedValue
             }
     end
-(*handle IllFormed msg => error ("in mkTransition: "^msg)*)
+(*handle IllFormed msg => Logger.error ("in mkTransition: "^msg)*)
     
 
 
@@ -804,7 +804,7 @@ fun mkState tree =
                 outgoing     = outgoing,incoming = incoming,
                 taggedValue  = tagval}
           
-         | s => error ("unknown StateVertex type \""^s^"\""^some_id tree^".")
+         | s => Logger.error ("unknown StateVertex type \""^s^"\""^some_id tree^".")
     end
 and mkStateMachine tree =
     let val atts = tree |> assert "UML:StateMachine" |> attributes 
@@ -820,7 +820,7 @@ and mkStateMachine tree =
                                      |> map mkTransition
             }
     end
-(*handle IllFormed msg => error ("in mkStateMachine: "^msg)*)
+(*handle IllFormed msg => Logger.error ("in mkStateMachine: "^msg)*)
 
 
 fun mkActivityGraph tree =
@@ -837,11 +837,11 @@ fun mkActivityGraph tree =
                                      |> map mkTransition,
               partition       = nil}
     end
-(*handle IllFormed msg => error ("in mkActivityGraph: "^msg)*)
+(*handle IllFormed msg => Logger.error ("in mkActivityGraph: "^msg)*)
     
 fun mkClass atts tree = 
     let
-	val _ = trace function_calls ("XmiParser.mkClass \n")
+	val _ = Logger.debug2 ("XmiParser.mkClass \n")
 	val res = XMI.Class 
             { xmiid              = atts |> xmiid,
 	      name               = atts |> name,
@@ -876,17 +876,17 @@ fun mkClass atts tree =
 					|> filter "UML:ActivityGraph"
 					|> map mkActivityGraph 
             }
-	val _ = trace function_ends ("end XmiParser.mkClass \n")
+	val _ = Logger.debug2 ("end XmiParser.mkClass \n")
     in
 	res
     end
-(*handle IllFormed msg => error ("Error in mkClass "^(name atts)^
+(*handle IllFormed msg => Logger.error ("Error in mkClass "^(name atts)^
 				 ": "^msg)*)
     
 (* extended to match Rep.AssociationClass *)
 fun mkAssociationClass atts tree =
     let
-	    val _ = trace function_calls ("XmiParser.mkAssociationClass\n")
+	    val _ = Logger.debug2 ("XmiParser.mkAssociationClass\n")
 	    val id = atts |> xmiid
 	    val res = XMI.AssociationClass
 			  { xmiid              = id,
@@ -926,12 +926,12 @@ fun mkAssociationClass atts tree =
 			     *)connection         = tree |> get_many "UML:Association.connection" 
 					                 |> map (mkAssociationEnd id)
 			  }
-	    val _ = trace function_ends ("end XmiParser.mkAssociation Class\n")
+	    val _ = Logger.debug2 ("end XmiParser.mkAssociation Class\n")
     in
 	res
     end
 
-(*handle IllFormed msg => error ("in mkAssociationClass: "^msg)*)
+(*handle IllFormed msg => Logger.error ("in mkAssociationClass: "^msg)*)
 
 
 fun mkPrimitive atts tree
@@ -948,7 +948,7 @@ fun mkPrimitive atts tree
           taggedValue     = tree |> get "UML:ModelElement.taggedValue"
                                  |> map mkTaggedValue
 		  }
-(* handle IllFormed msg => error ("in mkPrimitive: "^msg)*)
+(* handle IllFormed msg => Logger.error ("in mkPrimitive: "^msg)*)
 
 fun mkInterface atts tree
   = XMI.Interface 
@@ -966,12 +966,12 @@ fun mkInterface atts tree
 	  supplierDependency = tree |> get "UML:ModelElement.supplierDependency"
 				    |> map xmiidref
 	}
-(*handle IllFormed msg => error ("in mkInterface: "^msg)*)
+(*handle IllFormed msg => Logger.error ("in mkInterface: "^msg)*)
 
 fun mkEnumerationLiteral tree =
     tree |> assert "UML:EnumerationLiteral" 
          |> attributes |> name
-(*handle IllFormed msg =>  error ("in mkOperation: "^msg)*)
+(*handle IllFormed msg =>  Logger.error ("in mkOperation: "^msg)*)
 
 
 fun mkEnumeration atts tree
@@ -988,12 +988,12 @@ fun mkEnumeration atts tree
 	  literals           = tree |> get "UML:Enumeration.literal"
                                     |> map mkEnumerationLiteral
         }
-(*    handle IllFormed msg => error ("in mkEnumeration: "^msg)*)
+(*    handle IllFormed msg => Logger.error ("in mkEnumeration: "^msg)*)
     
 fun mkVoid atts tree = XMI.Void { xmiid = atts |> xmiid, 
 				  name  = atts |> name 
                                 }
-(* handle IllFormed msg => error ("in mkVoid: "^msg)*)
+(* handle IllFormed msg => Logger.error ("in mkVoid: "^msg)*)
                        
 
 fun mkGenericCollection atts tree = 
@@ -1007,7 +1007,7 @@ fun mkGenericCollection atts tree =
       elementtype        = tree |> get_one "OCL.Types.CollectionType.elementType" 
 			        |> xmiidref
     }
-(* handle IllFormed msg => error ("in mkGenericCollection: "^msg) *)
+(* handle IllFormed msg => Logger.error ("in mkGenericCollection: "^msg) *)
 
     
 fun mkCollection atts tree = XMI.Collection (mkGenericCollection atts tree)
@@ -1027,7 +1027,7 @@ fun mkStereotype tree =
 	  stereotypeConstraint = NONE  (* FIXME, not supported by ArgoUML 0.22 *)
 	}
     end 
-(*    handle IllFormed msg => error ("in mkStereotype: "^msg)*)
+(*    handle IllFormed msg => Logger.error ("in mkStereotype: "^msg)*)
 
 
 fun mkClassifier tree = 
@@ -1047,7 +1047,7 @@ fun mkClassifier tree =
 		   | "UML15OCL.Types.SetType"        => mkSet atts tree
 		   | "UML15OCL.Types.BagType"        => mkBag atts tree
 		   | "UML15OCL.Types.OrderedSetType" => mkOrderedSet atts tree
-		   | _ => error ("unknown Classifier type \""^elem^
+		   | _ => Logger.error ("unknown Classifier type \""^elem^
                                  "\""^some_id tree^".")
     end
     
@@ -1088,7 +1088,7 @@ fun mkEvent tree =
     in 
 	case elem of "UML:CallEvent"   => mkCallEvent atts tree
 		   | "UML:SignalEvent" => mkSignalEvent atts tree
-		   | _ => error ("unknown Event type \""^elem^"\""^some_id tree^".")
+		   | _ => Logger.error ("unknown Event type \""^elem^"\""^some_id tree^".")
     end
 
 
@@ -1099,8 +1099,8 @@ fun mkPackage tree =
     then let val trees = tree |> get "UML:Namespace.ownedElement"
 	     val atts = attributes tree 
              val package_name = atts |> name
-             val _ = if  tree is "UML:Model" then info ("parsing  model    "^package_name)
-                     else                         info ("parsing  package  "^package_name)
+             val _ = if  tree is "UML:Model" then Logger.info ("parsing  model    "^package_name)
+                     else                         Logger.info ("parsing  package  "^package_name)
          in
              XMI.Package 
                  { xmiid           = atts  |> xmiid, 
@@ -1128,7 +1128,7 @@ fun mkPackage tree =
 		   events          = trees |> filterEvents |> map mkEvent
                  }
 	 end
-    else error "no UML:Model or UML:Package found"
+    else Logger.error "no UML:Model or UML:Package found"
 	 
 
 fun mkXmiContent tree =
@@ -1154,10 +1154,10 @@ val emptyXmiContent = { packages              = nil,
                         state_machines        = nil}
                       
 fun findXmiContent tree = valOf (dfs "XMI.content" tree)
-    handle Option => error "no XMI.content found"
+    handle Option => Logger.error "no XMI.content found"
 		     
 fun readFile f = (mkXmiContent o findXmiContent o XmlTreeParser.readFile) f
-    handle ex => (error_msg ("Error during parsing of "^f^": \n\t"^General.exnMessage ex); 
+    handle ex => (Logger.warn ("Error during parsing of "^f^": \n\t"^General.exnMessage ex); 
                   raise ex)
 end
 
