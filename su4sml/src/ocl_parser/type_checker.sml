@@ -42,36 +42,35 @@
 
 signature TYPECHECKER = 
 sig
-
-
-    exception TC_wrongCollectionLiteral of Rep_OclTerm.OclTerm * string
-    exception TC_CollectionRangeError of Rep_OclTerm.CollectionPart * string
-    exception TC_IteratorTypeMissMatch of Rep_OclTerm.OclTerm * string 
-    exception TC_NoSuchIteratorNameError of Rep_OclTerm.OclTerm * string 
-    exception TC_TypeCheckerResolveIfError of Rep_OclTerm.OclTerm * string
-    exception TC_NotYetSupportedError of string
-    exception TC_WrongContextChecked of Context.context
-    exception TC_RootError of string 
-(*    exception TC_AsSetError of (Rep_OclTerm.OclTerm * string list * int * 
- * 			     (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list *  Rep_Core.transform_model)
- *    exception TC_DesugaratorCall of (Rep_OclTerm.OclTerm * string list * int * 
- *			  (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list * Rep_Core.transform_model) *)
-    exception TC_IterateError of string
-    exception TC_IterateAccumulatorTypeError of string
-    exception TC_IterateTypeMissMatch of string
-    exception TC_NoSuchAttributeError of string 
-    exception TC_NoSuchOperationError of string
-    exception TC_OperationWithTypeError of string
-
-    val check_context_list            : Context.context list -> Rep_Core.transform_model -> Context.context option list
-    val check_context                 : Context.context -> Rep_Core.transform_model -> Context.context option
-    val resolve_OclTerm               : Rep_OclTerm.OclTerm -> Rep_Core.transform_model -> Rep_OclTerm.OclTerm
-    val resolve_CollectionPart        : Rep_Core.transform_model -> Rep_OclTerm.CollectionPart -> Rep_OclTerm.CollectionPart 
-    val resolve_arguments             : (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list -> Rep_Core.transform_model -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list
+  exception TC_wrongCollectionLiteral of Rep_OclTerm.OclTerm * string
+  exception TC_CollectionRangeError of Rep_OclTerm.CollectionPart * string
+  exception TC_IteratorTypeMismatch of Rep_OclTerm.OclTerm * string 
+  exception TC_NoSuchIteratorNameError of Rep_OclTerm.OclTerm * string 
+  exception TC_TypeCheckerResolveIfError of Rep_OclTerm.OclTerm * string
+  exception TC_NotYetSupportedError of string
+  exception TC_WrongContextChecked of Context.context
+  exception TC_RootError of string 
+  (*    exception TC_AsSetError of (Rep_OclTerm.OclTerm * string list * int * 
+   * 			     (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list *  Rep_Core.transform_model)
+   *    exception TC_DesugaratorCall of (Rep_OclTerm.OclTerm * string list * int * 
+   *			  (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list * Rep_Core.transform_model) *)
+  exception TC_IterateError of string
+  exception TC_IterateAccumulatorTypeError of string
+  exception TC_IterateTypeMismatch of string
+  exception TC_NoSuchAttributeError of string 
+  exception TC_NoSuchOperationError of string
+  exception TC_OperationWithTypeError of string
+					 
+  val check_context_list            : Context.context list -> Rep_Core.transform_model -> Context.context option list
+  val check_context                 : Context.context -> Rep_Core.transform_model -> Context.context option
+  val resolve_OclTerm               : Rep_OclTerm.OclTerm -> Rep_Core.transform_model -> Rep_OclTerm.OclTerm
+  val resolve_CollectionPart        : Rep_Core.transform_model -> Rep_OclTerm.CollectionPart -> Rep_OclTerm.CollectionPart 
+  val resolve_arguments             : (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list 
+				      -> Rep_Core.transform_model -> (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list
 end
 
 structure TypeChecker:TYPECHECKER  = 
- struct
+struct
 
 open Rep_Core
 open Rep_OclTerm
@@ -82,14 +81,14 @@ open XMI_DataTypes
 open Preprocessor
 open OclLibrary
 open Ocl2String
-
+     
 type operation = Rep_Core.operation
 type attribute = Rep_Core.attribute
-
+		 
 exception TC_RootError of string 
 exception TC_wrongCollectionLiteral of Rep_OclTerm.OclTerm * string
 exception TC_CollectionRangeError of Rep_OclTerm.CollectionPart * string
-exception TC_IteratorTypeMissMatch of Rep_OclTerm.OclTerm * string 
+exception TC_IteratorTypeMismatch of Rep_OclTerm.OclTerm * string 
 exception TC_NoSuchIteratorNameError of Rep_OclTerm.OclTerm * string 
 exception TC_TypeCheckerResolveIfError of Rep_OclTerm.OclTerm * string
 exception TC_NotYetSupportedError of string
@@ -98,7 +97,7 @@ exception TC_AsSetError of (OclTerm * string list * int * (OclTerm * OclType) li
 exception TC_DesugaratorCall of (OclTerm * string list * int * (OclTerm * OclType) list * Rep_Core.transform_model)
 exception TC_IterateError of string			     
 exception TC_IterateAccumulatorTypeError of string
-exception TC_IterateTypeMissMatch of string			  
+exception TC_IterateTypeMismatch of string			  
 exception TC_NoSuchAttributeError of string 
 exception TC_NoSuchOperationError of string
 exception TC_OperationWithTypeError of string
@@ -133,7 +132,7 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
 	    val ops = get_overloaded_methods class (List.last path) model
 	in
 	    if (List.length ops = 0)
-	    then raise UpcastingError ("FromSet no operation/attribute found. \n")
+	    then raise UpcastingError ("FromSet no operation/attribute found.")
 	    else
 		let
 		    val insert_term = upcast_op ops (Variable iterVar) rargs model
@@ -152,7 +151,7 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
 	    val attrs_or_assocs = get_overloaded_attrs_or_assocends class (List.last path) model
 	in
 	    if (List.length attrs_or_assocs = 0)
-	    then raise UpcastingError ("Attriubte '" ^ (List.last path) ^ "' does not exist ... \n") 
+	    then raise UpcastingError ("Attriubte '" ^ (List.last path) ^ "' does not exist ...") 
 	    else 
 		let
 		    val insert_term = upcast_att_aend attrs_or_assocs (Variable iterVar) model
@@ -205,12 +204,11 @@ fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
 		      in
 			  if (List.length ops = 0)
 			  then
-			    let val _ = print ("RAise: "^(Ocl2String.ocl2string false rterm))
-in
-			      raise TC_NoSuchOperationError ("interefere_methods: No operation signature matches given types (source: "^(Ocl2String.ocl2string false rterm)^").")
-	end
-		  else
-			      upcast_op ops new_rterm rargs model
+			    raise TC_NoSuchOperationError ("interefere_methods: No operation signature "
+							   ^"matches given types (source: "
+							   ^(Ocl2String.ocl2string false rterm)^").")
+			  else
+			    upcast_op ops new_rterm rargs model
 		      end
 		  else (* AttributeCall *)
 		      let
@@ -225,7 +223,7 @@ in
 		      in
 			  if (List.length attrs = 0) 
 			  then 
-			      raise TC_NoSuchAttributeError ("Attriubte '" ^ (List.last path) ^ "' does not exist ... \n") 
+			      raise TC_NoSuchAttributeError ("Attriubte '" ^ (List.last path) ^ "' does not exist ...") 
 			  else 
 			      upcast_att_aend attrs new_rterm model
 		      end
@@ -261,7 +259,7 @@ fun resolve_CollectionPart model (CollectionItem (term,typ))  =
 	    if (rtyp2 = rtyp1) then
 		(CollectionRange (rterm1,rterm2,rtyp1))
 	    else
-		raise (TC_CollectionRangeError ((CollectionRange (term1,term2,typ)),("Begin and end of Range not of same type.\n")))
+		raise (TC_CollectionRangeError ((CollectionRange (term1,term2,typ)),("Begin and end of Range not of same type.")))
     	val _ = Logger.debug2 ("TypeChecker.resolve_CollectionPart " ^ (ocl2string false term1) ^ "\n")
     in
 	res
@@ -277,7 +275,7 @@ and resolve_CollectionLiteral (CollectionLiteral (part_list,typ)) model =
 	    then
 		rpart_list
 	    else
-		raise TC_wrongCollectionLiteral ((CollectionLiteral (part_list,typ)),"Not all Literals have the same type.\n")
+		raise TC_wrongCollectionLiteral ((CollectionLiteral (part_list,typ)),"Not all Literals have the same type.")
 	val _ = Logger.debug2 ("TypeChecker.resolve_CollectionLiteral\n ")
     in
 	res
@@ -413,7 +411,10 @@ and resolve_OclTerm (Literal (s,typ)) model =
       val path = (attributes_to_path source)@[string_path]
       val _ = Logger.debug3 ("Path of the given type: " ^ string_of_path (path) ^ "\n")
       val typ  = type_of_path path model
-		handle GetClassifierError s => raise TC_OperationWithTypeError ("Wrong or ommited package in a OperationWithType call. Please ajust the the package of the type.\n" ^ "OclTerm is: " ^ ocl2string true opcall ^ "\n")
+		handle GetClassifierError s => raise TC_OperationWithTypeError ("Wrong or ommited package in a "
+									       ^"OperationWithType call. Please ajust "
+									       ^"the the package of the type.\n" 
+									       ^ "OclTerm is: " ^ ocl2string true opcall)
       val _ = Logger.debug3 ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
       val res = OperationWithType (rterm,rtyp,"oclIsTypeOf",typ,Boolean)
       val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm\n")
@@ -436,7 +437,10 @@ let
       val path = (attributes_to_path source)@[string_path]
       val _ = Logger.debug3 ("Path of the given type: " ^ string_of_path (path) ^ "\n")
       val typ  = type_of_path path model
-		handle GetClassifierError s => raise TC_OperationWithTypeError ("Wrong or ommited package in a OperationWithType call. Please ajust the the package of the type.\n" ^ "OclTerm is: " ^ ocl2string true opcall ^ "\n")
+		handle GetClassifierError s => raise TC_OperationWithTypeError ("Wrong or ommited package in a "
+									       ^"OperationWithType call. "
+									       ^"Please ajust the the package of the type.\n" 
+									       ^ "OclTerm is: " ^ ocl2string true opcall)
       val _ = Logger.debug3 ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
       val res = OperationWithType (rterm,rtyp,"oclIsKindOf",typ,Boolean)
       val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm\n")
@@ -459,7 +463,7 @@ let
       val path = (attributes_to_path source)@[string_path]
       val _ = Logger.debug3 ("Path of the given type: " ^ string_of_path (path) ^ "\n")
       val typ  = type_of_path path model
-		handle GetClassifierError s => raise TC_OperationWithTypeError ("Wrong or ommited package in a OperationWithType call. Please ajust the the package of the type.\n" ^ "OclTerm is: " ^ ocl2string true opcall ^ "\n")
+		handle GetClassifierError s => raise TC_OperationWithTypeError ("Wrong or ommited package in a OperationWithType call. Please ajust the the package of the type.\n" ^ "OclTerm is: " ^ ocl2string true opcall)
       val _ = Logger.debug3 ("res OpCall: oclTypeOf 4:" ^ "... " ^ "\n")
       val res = OperationWithType (rterm,rtyp,"oclAsType",typ,typ)
       val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm\n")
@@ -583,7 +587,7 @@ let
 		  )
 	      end
 	  else      
-	      raise TC_IteratorTypeMissMatch (Iterator (name,iter_vars,source_term,DummyT,expr,expr_typ,res_typ),("Iterator variable doesn't conform to choosen set \n"))
+	      raise TC_IteratorTypeMismatch (Iterator (name,iter_vars,source_term,DummyT,expr,expr_typ,res_typ),("Iterator variable doesn't conform to choosen set"))
       val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm\n")
   in
       res
@@ -634,7 +638,7 @@ let
 	      else
 		  raise TC_IterateAccumulatorTypeError ("Type of accumulator does not conform to type of expression of accumulator")
 	  else
-	      raise TC_IterateTypeMissMatch ("Iterate variables doesn't conform to choosen set \n")
+	      raise TC_IterateTypeMismatch ("Iterate variables doesn't conform to choosen set")
       val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm\n")
   in
       res
@@ -691,9 +695,9 @@ let
 	      else if (conforms_to relse_typ rif_typ model) then
 		  If(rterm,rtyp,rif_expr,rif_typ,relse_expr,relse_typ,rif_typ)
 	      else
-		  raise TC_TypeCheckerResolveIfError (If (cond_term,cond_typ,if_expr,if_typ,else_expr,else_typ,ret_typ),("Types of if-expression and else-expression don't conform each other \n"))
+		  raise TC_TypeCheckerResolveIfError (If (cond_term,cond_typ,if_expr,if_typ,else_expr,else_typ,ret_typ),("Types of if-expression and else-expression don't conform each other"))
 	  else
-	      raise TC_TypeCheckerResolveIfError (If (cond_term,cond_typ,if_expr,if_typ,else_expr,else_typ,ret_typ),("Type of condition is not Boolean. \n"))
+	      raise TC_TypeCheckerResolveIfError (If (cond_term,cond_typ,if_expr,if_typ,else_expr,else_typ,ret_typ),("Type of condition is not Boolean."))
       val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm\n")
   in
       res
@@ -758,97 +762,42 @@ fun check_context (Cond (path,op_name,op_sign,result_type,cond,pre_name,expr)) (
   in 
       res
   end
-| check_context (Empty_context (s,t)) _ = raise TC_NotYetSupportedError ("Empty_context not supported.\n")
+| check_context (Empty_context (s,t)) _ = raise TC_NotYetSupportedError ("Empty_context not supported.")
 (* SOME (Empty_context (s,t)) *)
-| check_context (Guard (path,name,expr)) _ = raise TC_NotYetSupportedError ("Guard not supported.\n") 
+| check_context (Guard (path,name,expr)) _ = raise TC_NotYetSupportedError ("Guard not supported.") 
 (* SOME (Guard (path,name,expr)) *)
 
 (* RETURN: (context option) list *)
 fun check_context_list [] model = []
   | check_context_list (h::context_list_tail) model  = 
     ((check_context h model
-      handle TC_wrongCollectionLiteral (term,mes) =>
-	     let
-	       val s1 =  ("wrongCollectionLiteral:\n")
-	       val s2 =  ("Error Message: " ^ mes ^ "\n")
-	       val s3 =  ("In Term: " ^ Ocl2String.ocl2string false term ^ "\n")
-	     in
-	       Logger.errorExn (TC_WrongContextChecked h) (s1^s2^s3)
-	     end
-	   | TC_CollectionRangeError (part,mes) =>
-	     let
-    	       val s1 =  ("CollectionRangeError:\n")
-	       val s2 =  ("Error Message: " ^ mes ^ "\n")
-	     in
-	       Logger.errorExn (TC_WrongContextChecked h) (s1^s2)
-	     end
-	   | TC_IteratorTypeMissMatch (term,mes) =>
-	     let
-	       val s1 =  ("IteratorTypeMissMatch:\n")
-	       val s2 =  ("Error Message: " ^ mes ^ "\n")
-	       val s3 =  ("In Term: " ^ Ocl2String.ocl2string false term ^ "\n")
-	   in
-	       Logger.errorExn (TC_WrongContextChecked h) (s1^s2^s3)
-	   end
-	 | TC_NoSuchIteratorNameError (term,mes) => 
-	   let
-	       val s1 =  ("NoSuchIteratorNameError:\n")
-	       val s2 =  ("Error Message: " ^ mes ^ "\n")
-	       val s3 =  ("In Term: " ^ Ocl2String.ocl2string false term ^ "\n")
-	   in
-	     Logger.errorExn (TC_WrongContextChecked h) (s1^s2^s3)
-	   end
-	 | TC_TypeCheckerResolveIfError (term,mes) => 
-	   let
-	       val s1 =  ("TypeCheckerResolveIfError:\n")
-	       val s2 =  ("Error Message: " ^ mes ^ "\n")
-	       val s3 =  ("In Term: " ^ Ocl2String.ocl2string false term ^ "\n")
-	   in
-	     Logger.errorExn (TC_WrongContextChecked h) (s1^s2^s3)
-	   end
-	 | TC_NotYetSupportedError mes => 
-	   let
-	       val s1 =  ("TC_NotYetSupportedError:\n")
-	       val s2 =  ("Error Message: " ^ mes ^ "\n")
-	   in
-	       Logger.errorExn (TC_WrongContextChecked h) (s1^s2)
-	   end
-	 | TC_OperationWithTypeError mes => 
-	   let	       
-	       val s1 =  ("TC_OperationWithType:\n")
-	       val s2 =  ("Error Message: " ^ mes ^ "\n")
-	   in
-	     Logger.errorExn (TC_WrongContextChecked h) (s1^s2)
-	   end
- 	 |  TC_NoSuchAttributeError mes => 
-	   let	       
-	       val s1 =  ("TC_NoSuchAttributeError:\n")
-	       val s2 =  ("Error Message: " ^ mes ^ "\n")
-	   in
-	     Logger.errorExn (TC_WrongContextChecked h) (s1^s2)
-	   end
-	 | GetClassifierError mes =>
-	   let	       
-	       val s1 =  ("GetClassifierError:\n")
-	       val s2 =  ("Error Message: " ^ mes ^ "\n")
-	   in
-	       Logger.errorExn (TC_WrongContextChecked h) (s1^s2)
-	   end
-	 | TC_NoSuchOperationError mes =>
-	   let	       
-	       val s1 =  ("TC_NoSuchOperationError:\n")
-	       val s2 =  ("Error Message: " ^ mes ^ "\n")
-	   in
-	       Logger.errorExn (TC_WrongContextChecked h) (s1^s2)
-	   end
+      handle TC_wrongCollectionLiteral (term,mes) => Logger.error ("WrongCollectionLiteral: "^mes^"\n"
+								  ^"  in term: "^(Ocl2String.ocl2string false term)
+								  ^"  in context: "^(cxt_list2string [h]))
+	   | TC_CollectionRangeError (part,mes) => Logger.error ("CollectionRangeError: "^mes^"\n"
+								^"  in context: "^(cxt_list2string [h]))
+	   | TC_IteratorTypeMismatch (term,mes) => Logger.error ("IteratorTypeMismatch: "^mes^"\n"
+								^"  in term: "^(Ocl2String.ocl2string false term)
+								^"  in context: "^(cxt_list2string [h]))
+	   | TC_NoSuchIteratorNameError (term,mes) => Logger.error ("NoSuchIteratorNameError: "^mes^"\n"
+								   ^"  in term: "^(Ocl2String.ocl2string false term)
+								   ^"  in context: "^(cxt_list2string [h]))
+	   | TC_TypeCheckerResolveIfError (term,mes) => Logger.error ("TypeCheckResolveIfError: "^mes^"\n"
+								     ^"  in term: "^(Ocl2String.ocl2string false term)
+								     ^"  in context: "^(cxt_list2string [h]))
+	   | TC_NotYetSupportedError mes => Logger.error ("NotYetSupportedError: "^mes^"\n"
+							 ^"  in context: "^(cxt_list2string [h]))
+	   | TC_OperationWithTypeError mes => Logger.error ("OperationWithTypeError: "^mes^"\n"
+							   ^"  in context: "^(cxt_list2string [h]))
+ 	   |  TC_NoSuchAttributeError mes =>  Logger.error ("NoSuchAttributeError: "^mes^"\n"
+							   ^"  in context: "^(cxt_list2string [h]))
+	   | GetClassifierError mes => Logger.error ("GetClassifierError: "^mes^"\n"
+						    ^"  in context: "^(cxt_list2string [h]))
+	   | TC_NoSuchOperationError mes => Logger.error ("NoSuchOperationError: "^mes^"\n"
+							 ^"  in context: "^(cxt_list2string [h]))
      )::(check_context_list context_list_tail model))
-    handle TC_WrongContextChecked h =>
-	   let
-	       val s1 =  ("\n\n#################################################\n")
-	       val s2 =  ("WrongContextChecked:\n")
-	       val s3 =  ("In Context: " ^ (cxt_list2string [h]) ^ "\n")
-	   in
-	       Logger.errorExn (TC_RootError "Something went wrong!\n") (s1^s2^s3)
-	   end
-  end
+   
+    handle TC_WrongContextChecked h => Logger.error ("Unkown Error in context: "
+						    ^(cxt_list2string [h]))
+ end
  
