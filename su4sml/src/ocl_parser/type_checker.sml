@@ -826,41 +826,41 @@ fun check_context_list [] model = []
 	       val s2 =  ("Error Message: " ^ mes ^ "\n")
 	       val _ = trace exce (s1^s2)
 	   in
-	       raise TC_OperationWithTypeError mes
+	       raise TC_WrongContextChecked h
+	   end
+ 	 |  TC_NoSuchAttributeError mes => 
+	   let	       
+	       val s1 =  ("TC_NoSuchAttributeError:\n")
+	       val s2 =  ("Error Message: " ^ mes ^ "\n")
+	       val _ = trace exce (s1^s2)
+	   in
+	       raise TC_WrongContextChecked h
+	   end
+	 | GetClassifierError mes =>
+	   let	       
+	       val s1 =  ("GetClassifierError:\n")
+	       val s2 =  ("Error Message: " ^ mes ^ "\n")
+	       val _ = trace exce (s1^s2)
+	   in
+	       raise TC_WrongContextChecked h
+	   end
+	 | TC_NoSuchOperationError mes =>
+	   let	       
+	       val s1 =  ("TC_NoSuchOperationError:\n")
+	       val s2 =  ("Error Message: " ^ mes ^ "\n")
+	       val _ = trace exce (s1^s2)
+	   in
+	       raise TC_WrongContextChecked h
 	   end
      )::(check_context_list context_list_tail model))
-    handle(*  TC_WrongContextChecked h =>  *)
-(* 	   let *)
-(* 	       val s1 =  ("\n\n#################################################\n") *)
-(* 	       val s2 =  ("WrongContextChecked:\n") *)
-(* 	       val s3 =  ("In Context: " ^ (cxt_list2string [h]) ^ "\n") *)
-(* 	       val _ = trace exce (s1^s2^s3) *)
-(* 	   in *)
-(* 	       raise TC_RootError ("Something went wrong!\n") *)
-(* 	   end *)
-(* 	 | *) TC_NoSuchAttributeError s => 
+    handle TC_WrongContextChecked h =>
 	   let
-	     val s1 =  ("\n\n#################################################\n")
-	     val s2 =  ("Attribute not found: "^s^ "\n")
-	     val _ = print s2	       
-	   in (* ADB TODO *)
-	     raise TC_RootError ("Something went wrong!\n")
-	   end
-	 | GetClassifierError s =>
-	   let
-	     val s1 =  ("\n\n#################################################\n")
-	     val s2 =  ("Classifier not found: "^s^ "\n")
-	     val _ = print s2
-	   in (* ADB TODO *)
-	     raise TC_RootError ("Something went wrong!\n")
-	   end
-	 | TC_NoSuchOperationError s =>
-	   let
-	     val s1 =  ("\n\n#################################################\n")
-	     val s2 =  ("Operation not found: "^s^ "\n")
-	     val _ = print s2
-	   in (* ADB TODO *)
-	     raise TC_RootError ("Something went wrong!\n")
+	       val s1 =  ("\n\n#################################################\n")
+	       val s2 =  ("WrongContextChecked:\n")
+	       val s3 =  ("In Context: " ^ (cxt_list2string [h]) ^ "\n")
+	       val _ = trace exce (s1^s2^s3)
+	   in
+	       raise TC_RootError ("Something went wrong!\n")
 	   end
   end
  
