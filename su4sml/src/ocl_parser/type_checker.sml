@@ -207,7 +207,8 @@ fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
 			  if (List.length ops = 0)
 			  then
 			    raise TC_NoSuchOperationError ("interefere_methods: No operation signature "
-							   ^"matches given types (source: "
+							   ^"for `"^(Rep_Core.string_of_path path)^"'"
+							   ^" matches given types (source: "
 							   ^(Ocl2String.ocl2string false rterm)^").")
 			  else
 			    upcast_op ops new_rterm rargs model
@@ -672,7 +673,15 @@ let
       val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm a Let-Expression \n")
       val rrhs_term = resolve_OclTerm rhs_term model
       val rrhs_typ = type_of_term rrhs_term
-      val rin_term = resolve_OclTerm in_term model
+(*      val rin_term = resolve_OclTerm in_term model (* TODO *) *)
+
+		  val _ = Logger.debug3  ("res Iter: types conforms \n")
+		  val bound_expr = embed_bound_variables [(str,typ)] in_term
+		  val _ = Logger.debug3 ("res Iter: term : " ^ Ocl2String.ocl2string false bound_expr ^ "\n")
+		  val rin_term = resolve_OclTerm bound_expr model
+
+
+
       val rin_typ = type_of_term rin_term
       val res = (Let (str,typ,rrhs_term,rrhs_typ,rin_term,rin_typ))
       val _ = Logger.debug2 ("TypeChecker.resolve_OclTerm")
