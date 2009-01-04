@@ -203,16 +203,13 @@ fun buildTree (SOME line) =
   | buildTree NONE  = []
     
 
-
-fun codegen_home _ = getOpt (OS.Process.getEnv "CODEGEN_HOME", Config.su4sml_home()^"/codegen")
-                     
 (** calls the external cpp ( C PreProcessor).
  * writes merged template to a file with extension .tmp instead of .tpl
  * and returns this file 
  *)
 fun call_cpp file = 
     let val targetFile = OS.FileSys.tmpName () 
-        val _ = OS.Process.system ("cpp -P -C "^codegen_home()^"/"^file^" "^targetFile)
+        val _ = OS.Process.system ("cpp -P -C "^(Config.su4sml_share())^"/"^file^" "^targetFile)
     in
         targetFile
     end
