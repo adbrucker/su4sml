@@ -393,7 +393,7 @@ and generate_variables (Literal (paras)) path meth_name model = Literal (paras)
     let
 	val _ = Logger.debug2 ("Preprocessor.generate_variables: AttributeCall\n")
 	val new_src = generate_variables src path meth_name model	
-	val _ = List.app (print o (fn x => x^"\n") o string_of_path o name_of ) model
+	val _ = List.app (Logger.debug2 o (fn x => x^"\n") o string_of_path o name_of ) model
 	val classifier = class_of path (model,[])
 	val _ = Logger.debug4 "classifier found\n"
 	val meth = get_operation meth_name classifier (model,[])

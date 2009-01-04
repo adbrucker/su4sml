@@ -42,21 +42,56 @@
 signature CONFIG = 
 sig
     val su4sml_home                : unit -> string
+    val su4sml_share               : unit -> string
+    val umlocl_dtd                 : string
+    val unzip                      : string
+    val check_umlocl_dtd           : unit -> bool
+    val check_unzip                : unit -> bool
+    val check_argo_import          : unit -> bool
+    val check_xmi_import           : unit -> bool
 end
 
 structure Config:>CONFIG = 
 struct
+ 
+val umlocl_dtd = "UML15OCL.xmi"
+val unzip      = "unzip"
 
 (* HOLOCL_HOME resp. SU4SML_HOME should point to the top-level directory *)
 (* of the corresponding library.  The semantics of UML2CDL_HOME should   *)
 (* probably be fixed                                                     *)
-fun su4sml_home () = case OS.Process.getEnv "HOLOCL_HOME" of
-			 SOME p => p^"/lib/su4sml/src"
+
+fun su4sml_share () = case OS.Process.getEnv "HOLOCL_HOME" of
+			 SOME p => p^"/lib/su4sml/share"
 		       | NONE   => (case OS.Process.getEnv "SU4SML_HOME" of
-				        SOME p => p^"/src"
+				        SOME p => p^"/share"
 				      | NONE => (case OS.Process.getEnv "UML2CDL_HOME" of 
-                                                     SOME p => p^"../../../src"
+                                                     SOME p => p^"../../../share"
                                                    | NONE => ".")
                                    )
+
+fun su4sml_home () = case OS.Process.getEnv "HOLOCL_HOME" of
+			 SOME p => p^"/lib/su4sml"
+		       | NONE   => (case OS.Process.getEnv "SU4SML_HOME" of
+				        SOME p => p
+				      | NONE => (case OS.Process.getEnv "UML2CDL_HOME" of 
+                                                     SOME p => p^"../../.."
+                                                   | NONE => ".")
+                                   )
+
+fun check_umlocl_dtd () = (OS.FileSys.chDir (su4sml_share());OS.FileSys.access (umlocl_dtd,[]))
+			  handle _ => false
+
+
+fun check_unzip () = let 
+  val tmpFile = OS.FileSys.tmpName ()
+  val result = (OS.Process.system (unzip^" > "^tmpFile) = OS.Process.success)
+  val _ = OS.FileSys.remove tmpFile       
+in 
+  result
+end
+		     
+fun check_argo_import () =  (check_umlocl_dtd ()) andalso (check_unzip ())
+val check_xmi_import = check_umlocl_dtd 
 
 end

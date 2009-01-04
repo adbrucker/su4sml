@@ -62,11 +62,32 @@ fun print_help name = let
   val _ = print("   transform-model\n")
   val _ = print("   typecheck\n")
   val _ = print("\n")
+  val _ = print("Reading XMI or ArguUML files requires the file '"^Config.umlocl_dtd^"' which\n")
+  val _ = print("must be either located in the local directory or in '$SU4SML_HOME/share'.\n")
+  val _ = print("Current status: ")
+  val _ = print("SU4SML_HOME="^(Config.su4sml_home())^"\n") 
+  val _ = print("\n")
+  val _ = print("Reading ArgoUML files requires the '"^Config.unzip^"' program.\n")
+  val _ = print("Current status: ")
+  val _ = print("The program '"^Config.unzip^"' was ")
+  val _ = if Config.check_unzip()
+	  then print ""
+	  else print "not"
+  val _ = print "found.\n"    
+  val _ = print("\n")
+  val _ = if Config.check_argo_import ()
+	  then print "Support for XMI and ArgoUML files enabled.\n"
+	  else 
+	    if Config.check_xmi_import () 
+	    then print "Support for XMI files enabled, support for ArgoUML files disabled.\n"
+	    else print "Support for XMI and ArgoUML files disabled.\n"
+  val _ = print("\n")
   val _ = print("Su4sml is a tool for working with UML/OCL and SecureUML/OCL models.\n")
   val _ = print("For additional information, see http://projects.brucker.ch/projects/su4msl/\n")
 in
   0
 end 
+
 
 
 structure typecheck = struct

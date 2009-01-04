@@ -56,13 +56,13 @@ fun readFile filename =
 
 	(* how to do the following in a clean/portable way? *)
 	fun read_dtd dtd = 
-	    (OS.FileSys.chDir (Config.su4sml_home());
+	    (OS.FileSys.chDir (Config.su4sml_share());
 	     (* check to see if the DTD file exists. *)
-	     if OS.FileSys.access ("UML15OCL.xmi",[]) then 
+	     if OS.FileSys.access (Config.umlocl_dtd,[]) then 
 	         (Parser.parseDocument 
-		      (SOME (Uri.String2Uri ("file:UML15OCL.xmi")))
+		      (SOME (Uri.String2Uri ("file:"^(Config.umlocl_dtd))))
 		      (SOME dtd) (dtd,nil,nil))
-	     else Logger.error ("Error while reading file UML15OCL.xmi: "^
+	     else Logger.error ("Error while reading UML/OCL DTD `"^(Config.umlocl_dtd)^"': "^
                          "no such file or directory");
 	     OS.FileSys.chDir currentDir)
 
