@@ -126,8 +126,8 @@ struct
   fun suffix sffx s = s ^ sffx
       
 		     
-   fun mk_error_string s = ("Error: "^s) |> prefix_lines "*** " |> suffix "\n"
-   fun mk_warn_string s  = ("Warning: "^s) |> prefix_lines "### " |> suffix "\n"
+   fun mk_error_string s = ("\nError:\n"^s) |> prefix_lines "*** " |> suffix "\n"
+   fun mk_warn_string s  = ("\nWarning:\n"^s) |> prefix_lines "### " |> suffix "\n"
    fun mk_info_string s  = s |> prefix_lines "+++ " |> suffix "\n"
    fun mk_debug_string s = s |> prefix_lines "::: " |> suffix "\n"
 
