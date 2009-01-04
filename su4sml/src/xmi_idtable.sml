@@ -271,11 +271,12 @@ fun find_classifier_entries t xmiid =
 	res
     end
 									  
-	fun find_classifier t xmiid =
-	    (case valOf (HashTable.find t xmiid) 
+fun find_classifier t xmiid =
+    (case valOf (HashTable.find t xmiid) 
       of Type (_,_,_,c,_) => c
        | _                => raise Option) 
-    handle Option => Logger.error ("expected Classifier "^xmiid^" in table (in find_classifer)")
+    handle Option =>  Logger.error ("expected Classifier with xmiid '"^xmiid^"' in table (in find_classifer)")
+	 
 
 fun exists_classifier t xmiid =
     (case valOf (HashTable.find t xmiid) 
@@ -319,10 +320,26 @@ fun find_classifier_type t xmiid
 		      | Rep_OclType.Set        (Rep_OclType.Classifier [x]) => Rep_OclType.Set (find_classifier_type t x)
 		      | Rep_OclType.Bag        (Rep_OclType.Classifier [x]) => Rep_OclType.Bag (find_classifier_type t x)
 		      | Rep_OclType.OrderedSet (Rep_OclType.Classifier [x]) => Rep_OclType.OrderedSet (find_classifier_type t x)
+		      (* <ArgoUML-Hack> *)
+		      | Rep_OclType.Collection (Rep_OclType.Classifier c) => 
+			let val _ = Logger.warn ("ArgoUML workaround for supporting collection types ...")
+			in Rep_OclType.Collection (Rep_OclType.Classifier c) end
+		      | Rep_OclType.Sequence   (Rep_OclType.Classifier c) => 
+			let val _ = Logger.warn ("ArgoUML workaround for supporting collection types ...")
+			in Rep_OclType.Sequence (Rep_OclType.Classifier c) end 
+		      | Rep_OclType.Set        (Rep_OclType.Classifier c) => 
+			let val _ = Logger.warn ("ArgoUML workaround for supporting collection types ...")
+			in Rep_OclType.Set (Rep_OclType.Classifier c) end
+		      | Rep_OclType.Bag        (Rep_OclType.Classifier c) => 
+			let val _ = Logger.warn ("ArgoUML workaround for supporting collection types ...")
+			in Rep_OclType.Bag (Rep_OclType.Classifier c) end 
+		      | Rep_OclType.OrderedSet (Rep_OclType.Classifier c) => 
+			let val _ = Logger.warn ("ArgoUML workaround for supporting collection types ...")
+			in Rep_OclType.OrderedSet (Rep_OclType.Classifier c) end 
+		      (* </ArgoUML-Hack> *)
 		      | _ => Logger.error ("unexpected Classifier-Type "^xmiid^" in table")
 	 end
-	handle Option => Logger.error ("expected Classifier "^xmiid^" in table (in find_classifier_type)")
-		    
+	handle Option => Logger.error ("expected Classifier with xmiid '"^xmiid^"' in table (in find_classifer_type)")		    
 
 fun find_association_path t xmiid = 
     case valOf (HashTable.find t xmiid) of (Association (x,xs)) => x
@@ -414,6 +431,20 @@ fun insert_classifier table package_prefix class =
 	val id      = XMI.classifier_xmiid_of class
 	val name    = XMI.classifier_name_of class
 	val path    = package_prefix @ [name]
+		      
+	fun argoUMLWorkaround name = (* ugly hack *) 
+	    let
+	      val _ = Logger.warn ("Warning: argument ("^name
+			     ^") is not a collection value,\n"
+			     ^"assuming ArgoUML workaround for supporting collection types ...")
+	      val [colType,elementtype,tail] = String.fields (fn c => c = #"(" orelse c= #")") name
+		  handle _ =>  ["","",""]
+	    in 
+	      if elementtype = "" 
+	      then NONE 
+	      else SOME (Rep_OclType.Classifier (String.fields (fn c => #"."  = c) elementtype))
+	    end  
+	    
 	val ocltype = if (package_prefix = ["oclLib"]
 			  orelse package_prefix = ["UML_OCL"])
 		      then if      name = "Integer" then Rep_OclType.Integer
@@ -428,18 +459,33 @@ fun insert_classifier table package_prefix class =
 			   else if String.isPrefix "Collection(" name 
 			   then Rep_OclType.Collection (Rep_OclType.Classifier [
 							XMI.classifier_elementtype_of class])
+				handle ex => case argoUMLWorkaround name of 
+					      SOME c => Rep_OclType.Collection (c)
+					    | None => raise ex
 			   else if String.isPrefix "Sequence("   name 
 			   then Rep_OclType.Sequence   (Rep_OclType.Classifier [
 							XMI.classifier_elementtype_of class])
+				handle ex => case argoUMLWorkaround name of 
+					      SOME c => Rep_OclType.Sequence c
+					    | None => raise ex
 			   else if String.isPrefix "Set("        name 
 			   then Rep_OclType.Set        (Rep_OclType.Classifier [
 							XMI.classifier_elementtype_of class])
+				handle ex => case argoUMLWorkaround name of 
+					      SOME c => Rep_OclType.Set c
+					    | None => raise ex
 			   else if String.isPrefix "Bag("        name 
 			   then Rep_OclType.Bag        (Rep_OclType.Classifier [
 							XMI.classifier_elementtype_of class])
+				handle ex => case argoUMLWorkaround name of 
+					      SOME c => Rep_OclType.Bag c
+					    | None => raise ex
 			   else if String.isPrefix "OrderedSet(" name 
 			   then Rep_OclType.OrderedSet (Rep_OclType.Classifier [
 							XMI.classifier_elementtype_of class])
+				handle ex => case argoUMLWorkaround name of 
+					      SOME c => Rep_OclType.OrderedSet c
+					    | None => raise ex
 			   else Logger.error ("didn't recognize ocltype "^name) 
 		      else Rep_OclType.Classifier path
 	(* This function is called before the associations are handled, *)

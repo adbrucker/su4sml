@@ -399,10 +399,20 @@ fun classifier_elementtype_of (Collection{elementtype,...}) = elementtype
   | classifier_elementtype_of (Sequence{elementtype,...}) = elementtype
   | classifier_elementtype_of (Set{elementtype,...}) = elementtype
   | classifier_elementtype_of (Bag{elementtype,...}) = elementtype
-  | classifier_elementtype_of (OrderedSet{elementtype,...}) = elementtype
-  | classifier_elementtype_of _ = Logger.error "in classifier_elementtype_of: \
-                                                \argument is not a collection value"
-
+  | classifier_elementtype_of (OrderedSet{elementtype,...}) = elementtype 
+  | classifier_elementtype_of c = raise Option 
+(*
+ Logger.error "in classifier_elementtype_of: \
+ 	      \argument is not a collection value"
+ *)
+(*     let  *)
+(*       val _ = Logger.warn ("Warning in classifier_elementtype_of: " *)
+(* 			   ^"argument ("^(classifier_name_of c) *)
+(* 			   ^") is not a collection value, assuming \n" *)
+(* 			   ^"ArgoUML workaround for supporting collection types ...") *)
+(*     in *)
+(*       (classifier_name_of c) *)
+(*     end  *)
 end
 
 
