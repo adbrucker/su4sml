@@ -153,7 +153,7 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
 	    val attrs_or_assocs = get_overloaded_attrs_or_assocends class (List.last path) model
 	in
 	    if (List.length attrs_or_assocs = 0)
-	    then raise UpcastingError ("Attriubte '" ^ (List.last path) ^ "' does not exist ...") 
+	    then raise UpcastingError ("Attribute '" ^ (List.last path) ^ "' does not exist ...") 
 	    else 
 		let
 		    val insert_term = upcast_att_aend attrs_or_assocs (Variable iterVar) model
@@ -192,7 +192,7 @@ fun FromSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs):Rep
 (* RETURN: OclTerm (OperationCall/AttributeCall) *)
 fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
     let
-        val _ = if isColl_Type (type_of_term rterm) then print "\n error in AsSet_Desugarotr\n"  else ()
+        val _ = if isColl_Type (type_of_term rterm) then Logger.error "\n error in AsSet_Desugarotr\n"  else ()
 	val _ = (Logger.debug2 ("TypeChecker.AsSet_desugarator class= " ^ (string_of_OclType (type_of_term rterm)) ^ " , attr\n"))
 	val res = if (attr_or_meth = 0) 
 		  then (* OperationCall *)
@@ -225,7 +225,7 @@ fun AsSet_desugarator rterm path attr_or_meth rargs (model as (cls,assocs)) =
 		      in
 			  if (List.length attrs = 0) 
 			  then 
-			      raise TC_NoSuchAttributeError ("Attriubte '" ^ (List.last path) ^ "' does not exist ...") 
+			      raise TC_NoSuchAttributeError ("Attribute '" ^ (List.last path) ^ "' does not exist ...") 
 			  else 
 			      upcast_att_aend attrs new_rterm model
 		      end

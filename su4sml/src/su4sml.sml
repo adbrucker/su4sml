@@ -62,14 +62,14 @@ fun print_help name = let
   val _ = print("   transform-model\n")
   val _ = print("   typecheck\n")
   val _ = print("\n")
+  val _ = print("Reading ArgoUML files requires the '"^Config.unzip^"' program.\n")
+  val _ = print("Current status: ")
+  val _ = print("The program '"^Config.unzip^"' was ")
+  val _ = print("\n")
   val _ = print("Reading XMI or ArguUML files requires the file '"^Config.umlocl_dtd^"' which\n")
   val _ = print("must be either located in the local directory or in '$SU4SML_HOME/share'.\n")
   val _ = print("Current status: ")
   val _ = print("SU4SML_HOME="^(Config.su4sml_home())^"\n") 
-  val _ = print("\n")
-  val _ = print("Reading ArgoUML files requires the '"^Config.unzip^"' program.\n")
-  val _ = print("Current status: ")
-  val _ = print("The program '"^Config.unzip^"' was ")
   val _ = if Config.check_unzip()
 	  then print ""
 	  else print "not"
