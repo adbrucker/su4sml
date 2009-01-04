@@ -6,7 +6,7 @@
  * This file is part of su4sml.
  *
  * Copyright (c) 2005-2007 ETH Zurich, Switzerland
- *           (c) 2008-2009 Achim D. Brucker, Germany
+ *               2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -338,18 +338,62 @@ fun cond_list (path,sign,[]) =
 fun guard_list (context,[]) = []
   | guard_list (context,(name,expr)::tail) = Guard (context,name,expr)::guard_list (context,tail) 					     
 
+
+
+
 (* RETURN: string *)
-fun cxt_list2string ([]) = ""
-  | cxt_list2string ((Empty_context(s,t))::tail) = 
-    "empty: "^(Ocl2String.ocl2string false t)^"\n"^(cxt_list2string tail)
-  | cxt_list2string ((Inv(p,s,t))::tail) = 
-    "inv: "^(Ocl2String.ocl2string false t)^"\n"^(cxt_list2string tail)
-  | cxt_list2string ((Attr(p,ty,a,t))::tail) = 
-    "attr_or_assoc "^(Ocl2String.ocl2string false t)^"\n"^(cxt_list2string tail)
-  | cxt_list2string ((Cond(p,s,l,ty,c,so,t))::tail) = 
-    "condition: "^(Ocl2String.ocl2string false t)^"\n"^(cxt_list2string tail)
-  | cxt_list2string ((Guard(p,so,t))::tail) = 
-    "guard: "^(Ocl2String.ocl2string false t)^"\n"^(cxt_list2string tail)		
+(*
+ fun cxt_list2string ([]) = ""
+   | cxt_list2string ((Empty_context(s,t))::tail) = 
+     "empty: "^(Ocl2String.ocl2string false t)^"\n"^(cxt_list2string tail)
+   | cxt_list2string ((Inv(p,s,t))::tail) = 
+     "inv: "^(Ocl2String.ocl2string false t)^"\n"^(cxt_list2string tail)
+   | cxt_list2string ((Attr(p,ty,a,t))::tail) = 
+     "attr_or_assoc "^(Ocl2String.ocl2string false t)^"\n"^(cxt_list2string tail)
+   | cxt_list2string ((Cond(p,s,l,ty,c,so,t))::tail) = 
+     "condition: "^(Ocl2String.ocl2string false t)^"\n"^(cxt_list2string tail)
+   | cxt_list2string ((Guard(p,so,t))::tail) = 
+     "guard: "^(Ocl2String.ocl2string false t)^"\n"^(cxt_list2string tail)		
+ *)     
+
+fun string_of_arglist []      = ""
+  | string_of_arglist [(n,t)] = n^":"^(Rep_OclType.string_of_OclType t)
+  | string_of_arglist (x::xs) = (string_of_arglist [x])^", "^(string_of_arglist xs)
+     
+fun cxt2string (Empty_context(s,t))            = s^"\n"
+						 ^"  empty: "^(Ocl2String.ocl2string false t)^"\n" 
+						 
+  | cxt2string (Inv(p,NONE,t))                 = (Rep_Core.string_of_path p)^"\n"
+						 ^"  inv: "^(Ocl2String.ocl2string false t)^"\n"
+  | cxt2string (Inv(p,SOME cn,t))              = (Rep_Core.string_of_path p)^"\n"
+						 ^"  inv "^cn^": "^(Ocl2String.ocl2string false t)^"\n"
+						 
+  | cxt2string (Attr(p,ty,derive,t))           = (Rep_Core.string_of_path p)^"\n"
+						 ^"  derive: "^(Ocl2String.ocl2string false t)^"\n"
+  | cxt2string (Attr(p,ty,init,t))             = (Rep_Core.string_of_path p)^"\n"
+						 ^"  init: "^(Ocl2String.ocl2string false t)^"\n"
+  | cxt2string (Attr(p,ty,def,t))              = (Rep_Core.string_of_path p)^"\n"
+						 ^"  def: "^(Ocl2String.ocl2string false t)^"\n"
+
+  | cxt2string (Cond(p,s,l,ty,pre,NONE,t))     = (Rep_Core.string_of_path (tl p))^"::"^s^"("^(string_of_arglist l)^"):"^(Rep_OclType.string_of_OclType ty)^"\n"
+						 ^"  pre: "^(Ocl2String.ocl2string false t)^"\n"
+  | cxt2string (Cond(p,s,l,ty,pre,SOME cn,t))  = (Rep_Core.string_of_path (tl p))^"::"^s^"("^(string_of_arglist l)^"):"^(Rep_OclType.string_of_OclType ty)^"\n"
+						 ^"  pre "^cn^": "^(Ocl2String.ocl2string false t)^"\n"
+  | cxt2string (Cond(p,s,l,ty,post,NONE,t))    = (Rep_Core.string_of_path (tl p))^"::"^s^"("^(string_of_arglist l)^"):"^(Rep_OclType.string_of_OclType ty)^"\n"
+						 ^"  post: "^(Ocl2String.ocl2string false t)^"\n"
+  | cxt2string (Cond(p,s,l,ty,post,SOME cn,t)) = (Rep_Core.string_of_path (tl p))^"::"^s^"("^(string_of_arglist l)^"):"^(Rep_OclType.string_of_OclType ty)^"\n"
+						 ^"  post "^cn^": "^(Ocl2String.ocl2string false t)^"\n"
+  | cxt2string (Cond(p,s,l,ty,body,NONE,t))    = (Rep_Core.string_of_path (tl p))^"::"^s^"("^(string_of_arglist l)^"):"^(Rep_OclType.string_of_OclType ty)^"\n"
+						 ^"  body: "^(Ocl2String.ocl2string false t)^"\n"
+  | cxt2string (Cond(p,s,l,ty,body,SOME cn,t)) = (Rep_Core.string_of_path (tl p))^"::"^s^"("^(string_of_arglist l)^"):"^(Rep_OclType.string_of_OclType ty)^"\n"
+						 ^"  body "^cn^": "^(Ocl2String.ocl2string false t)^"\n"
+  
+  | cxt2string (Guard(p,NONE,t))               = (Rep_Core.string_of_path p)^"\n"
+						 ^"  guard: "^(Ocl2String.ocl2string false t)^"\n"		
+  | cxt2string (Guard(p,SOME cn,t))            = (Rep_Core.string_of_path p)^"\n"
+						 ^"  guard "^cn^": "^(Ocl2String.ocl2string false t)^"\n"		
+
+fun cxt_list2string ctxs = String.concat (map cxt2string ctxs)
 
 fun rename_classifier path (Class{name=name,parent=parent,attributes=attributes,operations=operations,associations=associations,invariant=invariant,stereotypes=stereotypes,interfaces=interfaces,thyname=thyname,visibility=visibility,activity_graphs=activity_graphs}) =
     let

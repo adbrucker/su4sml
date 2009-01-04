@@ -49,6 +49,7 @@ sig
   exception TC_TypeCheckerResolveIfError of Rep_OclTerm.OclTerm * string
   exception TC_NotYetSupportedError of string
   exception TC_WrongContextChecked of Context.context
+  exception TC_ContextNotDefined of Context.context
   exception TC_RootError of string 
   (*    exception TC_AsSetError of (Rep_OclTerm.OclTerm * string list * int * 
    * 			     (Rep_OclTerm.OclTerm * Rep_OclType.OclType) list *  Rep_Core.transform_model)
@@ -85,6 +86,7 @@ open Ocl2String
 type operation = Rep_Core.operation
 type attribute = Rep_Core.attribute
 		 
+  exception TC_ContextNotDefined of Context.context
 exception TC_RootError of string 
 exception TC_wrongCollectionLiteral of Rep_OclTerm.OclTerm * string
 exception TC_CollectionRangeError of Rep_OclTerm.CollectionPart * string
@@ -711,6 +713,7 @@ fun check_context (Cond (path,op_name,op_sign,result_type,cond,pre_name,expr)) (
 	val _ = Logger.debug3 ("pre/post/body         : "  ^  Ocl2String.ocl2string false expr ^ "\n")
 	val classifier = class_of_type  (Classifier (path)) model
 	val oper = get_operation op_name classifier model
+	    handle Option => raise TC_ContextNotDefined (Cond (path,op_name,op_sign,result_type,cond,pre_name,expr))
 	val check1 = (op_sign = (#arguments oper))
 	val check2 = (result_type = (#result oper))
 	val _ = Logger.debug3 ("check1 = " ^ Bool.toString check1 ^ ", check2 = " ^ Bool.toString check2 ^ "\n")
@@ -722,7 +725,6 @@ fun check_context (Cond (path,op_name,op_sign,result_type,cond,pre_name,expr)) (
 	    else
 		(* NONE *)
 		raise TC_WrongContextChecked (Cond (path,op_name,op_sign,result_type,cond,pre_name,expr))
-
 	val _ = Logger.debug2 ("TypeChecker.check_context Cond(...)\n\n\n")
     in
 	res
@@ -794,10 +796,14 @@ fun check_context_list [] model = []
 	   | GetClassifierError mes => Logger.error ("GetClassifierError: "^mes^"\n"
 						    ^"  in context: "^(cxt_list2string [h]))
 	   | TC_NoSuchOperationError mes => Logger.error ("NoSuchOperationError: "^mes^"\n"
-							 ^"  in context: "^(cxt_list2string [h]))
+							 ^"  in context: "^(cxt_list2string [h])) 
+	   | TC_ContextNotDefined h => Logger.error ("Context not defined in UML model:\n"
+						    ^(cxt_list2string [h]))
+	   | Option => Logger.error ("hadling otpin")
      )::(check_context_list context_list_tail model))
    
     handle TC_WrongContextChecked h => Logger.error ("Unkown Error in context: "
 						    ^(cxt_list2string [h]))
+	   | Option => Logger.error ("hadling option outer")
  end
  
