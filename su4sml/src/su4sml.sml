@@ -170,7 +170,7 @@ fun main (name:string,args:(string list)) =
       | (_, "check-model"::_)         => let val _ =  print "not yet supported \n" in 0 end
       (* codegen         *)
       | (_, ["codegen", "help"])      => let val _ =  Codegen.print_usage() in 0 end
-      | (_,  "codegen"::args)  => Codegen.main("su4sml",args)
+      | (_,  "codegen"::args)         => let val _ = Codegen.main("su4sml",args) in 0 end
       (* transform-model *)
       | (_, ["transform-model", "help"]) => let val _ =  print "not yet supported \n" in 0 end
       | (_, "transform-model"::_)     => let val _ =  print "not yet supported \n" in 0 end
