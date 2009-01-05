@@ -6,7 +6,7 @@
  * This file is part of su4sml.
  *
  * Copyright (c) 2006, 2007 ETH Zurich, Switzerland
- *               2008       Achim D. Brucker, Germany
+ *               2008-2009  Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -152,6 +152,13 @@ val testcases = [
     result = initResult
    }:testcase ,
    {
+    name = "Red-black Trees",
+    uml  = prefix^"rbt/rbt.zargo",
+    ocl  = prefix^"rbt/rbt.ocl",
+    exclude = [],
+    result = initResult
+   }:testcase,
+   {
     name = "Invoicing Orders",
     uml  = prefix^"InvoicingOrders/InvoicingOrders.zargo",
     ocl  = prefix^"InvoicingOrders/InvoicingOrders.ocl",
@@ -180,55 +187,35 @@ val testcases = [
 
 fun test (tc:testcase) = 
     let 
+        val _   = print ("Running test case '"^(#name tc)^" ...'\n")
 	val xmi = ModelImport.parseUML (#uml tc)
 	    handle _ => ([],[]) 
 	val ocl = ModelImport.parseOCL (#ocl tc)
 	    handle _ => [] 
 	val OclParse = if ocl = [] then false else true
-	(*
-	val (xmi,ocl) = ModelImport.removePackages (xmi,ocl) (#exclude tc)
-	    handle _ => (([],[]),[])  
-        *)
-	val _         = print "### Preprocess Context List ###\n"
 	val fixed_ocl = Preprocessor.preprocess_context_list 
 			    ocl ((OclLibrary.oclLib)@(#1 xmi))
 	    handle _ => []    
 	val OclPreprocess = if fixed_ocl = [] then false else true
-	val _         = print "### Finished Preprocess Context List ###\n\n"	
-			
-	val _         = print "### Type Checking ###\n"
 	val typed_cl  = TypeChecker.check_context_list 
 			    fixed_ocl (((OclLibrary.oclLib)@(#1 xmi)),#2 xmi)
 	    handle _ => []   
 	val OclTC = if typed_cl = [] then false else true
-	val _         = print "### Finished Type Checking ###\n\n"
-			
-	val _         = print"### Updating Classifier List ###\n"
 	val model     = Update_Model.gen_updated_classifier_list 
 			    typed_cl ((OclLibrary.oclLib)@(#1 xmi))
 	    handle _ => []   
 	val modelUpdate = if model = [] then false else true
-	val _         = print "### Finished Updating Classifier List ###\n"
-
   	val cl     = ModelImport.removeOclLibrary (model)
-
-	val _         = print"### Transform Model (remove associations) ###\n"
 	val cl        = FixTyping.transform_ocl_spec FixTyping.transformForHolOcl 
 			   (#1 (Rep_Core.normalize_ext (cl, #2 xmi)))
 	                handle _ => []   
 	val transform = if cl = [] then false else true
-	val _         = print "### Finished Transform Model (after transformation) ###\n"
-
-	val _         = print"### RemovingPackages ###\n"
 	val clrm      = ModelImport.removePackages (#exclude tc) (cl, #2xmi)
 	                handle _ => (([],[]):Rep_Core.transform_model)   
 	val rmPkg = if (#exclude tc) = [] then true 
 		    else if (List.length cl) > (List.length (#1 clrm))
 		    then true 
 		    else false
-	val _   = print "### Finished Removing Packages ###\n"
-
-
 	val CodeGen = 
 	    let 
 		val _  = Codegen.generateFromModel xmi "java"
@@ -236,8 +223,6 @@ fun test (tc:testcase) =
 		true
 	    end       
             handle  _ => false
- 
-		      
 
     in 
 	    {
@@ -309,8 +294,6 @@ fun printSummary res =
       ()
     end
 
-(* val _ = (Ext_Library.log_level := 1);(); *)
-		
   fun runTest () = let 
     val results = (map test testcases)
     val _       = map printResult results
