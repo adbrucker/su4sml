@@ -162,16 +162,15 @@ fun main (name:string,args:(string list)) =
       case (prgName,args) of 
 	(n, [])                       => print_usage n
       (* su4sml          *)
-      | ("su4sml", ["help"])          => print_help "su4sml"
-      | ("su4sml", ["help", subcmd])  => main(subcmd,["help"]) 
+      | (_, ["help"])          => print_help "su4sml"
+      | (_, ["help", subcmd])  => main(subcmd,["help"]) 
       (* check-model     *)
 
       | (_, ["check-model", "help"])  => let val _ =  print "not yet supported \n" in 0 end
       | (_, "check-model"::_)         => let val _ =  print "not yet supported \n" in 0 end
       (* codegen         *)
       | (_, ["codegen", "help"])      => let val _ =  Codegen.print_usage() in 0 end
-      | ("su4sml",  "codegen"::args)  => Codegen.main("su4sml",args)
-      | (_, "codegen"::_)             => let val _ =  Codegen.print_usage() in 0 end
+      | (_,  "codegen"::args)  => Codegen.main("su4sml",args)
       (* transform-model *)
       | (_, ["transform-model", "help"]) => let val _ =  print "not yet supported \n" in 0 end
       | (_, "transform-model"::_)     => let val _ =  print "not yet supported \n" in 0 end
