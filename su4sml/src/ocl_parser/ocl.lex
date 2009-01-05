@@ -113,6 +113,7 @@ ws = [\ \t];
 "endif"    => (Tokens.ENDIF(yytext,inputPos_half yypos,inputPos_half yypos));
 "endpackage" => (Tokens.ENDPACKAGE(yytext,inputPos_half yypos,inputPos_half yypos));
 "false"    => (Tokens.FALSE(yytext,inputPos_half yypos,inputPos_half yypos));
+"null"     => (Tokens.NULL(yytext,inputPos_half yypos,inputPos_half yypos));
 "if"       => (Tokens.IF(yytext,inputPos_half yypos,inputPos_half yypos));
 "in"       => (Tokens.IN(yytext,inputPos_half yypos,inputPos_half yypos));
 "init"     => (Tokens.INIT(init,inputPos_half yypos,inputPos_half yypos));

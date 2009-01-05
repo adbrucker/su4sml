@@ -119,6 +119,7 @@ exception NotYetSupported of string
         | ENDIF of string
         | ENDPACKAGE of string
         | FALSE of string
+        | NULL of string
 	| FORALL of string
 	| TRUE of string
         | IF of string
@@ -243,6 +244,7 @@ exception NotYetSupported of string
         | numeric_literal_exp_cs of OclTerm
         | string_literal_exp_cs of OclTerm
         | boolean_literal_exp_cs of OclTerm
+        | invalid_literal_exp_cs of OclTerm
         | integer_literal of OclTerm
         | real_literal of OclTerm
         | string_literal of OclTerm
@@ -530,14 +532,17 @@ literal_exp_cs :                         primitive_literal_exp_cs						(Logger.d
 primitive_literal_exp_cs :                numeric_literal_exp_cs						(Logger.debug3 ("numeric_literal_exp_cs..." ^ "\n");numeric_literal_exp_cs)
                                         | string_literal_exp_cs							(Logger.debug3 ("string_literal_exp_cs..." ^ "\n");string_literal_exp_cs)
                                         | boolean_literal_exp_cs						(boolean_literal_exp_cs)
+                                        | invalid_literal_exp_cs						(invalid_literal_exp_cs)
 numeric_literal_exp_cs :                  INTEGER_LITERAL        	                              		(Logger.debug3 ("INTEGER_LITERAL..." ^ "\n");Literal (INTEGER_LITERAL,Integer))
                                         | REAL_LITERAL                  	                       		(Literal (REAL_LITERAL,Real))
 string_literal_exp_cs :                   STRING_LITERAL                        	               		(Literal (STRING_LITERAL,String))
 boolean_literal_exp_cs :                  TRUE                                          	       		(Literal ("true",Boolean))
                                         | FALSE                                                			(Literal ("false",Boolean))
+invalid_literal_exp_cs :                  NULL                                                                  (Literal ("null",DummyT))
 (* NOT SUPPORTED YET
 tuple_literal_exp_cs :                    TUPLE BRACE_OPEN initialized_variable_list_cs BRACE_CLOSE
 *)
+
 
 (* RETURN: OclTerm *)
 logical_exp_cs :                          relational_exp_cs							(Logger.debug3 ("logical_exp_cs..." ^ "\n");relational_exp_cs)

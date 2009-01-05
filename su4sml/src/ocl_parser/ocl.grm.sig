@@ -56,6 +56,7 @@ val IN: (string) *  'a * 'a -> (svalue,'a) token
 val IF: (string) *  'a * 'a -> (svalue,'a) token
 val TRUE: (string) *  'a * 'a -> (svalue,'a) token
 val FORALL: (string) *  'a * 'a -> (svalue,'a) token
+val NULL: (string) *  'a * 'a -> (svalue,'a) token
 val FALSE: (string) *  'a * 'a -> (svalue,'a) token
 val ENDPACKAGE: (string) *  'a * 'a -> (svalue,'a) token
 val ENDIF: (string) *  'a * 'a -> (svalue,'a) token
