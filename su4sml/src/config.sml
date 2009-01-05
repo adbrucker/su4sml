@@ -85,7 +85,7 @@ fun check_umlocl_dtd () = (OS.FileSys.chDir (su4sml_share());OS.FileSys.access (
 
 fun check_unzip () = let 
   val tmpFile = OS.FileSys.tmpName ()
-  val result = (OS.Process.system (unzip^" > "^tmpFile) = OS.Process.success)
+  val result = (Posix.Process.fromStatus(OS.Process.system (unzip^" > "^tmpFile)) = Posix.Process.W_EXITED)
   val _ = OS.FileSys.remove tmpFile       
 in 
   result
