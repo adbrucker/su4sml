@@ -5,7 +5,7 @@
  *  ---
  * This file is part of su4sml.
  *
- * Copyright (c) 2008 Achim D. Brucker, Germany
+ * Copyright (c) 2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -128,7 +128,7 @@ fun del_wfpo wfpo_id = ((wfpos := List.filter (fn w => not ((WFCPOG.id_of w) = (
 
 fun get_wfpo [] x = 
     let
-	val _ = trace exce ("No ID = " ^ x ^ " found in given list!\n")
+	val _ = Logger.warn ("No ID = " ^ x ^ " found in given list!\n")
     in 
 	raise WFCPOG_RegistryError ("No ID = " ^ x ^ " found in given list!\n")
     end
@@ -470,20 +470,20 @@ fun set_data (new_data:Object.T table) (WFCPOG.WFPO{identifier,name,description,
 
 fun check_wfc model wfc = 
     let
-	val _ = trace function_calls ("WFCPOG_Registry.check_wfc\n")
-	val _ = trace wgen (name_of wfc ^ ".............." ^ "\n")
+	val _ = Logger.info ("WFCPOG_Registry.check_wfc\n")
+	val _ = Logger.debug1 (name_of wfc ^ ".............." ^ "\n")
 	val res = 
 	    case (WFCPOG.apply_of wfc) of
 		WFCPOG.WFC(a) => (wfc,a wfc model)
 	      | x => raise WFCPOG_RegistryError ("A assumed wfc " ^ (name_of wfc) ^ " is not a wfc!\n")
-	val _ = trace function_ends ("WFCPOG_Registry.check_wfc\n")
+	val _ = Logger.info ("WFCPOG_Registry.check_wfc\n")
     in
 	res
     end
     
 fun check_wfcs model wfcs =  
     let
-	val _ = trace function_calls ("WFCPOG_Registry.check_wfcs\n")
+	val _ = Logger.info ("WFCPOG_Registry.check_wfcs\n")
 	val res =     List.concat (map (fn (a as WFCPOG.WFPO{identifier,name,description,recommended,depends,recommends,apply,data}:WFCPOG.wfpo) =>
 					   if (depends = [])
 					   then [(check_wfc model a)]
@@ -503,27 +503,27 @@ fun check_wfcs model wfcs =
 						   then raise WFCPOG_RegistryError ("A wellformedness check has a proof obligation marked as depending. But this is not allowed! \n\nCHANGE WFCPOG_Registry.supported_wfs ENTRY(IES)!!!")
 						   else (List.map (check_wfc model) depending_wfcs)@[(check_wfc model a)]
 					       end) wfcs)
-	val _ = trace function_ends ("WFCPOG_Registry.check_wfcs\n")
+	val _ = Logger.info ("WFCPOG_Registry.check_wfcs\n")
     in
 	res
     end
 
 fun generate_po model po =  
     let
-	val _ = trace function_calls ("WFCPOG_Registry.generate_po\n")
-	val _ = trace wgen (name_of po ^ " ...............\n")
+	val _ = Logger.info ("WFCPOG_Registry.generate_po\n")
+	val _ = Logger.debug1 (name_of po ^ " ...............\n")
 	val res = 
 	    case (WFCPOG.apply_of po) of
 		WFCPOG.POG (a) => (po,a po model)
 	      | x  => raise WFCPOG_RegistryError ("A assumed po " ^ (name_of po) ^ " is not a po!\n")
-	val _ = trace function_ends ("WFCPOG_Registry.generate_po\n")
+	val _ =Logger.info ("WFCPOG_Registry.generate_po\n")
     in
 	res
     end
 
 fun generate_pos model pos =
     let
-	val _ = trace function_calls ("WFCPOG_Registry.generate_pos\n")
+	val _ = Logger.info ("WFCPOG_Registry.generate_pos\n")
 	val res = 
 	    List.concat (map (fn (a as (WFCPOG.WFPO{identifier,name,description,recommended,depends,recommends,apply,data}:WFCPOG.wfpo)) => 
 				 if (depends = [])
@@ -546,7 +546,7 @@ fun generate_pos model pos =
 					 else (* doesn't matter, because WFCPOG_WFC_FailedException is returned *) 
 						  []
 				     end) pos)
-	val _ = trace function_ends ("WFCPOG_Registry.generate_pos\n")
+	val _ = Logger.info ("WFCPOG_Registry.generate_pos\n")
     in
 	res
     end

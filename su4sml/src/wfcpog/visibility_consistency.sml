@@ -5,7 +5,8 @@
  * context_declarations.sml --- 
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2005-2007 ETH Zurich, Switzerland
+ *               2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -118,12 +119,12 @@ and expr_is_visible modif (Literal(s,typ)) model = true
     andalso expr_is_visible modif then_t model
   | expr_is_visible modif (AssociationEndCall(src,styp,path,rtyp)) model = 
     let
-	val _ = trace wgen ("start expr_is_visible")
+	val _ = Logger.info ("start expr_is_visible")
 	val cl = class_of_term src model
 	val att_name = List.last(path)
-	val _ = trace wgen ("start get_associationends ")
+	val _ = Logger.info ("start get_associationends ")
 	val att = get_associationend att_name cl model
-	val _ = trace wgen ("end expr_is_visible")
+	val _ = Logger.info ("end expr_is_visible")
     in
 	if (visibility_conforms_to (#visibility att) modif)
 	then (expr_is_visible modif src model)
@@ -131,29 +132,29 @@ and expr_is_visible modif (Literal(s,typ)) model = true
     end    
   | expr_is_visible modif (x as OperationCall(src,styp,path,args,rtyp)) model = 
     let
-	val _ = trace function_calls ("WFCPGO_Visibility_Constraint.expr_is_visible : " ^ (ocl2string false x) ^ "\n")
+	val _ = Logger.debug1 ("WFCPGO_Visibility_Constraint.expr_is_visible : " ^ (ocl2string false x) ^ "\n")
 	val typ = type_of_term src
 	val cl = class_of_term (Variable("x",typ)) model
 	val op_name = List.last(path)
-	val _ = trace 50 ("Classifier : " ^ (string_of_path (name_of cl)) ^ "\n")
-	val _ = trace 50 ("Op_name : " ^ op_name ^ "\n")
+	val _ = Logger.info ("Classifier : " ^ (string_of_path (name_of cl)) ^ "\n")
+	val _ = Logger.info ("Op_name : " ^ op_name ^ "\n")
 	val oper = get_operation op_name cl model
-	val _ = trace wgen ("got operation\n")
+	val _ = Logger.info ("got operation\n")
 	val res = 
 	    if (visibility_conforms_to (#visibility oper) modif) 
 	    then ((List.all (fn (a,b) => (expr_is_visible modif a model)) args) andalso (expr_is_visible modif src model))
 	    else false
-	val _ = trace function_ends ("WFCPGO_Visibility_Constraint.expr_is_visible\n")
+	val _ = Logger.debug1 ("WFCPGO_Visibility_Constraint.expr_is_visible\n")
     in
 	res 
     end
   | expr_is_visible modif (x as AttributeCall(src,styp,path,rtyp)) model =
     let
-	val _ = trace 50 ("expr_is_visible: AttCall \n ")
+	val _ = Logger.info ("expr_is_visible: AttCall \n ")
 	val cl = class_of_term src model
 	val att_name = List.last(path)
 	val att = get_attribute att_name cl model
-	val _ = trace 100 ("end expr_is_visible")
+	val _ = Logger.info ("end expr_is_visible")
     in
 	if (visibility_conforms_to (#visibility att) modif)
 	then (expr_is_visible modif src model)
@@ -228,7 +229,7 @@ fun check_inheritance_classifier class model =
 				 raise WFCPOG.WFC_FailedMessage (s1^s2^s3^s4)
 			     end
 		     ) mod_ops_super_this
-	val _ = trace function_ends ("WFCPOG_Visibility_Consistency.check_inheritance_visibility_consistency\n")
+	val _ = Logger.debug1 ("WFCPOG_Visibility_Consistency.check_inheritance_visibility_consistency\n")
     in
 	List.all (fn a => a = true) check
     end
@@ -328,26 +329,26 @@ fun check_design_classifier class model =
 
 fun model_entity_consistency wfc_sel (model as (clist,alist)) =
     let
-	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.model_entity_consistency\n")
+	val _ = Logger.debug1 ("WFCPOG_Visibility_Constraint.model_entity_consistency\n")
 	(* remove OclLibrary *)
 	val cl = removeOclLibrary (clist)
         (* visiblity only for Classes and AssocClasses *)
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
 	val res = List.all (fn a => a = true) (List.map (fn a => check_entity_classifier a model
 							    handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfc_sel,s)) classes)
-	val _ = trace function_ends ("WFCPOG_Visibility_Constraint.model_entity_consistency\n")
+	val _ = Logger.debug1 ("WFCPOG_Visibility_Constraint.model_entity_consistency\n")
     in
 	res
     end
 
 fun model_inheritance_consistency wfc_sel (model as (clist,alist)) = 
     let
-	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.model_inheritance_consistency\n")
+	val _ = Logger.debug1 ("WFCPOG_Visibility_Constraint.model_inheritance_consistency\n")
 	val cl = removeOclLibrary (clist)
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
 	val res  = List.all (fn a => a = true) (List.map (fn a => check_inheritance_classifier a model
 							     handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfc_sel,s)) classes)
-	val _ = trace function_ends ("WFCPOG_Visibility_Constraint.model_inheritance_consistency\n")
+	val _ = Logger.debug1 ("WFCPOG_Visibility_Constraint.model_inheritance_consistency\n")
     in
 	res
 
@@ -355,24 +356,24 @@ fun model_inheritance_consistency wfc_sel (model as (clist,alist)) =
 
 fun constraint_check_by_runtime_consistency wfc_sel (model as (clist,alist)) = 
     let
-	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency\n")
+	val _ = Logger.debug1 ("WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency\n")
 	val cl = removeOclLibrary clist
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
 	val res = List.all (fn a => a = true) (List.map (fn a => check_runtime_classifier a model
 							    handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfc_sel,s)) classes)
-	val _ = trace function_ends ("WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency\n")
+	val _ = Logger.debug1 ("WFCPOG_Visibility_Constraint.constraint_check_by_runtime_consistency\n")
     in
 	res
     end
 
 fun constraint_design_by_contract_consistency wfc_sel (model as (clist,alist)) =
     let
-	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.constraint_design_by_contract_consistency\n")
+	val _ = Logger.debug1 ("WFCPOG_Visibility_Constraint.constraint_design_by_contract_consistency\n")
 	val cl = removeOclLibrary clist
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
 	val res = List.all (fn a => a = true) (List.map (fn a => check_design_classifier a model
 							    handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfc_sel,s)) classes)
- 	val _ = trace function_calls ("WFCPOG_Visibility_Constraint.constraint_design_by_contract_consistency\n")
+ 	val _ = Logger.debug1 ("WFCPOG_Visibility_Constraint.constraint_design_by_contract_consistency\n")
     in
 	res
 	

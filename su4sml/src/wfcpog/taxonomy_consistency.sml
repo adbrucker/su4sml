@@ -5,7 +5,8 @@
  * context_declarations.sml --- 
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2005-2007 ETH Zurich, Switzerland
+ *               2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -120,7 +121,7 @@ fun deep_of_classifier x (Class{parent,...}) (model as (clist,alist)) =
 
 fun  check_depth_classifier depth class (model as (clist,alist)) = 
     let 
-	val _ = trace wgen ("look for deep ...\n")
+	val _ = Logger.debug1 ("look for deep ...\n")
 	val d = deep_of_classifier 0 class model
 	val check = 
 	    if (depth  >= d) 
@@ -138,14 +139,14 @@ fun  check_depth_classifier depth class (model as (clist,alist)) =
     
 fun check_depth wfpo (model as (clist,alist)) =
     let
-	val _ = trace function_calls ("WFCPG_Taxonomy_Consistency.check_maxDepth\n")
+	val _ = Logger.info ("WFCPG_Taxonomy_Consistency.check_maxDepth\n")
 	val cl = removeOclLibrary clist
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a) orelse (is_Iface a) orelse (is_Enum a) orelse (is_Primi a)) cl
 	val tax_args = WFCPOG_TAX_Data.get wfpo
 	val depth = (#max_depth tax_args)
 	val res = List.all (fn a => a = true) (List.map (fn a => check_depth_classifier depth a model
 							    handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)) classes)
-	val _ = trace function_calls ("WFCPG_Taxonomy_Consistency.check_maxDepth\n")
+	val _ = Logger.info ("WFCPG_Taxonomy_Consistency.check_maxDepth\n")
     in
 	res
     end

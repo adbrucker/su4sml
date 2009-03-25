@@ -5,7 +5,8 @@
  * holocl_namespace.sml --- 
  * This file is part of HOL-OCL.
  *
- * Copyright (c) 2008 Achim D. Brucker, Germany
+ * Copyright (c) 2005-2007 ETH Zurich, Switzerland
+ *               2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -288,20 +289,20 @@ fun holocl_localValid_transition term var_name1 var_name2 =
 
 fun get_holocl_operation abs_or_conc oper class model = 
     let
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.get_holocl_operation\n") 
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.get_holocl_operation\n") 
 	val hol_name = string_of_path ((name_of class)@[name_of_op oper])
 	val styp = type_of class
 	val src = Variable((abs_or_conc^"_"^(name_of_op oper)),styp)
 	val predicate = Predicate(src,Boolean,[hol_name],args2varargs 
 	  (map (fn (n,t) => (abs_or_conc^"_"^n,t)) (arguments_of_op oper)))
-	val _ = trace function_ends ("WFCPOG_Refine_Constraint.get_holocl_operation\n") 
+	val _ = Logger.info  ("WFCPOG_Refine_Constraint.get_holocl_operation\n") 
     in
 	predicate
     end
 
 fun get_holocl_abstraction_relation  abs_class conc_class model =
     let
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.get_holocl_abstraction_relation\n")
+	val _ = Logger.info  ("WFCPOG_Refine_Constraint.get_holocl_abstraction_relation\n")
 	val predicate_name = "R_"^(string_of_path (package_of abs_class))^"_"^(string_of_path (package_of conc_class))^"_"^(List.last (name_of abs_class))
 	val abs_typ = type_of abs_class
 	val conc_typ = type_of conc_class
@@ -310,7 +311,7 @@ fun get_holocl_abstraction_relation  abs_class conc_class model =
 	val abs_term = Variable(string_of_path (name_of abs_class),abs_typ)
 	val conc_term = Variable(string_of_path (name_of conc_class),conc_typ)
 	val predicate = Predicate(abs_state,OclState,[predicate_name],[(conc_state,OclState),(abs_term,abs_typ),(conc_term,conc_typ)])
-	val _ = trace function_ends ("WFCPOG_Refine_Constraint.get_holocl_abstraction_relation\n")
+	val _ = Logger.info  ("WFCPOG_Refine_Constraint.get_holocl_abstraction_relation\n")
     in
 	predicate
     end

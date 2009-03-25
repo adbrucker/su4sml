@@ -5,7 +5,8 @@
  * context_declarations.sml --- 
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2005-2007 ETH Zurich, Switzerland
+ *               2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -72,11 +73,11 @@ exception WFCPO_ConstructorError of string
 
 fun term_post_implies_inv class oper model = 
     let
-	val _ = trace function_calls ("WFCPOG_Constructor_Consistency_Constraint.term_post_implies_inv\n")
+	val _ = Logger.info ("WFCPOG_Constructor_Consistency_Constraint.term_post_implies_inv\n")
 	val inv = Predicate (Variable("self",type_of class),type_of class,name_of_inv class,[])
 	val post = Predicate (Variable ("self",type_of class),type_of class,name_of_post class oper,args2varargs ((arguments_of_op oper)@[("result",(#result oper))]))
 	val implies = OperationCall (post,Boolean,["holOclLib","Boolean","implies"],[(inv,Boolean)],Boolean)
-    	val _ = trace function_ends ("WFCPOG_Constructor_Consistency_Constraint.term_post_implies_inv\n")
+    	val _ = Logger.info ("WFCPOG_Constructor_Consistency_Constraint.term_post_implies_inv\n")
     in
 	implies
     end
@@ -84,7 +85,7 @@ fun term_post_implies_inv class oper model =
 fun term_init_attributes class oper model = 
     let
 	val atts = all_attributes_of class model
-	val _ = trace wgen ("Number of attributes found = "^(Int.toString(List.length(atts))))
+	val _ = Logger.debug1  ("Number of attributes found = "^(Int.toString(List.length(atts))))
 	val post = Predicate (Variable ("self",type_of class),type_of class,name_of_post class oper,args2varargs ((arguments_of_op oper)@[("result",(#result oper))]))
         val att_is_defined = 
 	    List.map (fn a => 
@@ -103,7 +104,7 @@ fun term_init_attributes class oper model =
 
 fun check_override_classifier class (model as (clist,alist)) = 
     let
-	val _ = trace function_calls ("WFCPOG_Constructor_Consistency_Constraint.check_override_classifier\n")
+	val _ = Logger.info ("WFCPOG_Constructor_Consistency_Constraint.check_override_classifier\n")
 	val creas = creation_operations_of class model
 	val over_ops = modified_operations_of class model
 	val check = 
@@ -118,14 +119,14 @@ fun check_override_classifier class (model as (clist,alist)) =
 				 raise WFCPOG.WFC_FailedMessage (s1^s2)
 			     end) creas
 	val res = List.all (fn a => a = true) check
-	val _ = trace function_ends ("WFCPOG_Constructor_Consistency_Constraint.check_override_classifier\n")
+	val _ = Logger.info ("WFCPOG_Constructor_Consistency_Constraint.check_override_classifier\n")
     in
 	res
     end
 
 fun generate_post_classifier class model = 
     let
-	val _ = trace function_calls ("WFCPOG_Constructor_Consistency_Constraint.check_post_classifier\n")
+	val _ = Logger.info ("WFCPOG_Constructor_Consistency_Constraint.check_post_classifier\n")
 	val atts = all_attributes_of class model
 	val pos = if (List.length(atts) = 0)
 		    then []
@@ -137,7 +138,7 @@ fun generate_post_classifier class model =
 				     in
 					 (path,term)
 				     end) (creation_operations_of class model)
-	val _ = trace function_ends ("WFCPOG_Constructor_Consistency_Constraint.check_override_classifier\n")
+	val _ = Logger.info ("WFCPOG_Constructor_Consistency_Constraint.check_override_classifier\n")
     in
 	pos
     end
@@ -145,7 +146,7 @@ fun generate_post_classifier class model =
 
 fun generate_attribute_classifier class model = 
     let
-	val _ = trace function_calls ("WFCPOG_Constructor_Consistency_Constraint.generate_attribute_classifier\n")
+	val _ = Logger.info ("WFCPOG_Constructor_Consistency_Constraint.generate_attribute_classifier\n")
 	val pos = 
 	    List.map (fn a => 
 			 let
@@ -154,7 +155,7 @@ fun generate_attribute_classifier class model =
 			 in
 			     (path,term)
 			 end) (creation_operations_of class model)
-	val _ = trace function_calls ("WFCPOG_Constructor_Consistency_Constraint.generate_attribute_classifier\n")
+	val _ = Logger.info ("WFCPOG_Constructor_Consistency_Constraint.generate_attribute_classifier\n")
     in
 	pos
     end
@@ -162,23 +163,23 @@ fun generate_attribute_classifier class model =
 
 fun override_old_creators wfpo (model as (clist, alist)) = 
     let
-	val _ = trace function_calls ("WFCPOG_Constructor_Consistency.overrides_old_creators\n")
+	val _ = Logger.info ("WFCPOG_Constructor_Consistency.overrides_old_creators\n")
 	val cl = removeOclLibrary clist
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
 	val res = List.all (fn a => a = true) (List.map (fn a => check_override_classifier a model
 							    handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)) classes)
-	val _ = trace function_calls ("WFCPOG_Constructor_Consistency.overrides_old_creators\n")
+	val _ = Logger.info ("WFCPOG_Constructor_Consistency.overrides_old_creators\n")
     in
 	res
     end
 
 fun post_implies_invariant wfpo (model as (clist, alist)) =
     let
-	val _ = trace function_calls ("WFCPOG_Constructor_Consistency_Constraint.post_implies_invariant\n")
+	val _ = Logger.info ("WFCPOG_Constructor_Consistency_Constraint.post_implies_invariant\n")
 	val cl = removeOclLibrary clist
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
 	val list = List.concat (List.map (fn a => generate_post_classifier a model) classes)
-	val _ = trace function_ends ("WFCPOG_Constructor_Consistency_Constraint.post_implies_invariant\n")
+	val _ = Logger.info ("WFCPOG_Constructor_Consistency_Constraint.post_implies_invariant\n")
     in 
 	list
     end
@@ -186,11 +187,11 @@ fun post_implies_invariant wfpo (model as (clist, alist)) =
 
 fun force_initialize_attributes wfpo (model as (clist,alist)) = 
     let
-	val _ = trace function_calls ("WFCPOG_Constructor_Consistency_Constraint.force_initialize_attributes\n")
+	val _ = Logger.info ("WFCPOG_Constructor_Consistency_Constraint.force_initialize_attributes\n")
 	val cl = removeOclLibrary clist
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a)) cl
 	val list = List.concat (List.map (fn a => generate_attribute_classifier a model) classes)
-	val _ = trace function_ends ("WFCPOG_Constructor_Consistency_Constraint.force_initialize_attributes\n")
+	val _ = Logger.info ("WFCPOG_Constructor_Consistency_Constraint.force_initialize_attributes\n")
     in
 	list
     end

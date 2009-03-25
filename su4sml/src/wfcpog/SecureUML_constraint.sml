@@ -5,7 +5,8 @@
  * context_declarations.sml --- 
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2005-2007 ETH Zurich, Switzerland
+ *               2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -103,10 +104,10 @@ fun ssd_generate_pos [] classes model = []
 fun separation_of_duty_help [] classes model = []:((Path * OclTerm) list )
   | separation_of_duty_help (h::perm_sets) classes model =
     let
-	val _ = trace function_calls ("WFCPOG_SecureUML_Constraint.separation_of_duty_help\n")
+	val _ = Logger.info ("WFCPOG_SecureUML_Constraint.separation_of_duty_help\n")
 	val x = ssd_generate_pos h classes model
 	val res = x@(separation_of_duty_help perm_sets classes model)
-	val _ = trace function_calls ("WFCPOG_SecureUML_Constraint.separation_of_duty_help\n")
+	val _ = Logger.info ("WFCPOG_SecureUML_Constraint.separation_of_duty_help\n")
     in
 	res
     end
@@ -118,39 +119,39 @@ fun binding_of_duty_help [] (cl::clist) model = []
 (*
 fun rh_is_tree wfpo (model as (clist,alist)) = 
     let
-	val _ = trace funciton_calls ("WFCPOG_SecureUML_Constraint.rh_is_tree\n")
+	val _ = Logger.info ("WFCPOG_SecureUML_Constraint.rh_is_tree\n")
 	val cl = removeOclLibrary clist
 	val classes = List.filter (fn a => (is_Role a)) cl
 
 		 
 
-	val _ = trace funciton_calls ("WFCPOG_SecureUML_Constraint.rh_is_tree\n")
+	val _ = Logger.info ("WFCPOG_SecureUML_Constraint.rh_is_tree\n")
     in
 	res
     end
 *)
 fun separation_of_duty wfpo (model as (clist,alist)) =  
     let 
-	val _ = trace function_calls ("WFCPOG_SecureUML_Constraint.separation_of_duty\n")
-	val _ = trace wgen ("remove OclLib ...\n")
+	val _ = Logger.info ("WFCPOG_SecureUML_Constraint.separation_of_duty\n")
+	val _ = Logger.debug1 ("remove OclLib ...\n")
 	val cl = removeOclLibrary clist
-	val _ = trace wgen ("oclLib removed ...\n")
-	val _ = trace wgen ("Extract args ...\n")
+	val _ = Logger.debug1 ("oclLib removed ...\n")
+	val _ = Logger.debug1 ("Extract args ...\n")
 	val ssd_args = WFCPOG_SSD_Data.get wfpo
 	val perm_sets = (#mutex_perm_sets ssd_args)
 	val res = separation_of_duty_help perm_sets cl model
-	val _ = trace function_ends ("WFCPOG_SecureUML_Constraint.separation_of_duty\n")
+	val _ = Logger.info ("WFCPOG_SecureUML_Constraint.separation_of_duty\n")
     in
 	res
     end
 
 fun binding_of_duty wfpo (model as (clist,alist)) = []:((Path * OclTerm) list)
 (*    let 
-	val _ = trace function_calls ("WFCPOG_SecureUML_Constraint.binding_of_duty\n")
-	val _ = trace wgen ("remove OclLib ...\n")
+	val _ = Logger.info ("WFCPOG_SecureUML_Constraint.binding_of_duty\n")
+	val _ = Logger.debug1 ("remove OclLib ...\n")
 	val cl = removeOclLibrary clist
 	val res = binding_of_duty cl model
-	val _ = trace function_ends ("WFCPOG_SecureUML_Constraint.binding_of_duty\n")
+	val _ = Logger.info ("WFCPOG_SecureUML_Constraint.binding_of_duty\n")
     in
 	res
     end

@@ -5,7 +5,8 @@
  * context_declarations.sml --- 
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2005-2007 ETH Zurich, Switzerland
+ *               2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -206,9 +207,7 @@ fun class_has_local_op name model classifier =
 
 fun get_operation s classifier model = 
     let
-	val _ = trace 100 ("get_operation: \n")
 	val x = List.find (fn a => if (name_of_op a = s) then true else false) (all_operations_of classifier model)
-	val _ = trace 100 ("end get_operation\n")
     in
 	case x of
 	    NONE => raise WFCPOG_LibraryError ("No operation found using 'get_operation'.\n")
@@ -223,7 +222,7 @@ fun get_attribute s classifier model =
 	case x of
 	    NONE => 
 	    let
-		val _ = trace exce ("No such Attribute: \n In Classifier "^(string_of_path (name_of classifier))^" in attribute "^s)
+		val _ = Logger.info ("No such Attribute: \n In Classifier "^(string_of_path (name_of classifier))^" in attribute "^s)
 	    in
 		raise WFCPOG_LibraryError ("No attribute found using 'get_attribute'.\n")
 	    end
@@ -237,7 +236,7 @@ fun get_associationend s classifier model =
 	case x of 
 	    NONE =>
 	    let
-		val _ = trace exce ("No such associationend: \n In Classifier "^(string_of_path (Rep_Core.name_of classifier))^" no associationend called "^(s)^".\n")
+		val _ = Logger.info ("No such associationend: \n In Classifier "^(string_of_path (Rep_Core.name_of classifier))^" no associationend called "^(s)^".\n")
 	    in
 		raise WFCPOG_LibraryError ("No attribute found using 'get_attribute'.\n")
 	    end 

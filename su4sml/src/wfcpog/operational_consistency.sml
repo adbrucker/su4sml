@@ -5,7 +5,8 @@
  * context_declarations.sml --- 
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2005-2007 ETH Zurich, Switzerland
+ *               2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -65,7 +66,7 @@ exception WFCPO_OperationalError
 
 fun impl_op_operation class oper = 
     let
-	val _ = trace function_calls ("WFCPOG_Operational_Consistency.prestate_complete_operation\n")
+	val _ = Logger.info ("WFCPOG_Operational_Consistency.prestate_complete_operation\n")
 	(* Generate Variables : (sigma_pre,sigma_post) => sigma *)
 	val sigma = Literal("sigma",OclState)
 	val sigma_s = Literal("sigma_s",OclState)
@@ -78,27 +79,27 @@ fun impl_op_operation class oper =
 	val lv_state = OperationCall(impl,Boolean,["holOclLib","Boolean","OclLocalValid"],[(tuple_term,OclState)],Boolean)
 	val holocl_exists = Iterator("holOclLib.exists",[("sigma_s",OclState)],Literal("",DummyT),DummyT,lv_state,Boolean,Boolean)
 	val holocl_forall = Iterator("holOclLib.forAll",[("sigma",OclState)],Literal("",DummyT),DummyT,holocl_exists,Boolean,Boolean)
-	val _ = trace function_ends ("WFCPOG_Operational_Consistency.prestate_complete_operaiton\n")
+	val _ = Logger.info ("WFCPOG_Operational_Consistency.prestate_complete_operaiton\n")
     in
 	holocl_forall
     end
 
 fun impl_op_classifier class (model as (clist,alist)) = 
     let
-	val _ = trace function_calls ("WFCPOG_Operational_Consistency.prestate_complete_classifier\n")
+	val _ = Logger.info ("WFCPOG_Operational_Consistency.prestate_complete_classifier\n")
 	val ops = all_operations_of class model
 	val res = (List.map (fn a => ((["po_class_model_"]@(name_of class)@["_"]@[(name_of_op a)]),(impl_op_operation class a))) ops)
-	val _ = trace function_ends ("WFCPOG_Operational_Consistency.prestate_complete_classifier\n")
+	val _ = Logger.info ("WFCPOG_Operational_Consistency.prestate_complete_classifier\n")
     in
 	res
     end
 
 fun implementable_operation wfc_sel (model as (clist,alist)) = 
     let
-	val _ = trace function_calls ("WFCPOG_Operational_Consistency.prestate_complete\n")
+	val _ = Logger.info ("WFCPOG_Operational_Consistency.prestate_complete\n")
 	val cl = removeOclLibrary clist
 	val res = List.concat (List.map (fn a => impl_op_classifier a model) cl )
-	val _ = trace function_ends ("WFCPOG_Operational_Consistency.prestate_complete\n")
+	val _ = Logger.info ("WFCPOG_Operational_Consistency.prestate_complete\n")
     in
 	res
     end

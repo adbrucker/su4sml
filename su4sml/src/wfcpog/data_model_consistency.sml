@@ -5,7 +5,8 @@
  * context_declarations.sml --- 
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2005-2007 ETH Zurich, Switzerland
+ *               2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -71,7 +72,7 @@ exception WFCPO_DataModelError
 
 fun c_allInstance_term (c:Classifier) =
     let 
-	val _ = trace function_calls ("WF_data_CS.c_allInstances\n")
+	val _ = Logger.info ("WF_data_CS.c_allInstances\n")
 	val class_type = type_of c
 	val x_name = ("c_"^(varcounter.nextStr()))
 	val x = Variable (x_name,class_type)
@@ -84,7 +85,7 @@ fun c_allInstance_term (c:Classifier) =
 	val oclIsTypeOf = OperationWithType (x,DummyT,"oclIsTypeOf",class_type,Boolean)
 	(* Iterator exists *)
 	val exists = Iterator("exists",[(x_name,class_type)],allInstances,Set(class_type),oclIsTypeOf,Boolean,Boolean)
-	val _ = trace function_ends ("WF_data_CS.c_allInstances\n")
+	val _ = Logger.info ("WF_data_CS.c_allInstances\n")
     in
 	exists
     end
@@ -92,12 +93,12 @@ fun c_allInstance_term (c:Classifier) =
 (* E t. t |= c::allInstances()->exists(x|x.oclIsTypeOf(c)) *)
 fun single_model_consistency (c:Classifier) (model as (clist,alist)) = 
     let
-	val _ = trace function_calls("WFCPOG_Data_Model_Consistency_Constraint.single_model_consistency\n")
+	val _ = Logger.info("WFCPOG_Data_Model_Consistency_Constraint.single_model_consistency\n")
 	val term = c_allInstance_term c
 	val local_valid = OperationCall(term,Boolean,["holOclLib","Boolean","OclLocalValid"],[(Literal("\\<tau>",OclState),DummyT)],Boolean)
 	val dummy_source = Literal("",DummyT)
 	val res = Iterator("holOclLib.exists",[("\\<tau>",OclState)],dummy_source,DummyT,local_valid,Boolean,Boolean)
-	val _ = trace function_ends("WFCPOG_Data_Model_Consistency_Constraint.single_model_consistency\n")
+	val _ = Logger.info("WFCPOG_Data_Model_Consistency_Constraint.single_model_consistency\n")
     in
 	res
     end
@@ -116,13 +117,13 @@ fun class_model_consistency wfpo (model as (clist,alist)) =
 
 fun strong_model_consistency_help classes model = 
     let 
-	val _ = trace function_calls("WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency\n")
+	val _ = Logger.info("WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency\n")
 	val terms = List.map (c_allInstance_term) classes
 	val local_valids = List.map (fn a => OperationCall(a,Boolean,["holOclLib","Boolean","OclLocalValid"],[(Literal("\\<tau>",OclState),DummyT)],Boolean)) terms
 	val con_term = holocl_and_all local_valids
 	val dummy_source = Literal("",DummyT)
 	val res = Iterator("holOclLib.exists",[("\\<tau>",OclState)],dummy_source,DummyT,con_term,Boolean,Boolean)
-	val _ = trace function_ends("WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency\n")
+	val _ = Logger.info("WFCPOG_Data_Model_Consistency_Constraint.strong_model_consistency\n")
     in
 	[(["po_strong_model"],res)]
     end

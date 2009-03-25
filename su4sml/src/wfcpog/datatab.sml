@@ -5,7 +5,7 @@
  * datatab.sml  --- a very simplistic datatab implementation
  * This file is part of su4sml.
  *
- * Copyright (c) 2008 Achim D. Brucker, Germany
+ * Copyright (c) 2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *

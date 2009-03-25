@@ -5,7 +5,8 @@
  * context_declarations.sml --- 
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2005-2007 ETH Zurich, Switzerland
+ *               2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -167,24 +168,24 @@ fun check_nameclash_classifier (c as Class{interfaces,...}) (model as (clist,ali
 
 fun check_stereotypes wfpo (model as (clist,alist)) = 
     let
-	val _ = trace function_calls ("WFCPOG_Interface_Consistency.check_stereotypes\n")
+	val _ = Logger.info ("WFCPOG_Interface_Consistency.check_stereotypes\n")
 	val cl = removeOclLibrary clist
 	val classes = List.filter (fn a => (is_Iface a)) cl
 	val res = List.all (fn a => a = true) (List.map (fn a => check_stereotypes_interface a model
 							    handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)) classes)
-	val _ = trace function_ends ("WFCPOG_Interface_Consistency.check_stereotypes\n")
+	val _ = Logger.info ("WFCPOG_Interface_Consistency.check_stereotypes\n")
     in
 	res
     end
 
 fun check_nameclashes wfpo (model as (clist,alist)) = 
     let
-	val _ = trace function_calls ("WFCPOG_Interface_Consistency.check_nameclashes\n")
+	val _ = Logger.info ("WFCPOG_Interface_Consistency.check_nameclashes\n")
 	val cl = removeOclLibrary clist
 	val classes = List.filter (fn a => (is_Class a) orelse (is_AssoClass a) orelse (is_Primi a) orelse (is_Enum a)) cl
 	val res = List.all (fn a => a = true) (List.map (fn a => check_nameclash_classifier a model
 							    handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)) classes)
-	val _ = trace function_ends ("WFCPOG_Interface_Consistency.check_nameclashes\n")
+	val _ = Logger.info ("WFCPOG_Interface_Consistency.check_nameclashes\n")
     in
 	res
 

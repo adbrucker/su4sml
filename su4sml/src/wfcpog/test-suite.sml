@@ -135,7 +135,7 @@ fun start_tests model [] = []
     case (apply_of h) of
 	WFC (a) =>
 	let 
-	    val _ = trace wgen ("Testing a wellformed constraint: \n")
+	    val _ = Logger.info ("Testing a wellformed constraint: \n")
 	    val res_wfcs = check_wfcs model [h]
 		handle WFCPOG.WFC_FailedException (wfc,s) =>
 		       let
@@ -148,29 +148,29 @@ fun start_tests model [] = []
 	    case check of
 		false => 
 		let
-		    val _ = trace wgen ("test is false ...\n")
+		    val _ = Logger.info ("test is false ...\n")
 		    val mes = ("\n" ^ (name_of h) ^ (insert_dots (name_of h)) ^ "[FAILED]\n")
-		    val _ = trace wgen mes
+		    val _ = Logger.info mes
 		    val _ = buffer:=(!buffer)^mes
-		    val _ = trace wgen ("results logged in buffer ...\n")
+		    val _ = Logger.info ("results logged in buffer ...\n")
 		in
 		    ([])@(start_tests model wfpos)
 		end
 	      | true =>  
 		let
-		    val _ = trace wgen ("test is true ...\n")
+		    val _ = Logger.info ("test is true ...\n")
 		    val name = WFCPOG.name_of h
 		    val mes = ("\n" ^ name ^ (insert_dots (name)) ^ "[OK]\n")
-		    val _ = trace wgen mes
+		    val _ = Logger.info mes
 		    val _ = buffer:=(!buffer)^mes
-		    val _ = trace wgen ("results logged in buffer ...\n")
+		    val _ = Logger.info ("results logged in buffer ...\n")
 		in
 		    ([])@(start_tests model wfpos)
 		end
 	end 
       | POG (a) =>
 	let
-	    val _ = trace wgen ("Testing a proof obligation constraint: \n")
+	    val _ = Logger.info ("Testing a proof obligation constraint: \n")
 	    val pos = generate_pos model [h] 
 		handle WFCPOG.WFC_FailedException (po,s) =>
 		       let 
@@ -205,9 +205,9 @@ fun test (tc:testcase) wfs pos =
 	val (clist,alist) = Rep_Core.normalize_ext i_model
  	val model = (((#1 i_model)@oclLib),(#2 i_model))
 (* 	val model = ((clist@oclLib),alist) *)
-	val _ = trace wgen ("Model of testcase loaded ...\n")
+	val _ = Logger.info ("Model of testcase loaded ...\n")
 	val x = start_tests model (wfs@pos)
-	val _ = trace wgen ("Test finished ...\n")
+	val _ = Logger.info ("Test finished ...\n")
 
     in
 	x
@@ -227,10 +227,10 @@ fun print_tc (tc:testcase)=
 
 fun runTest name wfs pos = 
     let
-	val _  = trace wgen ("Starts runing one test ...\n")
+	val _  = Logger.info ("Starts runing one test ...\n")
 	val _  = reset_buffer()
 	val tc = valOf (List.find (fn a => name = (#name a)) testcases)
-	val _ = trace wgen ("Accessing model ...\n")
+	val _ = Logger.info ("Accessing model ...\n")
 	val s1 = (print_tc tc)
 	val _ = (test tc wfs pos)
 	val _ = buffer:=s1^(!buffer)
@@ -244,7 +244,7 @@ fun runTest name wfs pos =
 
 fun runTests wfs pos = 
     let 
-	val _ = trace wgen ("Starts running tests ...\n")
+	val _ = Logger.info ("Starts running tests ...\n")
 	val _ = reset_buffer()
 	val _ = List.map (fn a => 
 			     let 
@@ -263,10 +263,10 @@ fun runTests wfs pos =
 
 fun runTest_ret_pos name wfs pos = 
     let
-	val _  = trace wgen ("Starts runing one test ...\n")
+	val _  = Logger.info ("Starts runing one test ...\n")
 	val _  = reset_buffer()
 	val tc = valOf (List.find (fn a => name = (#name a)) testcases)
-	val _ = trace wgen ("Accessing model ...\n")
+	val _ = Logger.info ("Accessing model ...\n")
 	val s1 = (print_tc tc)
 	val pos = List.concat (test tc wfs pos)
 	val _ = buffer:=s1^(!buffer)
@@ -281,7 +281,7 @@ fun runTest_ret_pos name wfs pos =
 
 fun runTests_ret_pos wfs pos =
     let 
-	val _ = trace wgen ("Starts running tests ...\n")
+	val _ = Logger.info ("Starts running tests ...\n")
 	val _ = reset_buffer()
 	val pos = List.concat (List.concat (List.map (fn a => 
 					    let 

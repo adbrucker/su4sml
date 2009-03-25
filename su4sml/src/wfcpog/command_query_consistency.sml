@@ -5,7 +5,8 @@
  * context_declarations.sml --- 
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2005-2007 ETH Zurich, Switzerland
+ *               2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -160,11 +161,11 @@ fun check_strong_classifier class (model as (clist,alist)) =
 
 fun weak_is_query po (model as (clist,alist)) =
     let
-	val _ = trace function_calls ("WFCPOG_Command_Query_Constraint.strong_is_query\n")
+	val _ = Logger.info ("WFCPOG_Command_Query_Constraint.strong_is_query\n")
 	val classes = removeOclLibrary clist
 	val res = List.all (fn a => a = true) (List.map (fn a => check_weak_classifier a model
 								 handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException(po,s)) classes)
-	val _ = trace function_ends ("WFCPOG_Command_Query_Constraint.strong_is_query\n")
+	val _ = Logger.info ("WFCPOG_Command_Query_Constraint.strong_is_query\n")
     in
 	res
     end
@@ -173,11 +174,11 @@ fun weak_is_query po (model as (clist,alist)) =
 
 fun strong_is_query po (model as (clist,alist)) = 
     let
-	val _ = trace function_calls ("WFCPOG_Command_Query_Constraint.strong_is_query\n")
+	val _ = Logger.info ("WFCPOG_Command_Query_Constraint.strong_is_query\n")
 	val classes = removeOclLibrary clist
 	val res = List.all (fn a => a = true) (List.map (fn a => check_strong_classifier a model
 								 handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException(po,s)) classes)
-	val _ = trace function_ends ("WFCPOG_Command_Query_Constraint.strong_is_query\n")
+	val _ = Logger.info ("WFCPOG_Command_Query_Constraint.strong_is_query\n")
     in
 	res
     end

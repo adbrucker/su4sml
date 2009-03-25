@@ -114,6 +114,7 @@ use "ocl2dresdenjava.sml";
 
 (* ****************************************************** *)
 (* Main Conversion Processes  *)
+use "config.sml";
 use "xmltree.sml";
 use "xmltree_helper.sml";
 use "xmltree_hooks.sml";

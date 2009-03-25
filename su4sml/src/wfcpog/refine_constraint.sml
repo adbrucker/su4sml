@@ -5,7 +5,8 @@
  * context_declarations.sml --- 
  * This file is part of su4sml.
  *
- * Copyright (c) 2005-2007, ETH Zurich, Switzerland
+ * Copyright (c) 2005-2007 ETH Zurich, Switzerland
+ *               2008-2009 Achim D. Brucker, Germany
  *
  * All rights reserved.
  *
@@ -111,8 +112,8 @@ fun group_cl [] [] = []
     end
   | group_cl (h1::t1) list =
     let
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.group_cl \n")
-	val _ = trace wgen ("Class: " ^ string_of_path (name_of h1) ^ "\n")
+	val _ = Logger.info  ("WFCPOG_Refine_Constraint.group_cl \n")
+	val _ = Logger.debug1 ("Class: " ^ string_of_path (name_of h1) ^ "\n")
 	val x = List.filter (fn a => ((List.last (name_of a)) = (List.last (name_of h1)))) list
 	val res = 
 	    case  (List.length(x)) of 
@@ -131,7 +132,7 @@ fun group_cl [] [] = []
 		in
 		    raise WFCPOG.WFC_FailedMessage (s1^s2)
 		end
-	val _ = trace function_ends ("WFCPOG_Refine_Constraint.group_cl \n")
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.group_cl \n")
     in
 	res
     end
@@ -148,7 +149,7 @@ fun group_op class_name [] [] = []
   | group_op class_name ((h1:operation)::t1) list =
     let
 	(* TODO: Check also signature because of the overloaded operations! *)
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.group_op \n")
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.group_op \n")
 	val x = (List.filter (fn a => ((name_of_op a) = (name_of_op h1))) list)
 	val res = 
 	    case  (List.length(x)) of 
@@ -167,7 +168,7 @@ fun group_op class_name [] [] = []
 		in
 		    raise WFCPOG.WFC_FailedMessage (s1^s2)
 		end
-	val _ = trace function_ends ("WFCPOG_Refine_Constraint.group_op \n")
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.group_op \n")
     in
 	res
     end
@@ -175,17 +176,17 @@ fun group_op class_name [] [] = []
 (* RETURN: (Classifier * Classifer) list *)
 fun map_public_classes fromPath toPath (model as (clist,alist)) = 
     let
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.map_public_classes\n")
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.map_public_classes\n")
 	val abs_c = List.filter (is_visible_cl) (List.filter (fn a => if (package_of a = fromPath) then true else false) (clist))
-	val _ = trace wgen ("abstract public classes: \n")
-	val _ = List.map (fn a => trace wgen (" - " ^ (string_of_path (name_of a))^"\n")) abs_c
-	val _ = trace wgen ("map_public_classes 2 \n")
-	val _ = trace wgen ("Package " ^ string_of_path (fromPath) ^ " contains " ^ Int.toString (List.length(abs_c)) ^ " public classes.\n")
+	val _ = Logger.debug1 ("abstract public classes: \n")
+	val _ = List.map (fn a => Logger.debug1 (" - " ^ (string_of_path (name_of a))^"\n")) abs_c
+	val _ = Logger.debug1 ("map_public_classes 2 \n")
+	val _ = Logger.debug1 ("Package " ^ string_of_path (fromPath) ^ " contains " ^ Int.toString (List.length(abs_c)) ^ " public classes.\n")
 	val conc_c = List.filter (is_visible_cl) (List.filter (fn a => if (package_of a = toPath) then true else false) (clist))
-	val _ = trace wgen ("concrete public classes: \n")
-	val _ = List.map (fn a => trace wgen (" - " ^ (string_of_path (name_of a))^"\n")) conc_c
-	val _ = trace wgen ("Package " ^ string_of_path (toPath) ^ " contains " ^ Int.toString (List.length(conc_c)) ^ " public classes.\n")
-	val _ = trace wgen ("map_public_classes 3 \n")
+	val _ = Logger.debug1 ("concrete public classes: \n")
+	val _ = List.map (fn a => Logger.debug1 (" - " ^ (string_of_path (name_of a))^"\n")) conc_c
+	val _ = Logger.debug1 ("Package " ^ string_of_path (toPath) ^ " contains " ^ Int.toString (List.length(conc_c)) ^ " public classes.\n")
+	val _ = Logger.debug1 ("map_public_classes 3 \n")
 	val res = group_cl abs_c conc_c
 (* 
 	handle WFCPOG.WFC_FailedMessage s => 
@@ -196,7 +197,7 @@ fun map_public_classes fromPath toPath (model as (clist,alist)) =
 	       in 
 		   raise WFCPOG.WFC_FailedMessage (s1^s2^s3)
 	       end
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.map_public_classes\n")
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.map_public_classes\n")
 *)
     in
 	res
@@ -205,11 +206,11 @@ fun map_public_classes fromPath toPath (model as (clist,alist)) =
 fun map_public_ops [] = [[]]
   | map_public_ops ((f,t)::tail) = 
     let
-	val _ = trace function_calls ("Refine_Constraint.map_public_ops\n")
+	val _ = Logger.info ("Refine_Constraint.map_public_ops\n")
 	val f_ops = List.filter (is_visible_op) (local_operations_of f)
 	val t_ops = List.filter (is_visible_op) (local_operations_of t)
-	val _ = trace wgen ("Number of operations of f_class(" ^ (string_of_path (name_of f)) ^ ") = " ^ Int.toString (List.length(f_ops)) ^ "\n")
-	val _ = trace wgen ("Number of operations of t_class(" ^ (string_of_path (name_of t)) ^ ") = " ^ Int.toString (List.length(t_ops)) ^ "\n")
+	val _ = Logger.debug1 ("Number of operations of f_class(" ^ (string_of_path (name_of f)) ^ ") = " ^ Int.toString (List.length(f_ops)) ^ "\n")
+	val _ = Logger.debug1 ("Number of operations of t_class(" ^ (string_of_path (name_of t)) ^ ") = " ^ Int.toString (List.length(t_ops)) ^ "\n")
 	val res = 
 	    [(List.map (fn (a,b) => (f,t,a,b)) (group_op (List.last (Rep_Core.name_of f))  f_ops t_ops
 						handle OpGroupError (oplist,s) => 
@@ -224,7 +225,7 @@ fun map_public_ops [] = [[]]
 						       end     
 	    ))]
 	    @(map_public_ops tail)
-	val _ = trace function_ends ("Refine_Constraint.map_public_op\n")
+	val _ = Logger.info ("Refine_Constraint.map_public_op\n")
     in
 	res 
     end
@@ -234,23 +235,23 @@ fun map_public_ops [] = [[]]
 fun map_types [] fP tP model = []
   | map_types ((h1:Classifier,h2:Classifier,h3:operation,h4:operation)::tail) fP tP model =
     let
-	val _ = trace function_calls ("WFCPOG_Refine_Constrain.map_types\n")
-	val _ = trace wgen ("map_types: f_cl = " ^ string_of_path (name_of h1) ^ "\n")
-	val _ = trace wgen ("map_types: t_cl = " ^ string_of_path (name_of h2) ^ "\n")
-	val _ = trace wgen ("map_types: f_op = " ^ name_of_op h3 ^ "\n")
-	val _ = trace wgen ("map_types: t_op = " ^ name_of_op h4 ^ "\n")
+	val _ = Logger.info ("WFCPOG_Refine_Constrain.map_types\n")
+	val _ = Logger.debug1 ("map_types: f_cl = " ^ string_of_path (name_of h1) ^ "\n")
+	val _ = Logger.debug1 ("map_types: t_cl = " ^ string_of_path (name_of h2) ^ "\n")
+	val _ = Logger.debug1 ("map_types: f_op = " ^ name_of_op h3 ^ "\n")
+	val _ = Logger.debug1 ("map_types: t_op = " ^ name_of_op h4 ^ "\n")
 	(* classifier of return type *)
 	(* TODO: remove next trace lines *)
-	val _ = trace wgen ("Length of model: " ^ Int.toString (List.length(#1 model))^ ".\n")
+	val _ = Logger.debug1 ("Length of model: " ^ Int.toString (List.length(#1 model))^ ".\n")
 	val ret_fC = class_of_type (#result (h3)) model
-	val _ = trace wgen ("map_types 2 \n")
+	val _ = Logger.debug1 ("map_types 2 \n")
 	(* name of classifier of return type *)
 	val ret_namefC = name_of ret_fC
-	val _ = trace wgen ("map_types_3: " ^ string_of_path (ret_namefC) ^ "\n")
-	val _ = trace wgen ("map_types_4: " ^ string_of_path fP ^ "\n")
+	val _ = Logger.debug1 ("map_types_3: " ^ string_of_path (ret_namefC) ^ "\n")
+	val _ = Logger.debug1 ("map_types_4: " ^ string_of_path fP ^ "\n")
 	(* relative path of return type *)
 	val new_path = substitute_package fP tP ret_namefC
-	val _ = trace wgen ("map_types_5: name of return type: " ^ string_of_path (ret_namefC) ^ "\n")
+	val _ = Logger.debug1 ("map_types_5: name of return type: " ^ string_of_path (ret_namefC) ^ "\n")
 	val c1 = class_of (new_path) (model)
 		 handle _ => 
 			let
@@ -265,9 +266,9 @@ fun map_types [] fP tP model = []
 			    raise WFCPOG.WFC_FailedMessage (s1^s2^s3^s4^s5^s6)
 			end
 	(* name of the arguments *)
-	val _ = trace wgen ("map_types_6: " ^ string_of_path (name_of c1) ^ "\n")
+	val _ = Logger.debug1 ("map_types_6: " ^ string_of_path (name_of c1) ^ "\n")
 	val arg_class_name1 = List.map (fn (a,b) => (name_of (class_of_type b model))) (arguments_of_op (h3))
-	val _ = trace wgen ("map_types_7: \n")
+	val _ = Logger.debug1 ("map_types_7: \n")
 	val c2 = List.map (fn a => 
 			      let
 				  val rel_path = substitute_package fP tP a
@@ -287,27 +288,27 @@ fun map_types [] fP tP model = []
 					 end
 			      end
 			  ) arg_class_name1
-	val _ = trace wgen ("map_types_8: \n")
+	val _ = Logger.debug1 ("map_types_8: \n")
 	val res = (true)::(map_types tail fP tP model)
-	val _ = trace function_ends ("WFCPOG_Refine_Constrain.map_types\n")
+	val _ = Logger.info ("WFCPOG_Refine_Constrain.map_types\n")
     in 
 	res
     end
 
 fun check_syntax_help (model:Rep.Model as (clist,alist)) fromPath toPath = 
     let
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.check_syntax_help\n")
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.check_syntax_help\n")
 	(* check public classes of the two packages *)
 	val x = map_public_classes fromPath toPath model
-        val _ = trace wgen ("check syntax 2 \n")
+        val _ = Logger.debug1 ("check syntax 2 \n")
 	(* check public methods of the public classes *)
 	val y = List.concat (map_public_ops x)
-	val _ = trace wgen ("check syntax 3 \n")
+	val _ = Logger.debug1 ("check syntax 3 \n")
 	(* check types of the public operations of public classes *)
 	val z = map_types y fromPath toPath model
-	val _ = trace wgen ("check syntax 4 \n")
+	val _ = Logger.debug1 ("check syntax 4 \n")
 	val res = List.all (fn a => a) z
-	val _ = trace function_ends ("WFCPOG_Refine_Constraint.check_syntax_help\n")
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.check_syntax_help\n")
     in
 	res
     end
@@ -316,16 +317,16 @@ fun check_syntax_help (model:Rep.Model as (clist,alist)) fromPath toPath =
 
 fun check_syntax wfpo (model:Rep.Model as (clist,alist)) = 
     let
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.check_syntax\n")
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.check_syntax\n")
 	val data = WFCPOG_RFM_Data.get wfpo
-	val _ = trace wgen (print_refine_args data)
+	val _ = Logger.debug1 (print_refine_args data)
 	val packages = (#rfm_tuple data)
 	val from = (#1 packages)
 	val to = (#2 packages)
 	val model_packages = all_packages_of_model model
-	val _ = trace wgen ("Packages of model: "^(String.concat (List.map (fn a => ((string_of_path a)^", ")) model_packages))^".\n")
-	val _ = trace wgen ("Abstract Package = "^(string_of_path from)^", contains "^(Int.toString (List.length(from)))^" strings.\n")
-	val _ = trace wgen ("Concrete Package = "^(string_of_path to)^", contains "^(Int.toString(List.length(from)))^" strings.\n")
+	val _ = Logger.debug1 ("Packages of model: "^(String.concat (List.map (fn a => ((string_of_path a)^", ")) model_packages))^".\n")
+	val _ = Logger.debug1 ("Abstract Package = "^(string_of_path from)^", contains "^(Int.toString (List.length(from)))^" strings.\n")
+	val _ = Logger.debug1 ("Concrete Package = "^(string_of_path to)^", contains "^(Int.toString(List.length(from)))^" strings.\n")
 	val check = if ((member from model_packages) andalso (member to model_packages))
 		    then check_syntax_help model from to
 			 handle WFCPOG.WFC_FailedMessage s => raise WFCPOG.WFC_FailedException (wfpo,s)
@@ -338,7 +339,7 @@ fun check_syntax wfpo (model:Rep.Model as (clist,alist)) =
 			in
 			    raise WFCPOG.WFC_FailedException (wfpo,s1^s2^s3^s4)
 			end 
-	val _ = trace function_ends ("WFCPOG_Refine_Constraint.check_syntax\n")
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.check_syntax\n")
     in
 	check
     end
@@ -346,11 +347,11 @@ fun check_syntax wfpo (model:Rep.Model as (clist,alist)) =
 (* 
 fun refine_operation abs_oper conc_oper abs_class conc_class model = 
     let
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.refine_classifier\n")
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.refine_classifier\n")
 	val state = Variable("mystate",OclState)
  	val op_term = get_holocl_operation ("abs") abs_oper abs_class model
 	val refine = OperationCall (op_term,DummyT,["holOclLib","Boolean","OclLocalValid"],[(state,OclState)],Boolean)
-	val _ = trace function_ends ("WFCPOG_Refine_Constraint.refine_classifier\n")	
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.refine_classifier\n")	
     in
 	(["po_refine_"^(string_of_path (name_of abs_class))^"_"^(string_of_path (name_of conc_class))^"_"^(name_of_op abs_oper)],refine)
     end
@@ -358,52 +359,52 @@ fun refine_operation abs_oper conc_oper abs_class conc_class model =
 
 fun refine_operation abs_oper conc_oper abs_class conc_class model = 
     let
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.refine_classifier\n")
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.refine_classifier\n")
  	val R = get_holocl_abstraction_relation abs_class conc_class model
  	val S = get_holocl_operation ("abs") abs_oper abs_class model
 	val T = get_holocl_operation ("conc") conc_oper conc_class model
 	val refine = OperationCall(S,DummyT,["holOclLib","methodology","refinement","OclForwardRefinement"],[(T,DummyT),(R,DummyT)],Boolean)
-	val _ = trace function_ends ("WFCPOG_Refine_Constraint.refine_classifier\n")	
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.refine_classifier\n")	
     in
 	(["po_refine_"^(string_of_path (name_of abs_class))^"_"^(string_of_path (name_of conc_class))^"_"^(name_of_op abs_oper)],refine)
     end
 
 fun refine_classifier abs_class conc_class model = 
     let
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.refine_classifier\n")
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.refine_classifier\n")
 	val abs_ops = List.filter (is_visible_op) (local_operations_of abs_class)
 	val conc_ops = List.filter (is_visible_op) (local_operations_of conc_class)
 	val gops = group_op (List.last (Rep_Core.name_of abs_class)) abs_ops conc_ops
 	val res = List.map (fn (a,b) => refine_operation a b abs_class conc_class model) (gops)
-	val _ = trace function_ends ("WFCPOG_Refine_Constraint.refine_classifier\n")
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.refine_classifier\n")
     in
 	res
     end
 
 fun refine_package abs_path conc_path (model as (clist,alist)) =
     let
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.refine_package\n")
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.refine_package\n")
 	val abs_classes = List.filter (fn a => (package_of a = abs_path) andalso (is_visible_cl a)) (clist)
 	val conc_classes = List.filter (fn a => (package_of a = conc_path) andalso (is_visible_cl a)) (clist)
 	val cl_grouped = group_cl abs_classes conc_classes
 	val res = (List.concat (List.map (fn (a,b) => refine_classifier a b model) cl_grouped))
-	val _ = trace function_ends ("WFCPOG_Refine_Constraint.refine_package\n")
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.refine_package\n")
     in
 	res
     end
 
 fun generate_pos wfpo (model as (clist,alist)) =
     let
-	val _ = trace function_calls ("WFCPOG_Refine_Constraint.generate_pos\n")
-	val _ = trace wgen ("remove OclLib ...\n")
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.generate_pos\n")
+	val _ = Logger.debug1 ("remove OclLib ...\n")
 	val classes = removeOclLibrary clist
-	val _ = trace wgen ("oclLib removed ...\n")
-	val _ = trace wgen ("Extract args ...\n")
+	val _ = Logger.debug1 ("oclLib removed ...\n")
+	val _ = Logger.debug1 ("Extract args ...\n")
 	val rfm_args = WFCPOG_RFM_Data.get wfpo
 	val packages = (#rfm_tuple rfm_args)
-	val _ = trace wgen("Args extracted ...\n")
+	val _ = Logger.debug1("Args extracted ...\n")
 	val res = refine_package (#1 packages) (#2 packages) model
-	val _ = trace function_ends ("WFCPOG_Refine_Constraint.generate_pos\n")
+	val _ = Logger.info ("WFCPOG_Refine_Constraint.generate_pos\n")
     in	
 	res
     end
