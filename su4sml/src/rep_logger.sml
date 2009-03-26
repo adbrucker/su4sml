@@ -50,15 +50,15 @@ sig
    val get_strict_logging   : unit -> bool
 
 
-   val ERROR : log_level
-   val WARN : log_level
-   val INFO : log_level
+   val LERROR : log_level
+   val LWARN : log_level
+   val LINFO : log_level
 
-   val DEBUG_1 : log_level
-   val DEBUG_2 : log_level
-   val DEBUG_3 : log_level
-   val DEBUG_4 : log_level
-   val DEBUG_5 : log_level
+   val LDEBUG_1 : log_level
+   val LDEBUG_2 : log_level
+   val LDEBUG_3 : log_level
+   val LDEBUG_4 : log_level
+   val LDEBUG_5 : log_level
 
    val get_log_level_str : unit -> string
   
@@ -83,16 +83,16 @@ struct
   infix 1 |>
   fun x |> f = f x
 
-  val ERROR   =  0
-  val WARN    = 10
-  val INFO    = 20
-  val DEBUG_1 = 30
-  val DEBUG_2 = 40
-  val DEBUG_3 = 50
-  val DEBUG_4 = 60
-  val DEBUG_5 = 70
+  val LERROR   =  0
+  val LWARN    = 10
+  val LINFO    = 20
+  val LDEBUG_1 = 30
+  val LDEBUG_2 = 40
+  val LDEBUG_3 = 50
+  val LDEBUG_4 = 60
+  val LDEBUG_5 = 70
 
-  val logLevel = ref WARN
+  val logLevel = ref LWARN
   fun set_log_level l = (logLevel := l;()) 
   fun get_log_level () = !logLevel	
 
@@ -138,13 +138,13 @@ struct
 
    fun error s = ((print o mk_error_string) s; raise Fail s)
    fun errorExn ex s = ((print o mk_error_string) s; raise ex)
-   fun warn   msg = msg |> mk_warn_string |> trace WARN
-   fun info   msg = msg |> mk_info_string |> trace INFO
-   fun debug1 msg = msg |> mk_debug_string |> trace DEBUG_1
-   fun debug2 msg = msg |> mk_debug_string |> trace DEBUG_2
-   fun debug3 msg = msg |> mk_debug_string |> trace DEBUG_3
-   fun debug4 msg = msg |> mk_debug_string |> trace DEBUG_4
-   fun debug5 msg = msg |> mk_debug_string |> trace  DEBUG_5
+   fun warn   msg = msg |> mk_warn_string |> trace LWARN
+   fun info   msg = msg |> mk_info_string |> trace LINFO
+   fun debug1 msg = msg |> mk_debug_string |> trace LDEBUG_1
+   fun debug2 msg = msg |> mk_debug_string |> trace LDEBUG_2
+   fun debug3 msg = msg |> mk_debug_string |> trace LDEBUG_3
+   fun debug4 msg = msg |> mk_debug_string |> trace LDEBUG_4
+   fun debug5 msg = msg |> mk_debug_string |> trace  LDEBUG_5
  	    
 (*   fun printStackTrace e =
        let val ss = CompilerExt.exnHistory e

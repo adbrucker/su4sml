@@ -461,31 +461,31 @@ fun insert_classifier table package_prefix class =
 							XMI.classifier_elementtype_of class])
 				handle ex => case argoUMLWorkaround name of 
 					      SOME c => Rep_OclType.Collection (c)
-					    | None => raise ex
+					    | NONE => raise ex
 			   else if String.isPrefix "Sequence("   name 
 			   then Rep_OclType.Sequence   (Rep_OclType.Classifier [
 							XMI.classifier_elementtype_of class])
 				handle ex => case argoUMLWorkaround name of 
 					      SOME c => Rep_OclType.Sequence c
-					    | None => raise ex
+					    | NONE => raise ex
 			   else if String.isPrefix "Set("        name 
 			   then Rep_OclType.Set        (Rep_OclType.Classifier [
 							XMI.classifier_elementtype_of class])
 				handle ex => case argoUMLWorkaround name of 
 					      SOME c => Rep_OclType.Set c
-					    | None => raise ex
+					    | NONE => raise ex
 			   else if String.isPrefix "Bag("        name 
 			   then Rep_OclType.Bag        (Rep_OclType.Classifier [
 							XMI.classifier_elementtype_of class])
 				handle ex => case argoUMLWorkaround name of 
 					      SOME c => Rep_OclType.Bag c
-					    | None => raise ex
+					    | NONE => raise ex
 			   else if String.isPrefix "OrderedSet(" name 
 			   then Rep_OclType.OrderedSet (Rep_OclType.Classifier [
 							XMI.classifier_elementtype_of class])
 				handle ex => case argoUMLWorkaround name of 
 					      SOME c => Rep_OclType.OrderedSet c
-					    | None => raise ex
+					    | NONE => raise ex
 			   else Logger.error ("didn't recognize ocltype "^name) 
 		      else Rep_OclType.Classifier path
 	(* This function is called before the associations are handled, *)

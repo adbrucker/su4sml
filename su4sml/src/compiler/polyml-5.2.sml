@@ -50,19 +50,21 @@ fun drop_last [] = []
 
 fun eval verbose txt =
     let 
+      fun drop_newline s =
+	  if String.isSuffix "\n" s then String.substring (s, 0, size s - 1)
+	  else s;
 	fun eval_fh (print, err) verbose txt =
 	    let
-		val in_buffer = ref (explode txt);
+		val in_buffer = ref (String.explode txt);
 		val out_buffer = ref ([]: string list);
-		fun output () = SML90.implode (drop_last (rev (! out_buffer)));
-		    
+(*		fun output () = SML90.implode (drop_last (rev (! out_buffer))); *)
+		fun output () = drop_newline (SML90.implode (rev (! out_buffer)));
 		fun get () =
 		    (case ! in_buffer of
 			 [] => NONE
-		       | c :: cs => (in_buffer := cs; SOME  c));
+		       | c :: cs => (in_buffer := cs; SOME c));
 		fun put s = out_buffer := s :: ! out_buffer;
 		    
-
 		val parameters =
 		    [PolyML.Compiler.CPOutStream put]
 
