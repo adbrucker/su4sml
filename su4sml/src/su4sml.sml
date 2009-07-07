@@ -157,7 +157,7 @@ end
 fun main (name:string,args:(string list)) = 
     let 
       val prgName = (hd o rev) (String.fields (fn s => s = #"/" orelse s = #"\\") name); 
-      val _ = Logger.set_log_level Logger.WARN
+      val _ = Logger.set_log_level Logger.LWARN
     in
       case (prgName,args) of 
 	(n, [])                       => print_usage n
