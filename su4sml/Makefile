@@ -63,7 +63,9 @@ codegen-doc:
 tags:
 	cd src && etags --language=none --regex='/^\(datatype\|type\|val\|fun\|structure\|signature\)[ \t]*\([^ \t]*\)/\2/' *.sml *.sig codegen/*.sml codegen/*.sig
 su4sml:
-	(cd src && echo "val _ = use \"ROOT.ML\"; val _ = OS.Process.exit 0" | sml ) || true
+	mlton  src/su4sml.cm 
+
+	# (cd src && echo "val _ = use \"ROOT.ML\"; val _ = OS.Process.exit 0" | sml ) || true
 
 rep_parser: 
 	ml-build src/su4sml.cm RepParser.test src/rep_parser
