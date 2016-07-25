@@ -14,7 +14,7 @@ association ends, as part of the participating classifiers
 * sml/NJ
 
 ## License
-This project is licensed under the Apache License Version 2.0.
+This project is licensed under a 3-clause BSD-style license.
 
 ## Publications
 * Achim D. Brucker, Jürgen Doser, and Burkhart Wolff. An MDA Framework Supporting 
