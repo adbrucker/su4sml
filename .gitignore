@@ -1,0 +1,12 @@
+
+# /su4sml/src/codegen/
+/su4sml/src/codegen/A.java
+/su4sml/src/codegen/B.java
+/su4sml/src/codegen/C.java
+/su4sml/src/codegen/D.java
+/su4sml/src/codegen/E.java
+
+# /su4sml/src/ocl_parser/
+/su4sml/src/ocl_parser/ocl.grm.sig
+/su4sml/src/ocl_parser/ocl.grm.sml
+/su4sml/src/ocl_parser/ocl.lex.sml
