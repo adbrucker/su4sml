@@ -19,4 +19,4 @@ This project is licensed under a 3-clause BSD-style license.
 ## Publications
 * Achim D. Brucker, Jürgen Doser, and Burkhart Wolff. An MDA Framework Supporting 
   OCL. In Electronic Communications of the EASST, 5, 2006.
-  (doi:10.14279/tuj.eceasst.5.45)[http://dx.doi.org/10.14279/tuj.eceasst.5.45]
+  [doi:10.14279/tuj.eceasst.5.45](http://dx.doi.org/10.14279/tuj.eceasst.5.45)
