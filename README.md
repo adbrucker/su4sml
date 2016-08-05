@@ -13,6 +13,19 @@ association ends, as part of the participating classifiers
 * poly/ML 5.x or later
 * sml/NJ
 
+## Developers 
+* [Achim D. Brucker](http://www.brucker.ch/)
+* Jürgen Doser
+* Burkhart Wolff
+
+### Contributors
+* Rolf Adelsberger
+* Martin Bill
+* Raphael Eidenbenz
+* Manuel Krucker
+* Raphael Schmid
+* Manfred Stock
+
 ## License
 This project is licensed under a 3-clause BSD-style license.
 
