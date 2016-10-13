@@ -1,13 +1,12 @@
 # su4sml coding style
-
 We here document coding-style guidelines that should be adhered to.
 Much of the existing code is not yet following these guidelines,
-patches are welcome. This style-guide was inspired by the SML Style Guide
-from Cornell university [1].
+patches are welcome. This style-guide was inspired by the SML Style
+Guide from
+[Cornell university](http://www.cs.cornell.edu/Courses/cs312/2007fa/handouts/style.htm).
 
     	   
 ##  Chapter 1: Indentation and breaking long lines
-
 The limit on the length of lines is 80 columns and this is a hard
 limit. Using more than 80 columns causes your code to wrap around to
 the next line, which is devastating to readability.
@@ -55,18 +54,18 @@ of thought.  The best way to transform code that constructs expressions over
 multiple lines to something that has good style is to factor the code using a
 let expression.  Consider the following:
 
-Bad
-```sml
+* Bad
+  ```sml
      fun euclid (m:int,n:int) : (int * int * int) =
        if n=0
          then (b 1, b 0, m)
        else (#2 (euclid (n, m mod n)), u - (m div n) *
 
                (euclid (n, m mod n)), #3 (euclid (n, m mod n)))
-```
+  ```
 
-Better
-```sml
+* Better
+  ```sml
      fun euclid (m:int,n:int) : (int * int * int) =
        if n=0
          then (b 1, b 0, m)
@@ -75,9 +74,9 @@ Better
              u - (m div n) * (euclid (n, m mod n)),
 
              #3 (euclid (n, m mod n)))
-```
-Best
-
+  ```
+* Best
+  ```
      fun euclid (m:int,n:int) : (int * int * int) =
        if n=0
          then (b 1, b 0, m)
@@ -88,38 +87,39 @@ Best
        in
          (v, u - q*v, g)
        end
-
+  ```
 
 Do not factor unnecessarily.
-Bad
-```sml
+* Bad
+  ```sml
      let
        val x = TextIO.inputLine TextIO.stdIn
      in
        case x of
          ...
      end
-```
+  ```
 
-Good
-```sml
+* Good
+  ```sml
      case TextIO.inputLine TextIO.stdIn of
        ...
-```
-Bad (provided y is not a large expression):
-```sml
+  ```
+* Bad (provided y is not a large expression):
+  ```sml
     let val x = y*y in x+z end
-```
+  ```
 
-Good
-```sml
+* Good
+  ```sml
     y*y + z
-```
+  ```
 
 ## Chapter 3: Comments
-
-Comments should be written with SMLDoc [2] in mind; a, nightly updated, API
-documentation is available [3]. For example:
+Comments should be written with
+[SMLDoc](http://www.pllab.riec.tohoku.ac.jp/smlsharp/?SMLDoc) in mind;
+a, nightly updated, API documentation is
+[available](http://projects.brucker.ch/su4sml/smldoc/). For example:
 ```sml
 (**
  * opens a file.
@@ -256,8 +256,8 @@ Combine nested case Expressions.  Rather than nest case expressions, you can
 combine them by pattern matching against a tuple, provided the tests in the
 case expressions are independent.  Here is an example:
 
-Bad
-```sml
+* Bad
+  ```sml
      let
        val d = Date.fromTimeLocal(Time.now())
      in
@@ -272,11 +272,10 @@ Bad
                         10 => print "Happy Metric Day"
                       | _ => ())
      end
-```
-
-
-Good
-```sml
+     ```
+     
+* Good
+  ```sml
      let
        val d = Date.fromTimeLocal(Time.now())
      in
@@ -286,37 +285,38 @@ Good
        | (Date.Oct, 10) => print "Happy Metric Day"
        | _ => ()
      end
-```
-Avoid the use valOf, hd, or tl.  The functions valOf, hd, and tl are used to
-deconstruct option types and list types.  However, they raise exceptions on
-certain inputs.  You should avoid these functions altogether.  It is usually
-easy to achieve the same effect with pattern matching.  If you cannot manage to
-avoid them, you should handle any exceptions that they might raise.
+  ```
+     
+Avoid the use `valOf`, `hd`, or `tl`.  The functions `valOf`, `hd`,
+and `tl` are used to deconstruct option types and list types.
+However, they raise exceptions on certain inputs.  You should avoid
+these functions altogether.  It is usually easy to achieve the same
+effect with pattern matching.  If you cannot manage to avoid them, you
+should handle any exceptions that they might raise.
 
 
 ## Chapter 6: Naming and declarations
-
 Naming Conventions. The best way to tell at a glance something about the type
 of a variable is to use the standard SML naming conventions.  The following are
 the preferred rules that are (more or less) followed by the SML basis and 
 SML/NJ libraries:
 
-Token          SML Naming Convention                                                                                 
-Variables      Symbolic or initial lower case. Use embedded caps for multiword names.                                
-               Example: `getItem`
-Functions      Initial lower case.  Use embedded caps for multiword names.
-               Example: `nameOf`
-Constructors   Initial upper case.  Use embedded caps for multiword names.  Historic                           
-               exceptions are nil, true, and false.  Rarely are symbolic names like :: used.                   
-               Example: `Node`, `EmptyQueue`
-Types          All lower case.  Use underscores for multiword names.           
-               Example: `priority_queue`
-Signatures     All upper case.  Use underscores for multiword names.                                                 
-               Example: `PRIORITY_QUEUE`
-Structures     Initial upper case.  Use embedded caps for multiword names.                                           
-               Example: `PriorityQueue`
-Functors       Same as structure convention, except Fn completes the name.                                           
-               Example: `PriorityQueueFn`
+Token          | SML Naming Convention
+ ------------- |:-------------------------------------------------------------------------
+Variables      | Symbolic or initial lower case. Use embedded caps for multiword names.         
+               | *Example:* `getItem`
+Functions      | Initial lower case.  Use embedded caps for multiword names.
+               | *Example:* `nameOf`
+Constructors   | Initial upper case.  Use embedded caps for multiword names.  Historic exceptions are `nil`, `true`, and `false`.  Rarely are symbolic names like `::` used.   
+               | *Example:* `Node`, `EmptyQueue`
+Types          | All lower case.  Use underscores for multiword names.           
+               | *Example:* `priority_queue`
+Signatures     | All upper case.  Use underscores for multiword names.                           
+               | *Example:* `PRIORITY_QUEUE`
+Structures     | Initial upper case.  Use embedded caps for multiword names.                     
+               | *Example:* `PriorityQueue`
+Functors       | Same as structure convention, except Fn completes the name.                  
+               | *Example:* `PriorityQueueFn`
 
 These conventions are not enforced by the compiler, though violations of the
 variable/constructor conventions ought to cause warning messages because of the
@@ -543,7 +543,8 @@ of the SML standard library.
 ## Appendix
 ###   Appendix I: Machine-support
 The following elisp-snippet provides marginal support for this coding-style for 
-the sml-mode [4] of Emacs [5]:
+the [sml-mode](http://www.smlnj.org/doc/Emacs/sml-mode.html) of
+[Emacs](http://www.gnu.org/software/emacs/).
 
 ```emacs
   (setq sml-indent-level       2)
@@ -554,9 +555,3 @@ the sml-mode [4] of Emacs [5]:
   (setq sml-electric-semi-mode nil)
 ```
 
-###  Appendix II: References
-1. http://www.cs.cornell.edu/Courses/cs312/2007fa/handouts/style.htm
-2. SMLDoc. http://www.pllab.riec.tohoku.ac.jp/smlsharp/?SMLDoc
-3. http://projects.brucker.ch/su4sml/smldoc/
-4. http://www.smlnj.org/doc/Emacs/sml-mode.html 
-5. http://www.gnu.org/software/emacs/
