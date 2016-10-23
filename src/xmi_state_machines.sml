@@ -1,5 +1,5 @@
 (*****************************************************************************
- * su4sml --- a SML repository for managing (Secure)UML/OCL models
+ * su4sml --- an SML repository for managing (Secure)UML/OCL models
  *             http://projects.brucker.ch/su4sml/
  *                                                                            
  * xmi_state_machines.sml --- XMI-UML-StateMachine datatypes for the import 

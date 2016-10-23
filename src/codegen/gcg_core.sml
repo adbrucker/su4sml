@@ -1,5 +1,5 @@
 (*****************************************************************************
- * su4sml --- a SML repository for managing (Secure)UML/OCL models
+ * su4sml --- an SML repository for managing (Secure)UML/OCL models
  *             http://projects.brucker.ch/su4sml/
  *                                                                            
  * gcg_core.sml --- implements functor GCG_Core  

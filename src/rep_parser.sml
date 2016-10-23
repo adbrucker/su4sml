@@ -1,5 +1,5 @@
 (*****************************************************************************
- * su4sml --- a SML repository for managing (Secure)UML/OCL models
+ * su4sml --- an SML repository for managing (Secure)UML/OCL models
  *             http://projects.brucker.ch/su4sml/
  *                                                                            
  * rep_parser.sml --- an xmi-parser for the import interface for su4sml

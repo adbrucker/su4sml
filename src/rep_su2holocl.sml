@@ -1,5 +1,5 @@
 (*****************************************************************************
- * su4sml --- a SML repository for managing (Secure)UML/OCL models
+ * su4sml --- an SML repository for managing (Secure)UML/OCL models
  *             http://projects.brucker.ch/su4sml/
  *                                                                            
  * rep_su2holocl.sml --- a SecureUML to UML/OCL model transformation

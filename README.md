@@ -1,6 +1,6 @@
-# su4sml: A SML repository for managing SecureUML/OCL and UML/OCL models
+# su4sml: An SML repository for managing SecureUML/OCL and UML/OCL models
 
-The model repository *su4sml* is a SML component that stores UML
+The model repository *su4sml* is an SML component that stores UML
 models.  It follows the UML/OCL metamodel in representing the model
 information as closely as this is sensible in a functional programming
 language. However, some simplifications where made deliberately. For
