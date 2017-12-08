@@ -28,7 +28,9 @@ participating classifiers
 * Manfred Stock
 
 ## License
-This project is licensed under a 3-clause BSD (SPDIX: BSD-3-Clause)  license.
+This project is licensed under a 3-clause BSD license.
+
+SPDX-License-Identifier: BSD-3-Clause
 
 ## Publications
 * Achim D. Brucker, Jürgen Doser, and Burkhart Wolff. An MDA Framework Supporting 
