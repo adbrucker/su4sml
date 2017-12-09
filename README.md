@@ -32,6 +32,12 @@ This project is licensed under a 3-clause BSD license.
 
 SPDX-License-Identifier: BSD-3-Clause
 
+## Master Repository
+
+The master git repository for this project is hosted by the [Software
+Assurance & Security Research Team](https://logicalhacking.com) at
+<https://git.logicalhacking.com/HOL-OCL/su4sml>.
+
 ## Publications
 * Achim D. Brucker, Jürgen Doser, and Burkhart Wolff. An MDA Framework Supporting 
   OCL. In Electronic Communications of the EASST, 5, 2006.
