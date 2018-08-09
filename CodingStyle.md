@@ -1,4 +1,5 @@
 # su4sml coding style
+
 We here document coding-style guidelines that should be adhered to.
 Much of the existing code is not yet following these guidelines,
 patches are welcome. This style-guide was inspired by the SML Style
@@ -7,6 +8,7 @@ Guide from
 
     	   
 ##  Chapter 1: Indentation and breaking long lines
+
 The limit on the length of lines is 80 columns and this is a hard
 limit. Using more than 80 columns causes your code to wrap around to
 the next line, which is devastating to readability.
@@ -16,6 +18,7 @@ spaces to control indenting. Indent by two spaces.
 
 Long expressions can be broken up and the parts aligned, as in the second
 example.  Either is acceptable.
+
 ```sml
 val x = "Long line..."^
   "Another long line."
@@ -23,13 +26,17 @@ val x = "Long line..."^
 val x = "Long line..."^
         "Another long line."
 ```
+
 Case expressions should be indented as follows:
+
 ```sml
 case expr of
   pat1 => ...
 | pat2 => ...
 ```
+
 If expressions should be indented according to one of the following schemes:
+
 ```sml
 if exp1 then exp2              if exp1 then
 else if exp3 then exp4           exp2
@@ -39,6 +46,7 @@ else if exp5 then exp6         else exp3
 if exp1 then exp2 else exp3    if exp1 then exp2
                                else exp3
 ```
+
 Comments should be indented to the level of the line of code that follows the
 comment.
 
@@ -55,6 +63,7 @@ multiple lines to something that has good style is to factor the code using a
 let expression.  Consider the following:
 
 * Bad
+
   ```sml
      fun euclid (m:int,n:int) : (int * int * int) =
        if n=0
@@ -65,6 +74,7 @@ let expression.  Consider the following:
   ```
 
 * Better
+
   ```sml
      fun euclid (m:int,n:int) : (int * int * int) =
        if n=0
@@ -75,7 +85,9 @@ let expression.  Consider the following:
 
              #3 (euclid (n, m mod n)))
   ```
+
 * Best
+
   ```
      fun euclid (m:int,n:int) : (int * int * int) =
        if n=0
@@ -90,7 +102,9 @@ let expression.  Consider the following:
   ```
 
 Do not factor unnecessarily.
+
 * Bad
+
   ```sml
      let
        val x = TextIO.inputLine TextIO.stdIn
@@ -101,25 +115,31 @@ Do not factor unnecessarily.
   ```
 
 * Good
+
   ```sml
      case TextIO.inputLine TextIO.stdIn of
        ...
   ```
-* Bad (provided y is not a large expression):
+
+* Bad (provided `y` is not a large expression):
+
   ```sml
     let val x = y*y in x+z end
   ```
 
 * Good
+
   ```sml
     y*y + z
   ```
 
 ## Chapter 3: Comments
+
 Comments should be written with
 [SMLDoc](http://www.pllab.riec.tohoku.ac.jp/smlsharp/?SMLDoc) in mind;
 a, nightly updated, API documentation is
 [available](http://projects.brucker.ch/su4sml/smldoc/). For example:
+
 ```sml
 (**
  * opens a file.
@@ -129,7 +149,9 @@ a, nightly updated, API documentation is
  * @return file stream *)
 val openFile : {fileName : string, mode : openMode} -> stream
 ```
+
 We mainly restrict ourselves to the following SMLDoc tags:
+
 ```
   @params  gives names to formal parameters of functions and value constructors
   @param   a description of a formal parameter
@@ -137,18 +159,21 @@ We mainly restrict ourselves to the following SMLDoc tags:
   @see     related items (specified text is not analyzed in the current version)
   @throws  same as the @exception tag
 ```
+
 Signatures must be commented using SMLDoc. 
 
 Comments go above the code they reference, as in the following example:
+
 ```sml
 (** Sums a list of integers. *)
 val sum = foldl (op +) 0
 ```
-Avoid Useless Comments. Avoid comments that merely repeat the code they
+
+*Avoid Useless Comments.* Avoid comments that merely repeat the code they
 reference or state the obvious.  Comments should state the invariants, the
 non-obvious, or any references that have more information about the code.
 
-Avoid Over-commenting. Very many or very long comments in the code body are
+*Avoid Over-commenting.* Very many or very long comments in the code body are
 more distracting than helpful.  Long comments may appear at the top of a file
 if you wish to explain the overall design of the code or refer to any sources
 that have more information about the algorithms or data structures.  All other
@@ -156,7 +181,7 @@ comments in the file should be as short as possible.  A good place for a
 comment is just before a function declaration.  Judicious choice of variable
 names can help minimize the need for comments.
 
-Line Breaks. Empty lines should only be included between value declarations
+*Line Breaks.* Empty lines should only be included between value declarations
 within a struct block, especially between function declarations.  It is not
 necessary to put empty lines between other declarations unless you are
 separating the different types of declarations (such as structures, types,
@@ -164,10 +189,11 @@ exceptions and values).  Unless function declarations within a let block are
 long, there should be no empty lines within a let block. There should never be
 an empty line within an expression.
 
-Multi-line Commenting. When comments are printed on paper, the reader lacks the
+*Multi-line Commenting.* When comments are printed on paper, the reader lacks the
 advantage of color highlighting performed by an editor such as Emacs. 
 Multiline comments can be distinguished from code by preceding each line of the
 comment with a * similar to the following:
+
 ```sml
 (**
  * This is one of those rare but long comments
@@ -179,20 +205,21 @@ fun complicatedFunction () = ...
 
 ## Chapter 4: Parentheses
 
-Over Parenthesizing.  Parentheses have many semantic purposes in ML, including
+*Over Parenthesizing.*  Parentheses have many semantic purposes in ML, including
 constructing tuples, grouping sequences of side-effect expressions, forcing a
 non-default parse of an expression, and grouping structures for functor
 arguments.  Their usage is very different from C or Java.  Avoid using
 unnecessary parantheses when their presence makes your code harder to
 understand.
 
-Case expressions.  Wrap case expressions with parentheses.  This avoids a
+*Case expressions.* Wrap case expressions with parentheses.  This avoids a
 common error involving nested case expressions. If the case expression is
 already wrapped by a let...in...end block, you can drop the parentheses.
 
-Alternative Block Styles. Blocks of code such as let...in...end, struct...end,
+*Alternative Block Styles.* Blocks of code such as let...in...end, struct...end,
 and sig...end should be indented as follows.  There are several alternative
 styles to choose from.
+
 ```sml
 fun foo bar =        fun foo bar =       fun foo bar = let
   let                  let val p = 4       val p = 4
@@ -203,16 +230,16 @@ fun foo bar =        fun foo bar =       fun foo bar = let
   end
 ```
 
-
 ## Chapter 5: Pattern matching
 
-No Incomplete Pattern Matches.  Incomplete pattern matches are flagged with
+*No Incomplete Pattern Matches.*  Incomplete pattern matches are flagged with
 compiler warnings, which should be treated as errors. 
 
-Pattern Match in the Function Arguments When Possible.  Tuples, records and
+*Pattern Match in the Function Arguments When Possible.*  Tuples, records and
 datatypes can be deconstructed using pattern matching.  If you simply
 deconstruct the function argument before you do anything useful, it is better
 to pattern match in the function argument. Consider these examples:
+
 ```sml
 Bad                              Good
 fun f arg1 arg2 = let            fun f (x,y) (z,_) = ...
@@ -233,8 +260,7 @@ in
 end
 ```
 
-
-Avoid Unnecessary Projections.  Prefer pattern matching to projections with
+*Avoid Unnecessary Projections.*  Prefer pattern matching to projections with
 function arguments or a value declarations.  Using projections is okay as long
 as it is infrequent and the meaning is clearly understood from the context. 
 The above rule shows how to pattern-match in the function arguments.  Here is
@@ -251,12 +277,12 @@ in                                  end
 end
 ```
 
-
-Combine nested case Expressions.  Rather than nest case expressions, you can
+*Combine nested case Expressions.*  Rather than nest case expressions, you can
 combine them by pattern matching against a tuple, provided the tests in the
 case expressions are independent.  Here is an example:
 
 * Bad
+
   ```sml
      let
        val d = Date.fromTimeLocal(Time.now())
@@ -275,6 +301,7 @@ case expressions are independent.  Here is an example:
      ```
      
 * Good
+
   ```sml
      let
        val d = Date.fromTimeLocal(Time.now())
@@ -294,9 +321,9 @@ these functions altogether.  It is usually easy to achieve the same
 effect with pattern matching.  If you cannot manage to avoid them, you
 should handle any exceptions that they might raise.
 
-
 ## Chapter 6: Naming and declarations
-Naming Conventions. The best way to tell at a glance something about the type
+
+*Naming Conventions.* The best way to tell at a glance something about the type
 of a variable is to use the standard SML naming conventions.  The following are
 the preferred rules that are (more or less) followed by the SML basis and 
 SML/NJ libraries:
@@ -322,11 +349,12 @@ These conventions are not enforced by the compiler, though violations of the
 variable/constructor conventions ought to cause warning messages because of the
 danger of a constructor turning into a variable when it is misspelled.
 
-Use Meaningful Names. Another way of conveying information is to use meaningful
+*Use Meaningful Names.* Another way of conveying information is to use meaningful
 variable names that reflect their intended use.  Choose words or combinations
 of words describing the value.  Variable names may be one letter in short let
 blocks.  Functions used in a fold, filter, or map are often bound to the name
 f.  Here is an example for short variable names:
+
 ```sml
 let
   val d = Date.fromTimeLocal(Time.now())
@@ -338,7 +366,7 @@ in
 end
 ```
 
-Avoid Global Mutable Variables. Mutable values should be local to closures and
+*Avoid Global Mutable Variables.* Mutable values should be local to closures and
 almost never declared as a structure's value.  Global mutable values cause many
 problems.  First, it is difficult to ensure that the mutable value is in the
 proper state, since it might have been modified outside the function or by a
@@ -348,7 +376,7 @@ makes it more likely that your code is nonreentrant.  Without proper knowledge
 of the ramifications, declaring global mutable values can extend beyond bad
 style to incorrect code.
 
-When to Rename Variables. You should rarely need to rename values, in fact this
+*When to Rename Variables.* You should rarely need to rename values, in fact this
 is a sure way to obfuscate code.  Renaming a value should be backed up with a
 very good reason. One instance where renaming a variable is common and
 encouraged is when aliasing structures. In these cases, other structures used
@@ -356,6 +384,7 @@ by functions within the current structure are aliased to one or two letter
 variables at the top of the struct block. This serves two purposes: it shortens
 the name of the structure and it documents the structures you use. Here is an
 example:
+
 ```sml
 struct
   structure H = HashTable
@@ -364,10 +393,12 @@ struct
   ...
 end
 ```
-Order of Declarations in a Structure. When declaring elements in a structure,
+
+*Order of Declarations in a Structure.* When declaring elements in a structure,
 you should first alias the structures you intend to use, followed by the types,
 followed by exceptions, and lastly list all the value declarations for the
 structure. Here is an example:
+
 ```sml
 struct
   structure L = List
@@ -383,16 +414,18 @@ Moreover, every top-level structure should be restricted by a (documented)
 signature. 
 
 Functions should declared in their their curried form, e.g.,  
+
 ```sml
 fun f x y = ... instead of fun f(x,y) = ...
 ```
+
 Datatypes should be preferred to type synonyms in particular for
 record types
 
 
 ## Chapter 7: Verbosity
 
-Don't Rewrite Library Functions. The basis library and the SML/NJ library have
+*Don't Rewrite Library Functions.* The basis library and the SML/NJ library have
 a great number of functions and data structures -- use them!  Often students
 will recode List.filter, List.map, and similar functions.  A more subtle
 situation for recoding is all the fold functions.  Writing a function that
@@ -400,7 +433,7 @@ recursively walks down the list should make vigorous use of List.foldl or
 List.foldr.  Other data structures often have a folding function; use them
 whenever they are available.
 
-Misusing if Expressions.  Remember that the type of the condition in an if
+*Misusing if Expressions.*  Remember that the type of the condition in an if
 expression is bool. In general, the type of an if expression is 'a, but in the
 case that the type is bool, you should not be using if at all. Consider the
 following:
@@ -418,9 +451,10 @@ if x then false else y                  not x andalso y
 if x then y else true                   not x orelse y
 ```
 
-Misusing case Expressions.  The case expression is misused in two common
+*Misusing case Expressions.* The case expression is misused in two common
 situations.  First, case should never be used in place of an if expression
 (that's why if exists).  Note the following:
+
 ```sml
 case e of
   true => x
@@ -428,8 +462,10 @@ case e of
 
 if e then x else y
 ```
+
 The latter is much better.  Another situation where if expressions are
 preferred over case expressions is as follows:
+
 ```sml
 case e of
   c => x   (* c is a constant value *)
@@ -437,13 +473,16 @@ case e of
 
 if e=c then x else y
 ```
+
 The latter is definitely better.  The other misuse is using case when pattern
 matching with a val declaration is enough. Consider the following:
+
 ```sml
 val x = case expr of (y,z) => y
 
 val (x,_) = expr
 ```
+
 The latter is better.
 
 Other Common Misuses.  Here are some other common mistakes to watch out for:
@@ -470,25 +509,30 @@ Int.sign(x)=1                       x>0
 
 Do not re-wrap Functions.  When passing a function as an argument to another
 function, don't re-wrap the function unnecessarily.  Here's an example:
+
 ```sml
 List.map (fn x => Math.sqrt x) [1.0, 4.0, 9.0, 16.0]
 
 List.map Math.sqrt [1.0, 4.0, 9.0, 16.0]
 ```
+
 The latter is better. Another case for rewrapping a function is often
 associated with infix binary operators. To prevent rewrapping the binary
 operator, use the op keyword as in the following example:
+
 ```sml
 foldl (fn (x,y) => x + y) 0
 
 foldl (op +) 0
 ```
+
 The latter is better.
 
 Don't Needlessly Nest let Expressions. Multiple declarations may occur in the
 first block of a let...in...end expression.  The bindings are performed
 sequentially, so you may use a name bound earlier in the same block.  Consider
 the following:
+
 ```sml
 let
   val x = 42
@@ -521,12 +565,14 @@ with a name.
 
 In general, a source file should only contain one signature or structure. In more 
 detail:
-- if a signature is only implemented by one structure, the signature and 
+
+* if a signature is only implemented by one structure, the signature and 
   structure can be placed in one file,
-- if a signature is implemented by several structures, the signature should 
+* if a signature is implemented by several structures, the signature should 
   be placed into a separate file. 
+
 The file name should reflect the signature name and it should be 
-and separated by underscore, e.g., ocl_term.sig 
+and separated by underscore, e.g., `ocl_term.sig`. 
 
 Source files should use the Unix line ending convention and be either encoding 
 using ASCII (preferred) or UTF-8.
@@ -541,7 +587,9 @@ of the SML standard library.
 
 
 ## Appendix
+
 ###   Appendix I: Machine-support
+
 The following elisp-snippet provides marginal support for this coding-style for 
 the [sml-mode](http://www.smlnj.org/doc/Emacs/sml-mode.html) of
 [Emacs](http://www.gnu.org/software/emacs/).
